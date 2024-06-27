@@ -15,6 +15,11 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using System.Reflection;
 using MQContract.Attributes;
+using System.IO.Compression;
+using AutomatedTesting.Encoders;
+using AutomatedTesting.ServiceInjection;
+using Microsoft.Extensions.DependencyInjection;
+using AutomatedTesting.Encryptors;
 
 namespace AutomatedTesting.ContractConnectionTests
 {
@@ -67,7 +72,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(0,messages[0].Header.Keys.Count());
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            Assert.AreEqual(testMessage, JsonSerializer.Deserialize<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             #endregion
 
             #region Verify
@@ -224,6 +229,64 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(testMessage, JsonSerializer.Deserialize<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(timeout, timeouts[0]);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithCompressionDueToMessageSize()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            transmissionResult.Setup(x => x.IsError)
+                .Returns(false);
+            transmissionResult.Setup(x => x.Error)
+                .Returns("");
+            transmissionResult.Setup(x => x.MessageID)
+                .Returns(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("AAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaa");
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<IServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult.Object);
+            serviceConnection.Setup(x => x.DefaultTimout)
+                .Returns(defaultTimeout);
+            serviceConnection.Setup(x => x.MaxMessageBodySize)
+                .Returns(35);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
+            Assert.AreEqual(transmissionResult.Object.Error, result.Error);
+            Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
+            Assert.AreEqual(1, messages.Count);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, timeouts.Count);
+            Assert.AreEqual(defaultTimeout, timeouts[0]);
+            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.AreEqual("C-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length>0);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(
+                new GZipStream(new MemoryStream(messages[0].Data.ToArray()), CompressionMode.Decompress)
+            ));
             #endregion
 
             #region Verify
@@ -454,6 +517,375 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Verify
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithNamedAndVersionedMessage()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            transmissionResult.Setup(x => x.IsError)
+                .Returns(false);
+            transmissionResult.Setup(x => x.Error)
+                .Returns("");
+            transmissionResult.Setup(x => x.MessageID)
+                .Returns(Guid.NewGuid().ToString());
+
+            var testMessage = new NamedAndVersionedMessage("testMessage");
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<IServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult.Object);
+            serviceConnection.Setup(x => x.DefaultTimout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<NamedAndVersionedMessage>(testMessage);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
+            Assert.AreEqual(transmissionResult.Object.Error, result.Error);
+            Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
+            Assert.AreEqual(1, messages.Count);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, timeouts.Count);
+            Assert.AreEqual(defaultTimeout, timeouts[0]);
+            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.AreEqual($"U-{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageNameAttribute>(false)?.Value}-{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageVersionAttribute>(false)?.Version}", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length>0);
+            Assert.AreEqual(testMessage, JsonSerializer.Deserialize<NamedAndVersionedMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithMessageWithDefinedEncoder()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            transmissionResult.Setup(x => x.IsError)
+                .Returns(false);
+            transmissionResult.Setup(x => x.Error)
+                .Returns("");
+            transmissionResult.Setup(x => x.MessageID)
+                .Returns(Guid.NewGuid().ToString());
+
+            var testMessage = new CustomEncoderMessage("testMessage");
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<IServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult.Object);
+            serviceConnection.Setup(x => x.DefaultTimout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<CustomEncoderMessage>(testMessage);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
+            Assert.AreEqual(transmissionResult.Object.Error, result.Error);
+            Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
+            Assert.AreEqual(1, messages.Count);
+            Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, timeouts.Count);
+            Assert.AreEqual(defaultTimeout, timeouts[0]);
+            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.AreEqual("U-CustomEncoderMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length>0);
+            Assert.AreEqual(testMessage, new TestMessageEncoder().Decode(new MemoryStream(messages[0].Data.ToArray())));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithMessageWithDefinedServiceInjectableEncoder()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            transmissionResult.Setup(x => x.IsError)
+                .Returns(false);
+            transmissionResult.Setup(x => x.Error)
+                .Returns("");
+            transmissionResult.Setup(x => x.MessageID)
+                .Returns(Guid.NewGuid().ToString());
+
+
+            var testMessage = new CustomEncoderWithInjectionMessage("testMessage");
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+            var serviceName = "TestPublishAsyncWithMessageWithDefinedServiceInjectableEncoder";
+            var services = Helper.ProduceServiceProvider(serviceName);
+
+            List<IServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult.Object);
+            serviceConnection.Setup(x => x.DefaultTimout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object,serviceProvider:services);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<CustomEncoderWithInjectionMessage>(testMessage);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
+            Assert.AreEqual(transmissionResult.Object.Error, result.Error);
+            Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
+            Assert.AreEqual(1, messages.Count);
+            Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, timeouts.Count);
+            Assert.AreEqual(defaultTimeout, timeouts[0]);
+            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.AreEqual("U-CustomEncoderWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length>0);
+            Assert.AreEqual(testMessage, 
+                new TestMessageEncoderWithInjection(services.GetRequiredService<IInjectableService>()).Decode(new MemoryStream(messages[0].Data.ToArray()))
+            );
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithMessageWithDefinedEncryptor()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            transmissionResult.Setup(x => x.IsError)
+                .Returns(false);
+            transmissionResult.Setup(x => x.Error)
+                .Returns("");
+            transmissionResult.Setup(x => x.MessageID)
+                .Returns(Guid.NewGuid().ToString());
+
+            var testMessage = new CustomEncryptorMessage("testMessage");
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<IServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult.Object);
+            serviceConnection.Setup(x => x.DefaultTimout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<CustomEncryptorMessage>(testMessage);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
+            Assert.AreEqual(transmissionResult.Object.Error, result.Error);
+            Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
+            Assert.AreEqual(1, messages.Count);
+            Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, timeouts.Count);
+            Assert.AreEqual(defaultTimeout, timeouts[0]);
+            Assert.AreEqual("U-CustomEncryptorMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length>0);
+            var decodedData = new TestMessageEncryptor().Decrypt(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorMessage>(decodedData));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithMessageWithDefinedServiceInjectableEncryptor()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            transmissionResult.Setup(x => x.IsError)
+                .Returns(false);
+            transmissionResult.Setup(x => x.Error)
+                .Returns("");
+            transmissionResult.Setup(x => x.MessageID)
+                .Returns(Guid.NewGuid().ToString());
+
+            var testMessage = new CustomEncryptorWithInjectionMessage("testMessage");
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+            var serviceName = "TestPublishAsyncWithMessageWithDefinedServiceInjectableEncryptor";
+            var services = Helper.ProduceServiceProvider(serviceName);
+
+            List<IServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult.Object);
+            serviceConnection.Setup(x => x.DefaultTimout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object,serviceProvider:services);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<CustomEncryptorWithInjectionMessage>(testMessage);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
+            Assert.AreEqual(transmissionResult.Object.Error, result.Error);
+            Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
+            Assert.AreEqual(1, messages.Count);
+            Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, timeouts.Count);
+            Assert.AreEqual(defaultTimeout, timeouts[0]);
+            Assert.AreEqual("U-CustomEncryptorWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length>0);
+            var decodedData = new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).Decrypt(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorWithInjectionMessage>(decodedData));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithNoMessageChannelThrowsError()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            transmissionResult.Setup(x => x.IsError)
+                .Returns(false);
+            transmissionResult.Setup(x => x.Error)
+                .Returns("");
+            transmissionResult.Setup(x => x.MessageID)
+                .Returns(Guid.NewGuid().ToString());
+
+            var testMessage = new NoChannelMessage("testMessage");
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<IServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult.Object);
+            serviceConnection.Setup(x => x.DefaultTimout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var exception = await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => contractConnection.PublishAsync<NoChannelMessage>(testMessage));
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(exception);
+            Assert.AreEqual("message must have a channel value (Parameter 'channel')", exception.Message);
+            Assert.AreEqual("channel", exception.ParamName);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithToLargeAMessageThrowsError()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            transmissionResult.Setup(x => x.IsError)
+                .Returns(false);
+            transmissionResult.Setup(x => x.Error)
+                .Returns("");
+            transmissionResult.Setup(x => x.MessageID)
+                .Returns(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("testMessage");
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<IServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult.Object);
+            serviceConnection.Setup(x => x.DefaultTimout)
+                .Returns(defaultTimeout);
+            serviceConnection.Setup(x => x.MaxMessageBodySize)
+                .Returns(1);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var exception = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => contractConnection.PublishAsync<BasicMessage>(testMessage));
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(exception);
+            Assert.IsTrue(exception.Message.StartsWith($"message data exceeds maxmium message size (MaxSize:{serviceConnection.Object.MaxMessageBodySize},"));
+            Assert.AreEqual("message", exception.ParamName);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
             #endregion
         }
     }

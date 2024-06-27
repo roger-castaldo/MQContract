@@ -137,7 +137,7 @@ namespace MQContract.Factories
         public IServiceMessage ConvertMessage(T message, string? channel, IMessageHeader? messageHeader = null)
         {
             channel ??= messageChannel;
-            if (string.IsNullOrEmpty(channel))
+            if (string.IsNullOrWhiteSpace(channel))
                 throw new ArgumentNullException(nameof(channel), "message must have a channel value");
 
             var encodedData = messageEncoder?.Encode(message)??globalMessageEncoder!.Encode<T>(message);
@@ -154,7 +154,7 @@ namespace MQContract.Factories
                 metaData = "C";
 
                 if (body.Length > maxMessageSize)
-                    throw new ArgumentOutOfRangeException(nameof(message), "message data exceeds maxmium message size");
+                    throw new ArgumentOutOfRangeException(nameof(message), $"message data exceeds maxmium message size (MaxSize:{maxMessageSize},EncodedSize:{body.Length})");
             }
             else
                 metaData="U";
