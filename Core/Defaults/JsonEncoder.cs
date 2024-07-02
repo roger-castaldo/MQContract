@@ -1,15 +1,10 @@
 ﻿using MQContract.Interfaces.Encoding;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace MQContract.Defaults
 {
     internal class JsonEncoder<T> : IMessageTypeEncoder<T>
-    { 
+    {
         private static JsonSerializerOptions JsonOptions => new()
         {
             WriteIndented=false,

@@ -1,15 +1,11 @@
 ﻿using AutomatedTesting.Messages;
 using AutomatedTesting.ServiceInjection;
 using MQContract.Interfaces.Encoding;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AutomatedTesting.Encoders
 {
-    internal class TestMessageEncoderWithInjection(IInjectableService injectableService) 
+    internal class TestMessageEncoderWithInjection(IInjectableService injectableService)
         : IMessageTypeEncoder<CustomEncoderWithInjectionMessage>
     {
         public CustomEncoderWithInjectionMessage? Decode(Stream stream)

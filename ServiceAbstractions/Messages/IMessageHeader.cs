@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MQContract.ServiceAbstractions.Messages
+﻿namespace MQContract.ServiceAbstractions.Messages
 {
     /// <summary>
     /// Houses the headers that were supplied by the respective service message

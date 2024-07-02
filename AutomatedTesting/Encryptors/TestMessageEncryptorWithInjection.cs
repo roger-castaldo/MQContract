@@ -2,15 +2,10 @@
 using AutomatedTesting.ServiceInjection;
 using MQContract.Interfaces.Encrypting;
 using MQContract.ServiceAbstractions.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutomatedTesting.Encryptors
 {
-    internal class TestMessageEncryptorWithInjection(IInjectableService injectableService) 
+    internal class TestMessageEncryptorWithInjection(IInjectableService injectableService)
         : IMessageTypeEncryptor<CustomEncryptorWithInjectionMessage>
     {
         private const string HeaderKey = "TestMessageEncryptorWithInjectionKey";

@@ -8,9 +8,9 @@ using MQContract.ServiceAbstractions.Messages;
 
 namespace MQContract.Factories
 {
-    internal class ConversionPath<T, V> : IConversionPath<V> 
-        where T: class
-        where V: class
+    internal class ConversionPath<T, V> : IConversionPath<V>
+        where T : class
+        where V : class
     {
         private readonly IEnumerable<IBaseConversionPath> path;
         private readonly IMessageTypeEncoder<T> messageEncoder;
@@ -39,7 +39,7 @@ namespace MQContract.Factories
             }
         }
 
-        public V? ConvertMessage(ILogger? logger, IServiceMessage message,Stream? dataStream=null)
+        public V? ConvertMessage(ILogger? logger, IServiceMessage message, Stream? dataStream = null)
         {
             dataStream = (globalMessageEncryptor!=null && messageEncryptor is NonEncryptor<T> ? globalMessageEncryptor : messageEncryptor).Decrypt(dataStream??new MemoryStream(message.Data.ToArray()), message.Header);
             object? result = (globalMessageEncoder!=null && messageEncoder is JsonEncoder<T> ? globalMessageEncoder.Decode<T>(dataStream) : messageEncoder.Decode(dataStream));

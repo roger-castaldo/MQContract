@@ -27,9 +27,7 @@
         }
 
         internal static string TypeName<T>()
-        {
-            return TypeName(typeof(T));
-        }
+            => TypeName(typeof(T));
 
         internal static string TypeName(Type type)
         {

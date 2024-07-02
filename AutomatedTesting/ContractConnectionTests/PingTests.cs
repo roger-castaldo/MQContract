@@ -2,11 +2,6 @@
 using MQContract;
 using MQContract.ServiceAbstractions;
 using MQContract.ServiceAbstractions.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutomatedTesting.ContractConnectionTests
 {
@@ -28,7 +23,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 .Returns("1.0.0");
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x=>x.PingAsync())
+            serviceConnection.Setup(x => x.PingAsync())
                 .Returns(Task.FromResult<IPingResult>(pingResult.Object));
 
             var contractConnection = new ContractConnection(serviceConnection.Object);

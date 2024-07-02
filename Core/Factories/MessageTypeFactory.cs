@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
 using MQContract.Attributes;
 using MQContract.Defaults;
 using MQContract.Interfaces.Conversion;
@@ -9,15 +8,10 @@ using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Factories;
 using MQContract.Messages;
 using MQContract.ServiceAbstractions.Messages;
-using System;
-using System.Collections.Generic;
 using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace MQContract.Factories
 {
@@ -52,7 +46,7 @@ namespace MQContract.Factories
                     {
                         return assembly.GetTypes()
                         .Where(t => !t.IsInterface && !t.IsAbstract
-                            && Array.Exists(t.GetInterfaces(),iface => iface == typeof(IMessageTypeEncoder<T>)
+                            && Array.Exists(t.GetInterfaces(), iface => iface == typeof(IMessageTypeEncoder<T>)
                                 || iface == typeof(IMessageTypeEncryptor<T>)
                                 || iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)));
                     }
@@ -65,19 +59,19 @@ namespace MQContract.Factories
                 .FirstOrDefault(type => type.GetInterfaces().Contains(typeof(IMessageTypeEncoder<T>)));
             var encryptorType = types
                 .FirstOrDefault(type => type.GetInterfaces().Contains(typeof(IMessageTypeEncryptor<T>)));
-            messageEncoder = (IMessageTypeEncoder<T>?)((serviceProvider, encoderType,globalMessageEncoder) switch
+            messageEncoder = (IMessageTypeEncoder<T>?)((serviceProvider, encoderType, globalMessageEncoder) switch
             {
-                (not null,not null,_)=> ActivatorUtilities.CreateInstance(serviceProvider!, encoderType!),
-                (null,not null,_)=> Activator.CreateInstance(encoderType)!,
-                (_,null,null)=>new JsonEncoder<T>(),
-                _=>null
+                (not null, not null, _) => ActivatorUtilities.CreateInstance(serviceProvider!, encoderType!),
+                (null, not null, _) => Activator.CreateInstance(encoderType)!,
+                (_, null, null) => new JsonEncoder<T>(),
+                _ => null
             });
-            messageEncryptor = (IMessageTypeEncryptor<T>?)((serviceProvider,encryptorType,globalMessageEncryptor) switch
+            messageEncryptor = (IMessageTypeEncryptor<T>?)((serviceProvider, encryptorType, globalMessageEncryptor) switch
             {
-                (not null,not null,_)=> ActivatorUtilities.CreateInstance(serviceProvider, encryptorType),
-                (null,not null,_)=> Activator.CreateInstance(encryptorType)!,
-                (_,null,null)=>new NonEncryptor<T>(),
-                _=>null
+                (not null, not null, _) => ActivatorUtilities.CreateInstance(serviceProvider, encryptorType),
+                (null, not null, _) => Activator.CreateInstance(encryptorType)!,
+                (_, null, null) => new NonEncryptor<T>(),
+                _ => null
             });
             converters = IgnoreMessageHeader
                 ? []
@@ -86,13 +80,13 @@ namespace MQContract.Factories
 
         private static IEnumerable<IConversionPath<T>> TraceConverters(Type destinationType, IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IEnumerable<Type> types, IEnumerable<object> curPath, IEnumerable<IConversionPath<T>> converters, IServiceProvider? serviceProvider)
         {
-            var subPaths = types.Where(t => Array.Exists(t.GetInterfaces(),iface => iface.IsGenericType &&
+            var subPaths = types.Where(t => Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType &&
                 iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)
                 && iface.GetGenericArguments()[1] == destinationType
                 && !converters.Any(conv => conv.GetType().GetGenericArguments()[0] == iface.GetGenericArguments()[0]))
             )
-                .Select(t => curPath.Prepend(serviceProvider == null ? 
-                    Activator.CreateInstance(t)! : 
+                .Select(t => curPath.Prepend(serviceProvider == null ?
+                    Activator.CreateInstance(t)! :
                     ActivatorUtilities.CreateInstance(serviceProvider, t)
                 ));
 
@@ -141,7 +135,7 @@ namespace MQContract.Factories
                 throw new ArgumentNullException(nameof(channel), "message must have a channel value");
 
             var encodedData = messageEncoder?.Encode(message)??globalMessageEncoder!.Encode<T>(message);
-            var body = messageEncryptor?.Encrypt(encodedData, out var messageHeaders)??globalMessageEncryptor!.Encrypt(encodedData,out messageHeaders);
+            var body = messageEncryptor?.Encrypt(encodedData, out var messageHeaders)??globalMessageEncryptor!.Encrypt(encodedData, out messageHeaders);
 
             var metaData = string.Empty;
             if (body.Length>maxMessageSize)
@@ -160,7 +154,7 @@ namespace MQContract.Factories
                 metaData="U";
             metaData+=$"-{messageName}-{messageVersion}";
 
-            return new ServiceMessage(Guid.NewGuid(), metaData,channel, new MessageHeader(baseHeader:messageHeader,newData: messageHeaders), body);
+            return new ServiceMessage(Guid.NewGuid(), metaData, channel, new MessageHeader(baseHeader: messageHeader, newData: messageHeaders), body);
         }
 
         public bool CanConvert(Type sourceType)
@@ -173,9 +167,17 @@ namespace MQContract.Factories
                 ArgumentNullException.ThrowIfNullOrWhiteSpace(message.MessageTypeID, nameof(message.MessageTypeID));
 #pragma warning restore S3236 // Caller information arguments should not be provided explicitly
             IConversionPath<T>? converter = null;
-            bool compressed = false;
+            T? result;
+            var compressed = false;
             if (IgnoreMessageHeader || IsMessageTypeMatch(message.MessageTypeID, typeof(T), out compressed))
-                converter = this;
+            {
+                dataStream = (compressed ? new GZipStream(new MemoryStream(message.Data.ToArray()), System.IO.Compression.CompressionMode.Decompress) : new MemoryStream(message.Data.ToArray()));
+                dataStream = messageEncryptor?.Decrypt(dataStream, message.Header)??globalMessageEncryptor!.Decrypt(dataStream, message.Header);
+                if (messageEncoder!=null)
+                    result = messageEncoder.Decode(dataStream);
+                else
+                    result = globalMessageEncoder!.Decode<T>(dataStream);
+            }
             else
             {
                 foreach (var conv in converters)
@@ -186,13 +188,13 @@ namespace MQContract.Factories
                         break;
                     }
                 }
+                if (converter==null)
+                    throw new InvalidCastException();
+                dataStream = (compressed ? new GZipStream(new MemoryStream(message.Data.ToArray()), System.IO.Compression.CompressionMode.Decompress) : new MemoryStream(message.Data.ToArray()));
+                result = converter.ConvertMessage(logger, message, dataStream: dataStream);
             }
-            if (converter==null)
-                throw new InvalidCastException();
-            dataStream = (compressed ? new GZipStream(new MemoryStream(message.Data.ToArray()), System.IO.Compression.CompressionMode.Decompress) : new MemoryStream(message.Data.ToArray()));
-            var result = converter.ConvertMessage(logger, message, dataStream: dataStream);
             if (Equals(result, default(T?)))
-                throw new MessageConversionException(typeof(T), converter.GetType());
+                throw new MessageConversionException(typeof(T), converter?.GetType()??GetType());
             return result;
         }
     }
