@@ -7,7 +7,6 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Factories;
 using MQContract.Messages;
-using MQContract.ServiceAbstractions.Messages;
 using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.Loader;

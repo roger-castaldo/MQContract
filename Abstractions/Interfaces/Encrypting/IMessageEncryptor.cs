@@ -1,4 +1,4 @@
-﻿using MQContract.ServiceAbstractions.Messages;
+﻿using MQContract.Messages;
 
 namespace MQContract.Interfaces.Encrypting
 {

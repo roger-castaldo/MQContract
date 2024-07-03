@@ -6,8 +6,7 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Factories;
 using MQContract.Messages;
-using MQContract.ServiceAbstractions;
-using MQContract.ServiceAbstractions.Messages;
+using MQContract.Subscriptions;
 using System.Reflection;
 
 namespace MQContract
@@ -53,6 +52,21 @@ namespace MQContract
         private IServiceMessage ProduceServiceMessage<T>(T message, string? channel = null, IMessageHeader? messageHeader = null) where T : class
             => GetMessageFactory<T>().ConvertMessage(message, channel, messageHeader);
 
+        public async Task<ISubscription> SubscribeAsync<T>(Action<IMessage<T>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
+        {
+            var subscription = new PubSubSubscription<T>(GetMessageFactory<T>(ignoreMessageHeader),
+                messageRecieved,
+                errorRecieved,
+                channel:channel,
+                group:group,
+                synchronous:synchronous,
+                options:options,
+                logger:logger);
+            if (await subscription.EstablishSubscriptionAsync(serviceConnection,cancellationToken))
+                return subscription;
+            throw new SubscriptionFailedException();
+        }
+
         private async Task<IQueryResult<R>> ExecuteQueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, IMessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class
@@ -95,5 +109,24 @@ namespace MQContract
                     queryResult.IsError,
                     queryResult.Error
                 );
+
+        public async Task<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IMessage<Q>, Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+            where Q : class
+            where R : class
+        {
+            var subscription = new QueryResponseSubscription<Q,R>(
+                GetMessageFactory<Q>(ignoreMessageHeader),
+                GetMessageFactory<R>(),
+                messageRecieved,
+                errorRecieved,
+                channel: channel,
+                group: group,
+                synchronous: synchronous,
+                options: options,
+                logger: logger);
+            if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
+                return subscription;
+            throw new SubscriptionFailedException();
+        }
     }
 }

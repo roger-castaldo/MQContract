@@ -1,6 +1,4 @@
-﻿using MQContract.ServiceAbstractions.Messages;
-
-namespace MQContract.Messages
+﻿namespace MQContract.Messages
 {
     internal record MessageHeader : IMessageHeader
     {

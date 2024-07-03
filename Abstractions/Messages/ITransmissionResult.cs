@@ -1,4 +1,4 @@
-﻿namespace MQContract.ServiceAbstractions.Messages
+﻿namespace MQContract.Messages
 {
     /// <summary>
     /// Houses the result from transmitting a message into the system or as part of a response

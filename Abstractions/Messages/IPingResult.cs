@@ -1,4 +1,4 @@
-﻿namespace MQContract.ServiceAbstractions.Messages
+﻿namespace MQContract.Messages
 {
     /// <summary>
     /// Represents a Ping Result from the underlying service

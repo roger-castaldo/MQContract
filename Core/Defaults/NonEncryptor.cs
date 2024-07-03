@@ -1,5 +1,5 @@
 ﻿using MQContract.Interfaces.Encrypting;
-using MQContract.ServiceAbstractions.Messages;
+using MQContract.Messages;
 
 namespace MQContract.Defaults
 {

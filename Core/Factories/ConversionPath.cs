@@ -4,7 +4,7 @@ using MQContract.Defaults;
 using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
-using MQContract.ServiceAbstractions.Messages;
+using MQContract.Messages;
 
 namespace MQContract.Factories
 {

@@ -1,4 +1,4 @@
-﻿namespace MQContract.ServiceAbstractions.Messages
+﻿namespace MQContract.Messages
 {
     /// <summary>
     /// Houses the headers that were supplied by the respective service message

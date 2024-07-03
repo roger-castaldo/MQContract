@@ -1,4 +1,4 @@
-﻿namespace MQContract.ServiceAbstractions.Messages
+﻿namespace MQContract.Messages
 {
     public interface IServiceQueryResult : IServiceMessage, ITransmissionResult
     {

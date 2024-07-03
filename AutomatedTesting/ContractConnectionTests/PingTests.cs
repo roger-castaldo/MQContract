@@ -1,7 +1,5 @@
 ﻿using Moq;
 using MQContract;
-using MQContract.ServiceAbstractions;
-using MQContract.ServiceAbstractions.Messages;
 
 namespace AutomatedTesting.ContractConnectionTests
 {

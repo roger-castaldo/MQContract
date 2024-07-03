@@ -1,4 +1,4 @@
-﻿using MQContract.ServiceAbstractions;
+﻿using MQContract;
 
 namespace AutomatedTesting
 {

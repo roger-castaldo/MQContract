@@ -1,5 +1,4 @@
 ﻿using MQContract.Interfaces;
-using MQContract.ServiceAbstractions.Messages;
 
 namespace MQContract.Messages
 {

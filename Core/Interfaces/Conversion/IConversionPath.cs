@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.ServiceAbstractions.Messages;
+using MQContract.Messages;
 
 namespace MQContract.Interfaces.Conversion
 {

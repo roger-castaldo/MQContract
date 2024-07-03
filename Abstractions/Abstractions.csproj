@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>MQContract.$(MSBuildProjectName)</AssemblyName>
-    <RootNamespace>MQContract.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <RootNamespace>MQContract</RootNamespace>
   </PropertyGroup>
 
 </Project>

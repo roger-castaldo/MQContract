@@ -1,5 +1,5 @@
 ﻿using MQContract.Interfaces.Conversion;
-using MQContract.ServiceAbstractions.Messages;
+using MQContract.Messages;
 
 namespace MQContract.Interfaces.Factories
 {

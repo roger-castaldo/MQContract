@@ -1,7 +1,7 @@
 ﻿using AutomatedTesting.Messages;
 using AutomatedTesting.ServiceInjection;
 using MQContract.Interfaces.Encrypting;
-using MQContract.ServiceAbstractions.Messages;
+using MQContract.Messages;
 
 namespace AutomatedTesting.Encryptors
 {

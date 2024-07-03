@@ -17,4 +17,11 @@
         internal UnknownResponseTypeException(string paramName, Type messageType)
             : base(paramName, $"The attempt to call a query response with the incoming message of type {messageType.FullName} does not have a determined response type.") { }
     }
+
+    public class SubscriptionFailedException : Exception
+    {
+        internal SubscriptionFailedException()
+            : base("Failed to establish subscription through service connection")
+        { }
+    }
 }

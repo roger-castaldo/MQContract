@@ -1,4 +1,4 @@
-﻿namespace MQContract.ServiceAbstractions
+﻿namespace MQContract
 {
     public interface IServiceChannelOptions
     {

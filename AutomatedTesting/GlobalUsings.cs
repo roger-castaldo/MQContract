@@ -1,0 +1,1 @@
+﻿global using MQContract.Messages;
