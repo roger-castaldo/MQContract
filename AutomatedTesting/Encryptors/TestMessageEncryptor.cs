@@ -1,6 +1,5 @@
 ﻿using AutomatedTesting.Messages;
 using MQContract.Interfaces.Encrypting;
-using MQContract.Messages;
 
 namespace AutomatedTesting.Encryptors
 {

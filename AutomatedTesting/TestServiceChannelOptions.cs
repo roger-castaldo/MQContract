@@ -1,4 +1,4 @@
-﻿using MQContract;
+﻿using MQContract.Interfaces.Service;
 
 namespace AutomatedTesting
 {

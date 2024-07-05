@@ -131,7 +131,7 @@ namespace MQContract.Factories
         {
             channel ??= messageChannel;
             if (string.IsNullOrWhiteSpace(channel))
-                throw new ArgumentNullException(nameof(channel), "message must have a channel value");
+                throw new MessageChannelNullException();
 
             var encodedData = messageEncoder?.Encode(message)??globalMessageEncoder!.Encode<T>(message);
             var body = messageEncryptor?.Encrypt(encodedData, out var messageHeaders)??globalMessageEncryptor!.Encrypt(encodedData, out messageHeaders);

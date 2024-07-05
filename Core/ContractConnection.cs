@@ -5,6 +5,7 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Factories;
+using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using MQContract.Subscriptions;
 using System.Reflection;
@@ -52,7 +53,7 @@ namespace MQContract
         private IServiceMessage ProduceServiceMessage<T>(T message, string? channel = null, IMessageHeader? messageHeader = null) where T : class
             => GetMessageFactory<T>().ConvertMessage(message, channel, messageHeader);
 
-        public async Task<ISubscription> SubscribeAsync<T>(Action<IMessage<T>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
+        public async Task<ISubscription> SubscribeAsync<T>(Func<IMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
         {
             var subscription = new PubSubSubscription<T>(GetMessageFactory<T>(ignoreMessageHeader),
                 messageRecieved,

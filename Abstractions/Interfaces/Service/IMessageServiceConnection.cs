@@ -1,6 +1,6 @@
 ﻿using MQContract.Messages;
 
-namespace MQContract
+namespace MQContract.Interfaces.Service
 {
     public interface IMessageServiceConnection
     {
@@ -8,8 +8,8 @@ namespace MQContract
         TimeSpan DefaultTimout { get; }
         Task<IPingResult> PingAsync();
         Task<ITransmissionResult> PublishAsync(IServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken());
-        Task<IServiceSubscription> SubscribeAsync(Action<IServiceMessage> messageRecieved,Action<Exception> errorRecieved,string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken());
+        Task<IServiceSubscription?> SubscribeAsync(Action<IRecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken());
         Task<IServiceQueryResult> QueryAsync(IServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken());
-        Task<IServiceSubscription> SubscribeQueryAsync(Func<IServiceMessage,Task<IServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken());
+        Task<IServiceSubscription?> SubscribeQueryAsync(Func<IRecievedServiceMessage, Task<IServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken());
     }
 }

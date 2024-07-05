@@ -1,4 +1,4 @@
-﻿namespace MQContract
+﻿namespace MQContract.Interfaces.Service
 {
     public interface IServiceSubscription : IDisposable
     {

@@ -1,7 +1,9 @@
 ﻿using MQContract.Messages;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MQContract
 {
+    [ExcludeFromCodeCoverage(Justification ="This is a basic record class and requires no unit testing.")]
     internal record ServiceMessage
         : IServiceMessage
     {

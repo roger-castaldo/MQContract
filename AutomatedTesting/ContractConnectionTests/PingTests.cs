@@ -1,5 +1,6 @@
 ﻿using Moq;
 using MQContract;
+using MQContract.Interfaces.Service;
 
 namespace AutomatedTesting.ContractConnectionTests
 {

@@ -8,6 +8,7 @@ using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
+using MQContract.Interfaces.Service;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
@@ -17,7 +18,7 @@ using System.Text.Json;
 namespace AutomatedTesting.ContractConnectionTests
 {
     [TestClass]
-    public class QueryAsyncTests
+    public class QueryTests
     {
         [TestMethod]
         public async Task TestQueryAsyncWithNoExtendedAspects()
@@ -1019,7 +1020,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<ArgumentNullException>(() => contractConnection.QueryAsync<NoChannelMessage, BasicResponseMessage>(testMessage));
+            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(() => contractConnection.QueryAsync<NoChannelMessage, BasicResponseMessage>(testMessage));
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion

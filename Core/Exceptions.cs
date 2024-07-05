@@ -24,4 +24,10 @@
             : base("Failed to establish subscription through service connection")
         { }
     }
+
+    public class MessageChannelNullException : ArgumentNullException
+    {
+        internal MessageChannelNullException()
+            : base("channel", "message must have a channel value") { }
+    }
 }

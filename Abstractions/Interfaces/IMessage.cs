@@ -8,5 +8,7 @@ namespace MQContract.Interfaces
         string ID { get; }
         T Message { get; }
         IMessageHeader Headers { get; }
+        DateTime RecievedTimestamp { get; }
+        DateTime ProcessedTimestamp { get; }
     }
 }
