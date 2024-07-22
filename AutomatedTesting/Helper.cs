@@ -13,7 +13,7 @@ namespace AutomatedTesting
             return services.BuildServiceProvider();
         }
 
-        public static IRecievedServiceMessage ProduceRecievedServiceMessage(IServiceMessage message)
+        public static IRecievedServiceMessage ProduceRecievedServiceMessage(IServiceMessage message,string? messageTypeID=null)
         {
             var timestamp = DateTime.Now;
             var result = new Mock<IRecievedServiceMessage>();
@@ -22,7 +22,7 @@ namespace AutomatedTesting
             result.Setup(x=>x.RecievedTimestamp).Returns(timestamp);
             result.Setup(x=>x.ID).Returns(message.ID);
             result.Setup(x=>x.Data).Returns(message.Data);
-            result.Setup(x=>x.MessageTypeID).Returns(message.MessageTypeID);
+            result.Setup(x=>x.MessageTypeID).Returns(messageTypeID??message.MessageTypeID);
             return result.Object;
         }
 

@@ -439,6 +439,73 @@ namespace AutomatedTesting.ContractConnectionTests
         }
 
         [TestMethod]
+        public async Task TestSubscribeAsyncWithCorruptMetaDataHeaderException()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            var actions = new List<Action<IRecievedServiceMessage>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string>();
+            var serviceMessages = new List<IRecievedServiceMessage>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+                Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(serviceSubscription.Object));
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                {
+                    var rmessage = Helper.ProduceRecievedServiceMessage(message,$"{message.MessageTypeID}:XXXX");
+                    serviceMessages.Add(rmessage);
+                    foreach (var act in actions)
+                        act(rmessage);
+                    return Task.FromResult(transmissionResult.Object);
+                });
+
+            var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var messages = new List<IMessage<BasicMessage>>();
+            var exceptions = new List<Exception>();
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => { return Task.CompletedTask; }, (error) => exceptions.Add(error));
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, actions.Count);
+            Assert.AreEqual(1, channels.Count);
+            Assert.AreEqual(1, groups.Count);
+            Assert.AreEqual(1, serviceMessages.Count);
+            Assert.AreEqual(0, messages.Count);
+            Assert.AreEqual(1, errorActions.Count);
+            Assert.AreEqual(1, exceptions.Count);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(groups[0]));
+            Assert.IsInstanceOfType<InvalidDataException>(exceptions[0]);
+            Assert.AreEqual("MetaData is not valid", exceptions[0].Message);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
         public async Task TestSubscribeAsyncWithDisposal()
         {
             #region Arrange
@@ -523,5 +590,233 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
+        [TestMethod]
+        public async Task TestSubscribeAsyncWithSingleConversion()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            var actions = new List<Action<IRecievedServiceMessage>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string>();
+            var serviceMessages = new List<IRecievedServiceMessage>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+                Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(serviceSubscription.Object));
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                {
+                    var rmessage = Helper.ProduceRecievedServiceMessage(message);
+                    serviceMessages.Add(rmessage);
+                    foreach (var act in actions)
+                        act(rmessage);
+                    return Task.FromResult(transmissionResult.Object);
+                });
+
+            var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
+            var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var messages = new List<IMessage<NamedAndVersionedMessage>>();
+            var exceptions = new List<Exception>();
+            var subscription = await contractConnection.SubscribeAsync<NamedAndVersionedMessage>((msg) => {
+                messages.Add(msg);
+                return Task.CompletedTask;
+            }, (error) => exceptions.Add(error));
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<BasicMessage>(message,channel:typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            foreach (var act in errorActions)
+                act(exception);
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, actions.Count);
+            Assert.AreEqual(1, channels.Count);
+            Assert.AreEqual(1, groups.Count);
+            Assert.AreEqual(1, serviceMessages.Count);
+            Assert.AreEqual(1, messages.Count);
+            Assert.AreEqual(1, errorActions.Count);
+            Assert.AreEqual(1, exceptions.Count);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(groups[0]));
+            Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
+            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.AreEqual(serviceMessages[0].RecievedTimestamp, messages[0].RecievedTimestamp);
+            Assert.AreEqual(message.Name, messages[0].Message.TestName);
+            Assert.AreEqual(exception, exceptions[0]);
+            System.Diagnostics.Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].RecievedTimestamp).TotalMilliseconds}ms");
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeAsyncWithMultipleStepConversion()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            var actions = new List<Action<IRecievedServiceMessage>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string>();
+            var serviceMessages = new List<IRecievedServiceMessage>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+                Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(serviceSubscription.Object));
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                {
+                    var rmessage = Helper.ProduceRecievedServiceMessage(message);
+                    serviceMessages.Add(rmessage);
+                    foreach (var act in actions)
+                        act(rmessage);
+                    return Task.FromResult(transmissionResult.Object);
+                });
+
+            var message = new NoChannelMessage("TestSubscribeAsyncWithNoExtendedAspects");
+            var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var messages = new List<IMessage<NamedAndVersionedMessage>>();
+            var exceptions = new List<Exception>();
+            var subscription = await contractConnection.SubscribeAsync<NamedAndVersionedMessage>((msg) => {
+                messages.Add(msg);
+                return Task.CompletedTask;
+            }, (error) => exceptions.Add(error));
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<NoChannelMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            foreach (var act in errorActions)
+                act(exception);
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, actions.Count);
+            Assert.AreEqual(1, channels.Count);
+            Assert.AreEqual(1, groups.Count);
+            Assert.AreEqual(1, serviceMessages.Count);
+            Assert.AreEqual(1, messages.Count);
+            Assert.AreEqual(1, errorActions.Count);
+            Assert.AreEqual(1, exceptions.Count);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(groups[0]));
+            Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
+            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.AreEqual(serviceMessages[0].RecievedTimestamp, messages[0].RecievedTimestamp);
+            Assert.AreEqual(message.TestName, messages[0].Message.TestName);
+            Assert.AreEqual(exception, exceptions[0]);
+            System.Diagnostics.Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].RecievedTimestamp).TotalMilliseconds}ms");
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeAsyncWithNoConversionPath()
+        {
+            #region Arrange
+            var transmissionResult = new Mock<ITransmissionResult>();
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            var actions = new List<Action<IRecievedServiceMessage>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string>();
+            var serviceMessages = new List<IRecievedServiceMessage>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+                Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(serviceSubscription.Object));
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                {
+                    var rmessage = Helper.ProduceRecievedServiceMessage(message);
+                    serviceMessages.Add(rmessage);
+                    foreach (var act in actions)
+                        act(rmessage);
+                    return Task.FromResult(transmissionResult.Object);
+                });
+
+            var message = new BasicQueryMessage("TestSubscribeAsyncWithNoExtendedAspects");
+            var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var messages = new List<IMessage<NamedAndVersionedMessage>>();
+            var exceptions = new List<Exception>();
+            var subscription = await contractConnection.SubscribeAsync<NamedAndVersionedMessage>((msg) => {
+                messages.Add(msg);
+                return Task.CompletedTask;
+            }, (error) => exceptions.Add(error));
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<BasicQueryMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
+            stopwatch.Stop();
+            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            foreach (var act in errorActions)
+                act(exception);
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, actions.Count);
+            Assert.AreEqual(1, channels.Count);
+            Assert.AreEqual(1, groups.Count);
+            Assert.AreEqual(1, serviceMessages.Count);
+            Assert.AreEqual(0, messages.Count);
+            Assert.AreEqual(1, errorActions.Count);
+            Assert.AreEqual(2, exceptions.Count);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(groups[0]));
+            Assert.IsInstanceOfType<InvalidCastException>(exceptions[0]);
+            Assert.AreEqual(exception, exceptions[1]);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
     }
 }
+

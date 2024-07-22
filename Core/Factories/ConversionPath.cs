@@ -12,13 +12,13 @@ namespace MQContract.Factories
         where T : class
         where V : class
     {
-        private readonly IEnumerable<IBaseConversionPath> path;
+        private readonly IEnumerable<object> path;
         private readonly IMessageTypeEncoder<T> messageEncoder;
         private readonly IMessageTypeEncryptor<T> messageEncryptor;
         private readonly IMessageEncoder? globalMessageEncoder;
         private readonly IMessageEncryptor? globalMessageEncryptor;
 
-        public ConversionPath(IEnumerable<IBaseConversionPath> path, IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider)
+        public ConversionPath(IEnumerable<object> path, IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider)
         {
             this.path = path;
             this.globalMessageEncoder = globalMessageEncoder;
@@ -27,16 +27,8 @@ namespace MQContract.Factories
                 .FirstOrDefault(type => type.GetInterfaces().Contains(typeof(IMessageTypeEncoder<T>)), typeof(JsonEncoder<T>));
             var encryptorType = types
                 .FirstOrDefault(type => type.GetInterfaces().Contains(typeof(IMessageTypeEncryptor<T>)), typeof(NonEncryptor<T>));
-            if (serviceProvider!=null)
-            {
-                messageEncoder = (IMessageTypeEncoder<T>)ActivatorUtilities.CreateInstance(serviceProvider, encoderType, Array.Empty<object>());
-                messageEncryptor = (IMessageTypeEncryptor<T>)ActivatorUtilities.CreateInstance(serviceProvider, encryptorType, Array.Empty<object>());
-            }
-            else
-            {
-                messageEncoder = (IMessageTypeEncoder<T>)Activator.CreateInstance(encoderType)!;
-                messageEncryptor = (IMessageTypeEncryptor<T>)Activator.CreateInstance(encryptorType)!;
-            }
+            messageEncoder = (IMessageTypeEncoder<T>)(serviceProvider!=null ? ActivatorUtilities.CreateInstance(serviceProvider, encoderType) : Activator.CreateInstance(encoderType)!);
+            messageEncryptor = (IMessageTypeEncryptor<T>)(serviceProvider!=null ? ActivatorUtilities.CreateInstance(serviceProvider, encryptorType) : Activator.CreateInstance(encryptorType)!);
         }
 
         public V? ConvertMessage(ILogger? logger, IServiceMessage message, Stream? dataStream = null)
@@ -61,8 +53,5 @@ namespace MQContract.Factories
                 .GetMethod("Convert")!
                 .Invoke(converter, [source]);
         }
-
-        public bool CanConvert(Type sourceType)
-            => sourceType==typeof(T);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using MQContract.Attributes;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace MQContract.Subscriptions
@@ -17,6 +18,7 @@ namespace MQContract.Subscriptions
         protected void SyncToken(CancellationToken cancellationToken)
             => cancellationToken.Register(() => token.Cancel());
 
+        [ExcludeFromCodeCoverage(Justification ="Virtual function that is implemented elsewhere")]
         protected virtual void InternalDispose()
         { }
 

@@ -74,40 +74,58 @@ namespace MQContract.Factories
             });
             converters = IgnoreMessageHeader
                 ? []
-                : TraceConverters(typeof(T), globalMessageEncoder, globalMessageEncryptor, types, [], [], serviceProvider);
+                : ProduceConverters<T>(types,globalMessageEncoder, globalMessageEncryptor, serviceProvider);
         }
 
-        private static IEnumerable<IConversionPath<T>> TraceConverters(Type destinationType, IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IEnumerable<Type> types, IEnumerable<object> curPath, IEnumerable<IConversionPath<T>> converters, IServiceProvider? serviceProvider)
+        private static IEnumerable<IConversionPath<M>> ProduceConverters<M>(IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider)
+            where M : class
         {
-            var subPaths = types.Where(t => Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType &&
-                iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)
-                && iface.GetGenericArguments()[1] == destinationType
-                && !converters.Any(conv => conv.GetType().GetGenericArguments()[0] == iface.GetGenericArguments()[0]))
-            )
-                .Select(t => curPath.Prepend(serviceProvider == null ?
-                    Activator.CreateInstance(t)! :
-                    ActivatorUtilities.CreateInstance(serviceProvider, t)
-                ));
+            var paths = types
+                .Where(t => Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType &&
+                    iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)
+                    && iface.GetGenericArguments()[1] == typeof(M)
+                ))
+                .Select(t => (IEnumerable<object>)[
+                    (serviceProvider == null ?
+                        Activator.CreateInstance(t)! :
+                        ActivatorUtilities.CreateInstance(serviceProvider, t)
+                    )
+                ])
+                .ToList();
 
-            var results = converters.Concat(
-                subPaths.Select(path =>
+            for (var x = 0; x<paths.Count; x++)
+            {
+                var conv = paths[x];
+                var destType = ExtractGenericArguements(conv.First().GetType())[0];
+                paths.AddRange(
+                    types
+                    .Where(t => Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType &&
+                        iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)
+                        && iface.GetGenericArguments()[1] == destType
+                        && !paths.Exists(path => Equals(ExtractGenericArguements(path.First().GetType())[0],iface.GetGenericArguments()[0]))
+                    ))
+                    .Select(t => conv.Prepend((serviceProvider == null ?
+                        Activator.CreateInstance(t)! :
+                        ActivatorUtilities.CreateInstance(serviceProvider, t)
+                    )))
+                    .ToArray()
+                );
+            }
+
+            return paths
+                .Select(path =>
                 {
 #pragma warning disable CS8601 // Possible null reference assignment.
                     var args = new object[] { path, types, globalMessageEncoder, globalMessageEncryptor, serviceProvider };
 #pragma warning restore CS8601 // Possible null reference assignment.
                     var type = typeof(ConversionPath<,>).MakeGenericType(
                         ExtractGenericArguements(path.First().GetType())[0],
-                        typeof(T)
+                        typeof(M)
                     );
-                    return (IConversionPath<T>)(serviceProvider == null ? Activator.CreateInstance(type, args)! : ActivatorUtilities.CreateInstance(serviceProvider, type, args));
-                })
-            );
-
-            foreach (var path in subPaths)
-                results = TraceConverters(ExtractGenericArguements(path.First().GetType())[0], globalMessageEncoder, globalMessageEncryptor, types, path, results, serviceProvider);
-
-            return results;
+                    return (IConversionPath<M>)(serviceProvider==null ? Activator.CreateInstance(type, args)! : ActivatorUtilities.CreateInstance(serviceProvider, type, args)!);
+                });
         }
+
         private static Type[] ExtractGenericArguements(Type t) => t.GetInterfaces().First(iface => iface.IsGenericType && iface.GetGenericTypeDefinition()==typeof(IMessageConverter<,>)).GetGenericArguments();
 
         private static bool IsMessageTypeMatch(string metaData, Type t, out bool isCompressed)
@@ -155,9 +173,6 @@ namespace MQContract.Factories
 
             return new ServiceMessage(Guid.NewGuid(), metaData, channel, new MessageHeader(baseHeader: messageHeader, newData: messageHeaders), body);
         }
-
-        public bool CanConvert(Type sourceType)
-            => converters.Any(con => con.CanConvert(sourceType));
 
         T? IConversionPath<T>.ConvertMessage(ILogger? logger, IServiceMessage message, Stream? dataStream)
         {

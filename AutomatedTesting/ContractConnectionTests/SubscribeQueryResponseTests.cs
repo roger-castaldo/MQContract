@@ -4,15 +4,7 @@ using MQContract.Attributes;
 using MQContract.Interfaces.Service;
 using MQContract.Interfaces;
 using MQContract;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
-using System.Threading.Channels;
-using System.Threading;
 using System.Reflection;
 
 namespace AutomatedTesting.ContractConnectionTests
@@ -606,5 +598,6 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
     }
 }
