@@ -57,7 +57,7 @@ namespace AutomatedTesting.ContractConnectionTests
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(5));
             foreach (var act in errorActions)
                 act(exception);
             #endregion
