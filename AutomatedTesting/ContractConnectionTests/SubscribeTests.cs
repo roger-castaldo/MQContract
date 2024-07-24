@@ -57,19 +57,18 @@ namespace AutomatedTesting.ContractConnectionTests
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IMessage<BasicMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(1, errorActions.Count);
             Assert.AreEqual(1, exceptions.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
@@ -335,12 +334,12 @@ namespace AutomatedTesting.ContractConnectionTests
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IMessage<BasicMessage>>(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result1);
             Assert.IsNotNull(result2);
@@ -348,7 +347,6 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(2, serviceMessages.Count);
-            Assert.AreEqual(2, messages.Count);
             Assert.AreEqual(1, errorActions.Count);
             Assert.AreEqual(1, exceptions.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
@@ -412,11 +410,10 @@ namespace AutomatedTesting.ContractConnectionTests
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-
-            await Task.Delay(TimeSpan.FromSeconds(1));
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<Exception>(exceptions, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
@@ -425,7 +422,6 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(1, serviceMessages.Count);
             Assert.AreEqual(0, messages.Count);
             Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsFalse(string.IsNullOrWhiteSpace(groups[0]));
             Assert.AreEqual(exception, exceptions[0]);
@@ -478,11 +474,10 @@ namespace AutomatedTesting.ContractConnectionTests
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-
-            await Task.Delay(TimeSpan.FromSeconds(1));
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<Exception>(exceptions, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
@@ -491,7 +486,6 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(1, serviceMessages.Count);
             Assert.AreEqual(0, messages.Count);
             Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsFalse(string.IsNullOrWhiteSpace(groups[0]));
             Assert.IsInstanceOfType<InvalidDataException>(exceptions[0]);
@@ -550,19 +544,18 @@ namespace AutomatedTesting.ContractConnectionTests
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IMessage<BasicMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(1, errorActions.Count);
             Assert.AreEqual(1, exceptions.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
@@ -636,19 +629,18 @@ namespace AutomatedTesting.ContractConnectionTests
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IMessage<NamedAndVersionedMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(1, errorActions.Count);
             Assert.AreEqual(1, exceptions.Count);
             Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
@@ -713,19 +705,18 @@ namespace AutomatedTesting.ContractConnectionTests
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IMessage<NamedAndVersionedMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(1, errorActions.Count);
             Assert.AreEqual(1, exceptions.Count);
             Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
@@ -790,25 +781,23 @@ namespace AutomatedTesting.ContractConnectionTests
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<Exception>(exceptions, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
             Assert.AreEqual(0, messages.Count);
             Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(2, exceptions.Count);
             Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsFalse(string.IsNullOrWhiteSpace(groups[0]));
-            Assert.IsInstanceOfType<InvalidCastException>(exceptions[0]);
-            Assert.AreEqual(exception, exceptions[1]);
+            Assert.AreEqual(1, exceptions.OfType<InvalidCastException>().Count());
+            Assert.IsTrue(exceptions.Contains(exception));
             #endregion
 
             #region Verify

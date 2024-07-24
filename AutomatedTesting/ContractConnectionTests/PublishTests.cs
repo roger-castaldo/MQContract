@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
+using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
@@ -55,11 +56,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -105,11 +106,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual($"Not{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}", messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
@@ -159,11 +160,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
@@ -211,11 +212,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
@@ -267,11 +268,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -324,11 +325,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual("BasicMessage", messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
@@ -381,11 +382,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual("BasicMessage", messages[0].Channel);
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
@@ -436,11 +437,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(TimeoutMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(TimeSpan.FromMilliseconds(typeof(TimeoutMessage).GetCustomAttribute<MessageResponseTimeoutAttribute>(false)?.Value??0), timeouts[0]);
@@ -492,11 +493,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -549,11 +550,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -603,11 +604,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -660,11 +661,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -716,11 +717,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -772,11 +773,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult.Object.MessageID, result.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result.IsError);
-            Assert.AreEqual(1, messages.Count);
             Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -923,11 +924,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result1);
             Assert.AreEqual(transmissionResult.Object.MessageID, result1.MessageID);
             Assert.AreEqual(transmissionResult.Object.Error, result1.Error);
             Assert.AreEqual(transmissionResult.Object.IsError, result1.IsError);
-            Assert.AreEqual(2, messages.Count);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(2, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);

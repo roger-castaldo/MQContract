@@ -1,6 +1,8 @@
 ﻿using AutomatedTesting.ServiceInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace AutomatedTesting
 {
@@ -42,6 +44,20 @@ namespace AutomatedTesting
                 result.Setup(x => x.Error).Returns(error.Error.Message);
             }
             return result.Object;
+        }
+
+        private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(5);
+
+        public static async Task<bool> WaitForCount<T>(IEnumerable<T> values,int count,TimeSpan maxTime)
+            where T : class
+        {
+            var task = new Task(() =>
+            {
+                while (values.Count()!=count)
+                    Task.Delay(Delay).Wait();
+            });
+            task.Start();
+            return await Task.WhenAny(task, Task.Delay(maxTime)) == task;
         }
     }
 }
