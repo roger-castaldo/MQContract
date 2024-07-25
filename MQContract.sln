@@ -17,9 +17,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Abstractions", "Abstraction
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{0DAB9C52-BDAF-44CD-B10A-B9E057105696}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messages", "Samples\Messages\Messages.csproj", "{D0C72055-C9A1-4F98-B7CB-A6A15644B689}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messages", "Samples\Messages\Messages.csproj", "{D0C72055-C9A1-4F98-B7CB-A6A15644B689}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KubeMQSample", "Samples\KubeMQSample\KubeMQSample.csproj", "{FEA3590A-A727-444A-B623-A6B33260780B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KubeMQSample", "Samples\KubeMQSample\KubeMQSample.csproj", "{FEA3590A-A727-444A-B623-A6B33260780B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NATSSample", "Samples\NATSSample\NATSSample.csproj", "{5A27E00D-B132-4292-9D98-272A172F883A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +57,10 @@ Global
 		{FEA3590A-A727-444A-B623-A6B33260780B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FEA3590A-A727-444A-B623-A6B33260780B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FEA3590A-A727-444A-B623-A6B33260780B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A27E00D-B132-4292-9D98-272A172F883A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A27E00D-B132-4292-9D98-272A172F883A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A27E00D-B132-4292-9D98-272A172F883A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A27E00D-B132-4292-9D98-272A172F883A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -64,6 +70,7 @@ Global
 		{45E457C0-A62C-4A7A-A427-77D9BE0AD351} = {FCAD12F9-6992-44D7-8E78-464181584E06}
 		{D0C72055-C9A1-4F98-B7CB-A6A15644B689} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
 		{FEA3590A-A727-444A-B623-A6B33260780B} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
+		{5A27E00D-B132-4292-9D98-272A172F883A} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4431E3A-7CBE-469C-A7FE-0A48F6768E02}
