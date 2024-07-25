@@ -7,17 +7,17 @@ namespace MQContract.KubeMQ.Messages
     {
         public TransmissionResult(Result res)
         {
-            MessageID=res.EventID;
+            ID=res.EventID;
             Error=res.Error;
         }
 
         public TransmissionResult(string? messageID=null,string? error = null)
         {
-            MessageID=messageID??string.Empty;
+            ID=messageID??string.Empty;
             Error=error;
         }
 
-        public string MessageID { get; private init; }
+        public string ID { get; private init; }
 
         public bool IsError => !string.IsNullOrWhiteSpace(Error);
 

@@ -82,10 +82,17 @@ namespace MQContract.KubeMQ.Subscriptions
 
         public async Task EndAsync()
         {
-            active = false;
-            await cancelToken.CancelAsync();
-            client.Dispose();
-            cancelToken.Dispose();
+            if (active)
+            {
+                active = false;
+                try
+                {
+                    await cancelToken.CancelAsync();
+                    client.Dispose();
+                    cancelToken.Dispose();
+                }
+                catch{ }
+            }
         }
 
         protected virtual void Dispose(bool disposing)

@@ -9,6 +9,7 @@ using MQContract.KubeMQ.SDK.Connection;
 using MQContract.KubeMQ.SDK.Grpc;
 using MQContract.KubeMQ.Subscriptions;
 using MQContract.Messages;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace MQContract.KubeMQ
@@ -35,8 +36,11 @@ namespace MQContract.KubeMQ
                 _ => options.Address
             };
             client = new KubeClient(addy, options.SSLCredentials??ChannelCredentials.Insecure, options.MaxBodySize+4096, options.Logger);
+            var watch = new Stopwatch();
+            watch.Start();
             var rec = client.Ping()??throw new UnableToConnectException();
-            var pingResult = new PingResponse(rec);
+            watch.Stop();
+            var pingResult = new PingResponse(rec,watch.Elapsed);
             options.Logger?.LogInformation("Established connection to [Host:{Address}, Version:{Version}, StartTime:{ServerStartTime}, UpTime:{ServerUpTime}]",
                 pingResult.Host,
                 pingResult.Version,
@@ -47,7 +51,7 @@ namespace MQContract.KubeMQ
 
         public int? MaxMessageBodySize => connectionOptions.MaxBodySize;
 
-        public TimeSpan DefaultTimout => TimeSpan.FromSeconds(connectionOptions.DefaultRPCTimeout??5000);
+        public TimeSpan DefaultTimout => TimeSpan.FromMilliseconds(connectionOptions.DefaultRPCTimeout??5000);
 
         private KubeClient EstablishConnection()
         { 
@@ -57,7 +61,13 @@ namespace MQContract.KubeMQ
             return result;
         }
         public Task<IPingResult> PingAsync()
-        => Task.FromResult<IPingResult>(new PingResponse(client.Ping()??throw new UnableToConnectException()));
+        {
+            var watch = new Stopwatch();
+            watch.Start();
+            var res = client.Ping()??throw new UnableToConnectException();
+            watch.Stop();
+            return Task.FromResult<IPingResult>(new PingResponse(res,watch.Elapsed));
+        }
 
         public static MapField<string, string> ConvertTags(IMessageHeader header)
         {
