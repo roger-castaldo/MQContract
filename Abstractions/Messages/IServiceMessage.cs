@@ -1,8 +1,7 @@
 ﻿namespace MQContract.Messages
 {
-    public interface IServiceMessage
+    public interface IServiceMessage : IMessage
     {
-        string ID { get; }
         string MessageTypeID { get; }
         string Channel { get; }
         IMessageHeader Header { get; }

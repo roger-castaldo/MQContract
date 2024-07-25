@@ -14,12 +14,8 @@
         /// </summary>
         string Version { get; }
         /// <summary>
-        /// The Server Start Time of the host that was pinged
+        /// How long it took for the server to respond to the Ping request
         /// </summary>
-        DateTime ServerStartTime { get; }
-        /// <summary>
-        /// The Server Up Time of the host that was pinged
-        /// </summary>
-        TimeSpan ServerUpTime { get; }
+        TimeSpan ResponseTime { get; }
     }
 }
