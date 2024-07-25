@@ -2,6 +2,6 @@
 
 namespace MQContract.Messages
 {
-    internal record QueryResult<T>(T? Result, IMessageHeader Header, string MessageID, bool IsError, string? Error)
+    internal record QueryResult<T>(T? Result, IMessageHeader Header, string ID, bool IsError, string? Error)
         : IQueryResult<T> where T : class;
 }

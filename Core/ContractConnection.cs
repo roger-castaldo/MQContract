@@ -106,7 +106,7 @@ namespace MQContract
             => new(
                     queryResult.IsError ? default : GetMessageFactory<R>().ConvertMessage(logger, queryResult),
                     queryResult.Header,
-                    queryResult.MessageID,
+                    queryResult.ID,
                     queryResult.IsError,
                     queryResult.Error
                 );

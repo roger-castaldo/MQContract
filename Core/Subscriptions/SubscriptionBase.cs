@@ -16,7 +16,7 @@ namespace MQContract.Subscriptions
         private bool disposedValue;
 
         protected void SyncToken(CancellationToken cancellationToken)
-            => cancellationToken.Register(() => token.Cancel());
+            => cancellationToken.Register(() => EndAsync().Wait());
 
         [ExcludeFromCodeCoverage(Justification ="Virtual function that is implemented elsewhere")]
         protected virtual void InternalDispose()
@@ -35,7 +35,7 @@ namespace MQContract.Subscriptions
             {
                 if (disposing)
                 {
-                    token.Cancel();
+                    EndAsync().Wait();
                     InternalDispose();
                     serviceSubscription?.Dispose();
                     token.Dispose();

@@ -64,6 +64,6 @@ namespace MQContract.Subscriptions
         }
 
         protected override void InternalDispose()
-            => dataChannel.Writer.Complete();
+            =>dataChannel.Writer.Complete();
     }
 }
