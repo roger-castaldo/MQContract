@@ -30,4 +30,10 @@
         internal MessageChannelNullException()
             : base("channel", "message must have a channel value") { }
     }
+
+    internal class QueryResponseException : Exception
+    {
+        internal QueryResponseException(string message)
+            : base(message) { }
+    }
 }

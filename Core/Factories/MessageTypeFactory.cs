@@ -6,6 +6,7 @@ using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Factories;
+using MQContract.Interfaces.Messages;
 using MQContract.Messages;
 using System.IO.Compression;
 using System.Reflection;
@@ -145,7 +146,7 @@ namespace MQContract.Factories
             return false;
         }
 
-        public IServiceMessage ConvertMessage(T message, string? channel, IMessageHeader? messageHeader = null)
+        public async Task<ServiceMessage> ConvertMessageAsync(T message, string? channel, IMessageHeader? messageHeader, Func<string, Task<string>>? mapChannel=null)
         {
             channel ??= messageChannel;
             if (string.IsNullOrWhiteSpace(channel))
@@ -159,8 +160,8 @@ namespace MQContract.Factories
             {
                 using var ms = new MemoryStream();
                 var zip = new GZipStream(ms, System.IO.Compression.CompressionLevel.SmallestSize, false);
-                zip.Write(body, 0, body.Length);
-                zip.Flush();
+                await zip.WriteAsync(body, 0, body.Length);
+                await zip.FlushAsync();
                 body = ms.ToArray();
                 metaData = "C";
 
@@ -170,16 +171,20 @@ namespace MQContract.Factories
             else
                 metaData="U";
             metaData+=$"-{messageName}-{messageVersion}";
+            if (mapChannel!=null)
+                channel=await mapChannel(channel);
 
-            return new ServiceMessage(Guid.NewGuid(), metaData, channel, new MessageHeader(baseHeader: messageHeader, newData: messageHeaders), body);
+            return new ServiceMessage(Guid.NewGuid().ToString(), metaData, channel, new MessageHeader(messageHeader, messageHeaders), body);
         }
 
-        T? IConversionPath<T>.ConvertMessage(ILogger? logger, IServiceMessage message, Stream? dataStream)
+        T? IConversionPath<T>.ConvertMessage(ILogger? logger, IEncodedMessage message, Stream? dataStream)
         {
             if (!IgnoreMessageHeader)
 #pragma warning disable S3236 // Caller information arguments should not be provided explicitly
                 ArgumentNullException.ThrowIfNullOrWhiteSpace(message.MessageTypeID, nameof(message.MessageTypeID));
 #pragma warning restore S3236 // Caller information arguments should not be provided explicitly
+            if (Equals(ErrorServiceMessage.MessageTypeID, message.MessageTypeID))
+                throw ErrorServiceMessage.DecodeError(message.Data);
             IConversionPath<T>? converter = null;
             T? result;
             var compressed = false;

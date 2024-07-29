@@ -6,9 +6,12 @@ using MQContract.Messages;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class QueryResponseSubscription<Q,R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, Func<IMessage<Q>, Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, 
+    internal sealed class QueryResponseSubscription<Q,R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, 
+        Func<IMessage<Q>, Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved,
+        Func<string, Task<string>> mapChannel,
+        string? channel = null, string? group = null, 
         bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
-        : SubscriptionBase<Q>(channel,synchronous),ISubscription
+        : SubscriptionBase<Q>(mapChannel,channel,synchronous),ISubscription
         where Q : class
         where R : class
     {
@@ -28,18 +31,18 @@ namespace MQContract.Subscriptions
             return serviceSubscription!=null;
         }
 
-        private async Task<IServiceMessage> ProcessServiceMessageAsync(IRecievedServiceMessage message)
+        private async Task<ServiceMessage> ProcessServiceMessageAsync(RecievedServiceMessage message)
         {
             if (Synchronous)
                 manualResetEvent.Wait(cancellationToken:token.Token);
             Exception? error = null;
-            IServiceMessage? response = null;
+            ServiceMessage? response = null;
             try
             {
                 var taskMessage = queryMessageFactory.ConvertMessage(logger, message)
                                         ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(Q).FullName}");
                 var result = await messageRecieved(new RecievedMessage<Q>(message.ID, taskMessage,message.Header,message.RecievedTimestamp,DateTime.Now));
-                response = responseMessageFactory.ConvertMessage(result.Message, message.Channel, new MessageHeader(newData:result.Headers));
+                response = await responseMessageFactory.ConvertMessageAsync(result.Message, message.Channel, new MessageHeader(result.Headers));
             }catch(Exception e)
             {
                 errorRecieved(e);
@@ -48,8 +51,8 @@ namespace MQContract.Subscriptions
             if (Synchronous)
                 manualResetEvent.Set();
             if (error!=null)
-                return new ErrorServiceMessage(Guid.NewGuid(),string.Empty,message.Channel,new MessageHeader(),error);
-            return response??new ErrorServiceMessage(Guid.NewGuid(), string.Empty, message.Channel, new MessageHeader(), new NullReferenceException());
+                return ErrorServiceMessage.Produce(message.Channel,error);
+            return response??ErrorServiceMessage.Produce(message.Channel, new NullReferenceException());
         }
 
         protected override void InternalDispose()

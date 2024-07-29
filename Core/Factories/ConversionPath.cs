@@ -4,6 +4,7 @@ using MQContract.Defaults;
 using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
+using MQContract.Interfaces.Messages;
 using MQContract.Messages;
 
 namespace MQContract.Factories
@@ -31,7 +32,7 @@ namespace MQContract.Factories
             messageEncryptor = (IMessageTypeEncryptor<T>)(serviceProvider!=null ? ActivatorUtilities.CreateInstance(serviceProvider, encryptorType) : Activator.CreateInstance(encryptorType)!);
         }
 
-        public V? ConvertMessage(ILogger? logger, IServiceMessage message, Stream? dataStream = null)
+        public V? ConvertMessage(ILogger? logger, IEncodedMessage message, Stream? dataStream = null)
         {
             dataStream = (globalMessageEncryptor!=null && messageEncryptor is NonEncryptor<T> ? globalMessageEncryptor : messageEncryptor).Decrypt(dataStream??new MemoryStream(message.Data.ToArray()), message.Header);
             object? result = (globalMessageEncoder!=null && messageEncoder is JsonEncoder<T> ? globalMessageEncoder.Decode<T>(dataStream) : messageEncoder.Decode(dataStream));

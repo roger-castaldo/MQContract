@@ -15,4 +15,10 @@ namespace MQContract.NATS
         internal UnableToConnectException()
             : base("Unable to establish connection to the NATS host") { }
     }
+
+    internal class QueryAsyncReponseException : Exception
+    {
+        internal QueryAsyncReponseException(string error)
+            : base(error) { }
+    }
 }

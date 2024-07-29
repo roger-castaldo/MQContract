@@ -3,16 +3,17 @@ using MQContract.Messages;
 
 namespace MQContract.KubeMQ.Messages
 {
-    internal class PingResponse(MQContract.KubeMQ.SDK.Grpc.PingResult result,TimeSpan responseTime) : IKubeMQPingResult
+    internal record PingResponse
+        : PingResult, IKubeMQPingResult
     {
-        public string Host => result.Host;
-
-        public string Version => result.Version;
-
+        private readonly MQContract.KubeMQ.SDK.Grpc.PingResult result;
+        public PingResponse(MQContract.KubeMQ.SDK.Grpc.PingResult result, TimeSpan responseTime)
+            : base(result.Host, result.Version, responseTime) {
+            this.result=result;
+        }
         public DateTime ServerStartTime => Utility.FromUnixTime(result.ServerStartTime);
 
         public TimeSpan ServerUpTime => TimeSpan.FromSeconds(result.ServerUpTimeSeconds);
 
-        public TimeSpan ResponseTime => responseTime;
     }
 }

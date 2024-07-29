@@ -16,27 +16,27 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeAsyncWithNoExtendedAspects()
         {
             #region Arrange
-            var transmissionResult = new Mock<ITransmissionResult>();   
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());   
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            var actions = new List<Action<IRecievedServiceMessage>>();
+            var actions = new List<Action<RecievedServiceMessage>>();
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string>();
-            var serviceMessages = new List<IRecievedServiceMessage>();
+            var serviceMessages = new List<RecievedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<RecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult.Object);
+                    return Task.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -82,9 +82,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -98,7 +98,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var channels = new List<string>();
             var channelName = "TestSubscribeAsyncWithSpecificChannel";
 
-            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), Capture.In<string>(channels),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
             
@@ -119,7 +119,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
@@ -134,7 +134,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var groupName = "TestSubscribeAsyncWithSpecificGroup";
 
-            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
 
@@ -155,7 +155,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
@@ -170,7 +170,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var serviceChannelOptions = new TestServiceChannelOptions("TestSubscribeAsyncWithServiceChannelOptions");
             List<IServiceChannelOptions> options = [];
 
-            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), Capture.In<IServiceChannelOptions>(options), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
 
@@ -189,7 +189,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
@@ -201,7 +201,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
 
@@ -219,7 +219,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
             #endregion
         }
@@ -230,7 +230,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult<IServiceSubscription?>(null));
 
@@ -246,7 +246,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
@@ -261,7 +261,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
 
@@ -278,7 +278,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             serviceSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
@@ -288,27 +288,27 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeAsyncWithSynchronousActions()
         {
             #region Arrange
-            var transmissionResult = new Mock<ITransmissionResult>();
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            var actions = new List<Action<IRecievedServiceMessage>>();
+            var actions = new List<Action<RecievedServiceMessage>>();
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string>();
-            var serviceMessages = new List<IRecievedServiceMessage>();
+            var serviceMessages = new List<RecievedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<RecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult.Object);
+                    return Task.FromResult(transmissionResult);
                 });
 
             var message1 = new BasicMessage("TestSubscribeAsyncWithSynchronousActions1");
@@ -361,9 +361,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -371,27 +371,27 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeAsyncWithErrorTriggeringInOurAction()
         {
             #region Arrange
-            var transmissionResult = new Mock<ITransmissionResult>();
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            var actions = new List<Action<IRecievedServiceMessage>>();
+            var actions = new List<Action<RecievedServiceMessage>>();
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string>();
-            var serviceMessages = new List<IRecievedServiceMessage>();
+            var serviceMessages = new List<RecievedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<RecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult.Object);
+                    return Task.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -428,9 +428,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -438,27 +438,27 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeAsyncWithCorruptMetaDataHeaderException()
         {
             #region Arrange
-            var transmissionResult = new Mock<ITransmissionResult>();
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            var actions = new List<Action<IRecievedServiceMessage>>();
+            var actions = new List<Action<RecievedServiceMessage>>();
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string>();
-            var serviceMessages = new List<IRecievedServiceMessage>();
+            var serviceMessages = new List<RecievedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<RecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message,$"{message.MessageTypeID}:XXXX");
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult.Object);
+                    return Task.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -493,9 +493,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -503,27 +503,27 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeAsyncWithDisposal()
         {
             #region Arrange
-            var transmissionResult = new Mock<ITransmissionResult>();
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            var actions = new List<Action<IRecievedServiceMessage>>();
+            var actions = new List<Action<RecievedServiceMessage>>();
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string>();
-            var serviceMessages = new List<IRecievedServiceMessage>();
+            var serviceMessages = new List<RecievedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<RecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult.Object);
+                    return Task.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -578,9 +578,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -588,27 +588,27 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeAsyncWithSingleConversion()
         {
             #region Arrange
-            var transmissionResult = new Mock<ITransmissionResult>();
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            var actions = new List<Action<IRecievedServiceMessage>>();
+            var actions = new List<Action<RecievedServiceMessage>>();
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string>();
-            var serviceMessages = new List<IRecievedServiceMessage>();
+            var serviceMessages = new List<RecievedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<RecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult.Object);
+                    return Task.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -654,9 +654,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -664,27 +664,27 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeAsyncWithMultipleStepConversion()
         {
             #region Arrange
-            var transmissionResult = new Mock<ITransmissionResult>();
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            var actions = new List<Action<IRecievedServiceMessage>>();
+            var actions = new List<Action<RecievedServiceMessage>>();
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string>();
-            var serviceMessages = new List<IRecievedServiceMessage>();
+            var serviceMessages = new List<RecievedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<RecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult.Object);
+                    return Task.FromResult(transmissionResult);
                 });
 
             var message = new NoChannelMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -730,9 +730,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -740,27 +740,27 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeAsyncWithNoConversionPath()
         {
             #region Arrange
-            var transmissionResult = new Mock<ITransmissionResult>();
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
-            var actions = new List<Action<IRecievedServiceMessage>>();
+            var actions = new List<Action<RecievedServiceMessage>>();
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string>();
-            var serviceMessages = new List<IRecievedServiceMessage>();
+            var serviceMessages = new List<RecievedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<IRecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<RecievedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(serviceSubscription.Object));
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((IServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult.Object);
+                    return Task.FromResult(transmissionResult);
                 });
 
             var message = new BasicQueryMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -801,9 +801,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<IRecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
     }

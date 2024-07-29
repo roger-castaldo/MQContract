@@ -7,12 +7,13 @@ using System.Threading.Channels;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class PubSubSubscription<T>(IMessageFactory<T> messageFactory, Func<IMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, 
-        bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
-        : SubscriptionBase<T>(channel,synchronous)
+    internal sealed class PubSubSubscription<T>(IMessageFactory<T> messageFactory, Func<IMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved,
+        Func<string, Task<string>> mapChannel, 
+        string? channel = null, string? group = null, bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
+        : SubscriptionBase<T>(mapChannel,channel,synchronous)
         where T : class
     {
-        private readonly Channel<IRecievedServiceMessage> dataChannel = Channel.CreateUnbounded<IRecievedServiceMessage>(new UnboundedChannelOptions()
+        private readonly Channel<RecievedServiceMessage> dataChannel = Channel.CreateUnbounded<RecievedServiceMessage>(new UnboundedChannelOptions()
         {
             SingleReader=true,
             SingleWriter=true

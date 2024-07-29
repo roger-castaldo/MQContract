@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace MQContract.NATS.Subscriptions
 {
     internal class PublishSubscription(IAsyncEnumerable<NatsMsg<NatsMessage>> asyncEnumerable,
-        Action<IRecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved,
+        Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved,
         CancellationToken cancellationToken) : SubscriptionBase(cancellationToken)
     {
         protected override async Task RunAction()
@@ -20,7 +20,13 @@ namespace MQContract.NATS.Subscriptions
             {
                 try
                 {
-                    messageRecieved(new RecievedMessage(new MessageHeader(msg.Headers), msg.Subject, msg.Data));
+                    messageRecieved(new(
+                        msg.Data?.ID??string.Empty, 
+                        msg.Data?.MessageTypeID??string.Empty, 
+                        msg.Subject, 
+                        new MQContract.NATS.Messages.MessageHeader(msg.Headers), 
+                        msg.Data?.Data??new ReadOnlyMemory<byte>()
+                    ));
                 }
                 catch (Exception ex)
                 {

@@ -1,4 +1,6 @@
-﻿namespace MQContract.KubeMQ
+﻿using Grpc.Core;
+
+namespace MQContract.KubeMQ
 {
     /// <summary>
     /// Thrown when an error occurs attempting to connect to the KubeMQ server.  
@@ -26,5 +28,17 @@
     {
         internal MessageResponseTransmissionException(Guid subscriptionID,string messageID, Exception error)
             : base($"An error occured attempting to transmit the message response on subscription {subscriptionID} to message id {messageID}", error) { }
+    }
+
+    internal class NullResponseException : NullReferenceException
+    {
+        internal NullResponseException()
+            : base("null response recieved from KubeMQ server") { }
+    }
+
+    internal class RPCErrorException : Exception
+    {
+        internal RPCErrorException(RpcException error)
+            : base($"Status: {error.Status}, Message: {error.Message}") { }
     }
 }

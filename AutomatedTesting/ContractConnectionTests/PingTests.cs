@@ -11,17 +11,11 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestPingAsync()
         {
             #region Arrange
-            var pingResult = new Mock<IPingResult>();
-            pingResult.Setup(x => x.Host)
-                .Returns("TestHost");
-            pingResult.Setup(x => x.Version)
-                .Returns("1.0.0");
-            pingResult.Setup(x => x.ResponseTime)
-                .Returns(TimeSpan.FromSeconds(5));
-
+            var pingResult = new PingResult("TestHost", "1.0.0", TimeSpan.FromSeconds(5));
+            
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.PingAsync())
-                .Returns(Task.FromResult<IPingResult>(pingResult.Object));
+                .Returns(Task.FromResult<PingResult>(pingResult));
 
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
@@ -32,9 +26,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual(pingResult.Object.Host, result.Host);
-            Assert.AreEqual(pingResult.Object.ResponseTime, result.ResponseTime);
-            Assert.AreEqual(pingResult.Object.Version, result.Version);
+            Assert.AreEqual(pingResult, result);
             #endregion
 
             #region Verify

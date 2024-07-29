@@ -16,7 +16,8 @@ namespace MQContract
         IMessageEncoder? defaultMessageEncoder = null,
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
-        ILogger? logger = null)
+        ILogger? logger = null,
+        ChannelMapper? channelMapper = null)
                 : IContractConnection
     {
         private readonly SemaphoreSlim dataLock = new(1, 1);
@@ -38,26 +39,30 @@ namespace MQContract
             return result;
         }
 
-        public Task<IPingResult> PingAsync()
+        private Task<string> MapChannel(ChannelMapper.MapTypes mapType, string originalChannel)
+            => channelMapper?.MapChannel(mapType, originalChannel)??Task.FromResult<string>(originalChannel);
+
+        public Task<PingResult> PingAsync()
             => serviceConnection.PingAsync();
 
-        public Task<ITransmissionResult> PublishAsync<T>(T message, TimeSpan? timeout = null, string? channel = null, IMessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        public async Task<TransmissionResult> PublishAsync<T>(T message, TimeSpan? timeout = null, string? channel = null, IMessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where T : class
-            => serviceConnection.PublishAsync(
-                ProduceServiceMessage<T>(message, channel: channel, messageHeader: messageHeader),
+            => await serviceConnection.PublishAsync(
+                await ProduceServiceMessage<T>(ChannelMapper.MapTypes.Publish,message, channel: channel, messageHeader: messageHeader),
                 timeout??TimeSpan.FromMilliseconds(typeof(T).GetCustomAttribute<MessageResponseTimeoutAttribute>()?.Value??serviceConnection.DefaultTimout.TotalMilliseconds),
                 options,
                 cancellationToken
             );
 
-        private IServiceMessage ProduceServiceMessage<T>(T message, string? channel = null, IMessageHeader? messageHeader = null) where T : class
-            => GetMessageFactory<T>().ConvertMessage(message, channel, messageHeader);
+        private async Task<ServiceMessage> ProduceServiceMessage<T>(ChannelMapper.MapTypes mapType,T message, string? channel = null, IMessageHeader? messageHeader = null) where T : class
+            => await GetMessageFactory<T>().ConvertMessageAsync(message, channel, messageHeader,(originalChannel)=>MapChannel(mapType,originalChannel));
 
         public async Task<ISubscription> SubscribeAsync<T>(Func<IMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
         {
             var subscription = new PubSubSubscription<T>(GetMessageFactory<T>(ignoreMessageHeader),
                 messageRecieved,
                 errorRecieved,
+                (originalChannel)=>MapChannel(ChannelMapper.MapTypes.PublishSubscription,originalChannel),
                 channel:channel,
                 group:group,
                 synchronous:synchronous,
@@ -68,22 +73,22 @@ namespace MQContract
             throw new SubscriptionFailedException();
         }
 
-        private async Task<IQueryResult<R>> ExecuteQueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, IMessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        private async Task<QueryResult<R>> ExecuteQueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, IMessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class
             => ProduceResultAsync<R>(await serviceConnection.QueryAsync(
-                ProduceServiceMessage<Q>(message, channel: channel, messageHeader: messageHeader),
+                await ProduceServiceMessage<Q>(ChannelMapper.MapTypes.Query,message, channel: channel, messageHeader: messageHeader),
                 timeout??TimeSpan.FromMilliseconds(typeof(Q).GetCustomAttribute<MessageResponseTimeoutAttribute>()?.Value??serviceConnection.DefaultTimout.TotalMilliseconds),
                 options,
                 cancellationToken
             ));
 
-        public async Task<IQueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, IMessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        public async Task<QueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, IMessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class
             => await ExecuteQueryAsync<Q, R>(message, timeout: timeout, channel: channel, messageHeader: messageHeader, options: options, cancellationToken: cancellationToken);
 
-        public async Task<IQueryResult<object>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, IMessageHeader? messageHeader = null,
+        public async Task<QueryResult<object>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, IMessageHeader? messageHeader = null,
             IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where Q : class
         {
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
@@ -99,17 +104,38 @@ namespace MQContract
                     cancellationToken
                 ])!;
             await task.ConfigureAwait(false);
-            return (IQueryResult<object>)((dynamic)task).Result;
+            var queryResult = ((dynamic)task).Result;
+            return new QueryResult<object>(queryResult.ID, queryResult.Header, queryResult.Result, queryResult.Error);
         }
 
-        private QueryResult<R> ProduceResultAsync<R>(IServiceQueryResult queryResult) where R : class
-            => new(
-                    queryResult.IsError ? default : GetMessageFactory<R>().ConvertMessage(logger, queryResult),
-                    queryResult.Header,
+        private QueryResult<R> ProduceResultAsync<R>(ServiceQueryResult queryResult) where R : class
+        {
+            try
+            {
+                return new(
                     queryResult.ID,
-                    queryResult.IsError,
-                    queryResult.Error
+                    queryResult.Header,
+                    Result: GetMessageFactory<R>().ConvertMessage(logger, queryResult)
                 );
+            }catch(QueryResponseException qre)
+            {
+                return new(
+                    queryResult.ID,
+                    queryResult.Header,
+                    Result: default,
+                    Error: qre.Message
+                );
+            }
+            catch(Exception ex)
+            {
+                return new(
+                    queryResult.ID,
+                    queryResult.Header,
+                    Result: default,
+                    Error: ex.Message
+                );
+            }
+        }
 
         public async Task<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IMessage<Q>, Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
             where Q : class
@@ -120,6 +146,7 @@ namespace MQContract
                 GetMessageFactory<R>(),
                 messageRecieved,
                 errorRecieved,
+                (originalChannel) => MapChannel(ChannelMapper.MapTypes.QuerySubscription, originalChannel),
                 channel: channel,
                 group: group,
                 synchronous: synchronous,

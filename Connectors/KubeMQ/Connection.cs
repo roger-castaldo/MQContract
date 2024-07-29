@@ -10,6 +10,7 @@ using MQContract.KubeMQ.SDK.Grpc;
 using MQContract.KubeMQ.Subscriptions;
 using MQContract.Messages;
 using System.Diagnostics;
+using System.IO.MemoryMappedFiles;
 using System.Text.RegularExpressions;
 
 namespace MQContract.KubeMQ
@@ -60,16 +61,16 @@ namespace MQContract.KubeMQ
                 throw new UnableToConnectException();
             return result;
         }
-        public Task<IPingResult> PingAsync()
+        public Task<MQContract.Messages.PingResult> PingAsync()
         {
             var watch = new Stopwatch();
             watch.Start();
             var res = client.Ping()??throw new UnableToConnectException();
             watch.Stop();
-            return Task.FromResult<IPingResult>(new PingResponse(res,watch.Elapsed));
+            return Task.FromResult<MQContract.Messages.PingResult>(new PingResponse(res,watch.Elapsed));
         }
 
-        public static MapField<string, string> ConvertTags(IMessageHeader header)
+        internal static MapField<string, string> ConvertMessageHeader(IMessageHeader header)
         {
             var result = new MapField<string, string>();
             foreach(var key in header.Keys)
@@ -77,7 +78,10 @@ namespace MQContract.KubeMQ
             return result;
         }
 
-        public async Task<ITransmissionResult> PublishAsync(IServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        internal static IMessageHeader ConvertMessageHeader(MapField<string, string> header)
+            => new MessageHeader(header.AsEnumerable());
+
+        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             if (options!=null && options is not PublishChannelOptions)
                 throw new InvalidChannelOptionsTypeException(typeof(PublishChannelOptions), options.GetType());
@@ -90,23 +94,23 @@ namespace MQContract.KubeMQ
                     ClientID=connectionOptions.ClientId,
                     EventID=message.ID,
                     Store=(options is PublishChannelOptions pbc && pbc.Stored),
-                    Tags={ ConvertTags(message.Header) }
+                    Tags={ ConvertMessageHeader(message.Header) }
                 }, connectionOptions.GrpcMetadata, cancellationToken);
-                return new TransmissionResult(res);
+                return new TransmissionResult(res.EventID, res.Error);
             }
             catch (RpcException ex)
             {
                 connectionOptions.Logger?.LogError(ex,"RPC error occured on Send in send Message:{ErrorMessage}, Status: {StatusCode}", ex.Message, ex.Status);
-                return new TransmissionResult(error: $"Status: {ex.Status}, Message: {ex.Message}");
+                return new TransmissionResult(message.ID,$"Status: {ex.Status}, Message: {ex.Message}");
             }
             catch (Exception ex)
             {
                 connectionOptions.Logger?.LogError(ex, "Exception occured in Send Message:{ErrorMessage}", ex.Message);
-                return new TransmissionResult(error: ex.Message);
+                return new TransmissionResult(message.ID,ex.Message);
             }
         }
 
-        public async Task<IServiceQueryResult> QueryAsync(IServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             if (options!=null)
                 throw new ArgumentOutOfRangeException(nameof(options),"There are no service channel options available for this action");
@@ -121,29 +125,29 @@ namespace MQContract.KubeMQ
                     Channel = message.Channel,
                     Metadata = message.MessageTypeID,
                     Body = ByteString.CopyFrom(message.Data.ToArray()),
-                    Tags = { ConvertTags(message.Header) }
+                    Tags = { ConvertMessageHeader(message.Header) }
                 }, connectionOptions.GrpcMetadata, cancellationToken);
                 if (res==null)
                 {
                     connectionOptions.Logger?.LogError("Transmission Result for RPC {MessageID} is null", message.ID);
-                    return new QueryResult(error: "null response recieved from KubeMQ server");
+                    throw new NullResponseException();
                 }
                 connectionOptions.Logger?.LogDebug("Transmission Result for RPC {MessageID} (IsError:{IsError},Error:{ErrorMessage})", message.ID, !string.IsNullOrEmpty(res.Error), res.Error);
-                return new QueryResult(message.ID,res);
+                return new ServiceQueryResult(message.ID, ConvertMessageHeader(res.Tags),res.Metadata,res.Body.ToArray());
             }
             catch (RpcException ex)
             {
                 connectionOptions.Logger?.LogError(ex, "RPC error occured on Send in send Message:{ErrorMessage}, Status: {StatusCode}", ex.Message, ex.Status);
-                return new QueryResult(error: $"Status: {ex.Status}, Message: {ex.Message}");
+                throw new RPCErrorException(ex);
             }
             catch (Exception ex)
             {
                 connectionOptions.Logger?.LogError(ex, "Exception occured in Send Message:{ErrorMessage}", ex.Message);
-                return new QueryResult(error: ex.Message);
+                throw;
             }
         }
 
-        public async Task<IServiceSubscription?> SubscribeAsync(Action<IRecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             if (options!=null && options is not StoredEventsSubscriptionOptions)
                 throw new InvalidChannelOptionsTypeException(typeof(StoredEventsSubscriptionOptions), options.GetType());
@@ -164,7 +168,7 @@ namespace MQContract.KubeMQ
             return sub;
         }
 
-        public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<IRecievedServiceMessage, Task<IServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             if (options!=null)
                 throw new ArgumentOutOfRangeException(nameof(options), "There are no service channel options available for this action");

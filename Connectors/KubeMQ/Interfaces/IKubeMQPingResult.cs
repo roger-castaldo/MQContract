@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MQContract.KubeMQ.Interfaces
 {
-    public interface IKubeMQPingResult : IPingResult
+    public interface IKubeMQPingResult
     {
         /// <summary>
         /// The Server Start Time of the host that was pinged

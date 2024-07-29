@@ -8,7 +8,7 @@ using MQContract.Messages;
 namespace MQContract.KubeMQ.Subscriptions
 {
     internal class QuerySubscription(ConnectionOptions options, KubeClient client, 
-        Func<IRecievedServiceMessage, Task<IServiceMessage>> messageRecieved, Action<Exception> errorRecieved, 
+        Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, 
         string channel, string group, CancellationToken cancellationToken)
         : SubscriptionBase<Request>(options.Logger,options.ReconnectInterval,client,errorRecieved,cancellationToken)
     {
@@ -29,10 +29,10 @@ namespace MQContract.KubeMQ.Subscriptions
 
         protected override async Task MessageRecieved(Request message)
         {
-            IServiceMessage? result;
+            ServiceMessage? result;
             try
             {
-                result = await messageRecieved(new RecievedMessage(message));
+                result = await messageRecieved(new(message.RequestID,message.Metadata,message.Channel,Connection.ConvertMessageHeader(message.Tags),message.Body.ToArray()));
             }
             catch (Exception ex)
             {
@@ -66,7 +66,7 @@ namespace MQContract.KubeMQ.Subscriptions
                         ReplyChannel=message.ReplyChannel,
                         Body=Google.Protobuf.ByteString.CopyFrom(result.Data.ToArray()),
                         Metadata=result.MessageTypeID,
-                        Tags = { Connection.ConvertTags(result.Header) },
+                        Tags = { Connection.ConvertMessageHeader(result.Header) },
                         Timestamp=Utility.ToUnixTime(DateTime.Now)
                     },
                     options.GrpcMetadata,

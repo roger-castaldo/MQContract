@@ -92,8 +92,14 @@ namespace MQContract.NATS
 
         public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromSeconds(5);
 
-        public async Task<IPingResult> PingAsync()
-            => new PingResponse(await natsConnection.PingAsync(), natsConnection.ServerInfo);
+        public ValueTask<INatsJSStream> CreateStreamAsync(StreamConfig streamConfig,CancellationToken cancellationToken = default)
+            => natsJSContext.CreateStreamAsync(streamConfig, cancellationToken);
+
+        public async Task<PingResult> PingAsync()
+            => new PingResult(natsConnection.ServerInfo?.Host??string.Empty,
+                natsConnection.ServerInfo?.Version??string.Empty,
+                await natsConnection.PingAsync()
+            );
 
         public static NatsHeaders ExtractHeader(IMessageHeader header)
             => new(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>(
@@ -104,16 +110,16 @@ namespace MQContract.NATS
                 )
             ));
 
-        public async Task<ITransmissionResult> PublishAsync(IServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
-            if (options!=null && options is not PublishChannelOptions)
-                throw new InvalidChannelOptionsTypeException(typeof(PublishChannelOptions), options.GetType());
+            if (options!=null && options is not StreamPublishChannelOptions)
+                throw new InvalidChannelOptionsTypeException(typeof(StreamPublishChannelOptions), options.GetType());
             try
             {
-                if (options is PublishChannelOptions publishChannelOptions)
+                if (options is StreamPublishChannelOptions publishChannelOptions)
                 {
                     if (publishChannelOptions.Config!=null)
-                        await natsJSContext.CreateStreamAsync(publishChannelOptions.Config, cancellationToken);
+                        await CreateStreamAsync(publishChannelOptions.Config, cancellationToken);
                     var ack = await natsJSContext.PublishAsync<NatsMessage>(
                         message.Channel,
                         new NatsMessage()
@@ -150,7 +156,7 @@ namespace MQContract.NATS
             }
         }
 
-        public async Task<IServiceQueryResult> QueryAsync(IServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             var result = await natsConnection.RequestAsync<NatsMessage, NatsQueryResponseMessage>(
                 message.Channel,
@@ -165,18 +171,25 @@ namespace MQContract.NATS
                 replySerializer: MessageSerializer<NatsQueryResponseMessage>.Default,
                 cancellationToken: cancellationToken
             );
-            return new QueryResult(result);
+            if (!string.IsNullOrWhiteSpace(result.Data?.Error))
+                throw new QueryAsyncReponseException(result.Data?.Error);
+            return new ServiceQueryResult(
+                result.Data?.ID??string.Empty,
+                new MQContract.NATS.Messages.MessageHeader(result.Headers),
+                result.Data?.MessageTypeID??string.Empty,
+                result.Data?.Data??new ReadOnlyMemory<byte>()
+            );
         }
 
-        public async Task<IServiceSubscription?> SubscribeAsync(Action<IRecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
-            if (options!=null && options is not PublishSubscriberOptions)
-                throw new InvalidChannelOptionsTypeException(typeof(PublishSubscriberOptions), options.GetType());
+            if (options!=null && options is not StreamPublishSubscriberOptions)
+                throw new InvalidChannelOptionsTypeException(typeof(StreamPublishSubscriberOptions), options.GetType());
             IInternalServiceSubscription? subscription = null;
-            if (options is PublishSubscriberOptions subscriberOptions)
+            if (options is StreamPublishSubscriberOptions subscriberOptions)
             {
                 if (subscriberOptions.StreamConfig!=null)
-                    await natsJSContext.CreateStreamAsync(subscriberOptions.StreamConfig, cancellationToken);
+                    await CreateStreamAsync(subscriberOptions.StreamConfig, cancellationToken);
                 var consumer = await natsJSContext.CreateOrUpdateConsumerAsync(subscriberOptions.StreamConfig?.Name??channel, subscriberOptions.ConsumerConfig??new ConsumerConfig(group) { AckPolicy = ConsumerConfigAckPolicy.Explicit }, cancellationToken);
                 subscription = new StreamSubscription(consumer, messageRecieved, errorRecieved, cancellationToken);
             }
@@ -199,7 +212,7 @@ namespace MQContract.NATS
             return subscription;
         }
 
-        public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<IRecievedServiceMessage, Task<IServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             var sub = new QuerySubscription(
                 natsConnection.SubscribeAsync<NatsMessage>(

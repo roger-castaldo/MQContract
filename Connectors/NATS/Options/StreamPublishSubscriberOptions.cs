@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MQContract.NATS.Options
 {
-    public record PublishChannelOptions(StreamConfig? Config=null) : IServiceChannelOptions
+    public record StreamPublishSubscriberOptions(StreamConfig? StreamConfig=null,ConsumerConfig? ConsumerConfig=null) : IServiceChannelOptions
     {
     }
 }

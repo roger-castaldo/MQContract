@@ -15,34 +15,11 @@ namespace AutomatedTesting
             return services.BuildServiceProvider();
         }
 
-        public static IRecievedServiceMessage ProduceRecievedServiceMessage(IServiceMessage message,string? messageTypeID=null)
-        {
-            var timestamp = DateTime.Now;
-            var result = new Mock<IRecievedServiceMessage>();
-            result.Setup(x => x.Channel).Returns(message.Channel);
-            result.Setup(x=>x.Header).Returns(message.Header);
-            result.Setup(x=>x.RecievedTimestamp).Returns(timestamp);
-            result.Setup(x=>x.ID).Returns(message.ID);
-            result.Setup(x=>x.Data).Returns(message.Data);
-            result.Setup(x=>x.MessageTypeID).Returns(messageTypeID??message.MessageTypeID);
-            return result.Object;
-        }
+        public static RecievedServiceMessage ProduceRecievedServiceMessage(ServiceMessage message, string? messageTypeID = null)
+            => new(message.ID, messageTypeID??message.MessageTypeID, message.Channel, message.Header, message.Data);
 
-        public static IServiceQueryResult ProduceQueryResult(IServiceMessage message)
-        {
-            var result = new Mock<IServiceQueryResult>();
-            result.Setup(x => x.Channel).Returns(message.Channel);
-            result.Setup(x => x.Header).Returns(message.Header);
-            result.Setup(x => x.ID).Returns(message.ID);
-            result.Setup(x => x.Data).Returns(message.Data);
-            result.Setup(x => x.MessageTypeID).Returns(message.MessageTypeID);
-            if (message is IErrorServiceMessage error)
-            {
-                result.Setup(x => x.IsError).Returns(true);
-                result.Setup(x => x.Error).Returns(error.Error.Message);
-            }
-            return result.Object;
-        }
+        public static ServiceQueryResult ProduceQueryResult(ServiceMessage message)
+            => new(message.ID, message.Header, message.MessageTypeID, message.Data);
 
         private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(5);
 

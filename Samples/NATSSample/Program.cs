@@ -18,8 +18,12 @@ using var serviceConnection = new Connection(new NATS.Client.Core.NatsOpts()
 });
 
 var streamConfig = new StreamConfig("StoredArrivalsStream", ["StoredArrivals"]);
+await serviceConnection.CreateStreamAsync(streamConfig);
 
-var contractConnection = new ContractConnection(serviceConnection);
+var mapper = new ChannelMapper()
+    .AddPublishSubscriptionMap("StoredArrivals", "StoredArrivalsStream");
+
+var contractConnection = new ContractConnection(serviceConnection,channelMapper:mapper);
 
 using var arrivalSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
     (announcement) =>
@@ -51,7 +55,7 @@ using var storedArrivalSubscription = await contractConnection.SubscribeAsync<St
         return Task.CompletedTask;
     },
     (error) => Console.WriteLine($"Stored Announcement error: {error.Message}"),
-    options: new PublishSubscriberOptions(StreamConfig:streamConfig),
+    options:new StreamPublishSubscriberOptions(),
     cancellationToken: sourceCancel.Token
 );
 

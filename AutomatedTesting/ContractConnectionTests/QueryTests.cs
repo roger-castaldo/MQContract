@@ -9,6 +9,7 @@ using MQContract.Attributes;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
+using MQContract.Messages;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
@@ -30,27 +31,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -65,11 +56,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -81,7 +72,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -95,27 +86,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -130,11 +111,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual($"Not{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}", messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -146,7 +127,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -160,27 +141,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -201,11 +172,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -219,7 +190,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -233,28 +204,18 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
             var timeout = TimeSpan.FromDays(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -269,11 +230,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(timeout, timeouts[0]);
@@ -285,7 +246,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -299,27 +260,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
             serviceConnection.Setup(x => x.MaxMessageBodySize)
@@ -336,11 +287,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -354,7 +305,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -367,27 +318,17 @@ namespace AutomatedTesting.ContractConnectionTests
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseData = ASCIIEncoding.ASCII.GetBytes(responseMessage.TestName).AsMemory();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -413,11 +354,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -429,7 +370,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -443,22 +384,12 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray().Reverse().ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
             List<byte[]> binaries = [];
             Dictionary<string, string?> headers = new([
@@ -466,8 +397,8 @@ namespace AutomatedTesting.ContractConnectionTests
                 ]);
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -493,11 +424,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -511,7 +442,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -525,27 +456,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -560,11 +481,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsFalse(result.IsError);
+            Assert.IsNull(result.Error);
             Assert.AreEqual(typeof(TimeoutMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(TimeSpan.FromMilliseconds(typeof(TimeoutMessage).GetCustomAttribute<MessageResponseTimeoutAttribute>(false)?.Value??0), timeouts[0]);
@@ -576,7 +497,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -590,29 +511,19 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
             List<IServiceChannelOptions> options = [];
             var serviceChannelOptions = new TestServiceChannelOptions("QWueryAsync");
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), Capture.In<IServiceChannelOptions>(options), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), Capture.In<IServiceChannelOptions>(options), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -627,11 +538,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -646,7 +557,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -660,27 +571,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -695,11 +596,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -711,7 +612,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -725,27 +626,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -760,11 +651,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -776,7 +667,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -790,29 +681,19 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
             var serviceName = "TestPublishAsyncWithMessageWithDefinedServiceInjectableEncoder";
             var services = Helper.ProduceServiceProvider(serviceName);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -827,11 +708,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -845,7 +726,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -859,27 +740,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -894,11 +765,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -910,7 +781,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -924,29 +795,19 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
             var serviceName = "TestPublishAsyncWithMessageWithDefinedServiceInjectableEncryptor";
             var services = Helper.ProduceServiceProvider(serviceName);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -961,11 +822,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -977,7 +838,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -991,27 +852,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -1032,7 +883,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
             #endregion
         }
 
@@ -1046,27 +897,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
             serviceConnection.Setup(x => x.MaxMessageBodySize)
@@ -1089,7 +930,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
             #endregion
         }
 
@@ -1104,27 +945,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -1143,11 +974,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 2, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result1);
-            Assert.AreEqual(queryResult.Object.ID, result1.ID);
-            Assert.AreEqual(queryResult.Object.Error, result1.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result1.IsError);
+            Assert.AreEqual(queryResult.ID, result1.ID);
+            Assert.IsNull(result1.Error);
+            Assert.IsFalse(result1.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(2, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -1158,9 +989,9 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(responseMessage, result1.Result);
 
             Assert.IsNotNull(result2);
-            Assert.AreEqual(queryResult.Object.ID, result2.ID);
-            Assert.AreEqual(queryResult.Object.Error, result2.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result2.IsError);
+            Assert.AreEqual(queryResult.ID, result2.ID);
+            Assert.IsNull(result2.Error);
+            Assert.IsFalse(result2.IsError);
             Assert.AreEqual("TestChannel2", messages[1].Channel);
             Assert.AreEqual(defaultTimeout, timeouts[1]);
             Assert.AreEqual(0, messages[1].Header.Keys.Count());
@@ -1171,7 +1002,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -1185,27 +1016,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -1220,11 +1041,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(queryResult.Object.ID, result.ID);
-            Assert.AreEqual(queryResult.Object.Error, result.Error);
-            Assert.AreEqual(queryResult.Object.IsError, result.IsError);
+            Assert.AreEqual(queryResult.ID, result.ID);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
@@ -1236,7 +1057,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -1250,27 +1071,17 @@ namespace AutomatedTesting.ContractConnectionTests
             await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
-            var queryResult = new Mock<IServiceQueryResult>();
-            queryResult.Setup(x => x.IsError)
-                .Returns(false);
-            queryResult.Setup(x => x.Error)
-                .Returns("");
-            queryResult.Setup(x => x.ID)
-                .Returns(Guid.NewGuid().ToString());
-            queryResult.Setup(x => x.Data)
-                .Returns(responseData);
-            queryResult.Setup(x => x.MessageTypeID)
-                .Returns("U-BasicResponseMessage-0.0.0.0");
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
 
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<IServiceMessage> messages = [];
+            List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.QueryAsync(Capture.In<IServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
@@ -1291,7 +1102,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<IServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
             #endregion
         }
     }

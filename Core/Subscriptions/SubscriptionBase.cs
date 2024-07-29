@@ -6,14 +6,22 @@ using System.Reflection;
 
 namespace MQContract.Subscriptions
 {
-    internal abstract class SubscriptionBase<T>(string? channel=null,bool synchronous=false) : ISubscription
+    internal abstract class SubscriptionBase<T> : ISubscription
         where T : class
     {
         protected IServiceSubscription? serviceSubscription;
         protected readonly CancellationTokenSource token = new();
-        protected readonly string MessageChannel = channel??typeof(T).GetCustomAttribute<MessageChannelAttribute>(false)?.Name??throw new MessageChannelNullException();
-        protected readonly bool Synchronous = synchronous;
         private bool disposedValue;
+        protected string MessageChannel { get; private init; }
+        protected bool Synchronous { get; private init; }
+
+        protected SubscriptionBase(Func<string, Task<string>> mapChannel, string? channel=null,bool synchronous = false){
+            var chan = channel??typeof(T).GetCustomAttribute<MessageChannelAttribute>(false)?.Name??throw new MessageChannelNullException();
+            Synchronous = synchronous;
+            var tsk = mapChannel(chan);
+            tsk.Wait();
+            MessageChannel=tsk.Result;
+        }
 
         protected void SyncToken(CancellationToken cancellationToken)
             => cancellationToken.Register(() => EndAsync().Wait());
