@@ -1,6 +1,5 @@
 ﻿using Grpc.Core;
 using Microsoft.Extensions.Logging;
-using MQContract.KubeMQ.Messages;
 using MQContract.KubeMQ.Options;
 using MQContract.KubeMQ.SDK.Connection;
 using MQContract.KubeMQ.SDK.Grpc;

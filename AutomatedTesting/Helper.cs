@@ -1,8 +1,5 @@
 ﻿using AutomatedTesting.ServiceInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace AutomatedTesting
 {

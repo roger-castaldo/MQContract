@@ -3,14 +3,8 @@ using Moq;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
 using MQContract;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Reflection;
-using MQContract.Interfaces;
 using System.Text.Json;
 
 namespace AutomatedTesting

@@ -1,12 +1,4 @@
-﻿using MQContract.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Unicode;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Text;
 
 namespace MQContract.Messages
 {

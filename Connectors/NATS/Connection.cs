@@ -1,26 +1,21 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using MQContract.NATS.Messages;
 using MQContract.NATS.Options;
-using MQContract.NATS.Serialization;
 using MQContract.NATS.Subscriptions;
 using NATS.Client.Core;
 using NATS.Client.JetStream;
 using NATS.Client.JetStream.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 namespace MQContract.NATS
 {
     public class Connection : IMessageServiceConnection,IDisposable
     {
+        private const string MESSAGE_IDENTIFIER_HEADER = "_MessageID";
+        private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
+        private const string QUERY_RESPONSE_ERROR_TYPE = "NatsQueryError";
+
         private readonly NatsConnection natsConnection;
         private readonly NatsJSContext natsJSContext;
         private readonly ILogger? logger;
@@ -101,14 +96,42 @@ namespace MQContract.NATS
                 await natsConnection.PingAsync()
             );
 
-        public static NatsHeaders ExtractHeader(IMessageHeader header)
+        internal static NatsHeaders ExtractHeader(ServiceMessage message)
             => new(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>(
-                header.Keys.Select(k=>
+                message.Header.Keys.Select(k=>
                     new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
                         k,
-                        new Microsoft.Extensions.Primitives.StringValues(header[k]))
+                        new Microsoft.Extensions.Primitives.StringValues(message.Header[k]))
                 )
+                .Concat([
+                    new(MESSAGE_IDENTIFIER_HEADER,message.ID),
+                    new(MESSAGE_TYPE_HEADER,message.MessageTypeID)
+                ])
             ));
+        internal static IMessageHeader ExtractHeader(NatsHeaders? header,out string? messageID,out string? messageTypeID)
+        {
+            if (header?.TryGetValue(MESSAGE_IDENTIFIER_HEADER, out var mid)??false)
+                messageID = mid.ToString();
+            else
+                messageID=null;
+            if (header?.TryGetValue(MESSAGE_TYPE_HEADER, out var mti)??false)
+                messageTypeID=mti.ToString();
+            else
+                messageTypeID=null;
+            return new MessageHeader(header?
+                .Where(pair=>!Equals(pair.Key,MESSAGE_IDENTIFIER_HEADER)&&!Equals(pair.Key,MESSAGE_TYPE_HEADER))
+                .Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value.ToString()))?? []
+            );
+        }
+
+        internal static NatsHeaders ProduceQueryError(Exception exception,string messageID,out byte[] data)
+        {
+            data = UTF8Encoding.UTF8.GetBytes(exception.Message);
+            return new(new Dictionary<string,Microsoft.Extensions.Primitives.StringValues>([
+                    new KeyValuePair<string,Microsoft.Extensions.Primitives.StringValues>(MESSAGE_IDENTIFIER_HEADER,messageID),
+                    new KeyValuePair<string,Microsoft.Extensions.Primitives.StringValues>(MESSAGE_TYPE_HEADER,QUERY_RESPONSE_ERROR_TYPE)
+            ]));
+        }
 
         public async Task<TransmissionResult> PublishAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
@@ -120,32 +143,20 @@ namespace MQContract.NATS
                 {
                     if (publishChannelOptions.Config!=null)
                         await CreateStreamAsync(publishChannelOptions.Config, cancellationToken);
-                    var ack = await natsJSContext.PublishAsync<NatsMessage>(
+                    var ack = await natsJSContext.PublishAsync<byte[]>(
                         message.Channel,
-                        new NatsMessage()
-                        {
-                            ID=message.ID,
-                            MessageTypeID=message.MessageTypeID,
-                            Data=message.Data
-                        },
-                        headers: ExtractHeader(message.Header),
-                        serializer: MessageSerializer<NatsMessage>.Default,
+                        message.Data.ToArray(),
+                        headers: ExtractHeader(message),
                         cancellationToken: cancellationToken
                     );
                     return new TransmissionResult(message.ID, (ack.Error!=null ? $"{ack.Error.Code}:{ack.Error.Description}" : null));
                 }
                 else
                 {
-                    await natsConnection.PublishAsync<NatsMessage>(
+                    await natsConnection.PublishAsync<byte[]>(
                         message.Channel,
-                        new NatsMessage()
-                        {
-                            ID=message.ID,
-                            MessageTypeID=message.MessageTypeID,
-                            Data=message.Data
-                        },
-                        headers: ExtractHeader(message.Header),
-                        serializer: MessageSerializer<NatsMessage>.Default,
+                        message.Data.ToArray(),
+                        headers: ExtractHeader(message),
                         cancellationToken: cancellationToken
                     );
                     return new TransmissionResult(message.ID);
@@ -158,26 +169,20 @@ namespace MQContract.NATS
 
         public async Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
-            var result = await natsConnection.RequestAsync<NatsMessage, NatsQueryResponseMessage>(
+            var result = await natsConnection.RequestAsync<byte[], byte[]>(
                 message.Channel,
-                new NatsMessage()
-                {
-                    ID=message.ID,
-                    MessageTypeID=message.MessageTypeID,
-                    Data=message.Data
-                },
-                headers: ExtractHeader(message.Header),
-                requestSerializer: MessageSerializer<NatsMessage>.Default,
-                replySerializer: MessageSerializer<NatsQueryResponseMessage>.Default,
+                message.Data.ToArray(),
+                headers: ExtractHeader(message),
                 cancellationToken: cancellationToken
             );
-            if (!string.IsNullOrWhiteSpace(result.Data?.Error))
-                throw new QueryAsyncReponseException(result.Data?.Error);
+            if (Equals(result.Headers?[MESSAGE_TYPE_HEADER], QUERY_RESPONSE_ERROR_TYPE))
+                throw new QueryAsyncReponseException(UTF8Encoding.UTF8.GetString(result.Data!));
+            var headers = ExtractHeader(result.Headers, out var messageID, out var messageTypeID);
             return new ServiceQueryResult(
-                result.Data?.ID??string.Empty,
-                new MQContract.NATS.Messages.MessageHeader(result.Headers),
-                result.Data?.MessageTypeID??string.Empty,
-                result.Data?.Data??new ReadOnlyMemory<byte>()
+                messageID??string.Empty,
+                headers,
+                messageTypeID??string.Empty,
+                result.Data??new ReadOnlyMemory<byte>()
             );
         }
 
@@ -195,10 +200,9 @@ namespace MQContract.NATS
             }
             else
                 subscription = new PublishSubscription(
-                    natsConnection.SubscribeAsync<NatsMessage>(
+                    natsConnection.SubscribeAsync<byte[]>(
                         channel,
                         queueGroup: group,
-                        serializer: MessageSerializer<NatsMessage>.Default,
                         cancellationToken: cancellationToken
                     ),
                     messageRecieved,
@@ -215,10 +219,9 @@ namespace MQContract.NATS
         public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             var sub = new QuerySubscription(
-                natsConnection.SubscribeAsync<NatsMessage>(
+                natsConnection.SubscribeAsync<byte[]>(
                     channel,
                     queueGroup: group,
-                    serializer: MessageSerializer<NatsMessage>.Default,
                     cancellationToken: cancellationToken
                 ),
                 messageRecieved,

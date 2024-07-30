@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
-using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;

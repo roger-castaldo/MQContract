@@ -1,11 +1,4 @@
-﻿using MQContract.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MQContract.KubeMQ.Interfaces
+﻿namespace MQContract.KubeMQ.Interfaces
 {
     public interface IKubeMQPingResult
     {

@@ -10,7 +10,6 @@ using MQContract.KubeMQ.SDK.Grpc;
 using MQContract.KubeMQ.Subscriptions;
 using MQContract.Messages;
 using System.Diagnostics;
-using System.IO.MemoryMappedFiles;
 using System.Text.RegularExpressions;
 
 namespace MQContract.KubeMQ

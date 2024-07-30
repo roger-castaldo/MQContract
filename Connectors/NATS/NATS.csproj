@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <PackageReference Include="NATS.Net" Version="2.3.2" />
-    <PackageReference Include="protobuf-net" Version="3.2.30" />
   </ItemGroup>
 
   <ItemGroup>

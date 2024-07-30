@@ -9,7 +9,6 @@ using MQContract.Attributes;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
-using MQContract.Messages;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;

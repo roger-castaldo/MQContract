@@ -1,13 +1,5 @@
-﻿using MQContract.Interfaces.Service;
-using MQContract.Messages;
-using MQContract.NATS.Messages;
-using MQContract.NATS.Serialization;
+﻿using MQContract.Messages;
 using NATS.Client.JetStream;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MQContract.NATS.Subscriptions
 {
@@ -23,18 +15,12 @@ namespace MQContract.NATS.Subscriptions
                 {
                     await consumer.RefreshAsync(cancelToken.Token); // or try to recreate consumer
 
-                    await foreach (var msg in consumer.ConsumeAsync<NatsMessage>(serializer: MessageSerializer<NatsMessage>.Default).WithCancellation(cancelToken.Token))
+                    await foreach (var msg in consumer.ConsumeAsync<byte[]>().WithCancellation(cancelToken.Token))
                     {
                         var success = true;
                         try
                         {
-                            messageRecieved(new(
-                                msg.Data?.ID??string.Empty,
-                                msg.Data?.MessageTypeID??string.Empty,
-                                msg.Subject,
-                                new MQContract.NATS.Messages.MessageHeader(msg.Headers),
-                                msg.Data?.Data??new ReadOnlyMemory<byte>()
-                            ));
+                            messageRecieved(ExtractMessage(msg));
                         }
                         catch (Exception ex)
                         {
