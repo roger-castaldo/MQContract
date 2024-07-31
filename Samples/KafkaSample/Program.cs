@@ -12,7 +12,7 @@ Console.CancelKeyPress += delegate {
 
 using var serviceConnection = new Connection(new Confluent.Kafka.ClientConfig()
 {
-    ClientId="KubeMQSample",
+    ClientId="KafkaSample",
     BootstrapServers="localhost:56497"
 });
 
@@ -34,7 +34,7 @@ using var greetingSubscription = await contractConnection.SubscribeQueryResponse
         Console.WriteLine($"Greeting recieved for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.RecievedTimestamp}]");
         System.Diagnostics.Debug.WriteLine($"Time to convert message: {greeting.ProcessedTimestamp.Subtract(greeting.RecievedTimestamp).TotalMilliseconds}ms");
         return Task.FromResult<QueryResponseMessage<string>>(
-            new($"Welcome {greeting.Message.FirstName} {greeting.Message.LastName} to the KubeMQ sample")
+            new($"Welcome {greeting.Message.FirstName} {greeting.Message.LastName} to the Kafka sample")
         );
     },
     (error) => Console.WriteLine($"Greeting error: {error.Message}"),

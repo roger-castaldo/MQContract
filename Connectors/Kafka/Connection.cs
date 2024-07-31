@@ -5,7 +5,6 @@ using MQContract.Kafka.Options;
 using MQContract.Kafka.Subscriptions;
 using MQContract.Messages;
 using MQContract.NATS.Subscriptions;
-using System.Collections.Concurrent;
 using System.Text;
 
 namespace MQContract.Kafka
@@ -23,13 +22,11 @@ namespace MQContract.Kafka
         private readonly List<SubscriptionBase> subscriptions = [];
         private readonly SemaphoreSlim dataLock = new(1, 1);
         private readonly Guid Identifier = Guid.NewGuid();
-        private readonly ConcurrentDictionary<Guid, ManualResetEventSlim> waitingCalls = new();
-        private readonly IMemoryCache queryResponseCache = new MemoryCache(new MemoryCacheOptions());
         private bool disposedValue;
 
         public int? MaxMessageBodySize => clientConfig.MessageMaxBytes;
 
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(20);
+        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(2);
 
         internal static byte[] EncodeHeaderValue(string value)
             => UTF8Encoding.UTF8.GetBytes(value);
@@ -105,85 +102,76 @@ namespace MQContract.Kafka
             if (options is not QueryChannelOptions queryChannelOptions)
                 throw new ArgumentNullException(nameof(options));
             ArgumentNullException.ThrowIfNullOrWhiteSpace(queryChannelOptions.ReplyChannel, nameof(queryChannelOptions.ReplyChannel));
-            using var queryLock = new ManualResetEventSlim(false);
             var callID = Guid.NewGuid();
             var headers = ExtractHeaders(message, Identifier, callID, queryChannelOptions.ReplyChannel);
-            if (!waitingCalls.TryAdd(callID, queryLock))
-                throw new QueryLockFailedException();
+            var tcs = StartResponseListener(clientConfig,Identifier,callID,queryChannelOptions.ReplyChannel,cancellationToken);
+            await producer.ProduceAsync(message.Channel, new Message<string, byte[]>()
+            {
+                Key=message.ID,
+                Headers=headers,
+                Value=message.Data.ToArray()
+            },cancellationToken);
             try
             {
-                StartResponseListener(callID,queryChannelOptions.ReplyChannel,cancellationToken,queryLock);
-                queryLock.Wait();
-                queryLock.Reset();
-                await producer.ProduceAsync(message.Channel, new Message<string, byte[]>()
-                {
-                    Key=message.ID,
-                    Headers=headers,
-                    Value=message.Data.ToArray()
-                },cancellationToken);
-            }catch(Exception)
-            {
-                waitingCalls.Remove(callID, out _);
-                throw;
+                await tcs.Task.WaitAsync(timeout, cancellationToken);
             }
-            if (queryLock.Wait(timeout,cancellationToken))
+            catch (Exception)
             {
-                waitingCalls.Remove(callID, out _);
-                if (queryResponseCache.TryGetValue<ServiceQueryResult>(callID, out ServiceQueryResult? result))
-                {
-                    if (Equals(result?.MessageTypeID, ERROR_MESSAGE_TYPE_ID))
-                        throw new QueryAsyncReponseException(DecodeHeaderValue(result.Data.ToArray()));
-                    return result!;
-                }
-                throw new QueryResultMissingException();
+                throw new QueryExecutionFailedException();
             }
-            waitingCalls.Remove(callID,out _);
-            throw new QueryExecutionFailedException();
+            if (tcs.Task.IsCompleted)
+            {
+                var result = tcs.Task.Result;
+                if (Equals(result?.MessageTypeID, ERROR_MESSAGE_TYPE_ID))
+                    throw new QueryAsyncReponseException(DecodeHeaderValue(result.Data.ToArray()));
+                else if (result!=null)
+                    return result;
+            }
+            throw new QueryResultMissingException();
         }
 
-        private void StartResponseListener(Guid callID, string replyChannel,CancellationToken cancellationToken, ManualResetEventSlim queryLock)
+        private static TaskCompletionSource<ServiceQueryResult> StartResponseListener(ClientConfig configuration,Guid identifier,Guid callID, string replyChannel,CancellationToken cancellationToken)
         {
-            var consumer = new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
-            {
-                AutoOffsetReset=AutoOffsetReset.Latest
-            }).Build();
-            consumer.Subscribe(replyChannel);
+            var result = new TaskCompletionSource<ServiceQueryResult>();
+            using var queryLock = new ManualResetEventSlim(false);
             Task.Run(() =>
             {
+                using var consumer = new ConsumerBuilder<string, byte[]>(new ConsumerConfig(configuration)
+                {
+                    AutoOffsetReset=AutoOffsetReset.Earliest
+                }).Build();
+                consumer.Subscribe(replyChannel);
                 queryLock.Set();
-                ServiceQueryResult? result = null;
-                while (!cancellationToken.IsCancellationRequested && waitingCalls.TryGetValue(callID, out _))
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
                         var msg = consumer.Consume(cancellationToken);
                         var headers = ExtractHeaders(msg.Message.Headers, out var messageTypeID, out var queryClient, out var replyID, out var replyChannel);
-                        if (Equals(queryClient, Identifier) && Equals(replyID, callID))
+                        if (Equals(queryClient, identifier) && Equals(replyID, callID))
                         {
-
-                            result = new(
+                            Console.WriteLine(result.TrySetResult(new(
                                 msg.Message.Key,
                                 headers,
                                 messageTypeID!,
                                 msg.Message.Value
-                            );
+                            )));
+                            consumer.Unassign();
                             break;
                         }
                     }
-                    catch (Exception) { }
+                    catch (Exception ex) {
+                        Console.WriteLine(ex.Message);
+                    }
                 }
                 try
                 {
                     consumer.Close();
-                    consumer.Dispose();
                 }
                 catch (Exception) { }
-                if (result!=null)
-                {
-                    queryResponseCache.Set(callID, result, DateTimeOffset.Now.AddMinutes(10));
-                    queryLock.Set();
-                }
             },cancellationToken);
+            queryLock.Wait(cancellationToken);
+            return result;
         }
 
         public async Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
