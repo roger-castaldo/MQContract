@@ -108,7 +108,7 @@ namespace MQContract.NATS
                     new(MESSAGE_TYPE_HEADER,message.MessageTypeID)
                 ])
             ));
-        internal static IMessageHeader ExtractHeader(NatsHeaders? header,out string? messageID,out string? messageTypeID)
+        internal static MessageHeader ExtractHeader(NatsHeaders? header,out string? messageID,out string? messageTypeID)
         {
             if (header?.TryGetValue(MESSAGE_IDENTIFIER_HEADER, out var mid)??false)
                 messageID = mid.ToString();
@@ -133,7 +133,7 @@ namespace MQContract.NATS
             ]));
         }
 
-        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             if (options!=null && options is not StreamPublishChannelOptions)
                 throw new InvalidChannelOptionsTypeException(typeof(StreamPublishChannelOptions), options.GetType());

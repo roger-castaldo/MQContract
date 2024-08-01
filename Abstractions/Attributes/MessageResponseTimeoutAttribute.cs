@@ -12,6 +12,9 @@
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class MessageResponseTimeoutAttribute(int value) : Attribute
     {
+        /// <summary>
+        /// The number of milliseconds for the timeout to trigger for this RPC call class
+        /// </summary>
         public int Value => value;
     }
 }

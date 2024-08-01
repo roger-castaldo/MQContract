@@ -22,10 +22,9 @@ namespace AutomatedTesting
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
-            List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
@@ -52,7 +51,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -66,10 +65,9 @@ namespace AutomatedTesting
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
-            List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
@@ -106,7 +104,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -120,10 +118,9 @@ namespace AutomatedTesting
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
-            List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
@@ -160,7 +157,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -174,10 +171,9 @@ namespace AutomatedTesting
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
-            List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
@@ -214,7 +210,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -228,10 +224,9 @@ namespace AutomatedTesting
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
-            List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
@@ -267,7 +262,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -284,7 +279,7 @@ namespace AutomatedTesting
                 It.IsAny<Action<Exception>>(), 
                 Capture.In<string>(channels),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var mapper = new ChannelMapper()
@@ -324,7 +319,7 @@ namespace AutomatedTesting
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
@@ -378,7 +373,7 @@ namespace AutomatedTesting
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
@@ -430,7 +425,7 @@ namespace AutomatedTesting
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
@@ -483,7 +478,7 @@ namespace AutomatedTesting
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
@@ -569,7 +564,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(),It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -816,7 +811,7 @@ namespace AutomatedTesting
                 It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var mapper = new ChannelMapper()
@@ -860,7 +855,7 @@ namespace AutomatedTesting
                 It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
@@ -918,7 +913,7 @@ namespace AutomatedTesting
                 It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
@@ -974,7 +969,7 @@ namespace AutomatedTesting
                 It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
@@ -1031,7 +1026,7 @@ namespace AutomatedTesting
                 It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";

@@ -6,9 +6,15 @@
     <Nullable>enable</Nullable>
     <AssemblyName>MQContract</AssemblyName>
     <RootNamespace>MQContract</RootNamespace>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <DocumentationMarkdown>$(MSBuildProjectDirectory)\Readme.md</DocumentationMarkdown>
   </PropertyGroup>
 
-    <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0'">
+  <ItemGroup>
+	  <PackageReference Include="Vsxmd" Version="1.4.5">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     </ItemGroup>

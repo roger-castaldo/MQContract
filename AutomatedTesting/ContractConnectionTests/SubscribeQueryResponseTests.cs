@@ -32,7 +32,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(async (ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
@@ -50,7 +50,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var messages = new List<IMessage<BasicQueryMessage>>();
+            var messages = new List<IRecievedMessage<BasicQueryMessage>>();
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage,BasicResponseMessage>((msg) => {
                 messages.Add(msg);
@@ -66,7 +66,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IMessage<BasicQueryMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<IRecievedMessage<BasicQueryMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, recievedActions.Count);
@@ -112,20 +112,24 @@ namespace AutomatedTesting.ContractConnectionTests
                 It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
             
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
 
             #region Act
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null), 
                 (error) => { },
                 channel:channelName);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription2 = await contractConnection.SubscribeQueryResponseAsync<NoChannelMessage, BasicResponseMessage>(
                 (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
                 channel: channelName);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
 
             #region Assert
@@ -159,18 +163,22 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
 
             #region Act
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
                 group: groupName);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription2 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { });
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
 
             #region Assert
@@ -204,15 +212,17 @@ namespace AutomatedTesting.ContractConnectionTests
                 It.IsAny<string>(),
                 Capture.In<IServiceChannelOptions>(options),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
 
             #region Act
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
                 options:serviceChannelOptions);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
 
             #region Assert
@@ -242,15 +252,17 @@ namespace AutomatedTesting.ContractConnectionTests
                 It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
 
             #region Act
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(() => contractConnection.SubscribeQueryResponseAsync<NoChannelMessage, BasicResponseMessage>(
                 (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
 
             #region Assert
@@ -277,15 +289,17 @@ namespace AutomatedTesting.ContractConnectionTests
                 It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription?>(null));
+                .ReturnsAsync((IServiceSubscription?)null);
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
 
             #region Act
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(() => contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
 
             #region Assert
@@ -314,15 +328,17 @@ namespace AutomatedTesting.ContractConnectionTests
                 It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
 
             #region Act
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { }
             );
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             await subscription.EndAsync();
             #endregion
 
@@ -357,7 +373,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(async (ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
@@ -376,7 +392,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var messages = new List<IMessage<BasicQueryMessage>>();
+            var messages = new List<IRecievedMessage<BasicQueryMessage>>();
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 messages.Add(msg);
@@ -397,7 +413,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IMessage<BasicQueryMessage>>(messages, 2, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<IRecievedMessage<BasicQueryMessage>>(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result1);
             Assert.AreEqual(1, recievedActions.Count);
@@ -450,7 +466,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(async (ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
@@ -468,7 +484,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var messages = new List<IMessage<BasicQueryMessage>>();
+            var messages = new List<IRecievedMessage<BasicQueryMessage>>();
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw exception;
@@ -523,7 +539,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult<IServiceSubscription>(serviceSubscription.Object));
+                .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .Returns(async (ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
@@ -541,7 +557,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var messages = new List<IMessage<BasicQueryMessage>>();
+            var messages = new List<IRecievedMessage<BasicQueryMessage>>();
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 messages.Add(msg);
@@ -557,7 +573,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IMessage<BasicQueryMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<IRecievedMessage<BasicQueryMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, recievedActions.Count);

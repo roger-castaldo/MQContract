@@ -14,6 +14,9 @@
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class MessageVersionAttribute(string version) : Attribute
     {
+        /// <summary>
+        /// The version number to tag this class with during transmission
+        /// </summary>
         public Version Version => new(version);
     }
 }

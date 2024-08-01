@@ -7,7 +7,7 @@ using MQContract.Messages;
 namespace MQContract.Subscriptions
 {
     internal sealed class QueryResponseSubscription<Q,R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, 
-        Func<IMessage<Q>, Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved,
+        Func<IRecievedMessage<Q>, Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved,
         Func<string, Task<string>> mapChannel,
         string? channel = null, string? group = null, 
         bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)

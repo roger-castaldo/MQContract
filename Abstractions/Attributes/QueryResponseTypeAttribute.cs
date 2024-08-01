@@ -10,6 +10,9 @@
     [AttributeUsage(AttributeTargets.Class)]
     public class QueryResponseTypeAttribute(Type responseType) : Attribute
     {
+        /// <summary>
+        /// The type of class that should be expected for a Response when not specified
+        /// </summary>
         public Type ResponseType => responseType;
     }
 }

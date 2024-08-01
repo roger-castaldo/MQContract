@@ -69,7 +69,7 @@ namespace MQContract.KubeMQ
             return Task.FromResult<MQContract.Messages.PingResult>(new PingResponse(res,watch.Elapsed));
         }
 
-        internal static MapField<string, string> ConvertMessageHeader(IMessageHeader header)
+        internal static MapField<string, string> ConvertMessageHeader(MessageHeader header)
         {
             var result = new MapField<string, string>();
             foreach(var key in header.Keys)
@@ -77,10 +77,10 @@ namespace MQContract.KubeMQ
             return result;
         }
 
-        internal static IMessageHeader ConvertMessageHeader(MapField<string, string> header)
+        internal static MessageHeader ConvertMessageHeader(MapField<string, string> header)
             => new MessageHeader(header.AsEnumerable());
 
-        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             if (options!=null && options is not PublishChannelOptions)
                 throw new InvalidChannelOptionsTypeException(typeof(PublishChannelOptions), options.GetType());

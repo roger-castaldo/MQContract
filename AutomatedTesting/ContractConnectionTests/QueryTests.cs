@@ -154,7 +154,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var messageHeader = new Mock<IMessageHeader>(); ;
+            var messageHeader = new Mock<MessageHeader>(); ;
             messageHeader.Setup(x => x.Keys)
                 .Returns(["testing"]);
             messageHeader.Setup(x => x["testing"])
@@ -404,8 +404,8 @@ namespace AutomatedTesting.ContractConnectionTests
             var globalEncryptor = new Mock<IMessageEncryptor>();
             globalEncryptor.Setup(x => x.Encrypt(Capture.In<byte[]>(binaries), out headers))
                 .Returns((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
-            globalEncryptor.Setup(x => x.Decrypt(It.IsAny<Stream>(), It.IsAny<IMessageHeader>()))
-                .Returns((Stream source, IMessageHeader headers) =>
+            globalEncryptor.Setup(x => x.Decrypt(It.IsAny<Stream>(), It.IsAny<MessageHeader>()))
+                .Returns((Stream source, MessageHeader headers) =>
                 {
                     var buff = new byte[source.Length];
                     source.Read(buff, 0, buff.Length);

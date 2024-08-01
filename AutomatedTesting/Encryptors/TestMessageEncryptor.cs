@@ -8,7 +8,7 @@ namespace AutomatedTesting.Encryptors
         private const string HeaderKey = "TestMessageEncryptorKey";
         private const string HeaderValue = "TestMessageEncryptorValue";
 
-        public Stream Decrypt(Stream stream, IMessageHeader headers)
+        public Stream Decrypt(Stream stream, MessageHeader headers)
         {
             Assert.IsNotNull(headers);
             Assert.IsTrue(headers.Keys.Contains(HeaderKey));

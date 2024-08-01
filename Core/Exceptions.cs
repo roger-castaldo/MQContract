@@ -18,6 +18,9 @@
             : base(paramName, $"The attempt to call a query response with the incoming message of type {messageType.FullName} does not have a determined response type.") { }
     }
 
+    /// <summary>
+    /// Thrown when a Subscription has failed to be established/created
+    /// </summary>
     public class SubscriptionFailedException : Exception
     {
         internal SubscriptionFailedException()
@@ -25,13 +28,19 @@
         { }
     }
 
+    /// <summary>
+    /// Thrown when a call is made but the system is unable to detect the channel
+    /// </summary>
     public class MessageChannelNullException : ArgumentNullException
     {
         internal MessageChannelNullException()
             : base("channel", "message must have a channel value") { }
     }
 
-    internal class QueryResponseException : Exception
+    /// <summary>
+    /// Thrown when a Query call is made and there is an error in the response
+    /// </summary>
+    public class QueryResponseException : Exception
     {
         internal QueryResponseException(string message)
             : base(message) { }

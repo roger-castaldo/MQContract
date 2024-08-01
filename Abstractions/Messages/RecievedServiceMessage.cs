@@ -1,8 +1,19 @@
 ﻿namespace MQContract.Messages
 {
-    public record RecievedServiceMessage(string ID, string MessageTypeID, string Channel, IMessageHeader Header, ReadOnlyMemory<byte> Data)
+    /// <summary>
+    /// A Recieved Service Message that gets passed back up into the Contract Connection when a message is recieved from the underlying service connection
+    /// </summary>
+    /// <param name="ID">The unique ID of the message</param>
+    /// <param name="MessageTypeID">The message type id which is used for decoding to a class</param>
+    /// <param name="Channel">The channel the message was recieved on</param>
+    /// <param name="Header">The message headers that came through</param>
+    /// <param name="Data">The binary content of the message that should be the encoded class</param>
+    public record RecievedServiceMessage(string ID, string MessageTypeID, string Channel, MessageHeader Header, ReadOnlyMemory<byte> Data)
         : ServiceMessage(ID,MessageTypeID,Channel,Header,Data)
     { 
+        /// <summary>
+        /// A timestamp for when the message was recieved
+        /// </summary>
         public DateTime RecievedTimestamp { get; private init; } = DateTime.Now;
     }
 }

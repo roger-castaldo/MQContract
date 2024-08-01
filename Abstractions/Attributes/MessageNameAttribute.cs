@@ -14,6 +14,9 @@
     public class MessageNameAttribute(string value)
                 : Attribute
     {
+        /// <summary>
+        /// The name of the class used when transmitting
+        /// </summary>
         public string Value => value;
     }
 }

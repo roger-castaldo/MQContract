@@ -15,7 +15,7 @@ namespace MQContract.Interfaces.Encrypting
         /// <param name="stream">The stream representing the message body binary data</param>
         /// <param name="headers">The message headers that were provided by the message</param>
         /// <returns>A decrypted stream of the message body</returns>
-        Stream Decrypt(Stream stream, IMessageHeader headers);
+        Stream Decrypt(Stream stream, MessageHeader headers);
 
         /// <summary>
         /// Called to encrypt the message body prior to transmitting a message

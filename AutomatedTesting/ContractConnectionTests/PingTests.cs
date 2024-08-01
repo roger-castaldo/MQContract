@@ -15,7 +15,7 @@ namespace AutomatedTesting.ContractConnectionTests
             
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.PingAsync())
-                .Returns(Task.FromResult<PingResult>(pingResult));
+                .ReturnsAsync(pingResult);
 
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion

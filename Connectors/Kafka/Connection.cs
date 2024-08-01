@@ -79,7 +79,7 @@ namespace MQContract.Kafka
         public Task<PingResult> PingAsync()
             => throw new NotImplementedException();
 
-        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             try
             {
