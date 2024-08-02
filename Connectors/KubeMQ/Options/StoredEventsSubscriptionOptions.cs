@@ -3,6 +3,11 @@ using static MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions;
 
 namespace MQContract.KubeMQ.Options
 {
+    /// <summary>
+    /// Houses the configuration for a subscription going to a stored message channel
+    /// </summary>
+    /// <param name="ReadStyle">The read style to use</param>
+    /// <param name="ReadOffset">The read offset to use</param>
     public record StoredEventsSubscriptionOptions(MessageReadStyle ReadStyle=MessageReadStyle.StartNewOnly,long ReadOffset=0) : IServiceChannelOptions
     {
         /// <summary>

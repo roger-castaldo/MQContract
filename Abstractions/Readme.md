@@ -46,8 +46,8 @@
 - [ISubscription](#T-MQContract-Interfaces-ISubscription 'MQContract.Interfaces.ISubscription')
   - [EndAsync()](#M-MQContract-Interfaces-ISubscription-EndAsync 'MQContract.Interfaces.ISubscription.EndAsync')
 - [InvalidChannelOptionsTypeException](#T-MQContract-InvalidChannelOptionsTypeException 'MQContract.InvalidChannelOptionsTypeException')
-  - [#ctor(expectedTypes,recievedType)](#M-MQContract-InvalidChannelOptionsTypeException-#ctor-System-Collections-Generic-IEnumerable{System-Type},System-Type- 'MQContract.InvalidChannelOptionsTypeException.#ctor(System.Collections.Generic.IEnumerable{System.Type},System.Type)')
-  - [#ctor(expectedType,recievedType)](#M-MQContract-InvalidChannelOptionsTypeException-#ctor-System-Type,System-Type- 'MQContract.InvalidChannelOptionsTypeException.#ctor(System.Type,System.Type)')
+  - [ThrowIfNotNullAndNotOfType(options,expectedTypes)](#M-MQContract-InvalidChannelOptionsTypeException-ThrowIfNotNullAndNotOfType-MQContract-Interfaces-Service-IServiceChannelOptions,System-Collections-Generic-IEnumerable{System-Type}- 'MQContract.InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType(MQContract.Interfaces.Service.IServiceChannelOptions,System.Collections.Generic.IEnumerable{System.Type})')
+  - [ThrowIfNotNullAndNotOfType\`\`1(options)](#M-MQContract-InvalidChannelOptionsTypeException-ThrowIfNotNullAndNotOfType``1-MQContract-Interfaces-Service-IServiceChannelOptions- 'MQContract.InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType``1(MQContract.Interfaces.Service.IServiceChannelOptions)')
 - [MessageChannelAttribute](#T-MQContract-Attributes-MessageChannelAttribute 'MQContract.Attributes.MessageChannelAttribute')
   - [#ctor(name)](#M-MQContract-Attributes-MessageChannelAttribute-#ctor-System-String- 'MQContract.Attributes.MessageChannelAttribute.#ctor(System.String)')
   - [Name](#P-MQContract-Attributes-MessageChannelAttribute-Name 'MQContract.Attributes.MessageChannelAttribute.Name')
@@ -66,6 +66,8 @@
 - [MessageVersionAttribute](#T-MQContract-Attributes-MessageVersionAttribute 'MQContract.Attributes.MessageVersionAttribute')
   - [#ctor(version)](#M-MQContract-Attributes-MessageVersionAttribute-#ctor-System-String- 'MQContract.Attributes.MessageVersionAttribute.#ctor(System.String)')
   - [Version](#P-MQContract-Attributes-MessageVersionAttribute-Version 'MQContract.Attributes.MessageVersionAttribute.Version')
+- [NoChannelOptionsAvailableException](#T-MQContract-NoChannelOptionsAvailableException 'MQContract.NoChannelOptionsAvailableException')
+  - [ThrowIfNotNull(options)](#M-MQContract-NoChannelOptionsAvailableException-ThrowIfNotNull-MQContract-Interfaces-Service-IServiceChannelOptions- 'MQContract.NoChannelOptionsAvailableException.ThrowIfNotNull(MQContract.Interfaces.Service.IServiceChannelOptions)')
 - [PingResult](#T-MQContract-Messages-PingResult 'MQContract.Messages.PingResult')
   - [#ctor(Host,Version,ResponseTime)](#M-MQContract-Messages-PingResult-#ctor-System-String,System-String,System-TimeSpan- 'MQContract.Messages.PingResult.#ctor(System.String,System.String,System.TimeSpan)')
   - [Host](#P-MQContract-Messages-PingResult-Host 'MQContract.Messages.PingResult.Host')
@@ -774,33 +776,50 @@ MQContract
 
 An exception thrown when the options supplied to an underlying system connection are not of an expected type.
 
-<a name='M-MQContract-InvalidChannelOptionsTypeException-#ctor-System-Collections-Generic-IEnumerable{System-Type},System-Type-'></a>
-### #ctor(expectedTypes,recievedType) `constructor`
+<a name='M-MQContract-InvalidChannelOptionsTypeException-ThrowIfNotNullAndNotOfType-MQContract-Interfaces-Service-IServiceChannelOptions,System-Collections-Generic-IEnumerable{System-Type}-'></a>
+### ThrowIfNotNullAndNotOfType(options,expectedTypes) `method`
 
 ##### Summary
 
-Constructor for the possibility of multiple types that can be used and a not valid type is passed
+Called to check if the options is one of the given types
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| expectedTypes | [System.Collections.Generic.IEnumerable{System.Type}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{System.Type}') | The possible types that the channel options object can be |
-| recievedType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type that was recieved |
+| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | The supplied service channel options |
+| expectedTypes | [System.Collections.Generic.IEnumerable{System.Type}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{System.Type}') | The possible types it can be |
 
-<a name='M-MQContract-InvalidChannelOptionsTypeException-#ctor-System-Type,System-Type-'></a>
-### #ctor(expectedType,recievedType) `constructor`
+##### Exceptions
+
+| Name | Description |
+| ---- | ----------- |
+| [MQContract.InvalidChannelOptionsTypeException](#T-MQContract-InvalidChannelOptionsTypeException 'MQContract.InvalidChannelOptionsTypeException') | Thrown when the options value is not null and not of any of the expected Types |
+
+<a name='M-MQContract-InvalidChannelOptionsTypeException-ThrowIfNotNullAndNotOfType``1-MQContract-Interfaces-Service-IServiceChannelOptions-'></a>
+### ThrowIfNotNullAndNotOfType\`\`1(options) `method`
 
 ##### Summary
 
-Constructor for the possibility of a single type that can be used and a not valid type is passed
+Called to check if the options is of a given type
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| expectedType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The possible type that the channel options object can be |
-| recievedType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type that was recieved |
+| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | The supplied service channel options |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The expected type for the ServiceChannelOptions |
+
+##### Exceptions
+
+| Name | Description |
+| ---- | ----------- |
+| [MQContract.InvalidChannelOptionsTypeException](#T-MQContract-InvalidChannelOptionsTypeException 'MQContract.InvalidChannelOptionsTypeException') | Thrown when the options value is not null and not of type T |
 
 <a name='T-MQContract-Attributes-MessageChannelAttribute'></a>
 ## MessageChannelAttribute `type`
@@ -1084,6 +1103,36 @@ it allows you to not necessarily update code for call handling immediately.
 ##### Summary
 
 The version number to tag this class with during transmission
+
+<a name='T-MQContract-NoChannelOptionsAvailableException'></a>
+## NoChannelOptionsAvailableException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+An exception thrown when there are options supplied to an underlying system connection that does not support options for that particular instance
+
+<a name='M-MQContract-NoChannelOptionsAvailableException-ThrowIfNotNull-MQContract-Interfaces-Service-IServiceChannelOptions-'></a>
+### ThrowIfNotNull(options) `method`
+
+##### Summary
+
+Called to throw if options is not null
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | The service channel options that were supplied |
+
+##### Exceptions
+
+| Name | Description |
+| ---- | ----------- |
+| [MQContract.NoChannelOptionsAvailableException](#T-MQContract-NoChannelOptionsAvailableException 'MQContract.NoChannelOptionsAvailableException') | Thrown when the options is not null |
 
 <a name='T-MQContract-Messages-PingResult'></a>
 ## PingResult `type`

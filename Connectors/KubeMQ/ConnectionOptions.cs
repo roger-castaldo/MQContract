@@ -50,6 +50,9 @@ namespace MQContract.KubeMQ
         /// </summary>
         public int? DefaultRPCTimeout { get; init; } = null;
 
+        /// <summary>
+        /// Logging instance to use in underlying service layer
+        /// </summary>
         public Microsoft.Extensions.Logging.ILogger? Logger { get; init; } = null;
 
         internal SslCredentials? SSLCredentials

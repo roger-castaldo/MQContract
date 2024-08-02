@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using Microsoft.Extensions.Caching.Memory;
 using MQContract.Interfaces.Service;
 using MQContract.Kafka.Options;
 using MQContract.Kafka.Subscriptions;
@@ -9,7 +8,11 @@ using System.Text;
 
 namespace MQContract.Kafka
 {
-    public class Connection(ClientConfig clientConfig) : IMessageServiceConnection,IDisposable
+    /// <summary>
+    /// This is the MessageServiceConnection implementation for using Kafka
+    /// </summary>
+    /// <param name="clientConfig"></param>
+    public class Connection(ClientConfig clientConfig) : IMessageServiceConnection
     {
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private const string QUERY_IDENTIFIER_HEADER = "_QueryClientID";
@@ -24,9 +27,16 @@ namespace MQContract.Kafka
         private readonly Guid Identifier = Guid.NewGuid();
         private bool disposedValue;
 
+        /// <summary>
+        /// The maximum message body size allowed
+        /// </summary>
         public int? MaxMessageBodySize => clientConfig.MessageMaxBytes;
 
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(2);
+        /// <summary>
+        /// The default timeout to use for RPC calls when not specified by the class or in the call.
+        /// DEFAULT:1 minute if not specified inside the connection options
+        /// </summary>
+        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
 
         internal static byte[] EncodeHeaderValue(string value)
             => UTF8Encoding.UTF8.GetBytes(value);
@@ -76,11 +86,25 @@ namespace MQContract.Kafka
             return ExtractHeaders(header);
         }
 
+        /// <summary>
+        /// Not implemented as Kafka does not support this particular action
+        /// </summary>
+        /// <returns>Throws NotImplementedException</returns>
+        /// <exception cref="NotImplementedException">Thrown because Kafka does not support this particular action</exception>
         public Task<PingResult> PingAsync()
             => throw new NotImplementedException();
 
+        /// <summary>
+        /// Called to publish a message into the Kafka server
+        /// </summary>
+        /// <param name="message">The service message being sent</param>
+        /// <param name="options">The service channel options, if desired, specifically the PublishChannelOptions which is used to access the storage capabilities of KubeMQ</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>Transmition result identifying if it worked or not</returns>
+        /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
         public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
+            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             try
             {
                 var result = await producer.ProduceAsync(message.Channel, new Message<string, byte[]>()
@@ -88,7 +112,7 @@ namespace MQContract.Kafka
                     Key=message.ID,
                     Headers=ExtractHeaders(message),
                     Value=message.Data.ToArray()
-                });
+                },cancellationToken);
                 return new TransmissionResult(result.Key);
             }
             catch (Exception ex)
@@ -97,11 +121,26 @@ namespace MQContract.Kafka
             }
         }
 
+        /// <summary>
+        /// Called to publish a query into the Kafka server
+        /// </summary>
+        /// <param name="message">The service message being sent</param>
+        /// <param name="timeout">The timeout supplied for the query to response</param>
+        /// <param name="options">The options specifically for this call and must be supplied.  Must be instance of QueryChannelOptions.</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>The resulting response</returns>
+        /// <exception cref="ArgumentNullException">Thrown if options is null</exception>
+        /// <exception cref="InvalidChannelOptionsTypeException">Thrown if the options that was supplied is not an instance of QueryChannelOptions</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the ReplyChannel is blank or null as it needs to be set</exception>
+        /// <exception cref="QueryExecutionFailedException">Thrown when the query fails to execute</exception>
+        /// <exception cref="QueryAsyncReponseException">Thrown when the responding instance has provided an error</exception>
+        /// <exception cref="QueryResultMissingException">Thrown when there is no response to be found for the query</exception>
         public async Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
-            if (options is not QueryChannelOptions queryChannelOptions)
-                throw new ArgumentNullException(nameof(options));
-            ArgumentNullException.ThrowIfNullOrWhiteSpace(queryChannelOptions.ReplyChannel, nameof(queryChannelOptions.ReplyChannel));
+            ArgumentNullException.ThrowIfNull(options);
+            InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<QueryChannelOptions>(options);
+            var queryChannelOptions = (QueryChannelOptions)options;
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(queryChannelOptions.ReplyChannel);
             var callID = Guid.NewGuid();
             var headers = ExtractHeaders(message, Identifier, callID, queryChannelOptions.ReplyChannel);
             var tcs = StartResponseListener(clientConfig,Identifier,callID,queryChannelOptions.ReplyChannel,cancellationToken);
@@ -174,8 +213,20 @@ namespace MQContract.Kafka
             return result;
         }
 
+        /// <summary>
+        /// Called to create a subscription to the underlying Kafka server
+        /// </summary>
+        /// <param name="messageRecieved">Callback for when a message is recieved</param>
+        /// <param name="errorRecieved">Callback for when an error occurs</param>
+        /// <param name="channel">The name of the channel to bind to</param>
+        /// <param name="group">The group to subscribe as part of</param>
+        /// <param name="options"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
         public async Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
+            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             var subscription = new PublishSubscription(
                 new ConsumerBuilder<string,byte[]>(new ConsumerConfig(clientConfig)
                 {
@@ -192,10 +243,20 @@ namespace MQContract.Kafka
             return subscription;
         }
 
+        /// <summary>
+        /// Called to create a subscription for queries to the underlying Kafka server
+        /// </summary>
+        /// <param name="messageRecieved">Callback for when a query is recieved</param>
+        /// <param name="errorRecieved">Callback for when an error occurs</param>
+        /// <param name="channel">The name of the channel to bind to</param>
+        /// <param name="group">The group to subscribe as part of</param>
+        /// <param name="options">Optional QueryChannelOptions to be supplied that will specify the ReplyChannel if not supplied by query message</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>A subscription instance</returns>
+        /// <exception cref="InvalidChannelOptionsTypeException">Thrown when options is not null and is not an instance of the type QueryChannelOptions</exception>
         public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
-            if (options!=null && options is not QueryChannelOptions)
-                throw new InvalidChannelOptionsTypeException(typeof(QueryChannelOptions), options.GetType());
+            InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<QueryChannelOptions>(options);
             var subscription = new QuerySubscription(
                 new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
                 {
@@ -248,6 +309,10 @@ namespace MQContract.Kafka
             return subscription;
         }
 
+        /// <summary>
+        /// Called to dispose of the resources used
+        /// </summary>
+        /// <param name="disposing">Indicates if it is disposing</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -266,6 +331,9 @@ namespace MQContract.Kafka
             }
         }
 
+        /// <summary>
+        /// Called to dispose of the resources used
+        /// </summary>
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
