@@ -117,18 +117,14 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var messageHeader = new Mock<MessageHeader>(); ;
-            messageHeader.Setup(x => x.Keys)
-                .Returns(["testing"]);
-            messageHeader.Setup(x => x["testing"])
-                .Returns("testing");
+            var messageHeader = new MessageHeader([new("testing", "testing")]);
 
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, messageHeader: messageHeader.Object);
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, messageHeader: messageHeader);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -141,9 +137,9 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
             Assert.AreEqual(testMessage, JsonSerializer.Deserialize<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
-            Assert.AreEqual(messageHeader.Object.Keys.Count(), messages[0].Header.Keys.Count());
-            Assert.IsTrue(messageHeader.Object.Keys.All(k => messages[0].Header.Keys.Contains(k)));
-            Assert.IsTrue(messageHeader.Object.Keys.All(k => Equals(messages[0].Header[k], messageHeader.Object[k])));
+            Assert.AreEqual(messageHeader.Keys.Count(), messages[0].Header.Keys.Count());
+            Assert.IsTrue(messageHeader.Keys.All(k => messages[0].Header.Keys.Contains(k)));
+            Assert.IsTrue(messageHeader.Keys.All(k => Equals(messages[0].Header[k], messageHeader[k])));
             #endregion
 
             #region Verify
@@ -487,7 +483,6 @@ namespace AutomatedTesting.ContractConnectionTests
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
-            List<TimeSpan> timeouts = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
@@ -510,8 +505,6 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
-            Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual("U-CustomEncryptorMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
             var decodedData = new TestMessageEncryptor().Decrypt(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);

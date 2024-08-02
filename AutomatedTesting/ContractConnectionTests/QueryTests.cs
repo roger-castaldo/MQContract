@@ -154,18 +154,14 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var messageHeader = new Mock<MessageHeader>(); ;
-            messageHeader.Setup(x => x.Keys)
-                .Returns(["testing"]);
-            messageHeader.Setup(x => x["testing"])
-                .Returns("testing");
+            var messageHeader = new MessageHeader([new("testing", "testing")]);
 
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, messageHeader: messageHeader.Object);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, messageHeader: messageHeader);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -183,9 +179,9 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.IsTrue(messages[0].Data.Length>0);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
-            Assert.AreEqual(messageHeader.Object.Keys.Count(), messages[0].Header.Keys.Count());
-            Assert.IsTrue(messageHeader.Object.Keys.All(k => messages[0].Header.Keys.Contains(k)));
-            Assert.IsTrue(messageHeader.Object.Keys.All(k => Equals(messages[0].Header[k], messageHeader.Object[k])));
+            Assert.AreEqual(messageHeader.Keys.Count(), messages[0].Header.Keys.Count());
+            Assert.IsTrue(messageHeader.Keys.All(k => messages[0].Header.Keys.Contains(k)));
+            Assert.IsTrue(messageHeader.Keys.All(k => Equals(messages[0].Header[k], messageHeader[k])));
             #endregion
 
             #region Verify

@@ -30,7 +30,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                .Returns((ServiceMessage message, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
@@ -302,7 +302,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                .Returns((ServiceMessage message, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
@@ -385,7 +385,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                .Returns((ServiceMessage message, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
@@ -452,7 +452,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                .Returns((ServiceMessage message, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message,$"{message.MessageTypeID}:XXXX");
                     serviceMessages.Add(rmessage);
@@ -517,7 +517,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                .Returns((ServiceMessage message, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
@@ -602,7 +602,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                .Returns((ServiceMessage message, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
@@ -678,7 +678,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                .Returns((ServiceMessage message, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
@@ -754,7 +754,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<string>(groups), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+                .Returns((ServiceMessage message, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
                     serviceMessages.Add(rmessage);
