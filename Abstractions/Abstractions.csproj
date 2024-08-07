@@ -8,6 +8,19 @@
     <RootNamespace>MQContract</RootNamespace>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	<DocumentationMarkdown>$(MSBuildProjectDirectory)\Readme.md</DocumentationMarkdown>
+	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	<Authors>roger-castaldo</Authors>
+	<Title>Abstractions for MQContract</Title>
+	<Company>$(AssemblyName)</Company>
+	<PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
+	<PackageReadmeFile>Readme.md</PackageReadmeFile>
+	<RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>
+	<PackageTags>Message Queue MQ Contract</PackageTags>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+	<IncludeSymbols>True</IncludeSymbols>
+	<RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +28,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Readme.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

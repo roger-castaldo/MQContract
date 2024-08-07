@@ -8,6 +8,18 @@
     <RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
   <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	  <DocumentationMarkdown>$(MSBuildProjectDirectory)\Readme.md</DocumentationMarkdown>
+	  <Authors>roger-castaldo</Authors>
+	  <Title>NATS.io Connector for MQContract</Title>
+	  <Company>$(AssemblyName)</Company>
+	  <PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
+	  <PackageReadmeFile>Readme.md</PackageReadmeFile>
+	  <RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>
+	  <PackageTags>Message Queue MQ Contract NATS</PackageTags>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+	  <IncludeSymbols>True</IncludeSymbols>
+	  <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,4 +34,11 @@
     <ProjectReference Include="..\..\Abstractions\Abstractions.csproj" />
   </ItemGroup>
 
+
+	<ItemGroup>
+		<None Update="Readme.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 </Project>
