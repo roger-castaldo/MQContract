@@ -22,8 +22,6 @@ namespace MQContract.NATS
         private readonly NatsConnection natsConnection;
         private readonly NatsJSContext natsJSContext;
         private readonly ILogger? logger;
-        private readonly List<IInternalServiceSubscription> subscriptions = [];
-        private readonly SemaphoreSlim dataLock = new(1, 1);
         private bool disposedValue;
 
         /// <summary>
@@ -229,9 +227,6 @@ namespace MQContract.NATS
                     cancellationToken
                 );
             subscription.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(subscription);
-            dataLock.Release();
             return subscription;
         }
 
@@ -260,9 +255,6 @@ namespace MQContract.NATS
                 cancellationToken
             );
             sub.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(sub);
-            dataLock.Release();
             return sub;
         }
 
@@ -276,13 +268,7 @@ namespace MQContract.NATS
             {
                 if (disposing)
                 {
-                    dataLock.Wait();
-                    foreach (var sub in subscriptions)
-                        sub.EndAsync().Wait();
-                    subscriptions.Clear();
                     Task.Run(async () => await natsConnection.DisposeAsync()).Wait();
-                    dataLock.Release();
-                    dataLock.Dispose();
                 }
                 disposedValue=true;
             }

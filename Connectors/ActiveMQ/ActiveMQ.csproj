@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <Nullable>enable</Nullable>
+	  <AssemblyName>MQContract.$(MSBuildProjectName)</AssemblyName>
+	  <RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <DocumentationMarkdown>$(MSBuildProjectDirectory)\Readme.md</DocumentationMarkdown>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Apache.NMS.ActiveMQ" Version="2.1.0" />
+	  <PackageReference Include="Vsxmd" Version="1.4.5">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+	  <ProjectReference Include="..\..\Abstractions\Abstractions.csproj" />
+  </ItemGroup>
+</Project>

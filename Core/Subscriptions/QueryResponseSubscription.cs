@@ -8,10 +8,10 @@ namespace MQContract.Subscriptions
 {
     internal sealed class QueryResponseSubscription<Q,R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, 
         Func<IRecievedMessage<Q>, Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved,
-        Func<string, Task<string>> mapChannel,
+        Func<string, Task<string>> mapChannel, SubscriptionCollection collection,
         string? channel = null, string? group = null, 
         bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
-        : SubscriptionBase<Q>(mapChannel,channel,synchronous),ISubscription
+        : SubscriptionBase<Q>(mapChannel,collection,channel,synchronous),ISubscription
         where Q : class
         where R : class
     {

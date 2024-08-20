@@ -33,6 +33,8 @@ namespace MQContract
     {
         private readonly SemaphoreSlim dataLock = new(1, 1);
         private IEnumerable<IMessageTypeFactory> typeFactories = [];
+        private bool disposedValue;
+        private readonly SubscriptionCollection subscriptions = new();
 
         private IMessageFactory<T> GetMessageFactory<T>(bool ignoreMessageHeader = false) where T : class
         {
@@ -101,13 +103,17 @@ namespace MQContract
                 messageRecieved,
                 errorRecieved,
                 (originalChannel)=>MapChannel(ChannelMapper.MapTypes.PublishSubscription,originalChannel),
+                subscriptions,
                 channel:channel,
                 group:group,
                 synchronous:synchronous,
                 options:options,
                 logger:logger);
-            if (await subscription.EstablishSubscriptionAsync(serviceConnection,cancellationToken))
+            if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
+            {
+                await subscriptions.AddAsync(subscription);
                 return subscription;
+            }
             throw new SubscriptionFailedException();
         }
 
@@ -224,14 +230,38 @@ namespace MQContract
                 messageRecieved,
                 errorRecieved,
                 (originalChannel) => MapChannel(ChannelMapper.MapTypes.QuerySubscription, originalChannel),
+                subscriptions,
                 channel: channel,
                 group: group,
                 synchronous: synchronous,
                 options: options,
                 logger: logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
+            {
+                await subscriptions.AddAsync(subscription);
                 return subscription;
+            }
             throw new SubscriptionFailedException();
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    subscriptions.Dispose();
+                    serviceConnection.Dispose();
+                }
+                disposedValue=true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

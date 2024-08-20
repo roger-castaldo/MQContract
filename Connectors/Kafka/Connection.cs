@@ -22,8 +22,6 @@ namespace MQContract.Kafka
 
         private readonly IProducer<string, byte[]> producer = new ProducerBuilder<string, byte[]>(clientConfig).Build();
         private readonly ClientConfig clientConfig = clientConfig;
-        private readonly List<SubscriptionBase> subscriptions = [];
-        private readonly SemaphoreSlim dataLock = new(1, 1);
         private readonly Guid Identifier = Guid.NewGuid();
         private bool disposedValue;
 
@@ -237,9 +235,6 @@ namespace MQContract.Kafka
                 channel,
                 cancellationToken);
             subscription.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(subscription);
-            dataLock.Release();
             return subscription;
         }
 
@@ -303,9 +298,6 @@ namespace MQContract.Kafka
                 channel,
                 cancellationToken);
             subscription.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(subscription);
-            dataLock.Release();
             return subscription;
         }
 
@@ -319,13 +311,7 @@ namespace MQContract.Kafka
             {
                 if (disposing)
                 {
-                    dataLock.Wait();
-                    foreach (var sub in subscriptions)
-                        sub.EndAsync().Wait();
-                    subscriptions.Clear();
                     producer.Dispose();
-                    dataLock.Release();
-                    dataLock.Dispose();
                 }
                 disposedValue=true;
             }

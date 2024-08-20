@@ -23,8 +23,6 @@ namespace MQContract.KubeMQ
 
         private readonly ConnectionOptions connectionOptions;
         private readonly KubeClient client;
-        private readonly List<IServiceSubscription> subscriptions = [];
-        private readonly SemaphoreSlim dataLock = new(1, 1);
         private bool disposedValue;
 
         /// <summary>
@@ -209,9 +207,6 @@ namespace MQContract.KubeMQ
                 cancellationToken
             );
             sub.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(sub);
-            dataLock.Release();
             return sub;
         }
 
@@ -239,9 +234,6 @@ namespace MQContract.KubeMQ
                 cancellationToken
             );
             sub.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(sub);
-            dataLock.Release();
             return sub;
         }
         /// <summary>
@@ -254,13 +246,7 @@ namespace MQContract.KubeMQ
             {
                 if (disposing)
                 {
-                    dataLock.Wait();
-                    foreach (var sub in subscriptions)
-                        sub.EndAsync().Wait();
-                    subscriptions.Clear();
                     client.Dispose();
-                    dataLock.Release();
-                    dataLock.Dispose();
                 }
                 disposedValue=true;
             }
