@@ -28,7 +28,7 @@ namespace MQContract
             {
                 disposedValue = true;
                 await dataLock.WaitAsync();
-                await Task.WhenAll(subscriptions.Select(sub => sub.EndAsync(false)).ToArray());
+                await Task.WhenAll(subscriptions.Select(sub => sub.EndAsync(false).AsTask()));
                 dataLock.Release();
                 dataLock.Dispose();
                 subscriptions.Clear();

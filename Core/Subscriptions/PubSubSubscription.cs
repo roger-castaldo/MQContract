@@ -48,7 +48,7 @@ namespace MQContract.Subscriptions
                         {
                             try
                             {
-                                var taskMessage = messageFactory.ConvertMessage(logger, message)
+                                var taskMessage = await messageFactory.ConvertMessageAsync(logger, message)
                                     ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
                                 await messageRecieved(new RecievedMessage<T>(message.ID,taskMessage!,message.Header,message.RecievedTimestamp,DateTime.Now));
                             }

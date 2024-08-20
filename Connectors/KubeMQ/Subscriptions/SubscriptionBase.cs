@@ -54,7 +54,7 @@ namespace MQContract.KubeMQ.Subscriptions
                                 case StatusCode.Cancelled:
                                 case StatusCode.PermissionDenied:
                                 case StatusCode.Aborted:
-                                    EndAsync().Wait();
+                                    await EndAsync();
                                     break;
                                 case StatusCode.Unknown:
                                 case StatusCode.Unavailable:
@@ -80,7 +80,7 @@ namespace MQContract.KubeMQ.Subscriptions
             });
         }
 
-        public async Task EndAsync()
+        public async ValueTask EndAsync()
         {
             if (active)
             {

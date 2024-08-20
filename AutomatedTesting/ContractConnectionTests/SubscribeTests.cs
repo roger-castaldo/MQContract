@@ -36,7 +36,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult);
+                    return ValueTask.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -209,7 +209,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(() => contractConnection.SubscribeAsync<NoChannelMessage>((msg) => Task.CompletedTask, (error) => { }));
+            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => Task.CompletedTask, (error) => { }));
             #endregion
 
             #region Assert
@@ -238,7 +238,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(()=>contractConnection.SubscribeAsync<BasicMessage>(msg => Task.CompletedTask, err => { }));
+            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async ()=> await contractConnection.SubscribeAsync<BasicMessage>(msg => Task.CompletedTask, err => { }));
             #endregion
 
             #region Assert
@@ -257,7 +257,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var serviceSubscription = new Mock<IServiceSubscription>();
             serviceSubscription.Setup(x => x.EndAsync())
-                .Returns(Task.CompletedTask);
+                .Returns(ValueTask.CompletedTask);
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
@@ -271,6 +271,39 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => Task.CompletedTask, err => { });
             await subscription.EndAsync();
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceSubscription.Verify(x => x.EndAsync(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscriptionsCleanup()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            serviceSubscription.Setup(x => x.EndAsync())
+                .Returns(ValueTask.CompletedTask);
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.Object);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => Task.CompletedTask, err => { });
+            await contractConnection.DisposeAsync();
             #endregion
 
             #region Assert
@@ -308,7 +341,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult);
+                    return ValueTask.FromResult(transmissionResult);
                 });
 
             var message1 = new BasicMessage("TestSubscribeAsyncWithSynchronousActions1");
@@ -391,7 +424,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult);
+                    return ValueTask.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -458,7 +491,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult);
+                    return ValueTask.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -523,7 +556,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult);
+                    return ValueTask.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -608,7 +641,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult);
+                    return ValueTask.FromResult(transmissionResult);
                 });
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -684,7 +717,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult);
+                    return ValueTask.FromResult(transmissionResult);
                 });
 
             var message = new NoChannelMessage("TestSubscribeAsyncWithNoExtendedAspects");
@@ -760,7 +793,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
-                    return Task.FromResult(transmissionResult);
+                    return ValueTask.FromResult(transmissionResult);
                 });
 
             var message = new BasicQueryMessage("TestSubscribeAsyncWithNoExtendedAspects");

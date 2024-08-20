@@ -11,13 +11,13 @@ namespace MQContract.Subscriptions
         Func<string, Task<string>> mapChannel, SubscriptionCollection collection,
         string? channel = null, string? group = null, 
         bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
-        : SubscriptionBase<Q>(mapChannel,collection,channel,synchronous),ISubscription
+        : SubscriptionBase<Q>(mapChannel,collection,channel,synchronous)
         where Q : class
         where R : class
     {
         private readonly ManualResetEventSlim manualResetEvent = new(true);
 
-        public async Task<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken = new CancellationToken())
+        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken = new CancellationToken())
         {
             SyncToken(cancellationToken);
             serviceSubscription = await connection.SubscribeQueryAsync(
@@ -31,7 +31,7 @@ namespace MQContract.Subscriptions
             return serviceSubscription!=null;
         }
 
-        private async Task<ServiceMessage> ProcessServiceMessageAsync(RecievedServiceMessage message)
+        private async ValueTask<ServiceMessage> ProcessServiceMessageAsync(RecievedServiceMessage message)
         {
             if (Synchronous)
                 manualResetEvent.Wait(cancellationToken:token.Token);
@@ -39,7 +39,7 @@ namespace MQContract.Subscriptions
             ServiceMessage? response = null;
             try
             {
-                var taskMessage = queryMessageFactory.ConvertMessage(logger, message)
+                var taskMessage = await queryMessageFactory.ConvertMessageAsync(logger, message)
                                         ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(Q).FullName}");
                 var result = await messageRecieved(new RecievedMessage<Q>(message.ID, taskMessage,message.Header,message.RecievedTimestamp,DateTime.Now));
                 response = await responseMessageFactory.ConvertMessageAsync(result.Message, message.Channel, new MessageHeader(result.Headers));

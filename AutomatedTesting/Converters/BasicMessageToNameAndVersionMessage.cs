@@ -5,7 +5,7 @@ namespace AutomatedTesting.Converters
 {
     internal class BasicMessageToNameAndVersionMessage : IMessageConverter<BasicMessage, NamedAndVersionedMessage>
     {
-        public NamedAndVersionedMessage Convert(BasicMessage source)
-            => new(source.Name);
+        public ValueTask<NamedAndVersionedMessage> ConvertAsync(BasicMessage source)
+            => ValueTask.FromResult<NamedAndVersionedMessage>(new(source.Name));
     }
 }

@@ -10,6 +10,6 @@ namespace MQContract.Interfaces.Subscriptions
     {
         Guid ID { get; }
 
-        Task EndAsync(bool remove);
+        ValueTask EndAsync(bool remove);
     }
 }

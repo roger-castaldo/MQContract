@@ -33,7 +33,7 @@ namespace MQContract.ActiveMQ.Subscriptions
             }
         }
 
-        public async Task EndAsync()
+        public async ValueTask EndAsync()
         {
             if (consumer!=null)
                 await consumer.CloseAsync();

@@ -77,7 +77,7 @@ namespace MQContract.NATS
         /// Called to ping the NATS.io service
         /// </summary>
         /// <returns>The Ping Result including service information</returns>
-        public async Task<PingResult> PingAsync()
+        public async ValueTask<PingResult> PingAsync()
             => new PingResult(natsConnection.ServerInfo?.Host??string.Empty,
                 natsConnection.ServerInfo?.Version??string.Empty,
                 await natsConnection.PingAsync()
@@ -129,7 +129,7 @@ namespace MQContract.NATS
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>Transmition result identifying if it worked or not</returns>
         /// <exception cref="InvalidChannelOptionsTypeException">Thrown when an attempt to pass an options object that is not of the type StreamPublishChannelOptions</exception>
-        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<StreamPublishChannelOptions>(options);
             try
@@ -172,7 +172,7 @@ namespace MQContract.NATS
         /// <returns>The resulting response</returns>
         /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
         /// <exception cref="QueryAsyncReponseException">Thrown when an error comes from the responding service</exception>
-        public async Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             var result = await natsConnection.RequestAsync<byte[], byte[]>(
@@ -204,7 +204,7 @@ namespace MQContract.NATS
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance</returns>
         /// <exception cref="InvalidChannelOptionsTypeException">Thrown when options is not null and is not an instance of the type StreamPublishSubscriberOptions</exception>
-        public async Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<StreamPublishChannelOptions>(options);
             IInternalServiceSubscription? subscription = null;
@@ -241,7 +241,7 @@ namespace MQContract.NATS
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance</returns>
         /// /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             var sub = new QuerySubscription(
@@ -255,7 +255,7 @@ namespace MQContract.NATS
                 cancellationToken
             );
             sub.Run();
-            return sub;
+            return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
 
         public async ValueTask DisposeAsync()

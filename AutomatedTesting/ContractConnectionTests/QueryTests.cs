@@ -328,10 +328,10 @@ namespace AutomatedTesting.ContractConnectionTests
                 .Returns(defaultTimeout);
 
             var globalEncoder = new Mock<IMessageEncoder>();
-            globalEncoder.Setup(x => x.Encode<BasicQueryMessage>(It.IsAny<BasicQueryMessage>()))
-                .Returns(encodedData);
-            globalEncoder.Setup(x => x.Decode<BasicResponseMessage>(It.IsAny<Stream>()))
-                .Returns((Stream str) =>
+            globalEncoder.Setup(x => x.EncodeAsync<BasicQueryMessage>(It.IsAny<BasicQueryMessage>()))
+                .ReturnsAsync(encodedData);
+            globalEncoder.Setup(x => x.DecodeAsync<BasicResponseMessage>(It.IsAny<Stream>()))
+                .ReturnsAsync((Stream str) =>
                 {
                     var reader = new StreamReader(str);
                     var result = new BasicResponseMessage(reader.ReadToEnd());
@@ -398,10 +398,10 @@ namespace AutomatedTesting.ContractConnectionTests
                 .Returns(defaultTimeout);
 
             var globalEncryptor = new Mock<IMessageEncryptor>();
-            globalEncryptor.Setup(x => x.Encrypt(Capture.In<byte[]>(binaries), out headers))
-                .Returns((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
-            globalEncryptor.Setup(x => x.Decrypt(It.IsAny<Stream>(), It.IsAny<MessageHeader>()))
-                .Returns((Stream source, MessageHeader headers) =>
+            globalEncryptor.Setup(x => x.EncryptAsync(Capture.In<byte[]>(binaries), out headers))
+                .ReturnsAsync((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
+            globalEncryptor.Setup(x => x.DecryptAsync(It.IsAny<Stream>(), It.IsAny<MessageHeader>()))
+                .ReturnsAsync((Stream source, MessageHeader headers) =>
                 {
                     var buff = new byte[source.Length];
                     source.Read(buff, 0, buff.Length);
@@ -657,7 +657,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-CustomEncoderMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            Assert.AreEqual(testMessage, new TestMessageEncoder().Decode(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await new TestMessageEncoder().DecodeAsync(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
 
@@ -715,7 +715,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual("U-CustomEncoderWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
             Assert.AreEqual(testMessage,
-                new TestMessageEncoderWithInjection(services.GetRequiredService<IInjectableService>()).Decode(new MemoryStream(messages[0].Data.ToArray()))
+                await new TestMessageEncoderWithInjection(services.GetRequiredService<IInjectableService>()).DecodeAsync(new MemoryStream(messages[0].Data.ToArray()))
             );
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -770,7 +770,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual("U-CustomEncryptorMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            var decodedData = new TestMessageEncryptor().Decrypt(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
+            var decodedData = await new TestMessageEncryptor().DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorMessage>(decodedData));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -827,7 +827,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual("U-CustomEncryptorWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            var decodedData = new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).Decrypt(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
+            var decodedData = await new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorWithInjectionMessage>(decodedData));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -866,7 +866,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(() => contractConnection.QueryAsync<NoChannelMessage, BasicResponseMessage>(testMessage));
+            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.QueryAsync<NoChannelMessage, BasicResponseMessage>(testMessage));
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -913,7 +913,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage));
+            var exception = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage));
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -1085,7 +1085,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<UnknownResponseTypeException>(() => contractConnection.QueryAsync<NoChannelMessage>(testMessage));
+            var exception = await Assert.ThrowsExceptionAsync<UnknownResponseTypeException>(async () => await contractConnection.QueryAsync<NoChannelMessage>(testMessage));
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion

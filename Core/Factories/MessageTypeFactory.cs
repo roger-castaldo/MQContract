@@ -146,21 +146,21 @@ namespace MQContract.Factories
             return false;
         }
 
-        public async Task<ServiceMessage> ConvertMessageAsync(T message, string? channel, MessageHeader? messageHeader, Func<string, Task<string>>? mapChannel=null)
+        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message, string? channel, MessageHeader? messageHeader, Func<string, Task<string>>? mapChannel=null)
         {
             channel ??= messageChannel;
             if (string.IsNullOrWhiteSpace(channel))
                 throw new MessageChannelNullException();
 
-            var encodedData = messageEncoder?.Encode(message)??globalMessageEncoder!.Encode<T>(message);
-            var body = messageEncryptor?.Encrypt(encodedData, out var messageHeaders)??globalMessageEncryptor!.Encrypt(encodedData, out messageHeaders);
+            var encodedData = await (messageEncoder?.EncodeAsync(message)??globalMessageEncoder!.EncodeAsync<T>(message));
+            var body = await (messageEncryptor?.EncryptAsync(encodedData, out var messageHeaders)??globalMessageEncryptor!.EncryptAsync(encodedData, out messageHeaders));
 
             var metaData = string.Empty;
             if (body.Length>maxMessageSize)
             {
                 using var ms = new MemoryStream();
                 var zip = new GZipStream(ms, System.IO.Compression.CompressionLevel.SmallestSize, false);
-                await zip.WriteAsync(body, 0, body.Length);
+                await zip.WriteAsync(body);
                 await zip.FlushAsync();
                 body = ms.ToArray();
                 metaData = "C";
@@ -177,7 +177,7 @@ namespace MQContract.Factories
             return new ServiceMessage(Guid.NewGuid().ToString(), metaData, channel, new MessageHeader(messageHeader, messageHeaders), body);
         }
 
-        T? IConversionPath<T>.ConvertMessage(ILogger? logger, IEncodedMessage message, Stream? dataStream)
+        async ValueTask<T?> IConversionPath<T>.ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
         {
             if (!IgnoreMessageHeader)
 #pragma warning disable S3236 // Caller information arguments should not be provided explicitly
@@ -191,11 +191,11 @@ namespace MQContract.Factories
             if (IgnoreMessageHeader || IsMessageTypeMatch(message.MessageTypeID, typeof(T), out compressed))
             {
                 dataStream = (compressed ? new GZipStream(new MemoryStream(message.Data.ToArray()), System.IO.Compression.CompressionMode.Decompress) : new MemoryStream(message.Data.ToArray()));
-                dataStream = messageEncryptor?.Decrypt(dataStream, message.Header)??globalMessageEncryptor!.Decrypt(dataStream, message.Header);
+                dataStream = await (messageEncryptor?.DecryptAsync(dataStream, message.Header)??globalMessageEncryptor!.DecryptAsync(dataStream, message.Header));
                 if (messageEncoder!=null)
-                    result = messageEncoder.Decode(dataStream);
+                    result = await messageEncoder.DecodeAsync(dataStream);
                 else
-                    result = globalMessageEncoder!.Decode<T>(dataStream);
+                    result = await globalMessageEncoder!.DecodeAsync<T>(dataStream);
             }
             else
             {
@@ -210,7 +210,7 @@ namespace MQContract.Factories
                 if (converter==null)
                     throw new InvalidCastException();
                 dataStream = (compressed ? new GZipStream(new MemoryStream(message.Data.ToArray()), System.IO.Compression.CompressionMode.Decompress) : new MemoryStream(message.Data.ToArray()));
-                result = converter.ConvertMessage(logger, message, dataStream: dataStream);
+                result = await converter.ConvertMessageAsync(logger, message, dataStream: dataStream);
             }
             if (Equals(result, default(T?)))
                 throw new MessageConversionException(typeof(T), converter?.GetType()??GetType());

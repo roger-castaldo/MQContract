@@ -210,8 +210,8 @@ namespace AutomatedTesting.ContractConnectionTests
                 .ReturnsAsync(transmissionResult);
 
             var globalEncoder = new Mock<IMessageEncoder>();
-            globalEncoder.Setup(x => x.Encode<BasicMessage>(It.IsAny<BasicMessage>()))
-                .Returns(encodedData);
+            globalEncoder.Setup(x => x.EncodeAsync<BasicMessage>(It.IsAny<BasicMessage>()))
+                .ReturnsAsync(encodedData);
 
             var contractConnection = new ContractConnection(serviceConnection.Object, defaultMessageEncoder: globalEncoder.Object);
             #endregion
@@ -236,7 +236,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Verify
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            globalEncoder.Verify(x => x.Encode<BasicMessage>(It.IsAny<BasicMessage>()), Times.Once);
+            globalEncoder.Verify(x => x.EncodeAsync<BasicMessage>(It.IsAny<BasicMessage>()), Times.Once);
             #endregion
         }
 
@@ -259,8 +259,8 @@ namespace AutomatedTesting.ContractConnectionTests
                 .ReturnsAsync(transmissionResult);
 
             var globalEncryptor = new Mock<IMessageEncryptor>();
-            globalEncryptor.Setup(x => x.Encrypt(Capture.In<byte[]>(binaries), out headers))
-                .Returns((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
+            globalEncryptor.Setup(x => x.EncryptAsync(Capture.In<byte[]>(binaries), out headers))
+                .ReturnsAsync((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
 
             var contractConnection = new ContractConnection(serviceConnection.Object, defaultMessageEncryptor: globalEncryptor.Object);
             #endregion
@@ -287,7 +287,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Verify
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            globalEncryptor.Verify(x => x.Encrypt(It.IsAny<byte[]>(), out headers), Times.Once);
+            globalEncryptor.Verify(x => x.EncryptAsync(It.IsAny<byte[]>(), out headers), Times.Once);
             #endregion
         }
 
@@ -417,7 +417,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-CustomEncoderMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            Assert.AreEqual(testMessage, new TestMessageEncoder().Decode(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await new TestMessageEncoder().DecodeAsync(new MemoryStream(messages[0].Data.ToArray())));
             #endregion
 
             #region Verify
@@ -464,7 +464,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual("U-CustomEncoderWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
             Assert.AreEqual(testMessage,
-                new TestMessageEncoderWithInjection(services.GetRequiredService<IInjectableService>()).Decode(new MemoryStream(messages[0].Data.ToArray()))
+                await new TestMessageEncoderWithInjection(services.GetRequiredService<IInjectableService>()).DecodeAsync(new MemoryStream(messages[0].Data.ToArray()))
             );
             #endregion
 
@@ -507,7 +507,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual("U-CustomEncryptorMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            var decodedData = new TestMessageEncryptor().Decrypt(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
+            var decodedData = await new TestMessageEncryptor().DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorMessage>(decodedData));
             #endregion
 
@@ -552,7 +552,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual("U-CustomEncryptorWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            var decodedData = new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).Decrypt(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
+            var decodedData = await new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorWithInjectionMessage>(decodedData));
             #endregion
 
@@ -583,7 +583,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(() => contractConnection.PublishAsync<NoChannelMessage>(testMessage));
+            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.PublishAsync<NoChannelMessage>(testMessage));
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -623,7 +623,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => contractConnection.PublishAsync<BasicMessage>(testMessage));
+            var exception = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(async () => await contractConnection.PublishAsync<BasicMessage>(testMessage));
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion

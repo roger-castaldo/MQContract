@@ -30,13 +30,13 @@ namespace MQContract.Subscriptions
         }
 
         protected void SyncToken(CancellationToken cancellationToken)
-            => cancellationToken.Register(() => EndAsync().Wait());
+            => cancellationToken.Register(async () => await EndAsync());
 
         [ExcludeFromCodeCoverage(Justification ="Virtual function that is implemented elsewhere")]
         protected virtual void InternalDispose()
         { }
 
-        public async Task EndAsync(bool remove)
+        public async ValueTask EndAsync(bool remove)
         {
             if (serviceSubscription!=null)
                 await serviceSubscription.EndAsync();
@@ -45,7 +45,7 @@ namespace MQContract.Subscriptions
                 await collection.RemoveAsync(ID);
         }
 
-        public Task EndAsync()
+        public ValueTask EndAsync()
             => EndAsync(true);
 
         public async ValueTask DisposeAsync()

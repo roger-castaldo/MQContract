@@ -37,7 +37,7 @@ namespace MQContract.NATS.Subscriptions
             RunAction();
         }
 
-        public async Task EndAsync()
+        public async ValueTask EndAsync()
         {
             try { await cancelToken.CancelAsync(); } catch { }
         }

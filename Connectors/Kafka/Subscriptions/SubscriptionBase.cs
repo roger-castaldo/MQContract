@@ -10,49 +10,26 @@ namespace MQContract.NATS.Subscriptions
         protected readonly CancellationTokenSource cancelToken = new();
 
         protected abstract Task RunAction();
-        public void Run()
+        public Task Run()
         {
             cancellationToken.Register(() =>
             {
                 cancelToken.Cancel();
             });
+            var resultSource = new TaskCompletionSource();
             Task.Run(async () =>
             {
                 Consumer.Subscribe(Channel);
+                resultSource.TrySetResult();
                 await RunAction();
                 Consumer.Close();
             });
+            return resultSource.Task;
         }
 
-        public async Task EndAsync()
+        public async ValueTask EndAsync()
         {
             try { await cancelToken.CancelAsync(); } catch { }
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    if (!cancellationToken.IsCancellationRequested) 
-                        cancelToken.Cancel();
-                    try
-                    {
-                        Consumer.Close();
-                    }
-                    catch (Exception) { }
-                    Consumer.Dispose();
-                    cancelToken.Dispose();
-                }
-                disposedValue=true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
 
         public async ValueTask DisposeAsync()

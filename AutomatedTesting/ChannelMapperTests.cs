@@ -805,7 +805,7 @@ namespace AutomatedTesting
             
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
-                It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(),
+                It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
                 It.IsAny<string>(),
@@ -834,7 +834,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
@@ -849,7 +849,7 @@ namespace AutomatedTesting
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
-                It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(),
+                It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
                 It.IsAny<string>(),
@@ -892,7 +892,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
@@ -907,7 +907,7 @@ namespace AutomatedTesting
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
-                It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(),
+                It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
                 It.IsAny<string>(),
@@ -948,7 +948,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
@@ -963,7 +963,7 @@ namespace AutomatedTesting
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
-                It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(),
+                It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
                 It.IsAny<string>(),
@@ -1005,7 +1005,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
@@ -1020,7 +1020,7 @@ namespace AutomatedTesting
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
-                It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(),
+                It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
                 It.IsAny<string>(),
@@ -1061,7 +1061,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, Task<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }

@@ -12,7 +12,7 @@ namespace MQContract.Interfaces
         /// Called to Ping the underlying system to obtain both information and ensure it is up.  Not all Services support this method.
         /// </summary>
         /// <returns></returns>
-        Task<PingResult> PingAsync();
+        ValueTask<PingResult> PingAsync();
         /// <summary>
         /// Called to send a message into the underlying service Pub/Sub style
         /// </summary>
@@ -23,7 +23,7 @@ namespace MQContract.Interfaces
         /// <param name="options">Any required Service Channel Options that will be passed down to the service Connection</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A result indicating the tranmission results</returns>
-        Task<TransmissionResult> PublishAsync<T>(T message, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<TransmissionResult> PublishAsync<T>(T message, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where T : class;
         /// <summary>
         /// Called to create a subscription into the underlying service Pub/Sub style
@@ -38,7 +38,7 @@ namespace MQContract.Interfaces
         /// <param name="options">Any required Service Channel Options that will be passed down to the service Connection</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance that can be ended when desired</returns>
-        Task<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false,bool synchronous=false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false,bool synchronous=false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where T : class;
         /// <summary>
         /// Called to send a message into the underlying service in the Query/Response style
@@ -52,7 +52,7 @@ namespace MQContract.Interfaces
         /// <param name="options">Any required Service Channel Options that will be passed down to the service Connection</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A result indicating the success or failure as well as the returned message</returns>
-        Task<QueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<QueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class;
         /// <summary>
@@ -67,7 +67,7 @@ namespace MQContract.Interfaces
         /// <param name="options">Any required Service Channel Options that will be passed down to the service Connection</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A result indicating the success or failure as well as the returned message</returns>
-        Task<QueryResult<object>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<QueryResult<object>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class;
         /// <summary>
         /// Called to create a subscription into the underlying service Query/Reponse style
@@ -83,7 +83,7 @@ namespace MQContract.Interfaces
         /// <param name="options">Any required Service Channel Options that will be passed down to the service Connection</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance that can be ended when desired</returns>
-        Task<ISubscription> SubscribeQueryResponseAsync<Q,R>(Func<IRecievedMessage<Q>,Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<ISubscription> SubscribeQueryResponseAsync<Q,R>(Func<IRecievedMessage<Q>,Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class;
     }

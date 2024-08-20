@@ -89,7 +89,7 @@ namespace MQContract.Kafka
         /// </summary>
         /// <returns>Throws NotImplementedException</returns>
         /// <exception cref="NotImplementedException">Thrown because Kafka does not support this particular action</exception>
-        public Task<PingResult> PingAsync()
+        public ValueTask<PingResult> PingAsync()
             => throw new NotImplementedException();
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace MQContract.Kafka
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>Transmition result identifying if it worked or not</returns>
         /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             try
@@ -133,7 +133,7 @@ namespace MQContract.Kafka
         /// <exception cref="QueryExecutionFailedException">Thrown when the query fails to execute</exception>
         /// <exception cref="QueryAsyncReponseException">Thrown when the responding instance has provided an error</exception>
         /// <exception cref="QueryResultMissingException">Thrown when there is no response to be found for the query</exception>
-        public async Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(options);
             InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<QueryChannelOptions>(options);
@@ -222,7 +222,7 @@ namespace MQContract.Kafka
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             var subscription = new PublishSubscription(
@@ -234,7 +234,7 @@ namespace MQContract.Kafka
                 errorRecieved,
                 channel,
                 cancellationToken);
-            subscription.Run();
+            await subscription.Run();
             return subscription;
         }
 
@@ -249,7 +249,7 @@ namespace MQContract.Kafka
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance</returns>
         /// <exception cref="InvalidChannelOptionsTypeException">Thrown when options is not null and is not an instance of the type QueryChannelOptions</exception>
-        public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<QueryChannelOptions>(options);
             var subscription = new QuerySubscription(
@@ -297,7 +297,7 @@ namespace MQContract.Kafka
                 errorRecieved,
                 channel,
                 cancellationToken);
-            subscription.Run();
+            await subscription.Run();
             return subscription;
         }
 

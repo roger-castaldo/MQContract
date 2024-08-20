@@ -37,10 +37,10 @@ namespace MQContract.ActiveMQ
         /// </summary>
         public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
 
-        public Task<PingResult> PingAsync()
+        public ValueTask<PingResult> PingAsync()
             => throw new NotImplementedException();
 
-        private async Task<IBytesMessage> ProduceMessage(ServiceMessage message)
+        private async ValueTask<IBytesMessage> ProduceMessage(ServiceMessage message)
         {
             var msg = await session.CreateBytesMessageAsync(message.Data.ToArray());
             msg.NMSMessageId=message.ID;
@@ -67,7 +67,7 @@ namespace MQContract.ActiveMQ
             );
         }
 
-        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -80,17 +80,17 @@ namespace MQContract.ActiveMQ
             }
         }
 
-        public Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

@@ -12,12 +12,12 @@
         /// </summary>
         /// <param name="message">The message value to encode</param>
         /// <returns>The message encoded as a byte array</returns>
-        byte[] Encode(T message);
+        ValueTask<byte[]> EncodeAsync(T message);
         /// <summary>
         /// Called to decode the message from a byte stream into the specified type
         /// </summary>
         /// <param name="stream">The byte stream containing the encoded message</param>
         /// <returns>null if the Decode fails, otherwise an instance of the message decoded from the stream</returns>
-        T? Decode(Stream stream);
+        ValueTask<T?> DecodeAsync(Stream stream);
     }
 }

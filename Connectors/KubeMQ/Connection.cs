@@ -79,13 +79,13 @@ namespace MQContract.KubeMQ
         /// </summary>
         /// <returns>The Ping result, specically a PingResponse instance</returns>
         /// <exception cref="UnableToConnectException">Thrown when the Ping fails</exception>
-        public Task<MQContract.Messages.PingResult> PingAsync()
+        public ValueTask<MQContract.Messages.PingResult> PingAsync()
         {
             var watch = new Stopwatch();
             watch.Start();
             var res = client.Ping()??throw new UnableToConnectException();
             watch.Stop();
-            return Task.FromResult<MQContract.Messages.PingResult>(new PingResponse(res,watch.Elapsed));
+            return ValueTask.FromResult<MQContract.Messages.PingResult>(new PingResponse(res,watch.Elapsed));
         }
 
         internal static MapField<string, string> ConvertMessageHeader(MessageHeader header)
@@ -107,7 +107,7 @@ namespace MQContract.KubeMQ
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>Transmition result identifying if it worked or not</returns>
         /// /// <exception cref="InvalidChannelOptionsTypeException">Thrown when an attempt to pass an options object that is not of the type PublishChannelOptions</exception>
-        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<PublishChannelOptions>(options);
             try { 
@@ -146,7 +146,7 @@ namespace MQContract.KubeMQ
         /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
         /// <exception cref="NullResponseException">Thrown when the response from KubeMQ is null</exception>
         /// <exception cref="RPCErrorException">Thrown when there is an RPC exception from the KubeMQ server</exception>
-        public async Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             try
@@ -193,7 +193,7 @@ namespace MQContract.KubeMQ
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance</returns>
         /// <exception cref="InvalidChannelOptionsTypeException">Thrown when options is not null and is not an instance of the type StoredEventsSubscriptionOptions</exception>
-        public async Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<StoredEventsSubscriptionOptions>(options);
             var sub = new PubSubscription(
@@ -207,7 +207,7 @@ namespace MQContract.KubeMQ
                 cancellationToken
             );
             sub.Run();
-            return sub;
+            return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
 
         /// <summary>
@@ -221,7 +221,7 @@ namespace MQContract.KubeMQ
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance</returns>
         /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
             NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             var sub = new QuerySubscription(
@@ -234,7 +234,7 @@ namespace MQContract.KubeMQ
                 cancellationToken
             );
             sub.Run();
-            return sub;
+            return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
         
         public async ValueTask DisposeAsync()

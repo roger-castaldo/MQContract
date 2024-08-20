@@ -15,13 +15,13 @@
   - [Header](#P-MQContract-Interfaces-Messages-IEncodedMessage-Header 'MQContract.Interfaces.Messages.IEncodedMessage.Header')
   - [MessageTypeID](#P-MQContract-Interfaces-Messages-IEncodedMessage-MessageTypeID 'MQContract.Interfaces.Messages.IEncodedMessage.MessageTypeID')
 - [IMessageConverter\`2](#T-MQContract-Interfaces-Conversion-IMessageConverter`2 'MQContract.Interfaces.Conversion.IMessageConverter`2')
-  - [Convert(source)](#M-MQContract-Interfaces-Conversion-IMessageConverter`2-Convert-`0- 'MQContract.Interfaces.Conversion.IMessageConverter`2.Convert(`0)')
+  - [ConvertAsync(source)](#M-MQContract-Interfaces-Conversion-IMessageConverter`2-ConvertAsync-`0- 'MQContract.Interfaces.Conversion.IMessageConverter`2.ConvertAsync(`0)')
 - [IMessageEncoder](#T-MQContract-Interfaces-Encoding-IMessageEncoder 'MQContract.Interfaces.Encoding.IMessageEncoder')
-  - [Decode\`\`1(stream)](#M-MQContract-Interfaces-Encoding-IMessageEncoder-Decode``1-System-IO-Stream- 'MQContract.Interfaces.Encoding.IMessageEncoder.Decode``1(System.IO.Stream)')
-  - [Encode\`\`1(message)](#M-MQContract-Interfaces-Encoding-IMessageEncoder-Encode``1-``0- 'MQContract.Interfaces.Encoding.IMessageEncoder.Encode``1(``0)')
+  - [DecodeAsync\`\`1(stream)](#M-MQContract-Interfaces-Encoding-IMessageEncoder-DecodeAsync``1-System-IO-Stream- 'MQContract.Interfaces.Encoding.IMessageEncoder.DecodeAsync``1(System.IO.Stream)')
+  - [EncodeAsync\`\`1(message)](#M-MQContract-Interfaces-Encoding-IMessageEncoder-EncodeAsync``1-``0- 'MQContract.Interfaces.Encoding.IMessageEncoder.EncodeAsync``1(``0)')
 - [IMessageEncryptor](#T-MQContract-Interfaces-Encrypting-IMessageEncryptor 'MQContract.Interfaces.Encrypting.IMessageEncryptor')
-  - [Decrypt(stream,headers)](#M-MQContract-Interfaces-Encrypting-IMessageEncryptor-Decrypt-System-IO-Stream,MQContract-Messages-MessageHeader- 'MQContract.Interfaces.Encrypting.IMessageEncryptor.Decrypt(System.IO.Stream,MQContract.Messages.MessageHeader)')
-  - [Encrypt(data,headers)](#M-MQContract-Interfaces-Encrypting-IMessageEncryptor-Encrypt-System-Byte[],System-Collections-Generic-Dictionary{System-String,System-String}@- 'MQContract.Interfaces.Encrypting.IMessageEncryptor.Encrypt(System.Byte[],System.Collections.Generic.Dictionary{System.String,System.String}@)')
+  - [DecryptAsync(stream,headers)](#M-MQContract-Interfaces-Encrypting-IMessageEncryptor-DecryptAsync-System-IO-Stream,MQContract-Messages-MessageHeader- 'MQContract.Interfaces.Encrypting.IMessageEncryptor.DecryptAsync(System.IO.Stream,MQContract.Messages.MessageHeader)')
+  - [EncryptAsync(data,headers)](#M-MQContract-Interfaces-Encrypting-IMessageEncryptor-EncryptAsync-System-Byte[],System-Collections-Generic-Dictionary{System-String,System-String}@- 'MQContract.Interfaces.Encrypting.IMessageEncryptor.EncryptAsync(System.Byte[],System.Collections.Generic.Dictionary{System.String,System.String}@)')
 - [IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection')
   - [DefaultTimout](#P-MQContract-Interfaces-Service-IMessageServiceConnection-DefaultTimout 'MQContract.Interfaces.Service.IMessageServiceConnection.DefaultTimout')
   - [MaxMessageBodySize](#P-MQContract-Interfaces-Service-IMessageServiceConnection-MaxMessageBodySize 'MQContract.Interfaces.Service.IMessageServiceConnection.MaxMessageBodySize')
@@ -29,10 +29,10 @@
   - [PublishAsync(message,options,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.PublishAsync(MQContract.Messages.ServiceMessage,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
   - [QueryAsync(message,timeout,options,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-QueryAsync-MQContract-Messages-ServiceMessage,System-TimeSpan,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.QueryAsync(MQContract.Messages.ServiceMessage,System.TimeSpan,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
   - [SubscribeAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeAsync-System-Action{MQContract-Messages-RecievedServiceMessage},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.SubscribeAsync(System.Action{MQContract.Messages.RecievedServiceMessage},System.Action{System.Exception},System.String,System.String,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
-  - [SubscribeQueryAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeQueryAsync-System-Func{MQContract-Messages-RecievedServiceMessage,System-Threading-Tasks-Task{MQContract-Messages-ServiceMessage}},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.SubscribeQueryAsync(System.Func{MQContract.Messages.RecievedServiceMessage,System.Threading.Tasks.Task{MQContract.Messages.ServiceMessage}},System.Action{System.Exception},System.String,System.String,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
+  - [SubscribeQueryAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeQueryAsync-System-Func{MQContract-Messages-RecievedServiceMessage,System-Threading-Tasks-ValueTask{MQContract-Messages-ServiceMessage}},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.SubscribeQueryAsync(System.Func{MQContract.Messages.RecievedServiceMessage,System.Threading.Tasks.ValueTask{MQContract.Messages.ServiceMessage}},System.Action{System.Exception},System.String,System.String,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
 - [IMessageTypeEncoder\`1](#T-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1')
-  - [Decode(stream)](#M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-Decode-System-IO-Stream- 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1.Decode(System.IO.Stream)')
-  - [Encode(message)](#M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-Encode-`0- 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1.Encode(`0)')
+  - [DecodeAsync(stream)](#M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-DecodeAsync-System-IO-Stream- 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1.DecodeAsync(System.IO.Stream)')
+  - [EncodeAsync(message)](#M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-EncodeAsync-`0- 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1.EncodeAsync(`0)')
 - [IMessageTypeEncryptor\`1](#T-MQContract-Interfaces-Encrypting-IMessageTypeEncryptor`1 'MQContract.Interfaces.Encrypting.IMessageTypeEncryptor`1')
 - [IRecievedMessage\`1](#T-MQContract-Interfaces-IRecievedMessage`1 'MQContract.Interfaces.IRecievedMessage`1')
   - [Headers](#P-MQContract-Interfaces-IRecievedMessage`1-Headers 'MQContract.Interfaces.IRecievedMessage`1.Headers')
@@ -330,8 +330,8 @@ message of type V
 | T | The source message type |
 | V | The destination message type |
 
-<a name='M-MQContract-Interfaces-Conversion-IMessageConverter`2-Convert-`0-'></a>
-### Convert(source) `method`
+<a name='M-MQContract-Interfaces-Conversion-IMessageConverter`2-ConvertAsync-`0-'></a>
+### ConvertAsync(source) `method`
 
 ##### Summary
 
@@ -360,8 +360,8 @@ An implementation of this is used to encode/decode message bodies when
 specified for a connection.  This is to allow for an override of the 
 default encoding of Json for the messages.
 
-<a name='M-MQContract-Interfaces-Encoding-IMessageEncoder-Decode``1-System-IO-Stream-'></a>
-### Decode\`\`1(stream) `method`
+<a name='M-MQContract-Interfaces-Encoding-IMessageEncoder-DecodeAsync``1-System-IO-Stream-'></a>
+### DecodeAsync\`\`1(stream) `method`
 
 ##### Summary
 
@@ -383,8 +383,8 @@ Null when fails or the value of T that was encoded inside the stream
 | ---- | ----------- |
 | T | The type of message being decoded |
 
-<a name='M-MQContract-Interfaces-Encoding-IMessageEncoder-Encode``1-``0-'></a>
-### Encode\`\`1(message) `method`
+<a name='M-MQContract-Interfaces-Encoding-IMessageEncoder-EncodeAsync``1-``0-'></a>
+### EncodeAsync\`\`1(message) `method`
 
 ##### Summary
 
@@ -419,8 +419,8 @@ An implementation of this is used to encrypt/decrypt message bodies when
 specified for a connection.  This is to allow for extended message security
 if desired.
 
-<a name='M-MQContract-Interfaces-Encrypting-IMessageEncryptor-Decrypt-System-IO-Stream,MQContract-Messages-MessageHeader-'></a>
-### Decrypt(stream,headers) `method`
+<a name='M-MQContract-Interfaces-Encrypting-IMessageEncryptor-DecryptAsync-System-IO-Stream,MQContract-Messages-MessageHeader-'></a>
+### DecryptAsync(stream,headers) `method`
 
 ##### Summary
 
@@ -437,8 +437,8 @@ A decrypted stream of the message body
 | stream | [System.IO.Stream](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.IO.Stream 'System.IO.Stream') | The stream representing the message body binary data |
 | headers | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message headers that were provided by the message |
 
-<a name='M-MQContract-Interfaces-Encrypting-IMessageEncryptor-Encrypt-System-Byte[],System-Collections-Generic-Dictionary{System-String,System-String}@-'></a>
-### Encrypt(data,headers) `method`
+<a name='M-MQContract-Interfaces-Encrypting-IMessageEncryptor-EncryptAsync-System-Byte[],System-Collections-Generic-Dictionary{System-String,System-String}@-'></a>
+### EncryptAsync(data,headers) `method`
 
 ##### Summary
 
@@ -557,7 +557,7 @@ A service subscription object
 | options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | The Service Channel Options instance that was supplied at the Contract Connection level |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
-<a name='M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeQueryAsync-System-Func{MQContract-Messages-RecievedServiceMessage,System-Threading-Tasks-Task{MQContract-Messages-ServiceMessage}},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
+<a name='M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeQueryAsync-System-Func{MQContract-Messages-RecievedServiceMessage,System-Threading-Tasks-ValueTask{MQContract-Messages-ServiceMessage}},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
 ### SubscribeQueryAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken) `method`
 
 ##### Summary
@@ -572,7 +572,7 @@ A service subscription object
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| messageRecieved | [System.Func{MQContract.Messages.RecievedServiceMessage,System.Threading.Tasks.Task{MQContract.Messages.ServiceMessage}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Messages.RecievedServiceMessage,System.Threading.Tasks.Task{MQContract.Messages.ServiceMessage}}') | The callback to be invoked when a message is recieved, returning the response message |
+| messageRecieved | [System.Func{MQContract.Messages.RecievedServiceMessage,System.Threading.Tasks.ValueTask{MQContract.Messages.ServiceMessage}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Messages.RecievedServiceMessage,System.Threading.Tasks.ValueTask{MQContract.Messages.ServiceMessage}}') | The callback to be invoked when a message is recieved, returning the response message |
 | errorRecieved | [System.Action{System.Exception}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Exception}') | The callback to invoke when an exception occurs |
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel to subscribe to |
 | group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription groupt to subscribe as |
@@ -597,8 +597,8 @@ This is used to override the default Json and the Global one for the connection 
 | ---- | ----------- |
 | T | The type of message that this encoder supports |
 
-<a name='M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-Decode-System-IO-Stream-'></a>
-### Decode(stream) `method`
+<a name='M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-DecodeAsync-System-IO-Stream-'></a>
+### DecodeAsync(stream) `method`
 
 ##### Summary
 
@@ -614,8 +614,8 @@ null if the Decode fails, otherwise an instance of the message decoded from the 
 | ---- | ---- | ----------- |
 | stream | [System.IO.Stream](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.IO.Stream 'System.IO.Stream') | The byte stream containing the encoded message |
 
-<a name='M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-Encode-`0-'></a>
-### Encode(message) `method`
+<a name='M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-EncodeAsync-`0-'></a>
+### EncodeAsync(message) `method`
 
 ##### Summary
 

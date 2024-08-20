@@ -1,10 +1,12 @@
 ﻿using MQContract.Interfaces.Service;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MQContract
 {
     /// <summary>
     /// An exception thrown when the options supplied to an underlying system connection are not of an expected type.
     /// </summary>
+    [ExcludeFromCodeCoverage(Justification ="This exception is only really thrown from underlying service connection implementations")]
     public sealed class InvalidChannelOptionsTypeException
         : InvalidCastException
     {
@@ -47,6 +49,7 @@ namespace MQContract
     /// <summary>
     /// An exception thrown when there are options supplied to an underlying system connection that does not support options for that particular instance
     /// </summary>
+    [ExcludeFromCodeCoverage(Justification = "This exception is only really thrown from underlying service connection implementations")]
     public sealed class NoChannelOptionsAvailableException
         : Exception
     {

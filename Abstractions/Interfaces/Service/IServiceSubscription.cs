@@ -9,6 +9,6 @@
         /// Called to end the subscription
         /// </summary>
         /// <returns>A task to allow for asynchronous ending of the subscription</returns>
-        Task EndAsync();
+        ValueTask EndAsync();
     }
 }
