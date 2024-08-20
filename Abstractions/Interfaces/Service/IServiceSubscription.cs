@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents an underlying service level subscription
     /// </summary>
-    public interface IServiceSubscription : IDisposable
+    public interface IServiceSubscription : IAsyncDisposable
     {
         /// <summary>
         /// Called to end the subscription

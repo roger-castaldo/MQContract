@@ -8,8 +8,6 @@
   - [DefaultTimout](#P-MQContract-NATS-Connection-DefaultTimout 'MQContract.NATS.Connection.DefaultTimout')
   - [MaxMessageBodySize](#P-MQContract-NATS-Connection-MaxMessageBodySize 'MQContract.NATS.Connection.MaxMessageBodySize')
   - [CreateStreamAsync(streamConfig,cancellationToken)](#M-MQContract-NATS-Connection-CreateStreamAsync-NATS-Client-JetStream-Models-StreamConfig,System-Threading-CancellationToken- 'MQContract.NATS.Connection.CreateStreamAsync(NATS.Client.JetStream.Models.StreamConfig,System.Threading.CancellationToken)')
-  - [Dispose(disposing)](#M-MQContract-NATS-Connection-Dispose-System-Boolean- 'MQContract.NATS.Connection.Dispose(System.Boolean)')
-  - [Dispose()](#M-MQContract-NATS-Connection-Dispose 'MQContract.NATS.Connection.Dispose')
   - [PingAsync()](#M-MQContract-NATS-Connection-PingAsync 'MQContract.NATS.Connection.PingAsync')
   - [PublishAsync(message,options,cancellationToken)](#M-MQContract-NATS-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.NATS.Connection.PublishAsync(MQContract.Messages.ServiceMessage,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
   - [QueryAsync(message,timeout,options,cancellationToken)](#M-MQContract-NATS-Connection-QueryAsync-MQContract-Messages-ServiceMessage,System-TimeSpan,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.NATS.Connection.QueryAsync(MQContract.Messages.ServiceMessage,System.TimeSpan,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
@@ -81,30 +79,6 @@ The stream creation result
 | ---- | ---- | ----------- |
 | streamConfig | [NATS.Client.JetStream.Models.StreamConfig](#T-NATS-Client-JetStream-Models-StreamConfig 'NATS.Client.JetStream.Models.StreamConfig') | The configuration settings for the stream |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
-
-<a name='M-MQContract-NATS-Connection-Dispose-System-Boolean-'></a>
-### Dispose(disposing) `method`
-
-##### Summary
-
-Called to dispose of the resources used
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| disposing | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates if it is disposing |
-
-<a name='M-MQContract-NATS-Connection-Dispose'></a>
-### Dispose() `method`
-
-##### Summary
-
-Called to dispose of the resources used
-
-##### Parameters
-
-This method has no parameters.
 
 <a name='M-MQContract-NATS-Connection-PingAsync'></a>
 ### PingAsync() `method`

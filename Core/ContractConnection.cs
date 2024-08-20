@@ -244,24 +244,14 @@ namespace MQContract
             throw new SubscriptionFailedException();
         }
 
-        protected virtual void Dispose(bool disposing)
+        public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    subscriptions.Dispose();
-                    serviceConnection.Dispose();
-                }
                 disposedValue=true;
+                await subscriptions.DisposeAsync();
+                await serviceConnection.DisposeAsync();
             }
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

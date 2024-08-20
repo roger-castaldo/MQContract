@@ -6,7 +6,7 @@ namespace MQContract.Interfaces.Service
     /// Defines an underlying service connection.  This interface is used to allow for the creation of multiple underlying connection types to support the ability to use common code while
     /// being able to run against 1 or more Message services.
     /// </summary>
-    public interface IMessageServiceConnection: IDisposable    
+    public interface IMessageServiceConnection: IAsyncDisposable    
     {
         /// <summary>
         /// Maximum supported message body size in bytes

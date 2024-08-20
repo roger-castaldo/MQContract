@@ -95,25 +95,16 @@ namespace MQContract.ActiveMQ
             throw new NotImplementedException();
         }
 
-        protected virtual void Dispose(bool disposing)
+        public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    producer.Dispose();
-                    session.Dispose();
-                    connection.Stop();
-                    connection.Dispose();
-                }
                 disposedValue=true;
+                producer.Dispose();
+                session.Dispose();
+                await connection.StopAsync();
+                connection.Dispose();
             }
-        }
-
-        void IDisposable.Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

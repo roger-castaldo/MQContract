@@ -24,10 +24,10 @@ namespace MQContract.KubeMQ.Subscriptions
                 cancelToken.Cancel();
             });
 
-            cancelToken.Token.Register(() =>
+            cancelToken.Token.Register(async () =>
             {
                 active = false;
-                client.Dispose();
+                await client.DisposeAsync();
             });
             Task.Run(async () =>
             {
@@ -88,28 +88,20 @@ namespace MQContract.KubeMQ.Subscriptions
                 try
                 {
                     await cancelToken.CancelAsync();
-                    client.Dispose();
+                    await client.DisposeAsync();
                     cancelToken.Dispose();
                 }
                 catch{ }
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        public async ValueTask DisposeAsync()
         {
-            if (!disposedValue)
+            if (!disposedValue && active)
             {
-                if (disposing && active)
-                    EndAsync().Wait();
-                disposedValue = true;
+                disposedValue=true;
+                await EndAsync();
             }
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

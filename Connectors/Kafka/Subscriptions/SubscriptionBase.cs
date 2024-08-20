@@ -54,5 +54,22 @@ namespace MQContract.NATS.Subscriptions
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!disposedValue)
+            {
+                disposedValue=true;
+                if (!cancelToken.IsCancellationRequested)
+                    await cancelToken.CancelAsync();
+                try
+                {
+                    Consumer.Close();
+                }
+                catch (Exception) { }
+                Consumer.Dispose();
+                cancelToken.Dispose();
+            }
+        }
     }
 }

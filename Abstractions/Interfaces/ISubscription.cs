@@ -3,7 +3,7 @@
     /// <summary>
     /// This interface represents a Contract Connection Subscription and is used to house and end the subscription
     /// </summary>
-    public interface ISubscription : IDisposable
+    public interface ISubscription : IAsyncDisposable
     {
         /// <summary>
         /// Called to end (close off) the subscription

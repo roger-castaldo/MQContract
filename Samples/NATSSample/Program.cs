@@ -11,7 +11,7 @@ Console.CancelKeyPress += delegate {
     sourceCancel.Cancel();
 };
 
-using var serviceConnection = new Connection(new NATS.Client.Core.NatsOpts()
+await using var serviceConnection = new Connection(new NATS.Client.Core.NatsOpts()
 {
     LoggerFactory=new Microsoft.Extensions.Logging.LoggerFactory(),
     Name="NATSSample"
@@ -25,7 +25,7 @@ var mapper = new ChannelMapper()
 
 var contractConnection = new ContractConnection(serviceConnection,channelMapper:mapper);
 
-using var arrivalSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
+await using var arrivalSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
     (announcement) =>
     {
         Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");
@@ -35,7 +35,7 @@ using var arrivalSubscription = await contractConnection.SubscribeAsync<ArrivalA
     cancellationToken: sourceCancel.Token
 );
 
-using var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
+await using var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
     (greeting) =>
     {
         Console.WriteLine($"Greeting recieved for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.RecievedTimestamp}]");
@@ -48,7 +48,7 @@ using var greetingSubscription = await contractConnection.SubscribeQueryResponse
     cancellationToken: sourceCancel.Token
 );
 
-using var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredArrivalAnnouncement>(
+await using var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredArrivalAnnouncement>(
     (announcement) =>
     {
         Console.WriteLine($"Stored Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");

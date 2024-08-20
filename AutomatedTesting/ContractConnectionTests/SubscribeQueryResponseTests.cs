@@ -596,7 +596,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Exception? disposeError = null;
             try
             {
-                subscription.Dispose();
+                await subscription.DisposeAsync();
             }
             catch (Exception e)
             {

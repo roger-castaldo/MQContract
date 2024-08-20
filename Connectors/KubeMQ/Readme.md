@@ -18,8 +18,6 @@
   - [#ctor(options)](#M-MQContract-KubeMQ-Connection-#ctor-MQContract-KubeMQ-ConnectionOptions- 'MQContract.KubeMQ.Connection.#ctor(MQContract.KubeMQ.ConnectionOptions)')
   - [DefaultTimout](#P-MQContract-KubeMQ-Connection-DefaultTimout 'MQContract.KubeMQ.Connection.DefaultTimout')
   - [MaxMessageBodySize](#P-MQContract-KubeMQ-Connection-MaxMessageBodySize 'MQContract.KubeMQ.Connection.MaxMessageBodySize')
-  - [Dispose(disposing)](#M-MQContract-KubeMQ-Connection-Dispose-System-Boolean- 'MQContract.KubeMQ.Connection.Dispose(System.Boolean)')
-  - [Dispose()](#M-MQContract-KubeMQ-Connection-Dispose 'MQContract.KubeMQ.Connection.Dispose')
   - [PingAsync()](#M-MQContract-KubeMQ-Connection-PingAsync 'MQContract.KubeMQ.Connection.PingAsync')
   - [PublishAsync(message,options,cancellationToken)](#M-MQContract-KubeMQ-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.KubeMQ.Connection.PublishAsync(MQContract.Messages.ServiceMessage,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
   - [QueryAsync(message,timeout,options,cancellationToken)](#M-MQContract-KubeMQ-Connection-QueryAsync-MQContract-Messages-ServiceMessage,System-TimeSpan,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.KubeMQ.Connection.QueryAsync(MQContract.Messages.ServiceMessage,System.TimeSpan,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
@@ -337,30 +335,6 @@ DEFAULT:30 seconds if not specified inside the connection options
 ##### Summary
 
 The maximum message body size allowed
-
-<a name='M-MQContract-KubeMQ-Connection-Dispose-System-Boolean-'></a>
-### Dispose(disposing) `method`
-
-##### Summary
-
-Called to dispose of the resources used
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| disposing | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates if it is disposing |
-
-<a name='M-MQContract-KubeMQ-Connection-Dispose'></a>
-### Dispose() `method`
-
-##### Summary
-
-Called to dispose of the resources used
-
-##### Parameters
-
-This method has no parameters.
 
 <a name='M-MQContract-KubeMQ-Connection-PingAsync'></a>
 ### PingAsync() `method`

@@ -6,7 +6,7 @@ namespace MQContract.Interfaces
     /// <summary>
     /// This interface represents the Core class for the MQContract system, IE the ContractConnection
     /// </summary>
-    public interface IContractConnection : IDisposable
+    public interface IContractConnection : IAsyncDisposable
     {
         /// <summary>
         /// Called to Ping the underlying system to obtain both information and ensure it is up.  Not all Services support this method.

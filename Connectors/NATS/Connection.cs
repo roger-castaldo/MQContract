@@ -258,30 +258,13 @@ namespace MQContract.NATS
             return sub;
         }
 
-        /// <summary>
-        /// Called to dispose of the resources used
-        /// </summary>
-        /// <param name="disposing">Indicates if it is disposing</param>
-        protected virtual void Dispose(bool disposing)
+        public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    Task.Run(async () => await natsConnection.DisposeAsync()).Wait();
-                }
                 disposedValue=true;
+                await natsConnection.DisposeAsync();
             }
-        }
-
-        /// <summary>
-        /// Called to dispose of the resources used
-        /// </summary>
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

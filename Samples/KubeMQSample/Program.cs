@@ -10,7 +10,7 @@ Console.CancelKeyPress += delegate {
     sourceCancel.Cancel();
 };
 
-using var serviceConnection = new Connection(new ConnectionOptions()
+await using var serviceConnection = new Connection(new ConnectionOptions()
 {
     Logger=new Microsoft.Extensions.Logging.Debug.DebugLoggerProvider().CreateLogger("Messages"),
     ClientId="KubeMQSample"
@@ -18,7 +18,7 @@ using var serviceConnection = new Connection(new ConnectionOptions()
 
 var contractConnection = new ContractConnection(serviceConnection);
 
-using var arrivalSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
+await using var arrivalSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
     (announcement) =>
     {
         Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");
@@ -28,7 +28,7 @@ using var arrivalSubscription = await contractConnection.SubscribeAsync<ArrivalA
     cancellationToken: sourceCancel.Token
 );
 
-using var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
+await using var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
     (greeting) =>
     {
         Console.WriteLine($"Greeting recieved for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.RecievedTimestamp}]");
@@ -41,7 +41,7 @@ using var greetingSubscription = await contractConnection.SubscribeQueryResponse
     cancellationToken: sourceCancel.Token
 );
 
-using var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredArrivalAnnouncement>(
+await using var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredArrivalAnnouncement>(
     (announcement) =>
     {
         Console.WriteLine($"Stored Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");

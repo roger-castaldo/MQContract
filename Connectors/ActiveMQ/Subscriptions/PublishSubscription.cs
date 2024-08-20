@@ -39,24 +39,14 @@ namespace MQContract.ActiveMQ.Subscriptions
                 await consumer.CloseAsync();
         }
 
-        protected virtual void Dispose(bool disposing)
+        public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    EndAsync().Wait();
-                    consumer?.Dispose();
-                }
                 disposedValue=true;
+                await EndAsync();
+                consumer?.Dispose();
             }
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

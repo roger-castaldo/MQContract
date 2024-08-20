@@ -48,26 +48,17 @@ namespace MQContract.Subscriptions
         public Task EndAsync()
             => EndAsync(true);
 
-        protected void Dispose(bool disposing)
+        public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    EndAsync().Wait();
-                    InternalDispose();
-                    serviceSubscription?.Dispose();
-                    token.Dispose();
-                }
                 disposedValue=true;
+                await EndAsync();
+                InternalDispose();
+                if (serviceSubscription!=null)
+                    await serviceSubscription!.EndAsync();
+                token.Dispose();
             }
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

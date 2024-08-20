@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MQContract.KubeMQ.SDK.Connection
 {
-    internal class KubeClient : IDisposable
+    internal class KubeClient : IAsyncDisposable
     {
         private const int RETRY_COUNT = 5;
 
@@ -163,31 +163,21 @@ namespace MQContract.KubeMQ.SDK.Connection
                 return client.SubscribeToEvents(subscribe, headers: headers, cancellationToken: cancellationToken);
             });
 
-        protected virtual void Dispose(bool disposing)
+        public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    try
-                    {
-                        channel.ShutdownAsync().Wait();
-                    }
-                    catch (Exception ex)
-                    {
-                        logger?.LogError(ex,"Error shutting down grpc Kube Channel: {ErrorMessage}",ex.Message);
-                    }
-                    channel.Dispose();
-                }
                 disposedValue=true;
+                try
+                {
+                    await channel.ShutdownAsync();
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "Error shutting down grpc Kube Channel: {ErrorMessage}", ex.Message);
+                }
+                channel.Dispose();
             }
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }
