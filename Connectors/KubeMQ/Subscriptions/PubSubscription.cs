@@ -31,10 +31,10 @@ namespace MQContract.KubeMQ.Subscriptions
             cancelToken.Token);
         }
 
-        protected override Task MessageRecieved(EventReceive message)
+        protected override ValueTask MessageRecieved(EventReceive message)
         {
             messageRecieved(new(message.EventID,message.Metadata,message.Channel,Connection.ConvertMessageHeader(message.Tags),message.Body.ToArray()));
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
     }
 }

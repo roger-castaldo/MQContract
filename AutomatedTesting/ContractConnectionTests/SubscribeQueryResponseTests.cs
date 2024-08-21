@@ -54,7 +54,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage,BasicResponseMessage>((msg) => {
                 messages.Add(msg);
-                return Task.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage,null));
+                return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage,null));
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
@@ -120,13 +120,13 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
-                (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null), 
+                (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null), 
                 (error) => { },
                 channel:channelName);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription2 = await contractConnection.SubscribeQueryResponseAsync<NoChannelMessage, BasicResponseMessage>(
-                (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
+                (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
                 channel: channelName);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
@@ -170,13 +170,13 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
-                (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
+                (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
                 group: groupName);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription2 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
-                (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
+                (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { });
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
@@ -219,7 +219,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
-                (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
+                (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
                 options:serviceChannelOptions);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
@@ -259,7 +259,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeQueryResponseAsync<NoChannelMessage, BasicResponseMessage>(
-                (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
+                (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
@@ -296,7 +296,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
-                (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
+                (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
@@ -335,7 +335,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
-                (msg) => Task.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
+                (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { }
             );
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
@@ -396,7 +396,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 messages.Add(msg);
-                return Task.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
+                return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => exceptions.Add(error),
             synchronous:true);
             var stopwatch = Stopwatch.StartNew();
@@ -561,7 +561,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 messages.Add(msg);
-                return Task.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
+                return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);

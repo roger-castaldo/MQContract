@@ -58,7 +58,7 @@ namespace MQContract.Kafka
         }
 
         private static MessageHeader ExtractHeaders(Headers header)
-            => new MessageHeader(
+            => new(
                 header
                 .Where(h => 
                     !Equals(h.Key, REPLY_ID)
@@ -301,12 +301,17 @@ namespace MQContract.Kafka
             return subscription;
         }
 
+        /// <summary>
+        /// Called to dispose of the object correctly and allow it to clean up it's resources
+        /// </summary>
+        /// <returns>A task required for disposal</returns>
         public ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
                 disposedValue=true;
                 producer.Dispose();
+                GC.SuppressFinalize(this);
             }
             return ValueTask.CompletedTask;
         }

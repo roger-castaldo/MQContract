@@ -29,7 +29,7 @@ await using var arrivalSubscription = await contractConnection.SubscribeAsync<Ar
     (announcement) =>
     {
         Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     },
     (error) => Console.WriteLine($"Announcement error: {error.Message}"),
     cancellationToken: sourceCancel.Token
@@ -40,7 +40,7 @@ await using var greetingSubscription = await contractConnection.SubscribeQueryRe
     {
         Console.WriteLine($"Greeting recieved for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.RecievedTimestamp}]");
         System.Diagnostics.Debug.WriteLine($"Time to convert message: {greeting.ProcessedTimestamp.Subtract(greeting.RecievedTimestamp).TotalMilliseconds}ms");
-        return Task.FromResult<QueryResponseMessage<string>>(
+        return ValueTask.FromResult<QueryResponseMessage<string>>(
             new($"Welcome {greeting.Message.FirstName} {greeting.Message.LastName} to the NATSio sample")
         );
     },
@@ -52,7 +52,7 @@ await using var storedArrivalSubscription = await contractConnection.SubscribeAs
     (announcement) =>
     {
         Console.WriteLine($"Stored Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     },
     (error) => Console.WriteLine($"Stored Announcement error: {error.Message}"),
     options:new StreamPublishSubscriberOptions(),

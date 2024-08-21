@@ -9,7 +9,7 @@ namespace MQContract.NATS.Subscriptions
         private bool disposedValue;
         protected readonly CancellationTokenSource cancelToken = new();
 
-        protected abstract Task RunAction();
+        protected abstract ValueTask RunAction();
         public Task Run()
         {
             cancellationToken.Register(() =>

@@ -15,7 +15,7 @@ namespace MQContract.KubeMQ.Subscriptions
         protected readonly CancellationTokenSource cancelToken = new();
 
         protected abstract AsyncServerStreamingCall<T> EstablishCall();
-        protected abstract Task MessageRecieved(T message);
+        protected abstract ValueTask MessageRecieved(T message);
 
         public void Run()
         {

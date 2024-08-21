@@ -236,13 +236,18 @@ namespace MQContract.KubeMQ
             sub.Run();
             return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
-        
+
+        /// <summary>
+        /// Called to dispose of the object correctly and allow it to clean up it's resources
+        /// </summary>
+        /// <returns>A task required for disposal</returns>
         public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
                 disposedValue=true;
                 await client.DisposeAsync();
+                GC.SuppressFinalize(this);
             }
         }
     }

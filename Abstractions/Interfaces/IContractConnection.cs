@@ -38,7 +38,7 @@ namespace MQContract.Interfaces
         /// <param name="options">Any required Service Channel Options that will be passed down to the service Connection</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false,bool synchronous=false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>,ValueTask> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false,bool synchronous=false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where T : class;
         /// <summary>
         /// Called to send a message into the underlying service in the Query/Response style
@@ -83,7 +83,7 @@ namespace MQContract.Interfaces
         /// <param name="options">Any required Service Channel Options that will be passed down to the service Connection</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeQueryResponseAsync<Q,R>(Func<IRecievedMessage<Q>,Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<ISubscription> SubscribeQueryResponseAsync<Q,R>(Func<IRecievedMessage<Q>,ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class;
     }

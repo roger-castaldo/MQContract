@@ -19,12 +19,12 @@ namespace MQContract.Subscriptions
 
         public Guid ID { get; private init; }
 
-        protected SubscriptionBase(Func<string, Task<string>> mapChannel, SubscriptionCollection collection, string? channel=null,bool synchronous = false){
+        protected SubscriptionBase(Func<string, ValueTask<string>> mapChannel, SubscriptionCollection collection, string? channel=null,bool synchronous = false){
             ID = Guid.NewGuid();
             this.collection=collection;
             var chan = channel??typeof(T).GetCustomAttribute<MessageChannelAttribute>(false)?.Name??throw new MessageChannelNullException();
             Synchronous = synchronous;
-            var tsk = mapChannel(chan);
+            var tsk = mapChannel(chan).AsTask();
             tsk.Wait();
             MessageChannel=tsk.Result;
         }

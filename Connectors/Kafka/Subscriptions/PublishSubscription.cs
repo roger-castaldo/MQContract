@@ -6,7 +6,7 @@ namespace MQContract.Kafka.Subscriptions
     internal class PublishSubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, CancellationToken cancellationToken)
         : SubscriptionBase(consumer,channel,cancellationToken)
     {
-        protected override Task RunAction()
+        protected override ValueTask RunAction()
         {
             while (!cancelToken.IsCancellationRequested)
             {
@@ -29,7 +29,7 @@ namespace MQContract.Kafka.Subscriptions
                 }
                 finally { }
             }
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
     }
 }

@@ -146,7 +146,7 @@ namespace MQContract.Factories
             return false;
         }
 
-        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message, string? channel, MessageHeader? messageHeader, Func<string, Task<string>>? mapChannel=null)
+        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message, string? channel, MessageHeader? messageHeader, Func<string, ValueTask<string>>? mapChannel=null)
         {
             channel ??= messageChannel;
             if (string.IsNullOrWhiteSpace(channel))

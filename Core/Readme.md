@@ -4,30 +4,31 @@
 ## Contents
 
 - [ChannelMapper](#T-MQContract-ChannelMapper 'MQContract.ChannelMapper')
-  - [AddDefaultPublishMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultPublishMap-System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddDefaultPublishMap(System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
-  - [AddDefaultPublishSubscriptionMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultPublishSubscriptionMap-System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddDefaultPublishSubscriptionMap(System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
-  - [AddDefaultQueryMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultQueryMap-System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddDefaultQueryMap(System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
-  - [AddDefaultQuerySubscriptionMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultQuerySubscriptionMap-System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddDefaultQuerySubscriptionMap(System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
+  - [AddDefaultPublishMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultPublishMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddDefaultPublishMap(System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
+  - [AddDefaultPublishSubscriptionMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultPublishSubscriptionMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddDefaultPublishSubscriptionMap(System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
+  - [AddDefaultQueryMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultQueryMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddDefaultQueryMap(System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
+  - [AddDefaultQuerySubscriptionMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultQuerySubscriptionMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddDefaultQuerySubscriptionMap(System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
   - [AddPublishMap(originalChannel,newChannel)](#M-MQContract-ChannelMapper-AddPublishMap-System-String,System-String- 'MQContract.ChannelMapper.AddPublishMap(System.String,System.String)')
-  - [AddPublishMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddPublishMap-System-String,System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddPublishMap(System.String,System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
-  - [AddPublishMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddPublishMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddPublishMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
+  - [AddPublishMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddPublishMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddPublishMap(System.String,System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
+  - [AddPublishMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddPublishMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddPublishMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
   - [AddPublishSubscriptionMap(originalChannel,newChannel)](#M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-String,System-String- 'MQContract.ChannelMapper.AddPublishSubscriptionMap(System.String,System.String)')
-  - [AddPublishSubscriptionMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddPublishSubscriptionMap(System.String,System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
-  - [AddPublishSubscriptionMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddPublishSubscriptionMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
+  - [AddPublishSubscriptionMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddPublishSubscriptionMap(System.String,System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
+  - [AddPublishSubscriptionMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddPublishSubscriptionMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
   - [AddQueryMap(originalChannel,newChannel)](#M-MQContract-ChannelMapper-AddQueryMap-System-String,System-String- 'MQContract.ChannelMapper.AddQueryMap(System.String,System.String)')
-  - [AddQueryMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddQueryMap-System-String,System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddQueryMap(System.String,System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
-  - [AddQueryMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddQueryMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddQueryMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
+  - [AddQueryMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddQueryMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQueryMap(System.String,System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
+  - [AddQueryMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddQueryMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQueryMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
   - [AddQuerySubscriptionMap(originalChannel,newChannel)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-String,System-String- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.String,System.String)')
-  - [AddQuerySubscriptionMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.String,System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
-  - [AddQuerySubscriptionMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-Task{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.Task{System.String}})')
+  - [AddQuerySubscriptionMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.String,System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
+  - [AddQuerySubscriptionMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
 - [ContractConnection](#T-MQContract-ContractConnection 'MQContract.ContractConnection')
   - [#ctor(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-#ctor-MQContract-Interfaces-Service-IMessageServiceConnection,MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.#ctor(MQContract.Interfaces.Service.IMessageServiceConnection,MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
+  - [DisposeAsync()](#M-MQContract-ContractConnection-DisposeAsync 'MQContract.ContractConnection.DisposeAsync')
   - [PingAsync()](#M-MQContract-ContractConnection-PingAsync 'MQContract.ContractConnection.PingAsync')
   - [PublishAsync\`\`1(message,channel,messageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-PublishAsync``1-``0,System-String,MQContract-Messages-MessageHeader,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.PublishAsync``1(``0,System.String,MQContract.Messages.MessageHeader,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
   - [QueryAsync\`\`1(message,timeout,channel,messageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,MQContract-Messages-MessageHeader,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.QueryAsync``1(``0,System.Nullable{System.TimeSpan},System.String,MQContract.Messages.MessageHeader,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
   - [QueryAsync\`\`2(message,timeout,channel,messageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,MQContract-Messages-MessageHeader,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.QueryAsync``2(``0,System.Nullable{System.TimeSpan},System.String,MQContract.Messages.MessageHeader,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
-  - [SubscribeAsync\`\`1(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-Task},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeAsync``1(System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.Task},System.Action{System.Exception},System.String,System.String,System.Boolean,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
-  - [SubscribeQueryResponseAsync\`\`2(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-Task{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeQueryResponseAsync``2(System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.Task{MQContract.Messages.QueryResponseMessage{``1}}},System.Action{System.Exception},System.String,System.String,System.Boolean,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
+  - [SubscribeAsync\`\`1(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeAsync``1(System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.ValueTask},System.Action{System.Exception},System.String,System.String,System.Boolean,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
+  - [SubscribeQueryResponseAsync\`\`2(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeQueryResponseAsync``2(System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.ValueTask{MQContract.Messages.QueryResponseMessage{``1}}},System.Action{System.Exception},System.String,System.String,System.Boolean,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
 - [MessageChannelNullException](#T-MQContract-MessageChannelNullException 'MQContract.MessageChannelNullException')
 - [MessageConversionException](#T-MQContract-MessageConversionException 'MQContract.MessageConversionException')
 - [QueryResponseException](#T-MQContract-QueryResponseException 'MQContract.QueryResponseException')
@@ -45,7 +46,7 @@ MQContract
 
 Used to map channel names depending on the usage of the channel when necessary
 
-<a name='M-MQContract-ChannelMapper-AddDefaultPublishMap-System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddDefaultPublishMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddDefaultPublishMap(mapFunction) `method`
 
 ##### Summary
@@ -60,9 +61,9 @@ The current instance of the Channel Mapper
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
-<a name='M-MQContract-ChannelMapper-AddDefaultPublishSubscriptionMap-System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddDefaultPublishSubscriptionMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddDefaultPublishSubscriptionMap(mapFunction) `method`
 
 ##### Summary
@@ -77,9 +78,9 @@ The current instance of the Channel Mapper
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
-<a name='M-MQContract-ChannelMapper-AddDefaultQueryMap-System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddDefaultQueryMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddDefaultQueryMap(mapFunction) `method`
 
 ##### Summary
@@ -94,9 +95,9 @@ The current instance of the Channel Mapper
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
-<a name='M-MQContract-ChannelMapper-AddDefaultQuerySubscriptionMap-System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddDefaultQuerySubscriptionMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddDefaultQuerySubscriptionMap(mapFunction) `method`
 
 ##### Summary
@@ -111,7 +112,7 @@ The current instance of the Channel Mapper
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
 <a name='M-MQContract-ChannelMapper-AddPublishMap-System-String,System-String-'></a>
 ### AddPublishMap(originalChannel,newChannel) `method`
@@ -131,7 +132,7 @@ The current instance of the Channel Mapper
 | originalChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The original channel that is being used in the connection |
 | newChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to map it to |
 
-<a name='M-MQContract-ChannelMapper-AddPublishMap-System-String,System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddPublishMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddPublishMap(originalChannel,mapFunction) `method`
 
 ##### Summary
@@ -147,9 +148,9 @@ The current instance of the Channel Mapper
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | originalChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The original channel that is being used in the connection |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
-<a name='M-MQContract-ChannelMapper-AddPublishMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddPublishMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddPublishMap(isMatch,mapFunction) `method`
 
 ##### Summary
@@ -165,7 +166,7 @@ The current instance of the Channel Mapper
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | isMatch | [System.Func{System.String,System.Boolean}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Boolean}') | A callback that will return true if the supplied function will mape that channel |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
 <a name='M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-String,System-String-'></a>
 ### AddPublishSubscriptionMap(originalChannel,newChannel) `method`
@@ -185,7 +186,7 @@ The current instance of the Channel Mapper
 | originalChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The original channel that is being used in the connection |
 | newChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to map it to |
 
-<a name='M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddPublishSubscriptionMap(originalChannel,mapFunction) `method`
 
 ##### Summary
@@ -201,9 +202,9 @@ The current instance of the Channel Mapper
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | originalChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The original channel that is being used in the connection |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
-<a name='M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddPublishSubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddPublishSubscriptionMap(isMatch,mapFunction) `method`
 
 ##### Summary
@@ -219,7 +220,7 @@ The current instance of the Channel Mapper
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | isMatch | [System.Func{System.String,System.Boolean}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Boolean}') | A callback that will return true if the supplied function will mape that channel |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
 <a name='M-MQContract-ChannelMapper-AddQueryMap-System-String,System-String-'></a>
 ### AddQueryMap(originalChannel,newChannel) `method`
@@ -239,7 +240,7 @@ The current instance of the Channel Mapper
 | originalChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The original channel that is being used in the connection |
 | newChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to map it to |
 
-<a name='M-MQContract-ChannelMapper-AddQueryMap-System-String,System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddQueryMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddQueryMap(originalChannel,mapFunction) `method`
 
 ##### Summary
@@ -255,9 +256,9 @@ The current instance of the Channel Mapper
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | originalChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The original channel that is being used in the connection |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
-<a name='M-MQContract-ChannelMapper-AddQueryMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddQueryMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddQueryMap(isMatch,mapFunction) `method`
 
 ##### Summary
@@ -273,7 +274,7 @@ The current instance of the Channel Mapper
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | isMatch | [System.Func{System.String,System.Boolean}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Boolean}') | A callback that will return true if the supplied function will mape that channel |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
 <a name='M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-String,System-String-'></a>
 ### AddQuerySubscriptionMap(originalChannel,newChannel) `method`
@@ -293,7 +294,7 @@ The current instance of the Channel Mapper
 | originalChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The original channel that is being used in the connection |
 | newChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to map it to |
 
-<a name='M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddQuerySubscriptionMap(originalChannel,mapFunction) `method`
 
 ##### Summary
@@ -309,9 +310,9 @@ The current instance of the Channel Mapper
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | originalChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The original channel that is being used in the connection |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
-<a name='M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-Task{System-String}}-'></a>
+<a name='M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}-'></a>
 ### AddQuerySubscriptionMap(isMatch,mapFunction) `method`
 
 ##### Summary
@@ -327,7 +328,7 @@ The current instance of the Channel Mapper
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | isMatch | [System.Func{System.String,System.Boolean}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Boolean}') | A callback that will return true if the supplied function will mape that channel |
-| mapFunction | [System.Func{System.String,System.Threading.Tasks.Task{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.Task{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+| mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
 
 <a name='T-MQContract-ContractConnection'></a>
 ## ContractConnection `type`
@@ -364,6 +365,21 @@ This is the primary class for this library and is used to create a Contract styl
 | logger | [Microsoft.Extensions.Logging.ILogger](#T-Microsoft-Extensions-Logging-ILogger 'Microsoft.Extensions.Logging.ILogger') | An instance of a logger if logging is desired |
 | channelMapper | [MQContract.ChannelMapper](#T-MQContract-ChannelMapper 'MQContract.ChannelMapper') | An instance of a ChannelMapper used to translate channels from one instance to another based on class channel attributes or supplied channels if necessary.
 For example, it might be necessary for a Nats.IO instance when you are trying to read from a stored message stream that is comprised of another channel or set of channels |
+
+<a name='M-MQContract-ContractConnection-DisposeAsync'></a>
+### DisposeAsync() `method`
+
+##### Summary
+
+Called to dispose of the object correctly and allow it to clean up it's resources
+
+##### Returns
+
+A task required for disposal
+
+##### Parameters
+
+This method has no parameters.
 
 <a name='M-MQContract-ContractConnection-PingAsync'></a>
 ### PingAsync() `method`
@@ -470,7 +486,7 @@ A QueryResult that will contain the response message and or an error
 | Q | The type of message to transmit for the Query |
 | R | The type of message expected as a response |
 
-<a name='M-MQContract-ContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-Task},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
+<a name='M-MQContract-ContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
 ### SubscribeAsync\`\`1(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken) `method`
 
 ##### Summary
@@ -485,7 +501,7 @@ An instance of the Subscription that can be held or called to end
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| messageRecieved | [System.Func{MQContract.Interfaces.IRecievedMessage{\`\`0},System.Threading.Tasks.Task}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.Task}') | The callback to be executed when a message is recieved |
+| messageRecieved | [System.Func{MQContract.Interfaces.IRecievedMessage{\`\`0},System.Threading.Tasks.ValueTask}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.ValueTask}') | The callback to be executed when a message is recieved |
 | errorRecieved | [System.Action{System.Exception}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Exception}') | The callback to be executed when an error occurs |
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on |
 | group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc) |
@@ -506,7 +522,7 @@ An instance of the Subscription that can be held or called to end
 | ---- | ----------- |
 | [MQContract.SubscriptionFailedException](#T-MQContract-SubscriptionFailedException 'MQContract.SubscriptionFailedException') | An exception thrown when the subscription has failed to establish |
 
-<a name='M-MQContract-ContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-Task{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
+<a name='M-MQContract-ContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
 ### SubscribeQueryResponseAsync\`\`2(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken) `method`
 
 ##### Summary
@@ -521,7 +537,7 @@ An instance of the Subscription that can be held or called to end
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| messageRecieved | [System.Func{MQContract.Interfaces.IRecievedMessage{\`\`0},System.Threading.Tasks.Task{MQContract.Messages.QueryResponseMessage{\`\`1}}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.Task{MQContract.Messages.QueryResponseMessage{``1}}}') | The callback to be executed when a message is recieved and expects a returned response |
+| messageRecieved | [System.Func{MQContract.Interfaces.IRecievedMessage{\`\`0},System.Threading.Tasks.ValueTask{MQContract.Messages.QueryResponseMessage{\`\`1}}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.ValueTask{MQContract.Messages.QueryResponseMessage{``1}}}') | The callback to be executed when a message is recieved and expects a returned response |
 | errorRecieved | [System.Action{System.Exception}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Exception}') | The callback to be executed when an error occurs |
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on |
 | group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc) |

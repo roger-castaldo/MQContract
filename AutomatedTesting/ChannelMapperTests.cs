@@ -78,8 +78,8 @@ namespace AutomatedTesting
                 .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, (originalChannel) =>
                 {
                     if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
-                        return Task.FromResult(newChannel);
-                    return Task.FromResult(originalChannel);
+                        return ValueTask.FromResult(newChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -132,7 +132,7 @@ namespace AutomatedTesting
                 (channelName)=>Equals(channelName, otherChannel)
                 ,(originalChannel) =>
                 {
-                    return Task.FromResult(newChannel);
+                    return ValueTask.FromResult(newChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -184,8 +184,8 @@ namespace AutomatedTesting
                 .AddDefaultPublishMap((originalChannel) =>
                 {
                     if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
-                        return Task.FromResult(newChannel);
-                    return Task.FromResult(originalChannel);
+                        return ValueTask.FromResult(newChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -237,7 +237,7 @@ namespace AutomatedTesting
                 .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!,newChannel)
                 .AddDefaultPublishMap((originalChannel) =>
                 {
-                    return Task.FromResult(originalChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -290,7 +290,7 @@ namespace AutomatedTesting
 
             #region Act
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => Task.CompletedTask, 
+                (msg) => ValueTask.CompletedTask, 
                 (error) => { });
             #endregion
 
@@ -329,8 +329,8 @@ namespace AutomatedTesting
                 (originalChannel) =>
                 {
                     if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
-                        return Task.FromResult(newChannel);
-                    return Task.FromResult(originalChannel);
+                        return ValueTask.FromResult(newChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -338,10 +338,10 @@ namespace AutomatedTesting
 
             #region Act
             var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => Task.CompletedTask,
+                (msg) => ValueTask.CompletedTask,
                 (error) => { });
             var subscription2 = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => Task.CompletedTask,
+                (msg) => ValueTask.CompletedTask,
                 (error) => { },
                 channel:otherChannel);
             #endregion
@@ -382,7 +382,7 @@ namespace AutomatedTesting
                 (channelName) => Equals(channelName, otherChannel),
                 (originalChannel) =>
                 {
-                    return Task.FromResult(newChannel);
+                    return ValueTask.FromResult(newChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -390,10 +390,10 @@ namespace AutomatedTesting
 
             #region Act
             var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => Task.CompletedTask,
+                (msg) => ValueTask.CompletedTask,
                 (error) => { });
             var subscription2 = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => Task.CompletedTask,
+                (msg) => ValueTask.CompletedTask,
                 (error) => { },
                 channel: otherChannel);
             #endregion
@@ -434,8 +434,8 @@ namespace AutomatedTesting
                 (originalChannel) =>
                 {
                     if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
-                        return Task.FromResult(newChannel);
-                    return Task.FromResult(originalChannel);
+                        return ValueTask.FromResult(newChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -443,10 +443,10 @@ namespace AutomatedTesting
 
             #region Act
             var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => Task.CompletedTask,
+                (msg) => ValueTask.CompletedTask,
                 (error) => { });
             var subscription2 = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => Task.CompletedTask,
+                (msg) => ValueTask.CompletedTask,
                 (error) => { },
                 channel: otherChannel);
             #endregion
@@ -487,7 +487,7 @@ namespace AutomatedTesting
                 .AddDefaultPublishSubscriptionMap(
                 (originalChannel) =>
                 {
-                    return Task.FromResult(originalChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -495,10 +495,10 @@ namespace AutomatedTesting
 
             #region Act
             var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => Task.CompletedTask,
+                (msg) => ValueTask.CompletedTask,
                 (error) => { });
             var subscription2 = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => Task.CompletedTask,
+                (msg) => ValueTask.CompletedTask,
                 (error) => { },
                 channel: otherChannel);
             #endregion
@@ -598,8 +598,8 @@ namespace AutomatedTesting
                 (originalChannel) =>
                 {
                     if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
-                        return Task.FromResult(newChannel);
-                    return Task.FromResult(originalChannel);
+                        return ValueTask.FromResult(newChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -655,7 +655,7 @@ namespace AutomatedTesting
                 .AddQueryMap((channelName) => Equals(channelName, otherChannel)
                 , (originalChannel) =>
                 {
-                    return Task.FromResult(newChannel);
+                    return ValueTask.FromResult(newChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -711,8 +711,8 @@ namespace AutomatedTesting
                 .AddDefaultQueryMap((originalChannel) =>
                 {
                     if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
-                        return Task.FromResult(newChannel);
-                    return Task.FromResult(originalChannel);
+                        return ValueTask.FromResult(newChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -768,7 +768,7 @@ namespace AutomatedTesting
                 .AddQueryMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel)
                 .AddDefaultQueryMap((originalChannel) =>
                 {
-                    return Task.FromResult(originalChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -865,8 +865,8 @@ namespace AutomatedTesting
                 (originalChannel) =>
                 {
                     if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
-                        return Task.FromResult(newChannel);
-                    return Task.FromResult(originalChannel);
+                        return ValueTask.FromResult(newChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -922,7 +922,7 @@ namespace AutomatedTesting
                 (channelName) => Equals(channelName, otherChannel),
                 (originalChannel) =>
                 {
-                    return Task.FromResult(newChannel);
+                    return ValueTask.FromResult(newChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -978,8 +978,8 @@ namespace AutomatedTesting
                 (originalChannel) =>
                 {
                     if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
-                        return Task.FromResult(newChannel);
-                    return Task.FromResult(originalChannel);
+                        return ValueTask.FromResult(newChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);
@@ -1035,7 +1035,7 @@ namespace AutomatedTesting
                 .AddDefaultQuerySubscriptionMap(
                 (originalChannel) =>
                 {
-                    return Task.FromResult(originalChannel);
+                    return ValueTask.FromResult(originalChannel);
                 });
 
             var contractConnection = new ContractConnection(serviceConnection.Object, channelMapper: mapper);

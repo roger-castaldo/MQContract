@@ -50,7 +50,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => {
                 messages.Add(msg);
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
@@ -106,8 +106,8 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => Task.CompletedTask, (error) => { },channel:channelName);
-            var subscription2 = await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => Task.CompletedTask, (error) => { }, channel: channelName);
+            var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { },channel:channelName);
+            var subscription2 = await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }, channel: channelName);
             #endregion
 
             #region Assert
@@ -142,8 +142,8 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => Task.CompletedTask, (error) => { }, group:groupName);
-            var subscription2 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => Task.CompletedTask, (error) => { });
+            var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { }, group:groupName);
+            var subscription2 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { });
             #endregion
 
             #region Assert
@@ -178,7 +178,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => Task.CompletedTask, (error) => { }, options:serviceChannelOptions);
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { }, options:serviceChannelOptions);
             #endregion
 
             #region Assert
@@ -209,7 +209,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => Task.CompletedTask, (error) => { }));
+            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }));
             #endregion
 
             #region Assert
@@ -238,7 +238,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async ()=> await contractConnection.SubscribeAsync<BasicMessage>(msg => Task.CompletedTask, err => { }));
+            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async ()=> await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }));
             #endregion
 
             #region Assert
@@ -269,7 +269,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => Task.CompletedTask, err => { });
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { });
             await subscription.EndAsync();
             #endregion
 
@@ -302,7 +302,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => Task.CompletedTask, err => { });
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { });
             await contractConnection.DisposeAsync();
             #endregion
 
@@ -356,7 +356,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => {
                 messages.Add(msg);
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             }, (error) => exceptions.Add(error),synchronous:true);
             var stopwatch = Stopwatch.StartNew();
             var result1 = await contractConnection.PublishAsync<BasicMessage>(message1);
@@ -502,7 +502,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
             var messages = new List<IRecievedMessage<BasicMessage>>();
             var exceptions = new List<Exception>();
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => { return Task.CompletedTask; }, (error) => exceptions.Add(error));
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => { return ValueTask.CompletedTask; }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             stopwatch.Stop();
@@ -570,7 +570,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => {
                 messages.Add(msg);
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
@@ -655,7 +655,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeAsync<NamedAndVersionedMessage>((msg) => {
                 messages.Add(msg);
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicMessage>(message,channel:typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
@@ -731,7 +731,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeAsync<NamedAndVersionedMessage>((msg) => {
                 messages.Add(msg);
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<NoChannelMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
@@ -807,7 +807,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeAsync<NamedAndVersionedMessage>((msg) => {
                 messages.Add(msg);
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicQueryMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);

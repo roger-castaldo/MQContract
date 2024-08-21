@@ -26,7 +26,7 @@ namespace MQContract.KubeMQ.Subscriptions
             cancelToken.Token);
         }
 
-        protected override async Task MessageRecieved(Request message)
+        protected override async ValueTask MessageRecieved(Request message)
         {
             ServiceMessage? result;
             try

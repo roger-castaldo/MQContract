@@ -8,6 +8,7 @@
   - [DefaultTimout](#P-MQContract-NATS-Connection-DefaultTimout 'MQContract.NATS.Connection.DefaultTimout')
   - [MaxMessageBodySize](#P-MQContract-NATS-Connection-MaxMessageBodySize 'MQContract.NATS.Connection.MaxMessageBodySize')
   - [CreateStreamAsync(streamConfig,cancellationToken)](#M-MQContract-NATS-Connection-CreateStreamAsync-NATS-Client-JetStream-Models-StreamConfig,System-Threading-CancellationToken- 'MQContract.NATS.Connection.CreateStreamAsync(NATS.Client.JetStream.Models.StreamConfig,System.Threading.CancellationToken)')
+  - [DisposeAsync()](#M-MQContract-NATS-Connection-DisposeAsync 'MQContract.NATS.Connection.DisposeAsync')
   - [PingAsync()](#M-MQContract-NATS-Connection-PingAsync 'MQContract.NATS.Connection.PingAsync')
   - [PublishAsync(message,options,cancellationToken)](#M-MQContract-NATS-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.NATS.Connection.PublishAsync(MQContract.Messages.ServiceMessage,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
   - [QueryAsync(message,timeout,options,cancellationToken)](#M-MQContract-NATS-Connection-QueryAsync-MQContract-Messages-ServiceMessage,System-TimeSpan,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.NATS.Connection.QueryAsync(MQContract.Messages.ServiceMessage,System.TimeSpan,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
@@ -79,6 +80,21 @@ The stream creation result
 | ---- | ---- | ----------- |
 | streamConfig | [NATS.Client.JetStream.Models.StreamConfig](#T-NATS-Client-JetStream-Models-StreamConfig 'NATS.Client.JetStream.Models.StreamConfig') | The configuration settings for the stream |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+<a name='M-MQContract-NATS-Connection-DisposeAsync'></a>
+### DisposeAsync() `method`
+
+##### Summary
+
+Called to dispose of the object correctly and allow it to clean up it's resources
+
+##### Returns
+
+A task required for disposal
+
+##### Parameters
+
+This method has no parameters.
 
 <a name='M-MQContract-NATS-Connection-PingAsync'></a>
 ### PingAsync() `method`

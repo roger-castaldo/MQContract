@@ -15,7 +15,7 @@ namespace MQContract.ActiveMQ.Subscriptions
         private bool disposedValue;
         private IMessageConsumer? consumer;
         
-        internal async Task StartAsync(CancellationToken cancellationToken)
+        internal async ValueTask StartAsync(CancellationToken cancellationToken)
         {
             consumer = await session.CreateConsumerAsync(SessionUtil.GetTopic(session, channel));
             consumer.Listener+=ConsumeMessage;

@@ -7,8 +7,8 @@ using System.Threading.Channels;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class PubSubSubscription<T>(IMessageFactory<T> messageFactory, Func<IRecievedMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved,
-        Func<string, Task<string>> mapChannel, SubscriptionCollection collection,
+    internal sealed class PubSubSubscription<T>(IMessageFactory<T> messageFactory, Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved,
+        Func<string, ValueTask<string>> mapChannel, SubscriptionCollection collection,
         string? channel = null, string? group = null, bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
         : SubscriptionBase<T>(mapChannel,collection,channel,synchronous)
         where T : class
@@ -19,7 +19,7 @@ namespace MQContract.Subscriptions
             SingleWriter=true
         });
 
-        public async Task<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken = new CancellationToken())
+        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken = new CancellationToken())
         {
             SyncToken(cancellationToken);
             serviceSubscription = await connection.SubscribeAsync(

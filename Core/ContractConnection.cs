@@ -52,8 +52,8 @@ namespace MQContract
             return result;
         }
 
-        private Task<string> MapChannel(ChannelMapper.MapTypes mapType, string originalChannel)
-            => channelMapper?.MapChannel(mapType, originalChannel)??Task.FromResult<string>(originalChannel);
+        private ValueTask<string> MapChannel(ChannelMapper.MapTypes mapType, string originalChannel)
+            => channelMapper?.MapChannel(mapType, originalChannel)??ValueTask.FromResult<string>(originalChannel);
 
         /// <summary>
         /// Called to execute a ping against the service layer
@@ -97,7 +97,7 @@ namespace MQContract
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>An instance of the Subscription that can be held or called to end</returns>
         /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
-        public async ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
+        public async ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
         {
             var subscription = new PubSubSubscription<T>(GetMessageFactory<T>(ignoreMessageHeader),
                 messageRecieved,
@@ -221,7 +221,7 @@ namespace MQContract
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>An instance of the Subscription that can be held or called to end</returns>
         /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
-        public async ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IRecievedMessage<Q>, Task<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
             where Q : class
             where R : class
         {
@@ -245,6 +245,11 @@ namespace MQContract
             throw new SubscriptionFailedException();
         }
 
+        /// <summary>
+        /// Called to dispose of the object correctly and allow it to clean up it's resources
+        /// </summary>
+        /// <returns>A task required for disposal</returns>
+
         public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
@@ -252,6 +257,7 @@ namespace MQContract
                 disposedValue=true;
                 await subscriptions.DisposeAsync();
                 await serviceConnection.DisposeAsync();
+                GC.SuppressFinalize(this);
             }
         }
     }

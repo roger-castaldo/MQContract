@@ -3,10 +3,10 @@ using MQContract.NATS.Subscriptions;
 
 namespace MQContract.Kafka.Subscriptions
 {
-    internal class QuerySubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Func<Message<string, byte[]>,Task> messageRecieved, Action<Exception> errorRecieved, string channel, CancellationToken cancellationToken)
+    internal class QuerySubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Func<Message<string, byte[]>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string channel, CancellationToken cancellationToken)
         : SubscriptionBase(consumer,channel,cancellationToken)
     {
-        protected override async Task RunAction()
+        protected override async ValueTask RunAction()
         {
             while (!cancelToken.IsCancellationRequested)
             {
