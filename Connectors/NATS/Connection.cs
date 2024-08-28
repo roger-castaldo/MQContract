@@ -13,7 +13,7 @@ namespace MQContract.NATS
     /// <summary>
     /// This is the MessageServiceConnection implementation for using NATS.io
     /// </summary>
-    public class Connection : IMessageServiceConnection
+    public sealed class Connection : IMessageServiceConnection, IAsyncDisposable,IDisposable
     {
         private const string MESSAGE_IDENTIFIER_HEADER = "_MessageID";
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
@@ -206,14 +206,14 @@ namespace MQContract.NATS
         /// <exception cref="InvalidChannelOptionsTypeException">Thrown when options is not null and is not an instance of the type StreamPublishSubscriberOptions</exception>
         public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
-            InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<StreamPublishChannelOptions>(options);
+            InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<StreamPublishSubscriberOptions>(options);
             IInternalServiceSubscription? subscription = null;
             if (options is StreamPublishSubscriberOptions subscriberOptions)
             {
                 if (subscriberOptions.StreamConfig!=null)
                     await CreateStreamAsync(subscriberOptions.StreamConfig, cancellationToken);
                 var consumer = await natsJSContext.CreateOrUpdateConsumerAsync(subscriberOptions.StreamConfig?.Name??channel, subscriberOptions.ConsumerConfig??new ConsumerConfig(group) { AckPolicy = ConsumerConfigAckPolicy.Explicit }, cancellationToken);
-                subscription = new StreamSubscription(consumer, messageRecieved, errorRecieved, cancellationToken);
+                subscription = new StreamSubscription(consumer, messageRecieved, errorRecieved);
             }
             else
                 subscription = new PublishSubscription(
@@ -223,8 +223,7 @@ namespace MQContract.NATS
                         cancellationToken: cancellationToken
                     ),
                     messageRecieved,
-                    errorRecieved,
-                    cancellationToken
+                    errorRecieved
                 );
             subscription.Run();
             return subscription;
@@ -251,12 +250,17 @@ namespace MQContract.NATS
                     cancellationToken: cancellationToken
                 ),
                 messageRecieved,
-                errorRecieved,
-                cancellationToken
+                errorRecieved
             );
             sub.Run();
             return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
+        /// <summary>
+        /// Called to close off the contract connection and close it's underlying service connection
+        /// </summary>
+        /// <returns>A task for the closure of the connection</returns>
+        public ValueTask CloseAsync()
+            => natsConnection.DisposeAsync();
 
         /// <summary>
         /// Called to dispose of the object correctly and allow it to clean up it's resources
@@ -264,12 +268,29 @@ namespace MQContract.NATS
         /// <returns>A task required for disposal</returns>
         public async ValueTask DisposeAsync()
         {
+            await natsConnection.DisposeAsync().ConfigureAwait(true);
+
+            Dispose(disposing: false);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
             if (!disposedValue)
             {
+                if (disposing)
+                    natsConnection.DisposeAsync().AsTask().Wait();
                 disposedValue=true;
-                await natsConnection.DisposeAsync();
-                GC.SuppressFinalize(this);
             }
+        }
+        /// <summary>
+        /// Called to dispose of the object correctly and allow it to clean up it's resources
+        /// </summary>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -22,13 +22,17 @@
   - [AddQuerySubscriptionMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
 - [ContractConnection](#T-MQContract-ContractConnection 'MQContract.ContractConnection')
   - [#ctor(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-#ctor-MQContract-Interfaces-Service-IMessageServiceConnection,MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.#ctor(MQContract.Interfaces.Service.IMessageServiceConnection,MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
+  - [CloseAsync()](#M-MQContract-ContractConnection-CloseAsync 'MQContract.ContractConnection.CloseAsync')
+  - [Dispose()](#M-MQContract-ContractConnection-Dispose 'MQContract.ContractConnection.Dispose')
   - [DisposeAsync()](#M-MQContract-ContractConnection-DisposeAsync 'MQContract.ContractConnection.DisposeAsync')
   - [PingAsync()](#M-MQContract-ContractConnection-PingAsync 'MQContract.ContractConnection.PingAsync')
   - [PublishAsync\`\`1(message,channel,messageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-PublishAsync``1-``0,System-String,MQContract-Messages-MessageHeader,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.PublishAsync``1(``0,System.String,MQContract.Messages.MessageHeader,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
   - [QueryAsync\`\`1(message,timeout,channel,messageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,MQContract-Messages-MessageHeader,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.QueryAsync``1(``0,System.Nullable{System.TimeSpan},System.String,MQContract.Messages.MessageHeader,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
   - [QueryAsync\`\`2(message,timeout,channel,messageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,MQContract-Messages-MessageHeader,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.QueryAsync``2(``0,System.Nullable{System.TimeSpan},System.String,MQContract.Messages.MessageHeader,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
-  - [SubscribeAsync\`\`1(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeAsync``1(System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.ValueTask},System.Action{System.Exception},System.String,System.String,System.Boolean,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
-  - [SubscribeQueryResponseAsync\`\`2(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeQueryResponseAsync``2(System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.ValueTask{MQContract.Messages.QueryResponseMessage{``1}}},System.Action{System.Exception},System.String,System.String,System.Boolean,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
+  - [SubscribeAsync\`\`1(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeAsync``1(System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.ValueTask},System.Action{System.Exception},System.String,System.String,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
+  - [SubscribeAsync\`\`1(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeAsync``1-System-Action{MQContract-Interfaces-IRecievedMessage{``0}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeAsync``1(System.Action{MQContract.Interfaces.IRecievedMessage{``0}},System.Action{System.Exception},System.String,System.String,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
+  - [SubscribeQueryAsyncResponseAsync\`\`2(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeQueryAsyncResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeQueryAsyncResponseAsync``2(System.Func{MQContract.Interfaces.IRecievedMessage{``0},System.Threading.Tasks.ValueTask{MQContract.Messages.QueryResponseMessage{``1}}},System.Action{System.Exception},System.String,System.String,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
+  - [SubscribeQueryResponseAsync\`\`2(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,options,cancellationToken)](#M-MQContract-ContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},MQContract-Messages-QueryResponseMessage{``1}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ContractConnection.SubscribeQueryResponseAsync``2(System.Func{MQContract.Interfaces.IRecievedMessage{``0},MQContract.Messages.QueryResponseMessage{``1}},System.Action{System.Exception},System.String,System.String,System.Boolean,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
 - [MessageChannelNullException](#T-MQContract-MessageChannelNullException 'MQContract.MessageChannelNullException')
 - [MessageConversionException](#T-MQContract-MessageConversionException 'MQContract.MessageConversionException')
 - [QueryResponseException](#T-MQContract-QueryResponseException 'MQContract.QueryResponseException')
@@ -366,16 +370,42 @@ This is the primary class for this library and is used to create a Contract styl
 | channelMapper | [MQContract.ChannelMapper](#T-MQContract-ChannelMapper 'MQContract.ChannelMapper') | An instance of a ChannelMapper used to translate channels from one instance to another based on class channel attributes or supplied channels if necessary.
 For example, it might be necessary for a Nats.IO instance when you are trying to read from a stored message stream that is comprised of another channel or set of channels |
 
+<a name='M-MQContract-ContractConnection-CloseAsync'></a>
+### CloseAsync() `method`
+
+##### Summary
+
+Called to close off this connection and it's underlying service connection
+
+##### Returns
+
+
+
+##### Parameters
+
+This method has no parameters.
+
+<a name='M-MQContract-ContractConnection-Dispose'></a>
+### Dispose() `method`
+
+##### Summary
+
+Called to dispose of the resources contained within
+
+##### Parameters
+
+This method has no parameters.
+
 <a name='M-MQContract-ContractConnection-DisposeAsync'></a>
 ### DisposeAsync() `method`
 
 ##### Summary
 
-Called to dispose of the object correctly and allow it to clean up it's resources
+Called to dispose of the resources contained within
 
 ##### Returns
 
-A task required for disposal
+A task of the underlying resources being disposed
 
 ##### Parameters
 
@@ -486,12 +516,12 @@ A QueryResult that will contain the response message and or an error
 | Q | The type of message to transmit for the Query |
 | R | The type of message expected as a response |
 
-<a name='M-MQContract-ContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
-### SubscribeAsync\`\`1(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken) `method`
+<a name='M-MQContract-ContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
+### SubscribeAsync\`\`1(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,options,cancellationToken) `method`
 
 ##### Summary
 
-Called to establish a Subscription in the sevice layer for the Pub/Sub style messaging
+Called to establish a Subscription in the sevice layer for the Pub/Sub style messaging processing messages asynchronously
 
 ##### Returns
 
@@ -506,7 +536,6 @@ An instance of the Subscription that can be held or called to end
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on |
 | group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc) |
 | ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T |
-| synchronous | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Set true if the desire the messageRecieved callback to be called such that it waits for the call to complete prior to calling for the next message |
 | options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
@@ -522,12 +551,47 @@ An instance of the Subscription that can be held or called to end
 | ---- | ----------- |
 | [MQContract.SubscriptionFailedException](#T-MQContract-SubscriptionFailedException 'MQContract.SubscriptionFailedException') | An exception thrown when the subscription has failed to establish |
 
-<a name='M-MQContract-ContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
-### SubscribeQueryResponseAsync\`\`2(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,synchronous,options,cancellationToken) `method`
+<a name='M-MQContract-ContractConnection-SubscribeAsync``1-System-Action{MQContract-Interfaces-IRecievedMessage{``0}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
+### SubscribeAsync\`\`1(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,options,cancellationToken) `method`
 
 ##### Summary
 
-Creates a subscription with the underlying service layer for the Query/Response style
+Called to establish a Subscription in the sevice layer for the Pub/Sub style messaging processing messages synchronously
+
+##### Returns
+
+An instance of the Subscription that can be held or called to end
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageRecieved | [System.Action{MQContract.Interfaces.IRecievedMessage{\`\`0}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{MQContract.Interfaces.IRecievedMessage{``0}}') | The callback to be executed when a message is recieved |
+| errorRecieved | [System.Action{System.Exception}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Exception}') | The callback to be executed when an error occurs |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T |
+| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The type of message to listen for |
+
+##### Exceptions
+
+| Name | Description |
+| ---- | ----------- |
+| [MQContract.SubscriptionFailedException](#T-MQContract-SubscriptionFailedException 'MQContract.SubscriptionFailedException') | An exception thrown when the subscription has failed to establish |
+
+<a name='M-MQContract-ContractConnection-SubscribeQueryAsyncResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},System-Threading-Tasks-ValueTask{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
+### SubscribeQueryAsyncResponseAsync\`\`2(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,options,cancellationToken) `method`
+
+##### Summary
+
+Creates a subscription with the underlying service layer for the Query/Response style processing messages asynchronously
 
 ##### Returns
 
@@ -542,7 +606,42 @@ An instance of the Subscription that can be held or called to end
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on |
 | group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc) |
 | ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T |
-| synchronous | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Set true if the desire the messageRecieved callback to be called such that it waits for the call to complete prior to calling for the next message |
+| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| Q | The expected message type for the Query |
+| R | The expected message type for the Response |
+
+##### Exceptions
+
+| Name | Description |
+| ---- | ----------- |
+| [MQContract.SubscriptionFailedException](#T-MQContract-SubscriptionFailedException 'MQContract.SubscriptionFailedException') | An exception thrown when the subscription has failed to establish |
+
+<a name='M-MQContract-ContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IRecievedMessage{``0},MQContract-Messages-QueryResponseMessage{``1}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
+### SubscribeQueryResponseAsync\`\`2(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,options,cancellationToken) `method`
+
+##### Summary
+
+Creates a subscription with the underlying service layer for the Query/Response style processing messages synchronously
+
+##### Returns
+
+An instance of the Subscription that can be held or called to end
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageRecieved | [System.Func{MQContract.Interfaces.IRecievedMessage{\`\`0},MQContract.Messages.QueryResponseMessage{\`\`1}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Interfaces.IRecievedMessage{``0},MQContract.Messages.QueryResponseMessage{``1}}') | The callback to be executed when a message is recieved and expects a returned response |
+| errorRecieved | [System.Action{System.Exception}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Exception}') | The callback to be executed when an error occurs |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T |
 | options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 

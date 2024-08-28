@@ -8,33 +8,33 @@ namespace MQContract.Subscriptions
 {
     internal sealed class QueryResponseSubscription<Q,R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, 
         Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved,
-        Func<string, ValueTask<string>> mapChannel, SubscriptionCollection collection,
+        Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, 
         bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
-        : SubscriptionBase<Q>(mapChannel,collection,channel,synchronous)
+        : SubscriptionBase<Q>(mapChannel,channel,synchronous)
         where Q : class
         where R : class
     {
-        private readonly ManualResetEventSlim manualResetEvent = new(true);
+        private ManualResetEventSlim? manualResetEvent = new(true);
+        private CancellationTokenSource? token = new();
 
-        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken = new CancellationToken())
+        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)
         {
-            SyncToken(cancellationToken);
             serviceSubscription = await connection.SubscribeQueryAsync(
                 serviceMessage => ProcessServiceMessageAsync(serviceMessage),
                 error => errorRecieved(error),
                 MessageChannel,
                 group??Guid.NewGuid().ToString(),
                 options: options,
-                cancellationToken: token.Token
+                cancellationToken: cancellationToken
             );
             return serviceSubscription!=null;
         }
 
         private async ValueTask<ServiceMessage> ProcessServiceMessageAsync(RecievedServiceMessage message)
         {
-            if (Synchronous)
-                manualResetEvent.Wait(cancellationToken:token.Token);
+            if (Synchronous&&!(token?.IsCancellationRequested??false))
+                manualResetEvent!.Wait(cancellationToken:token!.Token);
             Exception? error = null;
             ServiceMessage? response = null;
             try
@@ -49,13 +49,22 @@ namespace MQContract.Subscriptions
                 error=e;
             }
             if (Synchronous)
-                manualResetEvent.Set();
+                manualResetEvent!.Set();
             if (error!=null)
                 return ErrorServiceMessage.Produce(message.Channel,error);
             return response??ErrorServiceMessage.Produce(message.Channel, new NullReferenceException());
         }
 
         protected override void InternalDispose()
-            =>manualResetEvent.Dispose();
+        {
+            if (token!=null)
+            {
+                token.Cancel();
+                manualResetEvent?.Dispose();
+                token.Dispose();
+                token=null;
+                manualResetEvent=null;
+            }
+        }
     }
 }

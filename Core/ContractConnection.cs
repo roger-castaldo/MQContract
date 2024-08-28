@@ -23,7 +23,7 @@ namespace MQContract
     /// <param name="channelMapper">An instance of a ChannelMapper used to translate channels from one instance to another based on class channel attributes or supplied channels if necessary.
     /// For example, it might be necessary for a Nats.IO instance when you are trying to read from a stored message stream that is comprised of another channel or set of channels
     /// </param>
-    public class ContractConnection(IMessageServiceConnection serviceConnection,
+    public sealed class ContractConnection(IMessageServiceConnection serviceConnection,
         IMessageEncoder? defaultMessageEncoder = null,
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
@@ -34,7 +34,6 @@ namespace MQContract
         private readonly SemaphoreSlim dataLock = new(1, 1);
         private IEnumerable<IMessageTypeFactory> typeFactories = [];
         private bool disposedValue;
-        private readonly SubscriptionCollection subscriptions = new();
 
         private IMessageFactory<T> GetMessageFactory<T>(bool ignoreMessageHeader = false) where T : class
         {
@@ -84,7 +83,7 @@ namespace MQContract
             => await GetMessageFactory<T>().ConvertMessageAsync(message, channel, messageHeader,(originalChannel)=>MapChannel(mapType,originalChannel));
 
         /// <summary>
-        /// Called to establish a Subscription in the sevice layer for the Pub/Sub style messaging
+        /// Called to establish a Subscription in the sevice layer for the Pub/Sub style messaging processing messages asynchronously
         /// </summary>
         /// <typeparam name="T">The type of message to listen for</typeparam>
         /// <param name="messageRecieved">The callback to be executed when a message is recieved</param>
@@ -92,28 +91,48 @@ namespace MQContract
         /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on</param>
         /// <param name="group">Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc)</param>
         /// <param name="ignoreMessageHeader">If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T</param>
-        /// <param name="synchronous">Set true if the desire the messageRecieved callback to be called such that it waits for the call to complete prior to calling for the next message</param>
         /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>An instance of the Subscription that can be held or called to end</returns>
         /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
-        public async ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
+        public ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
+            => SubscribeAsync<T>(messageRecieved, errorRecieved, channel, group, ignoreMessageHeader, false, options, cancellationToken);
+
+        /// <summary>
+        /// Called to establish a Subscription in the sevice layer for the Pub/Sub style messaging processing messages synchronously
+        /// </summary>
+        /// <typeparam name="T">The type of message to listen for</typeparam>
+        /// <param name="messageRecieved">The callback to be executed when a message is recieved</param>
+        /// <param name="errorRecieved">The callback to be executed when an error occurs</param>
+        /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on</param>
+        /// <param name="group">Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc)</param>
+        /// <param name="ignoreMessageHeader">If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T</param>
+        /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>An instance of the Subscription that can be held or called to end</returns>
+        /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
+        public ValueTask<ISubscription> SubscribeAsync<T>(Action<IRecievedMessage<T>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
+            => SubscribeAsync<T>((msg) =>
+            {
+                messageRecieved(msg);
+                return ValueTask.CompletedTask;
+            }, 
+            errorRecieved, channel, group, ignoreMessageHeader, true, options, cancellationToken);
+
+        private async ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string? channel, string? group, bool ignoreMessageHeader,bool synchronous, IServiceChannelOptions? options, CancellationToken cancellationToken)
+            where T : class
         {
             var subscription = new PubSubSubscription<T>(GetMessageFactory<T>(ignoreMessageHeader),
                 messageRecieved,
                 errorRecieved,
-                (originalChannel)=>MapChannel(ChannelMapper.MapTypes.PublishSubscription,originalChannel),
-                subscriptions,
-                channel:channel,
-                group:group,
-                synchronous:synchronous,
-                options:options,
-                logger:logger);
+                (originalChannel) => MapChannel(ChannelMapper.MapTypes.PublishSubscription, originalChannel),
+                channel: channel,
+                group: group,
+                synchronous: synchronous,
+                options: options,
+                logger: logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
-            {
-                await subscriptions.AddAsync(subscription);
                 return subscription;
-            }
             throw new SubscriptionFailedException();
         }
 
@@ -207,7 +226,7 @@ namespace MQContract
         }
 
         /// <summary>
-        /// Creates a subscription with the underlying service layer for the Query/Response style
+        /// Creates a subscription with the underlying service layer for the Query/Response style processing messages asynchronously
         /// </summary>
         /// <typeparam name="Q">The expected message type for the Query</typeparam>
         /// <typeparam name="R">The expected message type for the Response</typeparam>
@@ -216,49 +235,103 @@ namespace MQContract
         /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on</param>
         /// <param name="group">Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc)</param>
         /// <param name="ignoreMessageHeader">If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T</param>
-        /// <param name="synchronous">Set true if the desire the messageRecieved callback to be called such that it waits for the call to complete prior to calling for the next message</param>
         /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>An instance of the Subscription that can be held or called to end</returns>
         /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
-        public async ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, bool synchronous = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public ValueTask<ISubscription> SubscribeQueryAsyncResponseAsync<Q, R>(Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+            where Q : class
+            where R : class
+        => SubscribeQueryResponseAsync<Q,R>(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,false,options,cancellationToken);
+
+        /// <summary>
+        /// Creates a subscription with the underlying service layer for the Query/Response style processing messages synchronously
+        /// </summary>
+        /// <typeparam name="Q">The expected message type for the Query</typeparam>
+        /// <typeparam name="R">The expected message type for the Response</typeparam>
+        /// <param name="messageRecieved">The callback to be executed when a message is recieved and expects a returned response</param>
+        /// <param name="errorRecieved">The callback to be executed when an error occurs</param>
+        /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on</param>
+        /// <param name="group">Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc)</param>
+        /// <param name="ignoreMessageHeader">If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T</param>
+        /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>An instance of the Subscription that can be held or called to end</returns>
+        /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
+        public ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IRecievedMessage<Q>, QueryResponseMessage<R>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+            where Q : class
+            where R : class
+        => SubscribeQueryResponseAsync<Q, R>((msg) =>
+            {
+                var result = messageRecieved(msg);
+                return ValueTask.FromResult(result);
+            }, errorRecieved, channel, group, ignoreMessageHeader, true, options, cancellationToken);
+
+        private async ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, IServiceChannelOptions? options, CancellationToken cancellationToken)
             where Q : class
             where R : class
         {
-            var subscription = new QueryResponseSubscription<Q,R>(
+            var subscription = new QueryResponseSubscription<Q, R>(
                 GetMessageFactory<Q>(ignoreMessageHeader),
                 GetMessageFactory<R>(),
                 messageRecieved,
                 errorRecieved,
                 (originalChannel) => MapChannel(ChannelMapper.MapTypes.QuerySubscription, originalChannel),
-                subscriptions,
                 channel: channel,
                 group: group,
                 synchronous: synchronous,
                 options: options,
                 logger: logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
-            {
-                await subscriptions.AddAsync(subscription);
                 return subscription;
-            }
             throw new SubscriptionFailedException();
         }
 
         /// <summary>
-        /// Called to dispose of the object correctly and allow it to clean up it's resources
+        /// Called to close off this connection and it's underlying service connection
         /// </summary>
-        /// <returns>A task required for disposal</returns>
+        /// <returns></returns>
+        public ValueTask CloseAsync()
+            => serviceConnection?.CloseAsync()??ValueTask.CompletedTask;
 
-        public async ValueTask DisposeAsync()
+        private void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
+                if (disposing)
+                {
+                    if (serviceConnection is IDisposable disposable)
+                        disposable.Dispose();
+                    else if (serviceConnection is IAsyncDisposable asyncDisposable)
+                        asyncDisposable.DisposeAsync().AsTask().Wait();
+                }
                 disposedValue=true;
-                await subscriptions.DisposeAsync();
-                await serviceConnection.DisposeAsync();
-                GC.SuppressFinalize(this);
             }
+        }
+
+        /// <summary>
+        /// Called to dispose of the resources contained within
+        /// </summary>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Called to dispose of the resources contained within
+        /// </summary>
+        /// <returns>A task of the underlying resources being disposed</returns>
+        public async ValueTask DisposeAsync()
+        {
+            if (serviceConnection is IAsyncDisposable asyncDisposable)
+                await asyncDisposable.DisposeAsync().ConfigureAwait(true);
+            else if (serviceConnection is IDisposable disposable)
+                disposable.Dispose();
+
+            Dispose(false);
+            GC.SuppressFinalize(this);
         }
     }
 }

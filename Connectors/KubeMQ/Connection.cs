@@ -17,7 +17,7 @@ namespace MQContract.KubeMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using KubeMQ
     /// </summary>
-    public class Connection : IMessageServiceConnection
+    public sealed class Connection : IMessageServiceConnection,IDisposable,IAsyncDisposable
     {
         private static readonly Regex regURL = new("^http(s)?://(.+)$", RegexOptions.Compiled|RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(500));
 
@@ -236,6 +236,12 @@ namespace MQContract.KubeMQ
             sub.Run();
             return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
+        /// <summary>
+        /// Called to close the underlying KubeMQ Client connection
+        /// </summary>
+        /// <returns></returns>
+        public ValueTask CloseAsync()
+            => client.DisposeAsync();
 
         /// <summary>
         /// Called to dispose of the object correctly and allow it to clean up it's resources
@@ -243,12 +249,29 @@ namespace MQContract.KubeMQ
         /// <returns>A task required for disposal</returns>
         public async ValueTask DisposeAsync()
         {
+            await client.DisposeAsync();
+
+            Dispose(disposing: false);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
             if (!disposedValue)
             {
+                if (disposing)
+                    client.DisposeAsync().AsTask().Wait();
                 disposedValue=true;
-                await client.DisposeAsync();
-                GC.SuppressFinalize(this);
             }
+        }
+        /// <summary>
+        /// Called to dispose of the underlying resources
+        /// </summary>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

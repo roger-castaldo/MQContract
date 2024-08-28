@@ -821,7 +821,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw new NotImplementedException();
             }, (error) => {});
             #endregion
@@ -873,10 +873,10 @@ namespace AutomatedTesting
             #endregion
 
             #region Act
-            var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription1 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw new NotImplementedException();
             }, (error) => { });
-            var subscription2 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription2 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw new NotImplementedException();
             }, (error) => { },
             channel:otherChannel);
@@ -929,10 +929,10 @@ namespace AutomatedTesting
             #endregion
 
             #region Act
-            var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription1 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw new NotImplementedException();
             }, (error) => { });
-            var subscription2 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription2 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw new NotImplementedException();
             }, (error) => { },
             channel: otherChannel);
@@ -986,10 +986,10 @@ namespace AutomatedTesting
             #endregion
 
             #region Act
-            var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription1 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw new NotImplementedException();
             }, (error) => { });
-            var subscription2 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription2 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw new NotImplementedException();
             }, (error) => { },
             channel: otherChannel);
@@ -1042,10 +1042,10 @@ namespace AutomatedTesting
             #endregion
 
             #region Act
-            var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription1 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw new NotImplementedException();
             }, (error) => { });
-            var subscription2 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription2 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 throw new NotImplementedException();
             }, (error) => { },
             channel: otherChannel);

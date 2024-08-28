@@ -7,6 +7,8 @@
   - [#ctor(clientConfig)](#M-MQContract-Kafka-Connection-#ctor-Confluent-Kafka-ClientConfig- 'MQContract.Kafka.Connection.#ctor(Confluent.Kafka.ClientConfig)')
   - [DefaultTimout](#P-MQContract-Kafka-Connection-DefaultTimout 'MQContract.Kafka.Connection.DefaultTimout')
   - [MaxMessageBodySize](#P-MQContract-Kafka-Connection-MaxMessageBodySize 'MQContract.Kafka.Connection.MaxMessageBodySize')
+  - [CloseAsync()](#M-MQContract-Kafka-Connection-CloseAsync 'MQContract.Kafka.Connection.CloseAsync')
+  - [Dispose()](#M-MQContract-Kafka-Connection-Dispose 'MQContract.Kafka.Connection.Dispose')
   - [DisposeAsync()](#M-MQContract-Kafka-Connection-DisposeAsync 'MQContract.Kafka.Connection.DisposeAsync')
   - [PingAsync()](#M-MQContract-Kafka-Connection-PingAsync 'MQContract.Kafka.Connection.PingAsync')
   - [PublishAsync(message,options,cancellationToken)](#M-MQContract-Kafka-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.Kafka.Connection.PublishAsync(MQContract.Messages.ServiceMessage,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
@@ -61,6 +63,32 @@ DEFAULT:1 minute if not specified inside the connection options
 ##### Summary
 
 The maximum message body size allowed
+
+<a name='M-MQContract-Kafka-Connection-CloseAsync'></a>
+### CloseAsync() `method`
+
+##### Summary
+
+Called to close off the underlying Kafka Connection
+
+##### Returns
+
+
+
+##### Parameters
+
+This method has no parameters.
+
+<a name='M-MQContract-Kafka-Connection-Dispose'></a>
+### Dispose() `method`
+
+##### Summary
+
+Called to dispose of the required resources
+
+##### Parameters
+
+This method has no parameters.
 
 <a name='M-MQContract-Kafka-Connection-DisposeAsync'></a>
 ### DisposeAsync() `method`

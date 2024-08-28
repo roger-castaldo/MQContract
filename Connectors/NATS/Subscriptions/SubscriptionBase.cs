@@ -4,10 +4,12 @@ using NATS.Client.JetStream;
 
 namespace MQContract.NATS.Subscriptions
 {
-    internal abstract class SubscriptionBase(CancellationToken cancellationToken) : IInternalServiceSubscription
+    internal abstract class SubscriptionBase() : IInternalServiceSubscription,IDisposable
     {
+        private readonly CancellationTokenSource CancelTokenSource = new();
         private bool disposedValue;
-        protected readonly CancellationTokenSource cancelToken = new();
+
+        protected CancellationToken CancelToken => CancelTokenSource.Token;
 
         protected static RecievedServiceMessage ExtractMessage(NatsJSMsg<byte[]> recievedMessage)
             => ExtractMessage(recievedMessage.Headers, recievedMessage.Subject, recievedMessage.Data);
@@ -29,28 +31,35 @@ namespace MQContract.NATS.Subscriptions
 
         protected abstract Task RunAction();
         public void Run()
-        {
-            cancellationToken.Register(() =>
-            {
-                cancelToken.Cancel();
-            });
-            RunAction();
-        }
+            => RunAction();
 
         public async ValueTask EndAsync()
         {
-            try { await cancelToken.CancelAsync(); } catch { }
+            if (!CancelTokenSource.IsCancellationRequested)
+            {
+                System.Diagnostics.Debug.WriteLine("Calling Cancel Async inside NATS subscription...");
+                await CancelTokenSource.CancelAsync();
+                System.Diagnostics.Debug.WriteLine("COmpleted Cancel Async inside NATS subscription");
+            }
         }
 
-        public async ValueTask DisposeAsync()
+        protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
+                if (disposing&&!CancelTokenSource.IsCancellationRequested)
+                    CancelTokenSource.Cancel();
+                
+                CancelTokenSource.Dispose();
                 disposedValue=true;
-                if (!cancelToken.IsCancellationRequested)
-                    await cancelToken.CancelAsync();
-                cancelToken.Dispose();
             }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -18,6 +18,8 @@
   - [#ctor(options)](#M-MQContract-KubeMQ-Connection-#ctor-MQContract-KubeMQ-ConnectionOptions- 'MQContract.KubeMQ.Connection.#ctor(MQContract.KubeMQ.ConnectionOptions)')
   - [DefaultTimout](#P-MQContract-KubeMQ-Connection-DefaultTimout 'MQContract.KubeMQ.Connection.DefaultTimout')
   - [MaxMessageBodySize](#P-MQContract-KubeMQ-Connection-MaxMessageBodySize 'MQContract.KubeMQ.Connection.MaxMessageBodySize')
+  - [CloseAsync()](#M-MQContract-KubeMQ-Connection-CloseAsync 'MQContract.KubeMQ.Connection.CloseAsync')
+  - [Dispose()](#M-MQContract-KubeMQ-Connection-Dispose 'MQContract.KubeMQ.Connection.Dispose')
   - [DisposeAsync()](#M-MQContract-KubeMQ-Connection-DisposeAsync 'MQContract.KubeMQ.Connection.DisposeAsync')
   - [PingAsync()](#M-MQContract-KubeMQ-Connection-PingAsync 'MQContract.KubeMQ.Connection.PingAsync')
   - [PublishAsync(message,options,cancellationToken)](#M-MQContract-KubeMQ-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.KubeMQ.Connection.PublishAsync(MQContract.Messages.ServiceMessage,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
@@ -336,6 +338,32 @@ DEFAULT:30 seconds if not specified inside the connection options
 ##### Summary
 
 The maximum message body size allowed
+
+<a name='M-MQContract-KubeMQ-Connection-CloseAsync'></a>
+### CloseAsync() `method`
+
+##### Summary
+
+Called to close the underlying KubeMQ Client connection
+
+##### Returns
+
+
+
+##### Parameters
+
+This method has no parameters.
+
+<a name='M-MQContract-KubeMQ-Connection-Dispose'></a>
+### Dispose() `method`
+
+##### Summary
+
+Called to dispose of the underlying resources
+
+##### Parameters
+
+This method has no parameters.
 
 <a name='M-MQContract-KubeMQ-Connection-DisposeAsync'></a>
 ### DisposeAsync() `method`

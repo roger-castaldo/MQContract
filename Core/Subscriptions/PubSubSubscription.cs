@@ -8,63 +8,40 @@ using System.Threading.Channels;
 namespace MQContract.Subscriptions
 {
     internal sealed class PubSubSubscription<T>(IMessageFactory<T> messageFactory, Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved,
-        Func<string, ValueTask<string>> mapChannel, SubscriptionCollection collection,
+        Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
-        : SubscriptionBase<T>(mapChannel,collection,channel,synchronous)
+        : SubscriptionBase<T>(mapChannel,channel,synchronous)
         where T : class
     {
-        private readonly Channel<RecievedServiceMessage> dataChannel = Channel.CreateUnbounded<RecievedServiceMessage>(new UnboundedChannelOptions()
+        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection,CancellationToken cancellationToken)
         {
-            SingleReader=true,
-            SingleWriter=true
-        });
-
-        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken = new CancellationToken())
-        {
-            SyncToken(cancellationToken);
             serviceSubscription = await connection.SubscribeAsync(
-                async serviceMessage=>await dataChannel.Writer.WriteAsync(serviceMessage,token.Token),
+                async serviceMessage=> await ProcessMessage(serviceMessage),
                 error=>errorRecieved(error),
                 MessageChannel,
                 group??Guid.NewGuid().ToString(),
                 options:options,
-                cancellationToken:token.Token
+                cancellationToken:cancellationToken
             );
             if (serviceSubscription==null)
                 return false;
-            EstablishReader();
             return true;
         }
 
-        private void EstablishReader()
+        private async ValueTask ProcessMessage(RecievedServiceMessage serviceMessage)
         {
-            Task.Run(async () =>
+            try
             {
-                while (await dataChannel.Reader.WaitToReadAsync(token.Token))
-                {
-                    while (dataChannel.Reader.TryRead(out var message))
-                    {
-                        var tsk = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                var taskMessage = await messageFactory.ConvertMessageAsync(logger, message)
-                                    ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
-                                await messageRecieved(new RecievedMessage<T>(message.ID,taskMessage!,message.Header,message.RecievedTimestamp,DateTime.Now));
-                            }
-                            catch (Exception e)
-                            {
-                                errorRecieved(e);
-                            }
-                        });
-                        if (Synchronous)
-                            await tsk;
-                    }
-                }
-            });
+                var taskMessage = await messageFactory.ConvertMessageAsync(logger, serviceMessage)
+                    ??throw new InvalidCastException($"Unable to convert incoming message {serviceMessage.MessageTypeID} to {typeof(T).FullName}");
+                var tsk = messageRecieved(new RecievedMessage<T>(serviceMessage.ID, taskMessage!, serviceMessage.Header, serviceMessage.RecievedTimestamp, DateTime.Now));
+                if (Synchronous)
+                    await tsk.ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                errorRecieved(e);
+            }
         }
-
-        protected override void InternalDispose()
-            =>dataChannel.Writer.Complete();
     }
 }

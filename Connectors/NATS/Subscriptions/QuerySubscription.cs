@@ -4,12 +4,12 @@ using NATS.Client.Core;
 namespace MQContract.NATS.Subscriptions
 {
     internal class QuerySubscription(IAsyncEnumerable<NatsMsg<byte[]>> asyncEnumerable, 
-        Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, 
-        CancellationToken cancellationToken) : SubscriptionBase(cancellationToken)
+        Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved) 
+        : SubscriptionBase()
     {
         protected override async Task RunAction()
         {
-            await foreach (var msg in asyncEnumerable.WithCancellation(cancelToken.Token))
+            await foreach (var msg in asyncEnumerable.WithCancellation(CancelToken))
             {
                 var recievedMessage = ExtractMessage(msg);
                 try
@@ -19,7 +19,7 @@ namespace MQContract.NATS.Subscriptions
                         result.Data.ToArray(),
                         headers: Connection.ExtractHeader(result),
                         replyTo: msg.ReplyTo,
-                        cancellationToken: cancelToken.Token
+                        cancellationToken: CancelToken
                     );
                 }
                 catch (Exception ex)
@@ -30,7 +30,7 @@ namespace MQContract.NATS.Subscriptions
                         responseData,
                         replyTo: msg.ReplyTo,
                         headers:headers,
-                        cancellationToken: cancelToken.Token
+                        cancellationToken: CancelToken
                     );
                 }
             }

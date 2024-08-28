@@ -4,18 +4,18 @@ using NATS.Client.JetStream;
 namespace MQContract.NATS.Subscriptions
 {
     internal class StreamSubscription(INatsJSConsumer consumer, Action<RecievedServiceMessage> messageRecieved, 
-        Action<Exception> errorRecieved, CancellationToken cancellationToken) 
-        : SubscriptionBase(cancellationToken)
+        Action<Exception> errorRecieved) 
+        : SubscriptionBase()
     {
         protected override async Task RunAction()
         {
-            while (!cancelToken.Token.IsCancellationRequested)
+            while (!CancelToken.IsCancellationRequested)
             {
                 try
                 {
-                    await consumer.RefreshAsync(cancelToken.Token); // or try to recreate consumer
+                    await consumer.RefreshAsync(CancelToken); // or try to recreate consumer
 
-                    await foreach (var msg in consumer.ConsumeAsync<byte[]>().WithCancellation(cancelToken.Token))
+                    await foreach (var msg in consumer.ConsumeAsync<byte[]>().WithCancellation(CancelToken))
                     {
                         var success = true;
                         try
@@ -26,10 +26,10 @@ namespace MQContract.NATS.Subscriptions
                         {
                             success=false;
                             errorRecieved(ex);
-                            await msg.NakAsync(cancellationToken: cancelToken.Token);
+                            await msg.NakAsync(cancellationToken: CancelToken);
                         }
                         if (success)
-                            await msg.AckAsync(cancellationToken: cancelToken.Token);
+                            await msg.AckAsync(cancellationToken: CancelToken);
                     }
                 }
                 catch (NatsJSProtocolException e)
@@ -40,7 +40,7 @@ namespace MQContract.NATS.Subscriptions
                 {
                     errorRecieved(e);
                     // log exception
-                    await Task.Delay(1000, cancelToken.Token); // backoff
+                    await Task.Delay(1000, CancelToken); // backoff
                 }
             }
         }

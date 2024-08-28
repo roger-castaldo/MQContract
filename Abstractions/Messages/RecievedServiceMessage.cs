@@ -1,4 +1,6 @@
-﻿namespace MQContract.Messages
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace MQContract.Messages
 {
     /// <summary>
     /// A Recieved Service Message that gets passed back up into the Contract Connection when a message is recieved from the underlying service connection
@@ -8,6 +10,7 @@
     /// <param name="Channel">The channel the message was recieved on</param>
     /// <param name="Header">The message headers that came through</param>
     /// <param name="Data">The binary content of the message that should be the encoded class</param>
+    [ExcludeFromCodeCoverage(Justification ="This is a record class and has nothing to test")]
     public record RecievedServiceMessage(string ID, string MessageTypeID, string Channel, MessageHeader Header, ReadOnlyMemory<byte> Data)
         : ServiceMessage(ID,MessageTypeID,Channel,Header,Data)
     { 

@@ -7,7 +7,9 @@
   - [#ctor(options)](#M-MQContract-NATS-Connection-#ctor-NATS-Client-Core-NatsOpts- 'MQContract.NATS.Connection.#ctor(NATS.Client.Core.NatsOpts)')
   - [DefaultTimout](#P-MQContract-NATS-Connection-DefaultTimout 'MQContract.NATS.Connection.DefaultTimout')
   - [MaxMessageBodySize](#P-MQContract-NATS-Connection-MaxMessageBodySize 'MQContract.NATS.Connection.MaxMessageBodySize')
+  - [CloseAsync()](#M-MQContract-NATS-Connection-CloseAsync 'MQContract.NATS.Connection.CloseAsync')
   - [CreateStreamAsync(streamConfig,cancellationToken)](#M-MQContract-NATS-Connection-CreateStreamAsync-NATS-Client-JetStream-Models-StreamConfig,System-Threading-CancellationToken- 'MQContract.NATS.Connection.CreateStreamAsync(NATS.Client.JetStream.Models.StreamConfig,System.Threading.CancellationToken)')
+  - [Dispose()](#M-MQContract-NATS-Connection-Dispose 'MQContract.NATS.Connection.Dispose')
   - [DisposeAsync()](#M-MQContract-NATS-Connection-DisposeAsync 'MQContract.NATS.Connection.DisposeAsync')
   - [PingAsync()](#M-MQContract-NATS-Connection-PingAsync 'MQContract.NATS.Connection.PingAsync')
   - [PublishAsync(message,options,cancellationToken)](#M-MQContract-NATS-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.NATS.Connection.PublishAsync(MQContract.Messages.ServiceMessage,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
@@ -63,6 +65,21 @@ DEFAULT: 30 seconds
 The maximum message body size allowed.
 DEFAULT: 1MB
 
+<a name='M-MQContract-NATS-Connection-CloseAsync'></a>
+### CloseAsync() `method`
+
+##### Summary
+
+Called to close off the contract connection and close it's underlying service connection
+
+##### Returns
+
+A task for the closure of the connection
+
+##### Parameters
+
+This method has no parameters.
+
 <a name='M-MQContract-NATS-Connection-CreateStreamAsync-NATS-Client-JetStream-Models-StreamConfig,System-Threading-CancellationToken-'></a>
 ### CreateStreamAsync(streamConfig,cancellationToken) `method`
 
@@ -80,6 +97,17 @@ The stream creation result
 | ---- | ---- | ----------- |
 | streamConfig | [NATS.Client.JetStream.Models.StreamConfig](#T-NATS-Client-JetStream-Models-StreamConfig 'NATS.Client.JetStream.Models.StreamConfig') | The configuration settings for the stream |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+<a name='M-MQContract-NATS-Connection-Dispose'></a>
+### Dispose() `method`
+
+##### Summary
+
+Called to dispose of the object correctly and allow it to clean up it's resources
+
+##### Parameters
+
+This method has no parameters.
 
 <a name='M-MQContract-NATS-Connection-DisposeAsync'></a>
 ### DisposeAsync() `method`

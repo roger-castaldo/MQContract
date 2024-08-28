@@ -15,7 +15,7 @@ namespace MQContract.ActiveMQ
         private const string MESSAGE_TYPE_HEADER_ID = "_MessageType";
 
         private bool disposedValue;
-
+        
         private readonly IConnectionFactory connectionFactory;
         private readonly IConnection connection;
         private readonly ISession session;
@@ -95,16 +95,36 @@ namespace MQContract.ActiveMQ
             throw new NotImplementedException();
         }
 
+        public async ValueTask CloseAsync()
+            => await connection.StopAsync();
+
         public async ValueTask DisposeAsync()
+        {
+            await connection.StopAsync().ConfigureAwait(false);
+
+            Dispose(disposing: false);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
-                disposedValue=true;
+                if (disposing)
+                    connection.Stop();
+
                 producer.Dispose();
                 session.Dispose();
-                await connection.StopAsync();
                 connection.Dispose();
+                disposedValue=true;
             }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

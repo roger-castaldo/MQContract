@@ -18,7 +18,7 @@ await using var serviceConnection = new Connection(new ConnectionOptions()
 
 var contractConnection = new ContractConnection(serviceConnection);
 
-await using var arrivalSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
+var announcementSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
     (announcement) =>
     {
         Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");
@@ -28,20 +28,18 @@ await using var arrivalSubscription = await contractConnection.SubscribeAsync<Ar
     cancellationToken: sourceCancel.Token
 );
 
-await using var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
+var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
     (greeting) =>
     {
         Console.WriteLine($"Greeting recieved for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.RecievedTimestamp}]");
         System.Diagnostics.Debug.WriteLine($"Time to convert message: {greeting.ProcessedTimestamp.Subtract(greeting.RecievedTimestamp).TotalMilliseconds}ms");
-        return ValueTask.FromResult<QueryResponseMessage<string>>(
-            new($"Welcome {greeting.Message.FirstName} {greeting.Message.LastName} to the KubeMQ sample")
-        );
+        return new($"Welcome {greeting.Message.FirstName} {greeting.Message.LastName} to the KubeMQ sample");
     },
     (error) => Console.WriteLine($"Greeting error: {error.Message}"),
     cancellationToken: sourceCancel.Token
 );
 
-await using var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredArrivalAnnouncement>(
+var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredArrivalAnnouncement>(
     (announcement) =>
     {
         Console.WriteLine($"Stored Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");
@@ -51,6 +49,16 @@ await using var storedArrivalSubscription = await contractConnection.SubscribeAs
     options:new StoredEventsSubscriptionOptions(StoredEventsSubscriptionOptions.MessageReadStyle.StartNewOnly),
     cancellationToken: sourceCancel.Token
 );
+
+sourceCancel.Token.Register(async () =>
+{
+    await Task.WhenAll(
+        announcementSubscription.EndAsync().AsTask(),
+        greetingSubscription.EndAsync().AsTask(),
+        storedArrivalSubscription.EndAsync().AsTask()
+    ).ConfigureAwait(true);
+    await contractConnection.CloseAsync().ConfigureAwait(true);
+}, true);
 
 var result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken:sourceCancel.Token);
 Console.WriteLine($"Result 1 [Success:{!result.IsError}, ID:{result.ID}]");

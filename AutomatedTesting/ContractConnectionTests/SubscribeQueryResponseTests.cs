@@ -6,6 +6,11 @@ using MQContract.Interfaces;
 using MQContract;
 using System.Diagnostics;
 using System.Reflection;
+using MQContract.Interfaces.Encoding;
+using System.Linq;
+using MQContract.Messages;
+using System.Linq.Expressions;
+using System;
 
 namespace AutomatedTesting.ContractConnectionTests
 {
@@ -52,7 +57,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
             var messages = new List<IRecievedMessage<BasicQueryMessage>>();
             var exceptions = new List<Exception>();
-            var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage,BasicResponseMessage>((msg) => {
+            var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage,BasicResponseMessage>((msg) => {
                 messages.Add(msg);
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage,null));
             }, (error) => exceptions.Add(error));
@@ -119,13 +124,13 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
+            var subscription1 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null), 
                 (error) => { },
                 channel:channelName);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var subscription2 = await contractConnection.SubscribeQueryResponseAsync<NoChannelMessage, BasicResponseMessage>(
+            var subscription2 = await contractConnection.SubscribeQueryAsyncResponseAsync<NoChannelMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
                 channel: channelName);
@@ -169,13 +174,13 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var subscription1 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
+            var subscription1 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
                 group: groupName);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var subscription2 = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
+            var subscription2 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { });
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
@@ -218,7 +223,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
+            var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
                 options:serviceChannelOptions);
@@ -258,7 +263,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeQueryResponseAsync<NoChannelMessage, BasicResponseMessage>(
+            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<NoChannelMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );
@@ -295,7 +300,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
+            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );
@@ -334,7 +339,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>(
+            var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { }
             );
@@ -396,9 +401,8 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 messages.Add(msg);
-                return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
-            }, (error) => exceptions.Add(error),
-            synchronous:true);
+                return new(responseMessage, null);
+            }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result1 = await contractConnection.QueryAsync<BasicQueryMessage>(message1);
             stopwatch.Stop();
@@ -479,7 +483,6 @@ namespace AutomatedTesting.ContractConnectionTests
             var contractConnection = new ContractConnection(serviceConnection.Object);
 
             var message = new BasicQueryMessage("TestSubscribeQueryResponseAsyncErrorTriggeringInOurAction");
-            var responseMessage = new BasicResponseMessage("TestSubscribeQueryResponseAsyncErrorTriggeringInOurAction");
             var exception = new NullReferenceException("TestSubscribeQueryResponseAsyncErrorTriggeringInOurAction");
             #endregion
 
@@ -520,23 +523,165 @@ namespace AutomatedTesting.ContractConnectionTests
         }
 
         [TestMethod]
-        public async Task TestSubscribeQueryResponseAsyncWithDisposal()
+        public async Task TestSubscribeQueryResponseAsyncEndAsync()
         {
             #region Arrange
             var serviceSubscription = new Mock<IServiceSubscription>();
+            serviceSubscription.Setup(x => x.EndAsync())
+                .Returns(ValueTask.CompletedTask);
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage,ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.Object);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+                throw new NotImplementedException();
+            }, (error) => { });
+            await subscription.EndAsync();
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceSubscription.Verify(x => x.EndAsync(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeQueryResponseAsyncAsyncCleanup()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IAsyncDisposable>();
+            serviceSubscription.Setup(x => x.DisposeAsync())
+                .Returns(ValueTask.CompletedTask);
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+                throw new NotImplementedException();
+            }, (error) => { });
+            await subscription.DisposeAsync();
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceSubscription.Verify(x => x.DisposeAsync(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeQueryResponseAsyncWithNonAsyncCleanup()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IDisposable>();
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+                throw new NotImplementedException();
+            }, (error) => { });
+            await subscription.DisposeAsync();
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceSubscription.Verify(x => x.Dispose(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeQueryResponseAsyncSubscriptionsCleanup()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IDisposable>();
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+                throw new NotImplementedException();
+            }, (error) => { });
+            subscription.Dispose();
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceSubscription.Verify(x => x.Dispose(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeQueryResponseAsyncWithThrowsConversionError()
+        {
+            #region Arrange
+            var message = new BasicQueryMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
+
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            var globalConverter = new Mock<IMessageEncoder>();
+            globalConverter.Setup(x => x.DecodeAsync<BasicResponseMessage>(It.IsAny<Stream>()))
+                .Returns(ValueTask.FromResult<BasicResponseMessage?>(null));
+            globalConverter.Setup(x => x.EncodeAsync<BasicResponseMessage>(It.IsAny<BasicResponseMessage>()))
+                .Returns(ValueTask.FromResult<byte[]>([]));
+            globalConverter.Setup(x => x.DecodeAsync<BasicQueryMessage>(It.IsAny<Stream>()))
+                .Returns(ValueTask.FromResult<BasicQueryMessage?>(message));
+            globalConverter.Setup(x => x.EncodeAsync<BasicQueryMessage>(It.IsAny<BasicQueryMessage>()))
+                .Returns(ValueTask.FromResult<byte[]>([]));
 
             var recievedActions = new List<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>();
-            var errorActions = new List<Action<Exception>>();
-            var channels = new List<string>();
-            var groups = new List<string>();
-            var serviceMessages = new List<RecievedServiceMessage>();
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 Capture.In<Func<RecievedServiceMessage, ValueTask<ServiceMessage>>>(recievedActions),
-                Capture.In<Action<Exception>>(errorActions),
-                Capture.In<string>(channels),
-                Capture.In<string>(groups),
+                It.IsAny<Action<Exception>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
@@ -544,65 +689,34 @@ namespace AutomatedTesting.ContractConnectionTests
                 .Returns(async (ServiceMessage message, TimeSpan timeout, IServiceChannelOptions options, CancellationToken cancellationToken) =>
                 {
                     var rmessage = Helper.ProduceRecievedServiceMessage(message);
-                    serviceMessages.Add(rmessage);
                     var result = await recievedActions[0](rmessage);
                     return Helper.ProduceQueryResult(result);
                 });
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = new ContractConnection(serviceConnection.Object,defaultMessageEncoder:globalConverter.Object);
 
-            var message = new BasicQueryMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
+            
             var responseMessage = new BasicResponseMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
-            var exception = new NullReferenceException("TestSubscribeQueryResponseWithNoExtendedAspects");
             #endregion
 
             #region Act
             var messages = new List<IRecievedMessage<BasicQueryMessage>>();
             var exceptions = new List<Exception>();
-            var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
                 messages.Add(msg);
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error),ignoreMessageHeader:true);
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-
-            foreach (var act in errorActions)
-                act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IRecievedMessage<BasicQueryMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
-            Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, recievedActions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
-            Assert.IsFalse(string.IsNullOrWhiteSpace(groups[0]));
-            Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
-            Assert.AreEqual(serviceMessages[0].RecievedTimestamp, messages[0].RecievedTimestamp);
-            Assert.AreEqual(message, messages[0].Message);
-            Assert.AreEqual(exception, exceptions[0]);
-            Assert.IsFalse(result.IsError);
-            Assert.IsNull(result.Error);
-            Assert.AreEqual(result.Result, responseMessage);
-            System.Diagnostics.Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].RecievedTimestamp).TotalMilliseconds}ms");
-            Exception? disposeError = null;
-            try
-            {
-                await subscription.DisposeAsync();
-            }
-            catch (Exception e)
-            {
-                disposeError=e;
-            }
-            Assert.IsNull(disposeError);
+            Assert.IsTrue(result.IsError);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(result.Error));
+            Assert.IsTrue(result.Error.Contains(typeof(BasicResponseMessage).FullName!));
             #endregion
 
             #region Verify

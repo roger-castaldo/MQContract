@@ -251,8 +251,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
         }
 
+
         [TestMethod]
-        public async Task TestSubscribeAsyncCleanup()
+        public async Task TestSubscriptionsEndAsync()
         {
             #region Arrange
             var serviceSubscription = new Mock<IServiceSubscription>();
@@ -285,25 +286,25 @@ namespace AutomatedTesting.ContractConnectionTests
         }
 
         [TestMethod]
-        public async Task TestSubscriptionsCleanup()
+        public async Task TestSubscribeAsyncCleanup()
         {
             #region Arrange
-            var serviceSubscription = new Mock<IServiceSubscription>();
-            serviceSubscription.Setup(x => x.EndAsync())
+            var serviceSubscription = new Mock<IAsyncDisposable>();
+            serviceSubscription.Setup(x => x.DisposeAsync())
                 .Returns(ValueTask.CompletedTask);
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
             serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(serviceSubscription.Object);
+                .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
             var contractConnection = new ContractConnection(serviceConnection.Object);
             #endregion
 
             #region Act
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { });
-            await contractConnection.DisposeAsync();
+            await subscription.DisposeAsync();
             #endregion
 
             #region Assert
@@ -313,7 +314,68 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceSubscription.Verify(x => x.EndAsync(), Times.Once);
+            serviceSubscription.Verify(x => x.DisposeAsync(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeAsyncWithNonAsyncCleanup()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IDisposable>();
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { });
+            await subscription.DisposeAsync();
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceSubscription.Verify(x => x.Dispose(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscriptionsCleanup()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IDisposable>();
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
+
+            var contractConnection = new ContractConnection(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { });
+            subscription.Dispose();
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(subscription);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceSubscription.Verify(x => x.Dispose(), Times.Once);
             #endregion
         }
 
@@ -356,8 +418,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var exceptions = new List<Exception>();
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => {
                 messages.Add(msg);
-                return ValueTask.CompletedTask;
-            }, (error) => exceptions.Add(error),synchronous:true);
+            }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
             var result1 = await contractConnection.PublishAsync<BasicMessage>(message1);
             stopwatch.Stop();
@@ -602,7 +663,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Exception? disposeError = null;
             try
             {
-                await subscription.DisposeAsync();
+                await subscription.EndAsync();
             }catch(Exception e)
             {
                 disposeError=e;

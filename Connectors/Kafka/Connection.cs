@@ -12,7 +12,7 @@ namespace MQContract.Kafka
     /// This is the MessageServiceConnection implementation for using Kafka
     /// </summary>
     /// <param name="clientConfig"></param>
-    public class Connection(ClientConfig clientConfig) : IMessageServiceConnection
+    public sealed class Connection(ClientConfig clientConfig) : IMessageServiceConnection
     {
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private const string QUERY_IDENTIFIER_HEADER = "_QueryClientID";
@@ -302,18 +302,44 @@ namespace MQContract.Kafka
         }
 
         /// <summary>
+        /// Called to close off the underlying Kafka Connection
+        /// </summary>
+        /// <returns></returns>
+        public ValueTask CloseAsync()
+        {
+            Dispose(true);
+            return ValueTask.CompletedTask;
+        }
+
+        /// <summary>
         /// Called to dispose of the object correctly and allow it to clean up it's resources
         /// </summary>
         /// <returns>A task required for disposal</returns>
         public ValueTask DisposeAsync()
         {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+            return ValueTask.CompletedTask;
+        }
+
+        private void Dispose(bool disposing)
+        {
             if (!disposedValue)
             {
+                if (disposing)
+                    producer.Dispose();
                 disposedValue=true;
-                producer.Dispose();
-                GC.SuppressFinalize(this);
             }
-            return ValueTask.CompletedTask;
+        }
+
+        /// <summary>
+        /// Called to dispose of the required resources
+        /// </summary>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace MQContract.Interfaces.Service
     /// Defines an underlying service connection.  This interface is used to allow for the creation of multiple underlying connection types to support the ability to use common code while
     /// being able to run against 1 or more Message services.
     /// </summary>
-    public interface IMessageServiceConnection: IAsyncDisposable    
+    public interface IMessageServiceConnection
     {
         /// <summary>
         /// Maximum supported message body size in bytes
@@ -60,5 +60,10 @@ namespace MQContract.Interfaces.Service
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A service subscription object</returns>
         ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken());
+        /// <summary>
+        /// Implements a call to close off the connection when the ContractConnection is closed
+        /// </summary>
+        /// <returns>A task that the close is running in</returns>
+        ValueTask CloseAsync();
     }
 }
