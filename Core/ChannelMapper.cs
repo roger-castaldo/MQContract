@@ -10,7 +10,8 @@
             Publish,
             PublishSubscription,
             Query,
-            QuerySubscription
+            QuerySubscription,
+            QueryResponse
         }
 
         private sealed record ChannelMap(MapTypes Type,Func<string,bool> IsMatch,Func<string,ValueTask<string>> Change);
@@ -158,11 +159,43 @@
         /// <returns>The current instance of the Channel Mapper</returns>
         public ChannelMapper AddDefaultQuerySubscriptionMap(Func<string, ValueTask<string>> mapFunction)
             => Append(MapTypes.QuerySubscription, mapFunction);
+        /// <summary>
+        /// Add a direct map for query/response response calls
+        /// </summary>
+        /// <param name="originalChannel">The original channel that is being used in the connection</param>
+        /// <param name="newChannel">The channel to map it to</param>
+        /// <returns>The current instance of the Channel Mapper</returns>
+        public ChannelMapper AddQueryResponseMap(string originalChannel, string newChannel)
+            => Append(MapTypes.QueryResponse, originalChannel, newChannel);
+        /// <summary>
+        /// Add a map function for query/response response calls
+        /// </summary>
+        /// <param name="originalChannel">The original channel that is being used in the connection</param>
+        /// <param name="mapFunction">A function to be called with the channel supplied expecting a mapped channel name</param>
+        /// <returns>The current instance of the Channel Mapper</returns>
+        public ChannelMapper AddQueryResponseMap(string originalChannel, Func<string, ValueTask<string>> mapFunction)
+            => Append(MapTypes.QueryResponse, originalChannel, mapFunction);
+        /// <summary>
+        /// Add a map function call pair for query/response response calls
+        /// </summary>
+        /// <param name="isMatch">A callback that will return true if the supplied function will mape that channel</param>
+        /// <param name="mapFunction">A function to be called with the channel supplied expecting a mapped channel name</param>
+        /// <returns>The current instance of the Channel Mapper</returns>
+        public ChannelMapper AddQueryResponseMap(Func<string, bool> isMatch, Func<string, ValueTask<string>> mapFunction)
+            => Append(MapTypes.QueryResponse, isMatch, mapFunction);
+        /// <summary>
+        /// Add a default map function to call for query/response response calls
+        /// </summary>
+        /// <param name="mapFunction">A function to be called with the channel supplied expecting a mapped channel name</param>
+        /// <returns>The current instance of the Channel Mapper</returns>
+        public ChannelMapper AddDefaultQueryResponseMap(Func<string, ValueTask<string>> mapFunction)
+            => Append(MapTypes.QueryResponse, mapFunction);
 
-        internal ValueTask<string> MapChannel(MapTypes mapType,string originalChannel)
+        internal async ValueTask<string> MapChannel(MapTypes mapType,string originalChannel)
         {
             var map = channelMaps.Find(m=>Equals(m.Type,mapType) && m.IsMatch(originalChannel));
-            return map?.Change(originalChannel)??ValueTask.FromResult<string>(originalChannel);
+            if (map == null) return originalChannel;
+            return await map.Change(originalChannel);
         }
     }
 }

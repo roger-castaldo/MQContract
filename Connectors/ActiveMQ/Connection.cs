@@ -1,19 +1,14 @@
 ﻿using Apache.NMS;
 using Apache.NMS.Util;
+using MQContract.ActiveMQ.Subscriptions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MQContract.ActiveMQ
 {
-    internal class Connection : IMessageServiceConnection
+    internal class Connection : IMessageServiceConnection,IAsyncDisposable,IDisposable
     {
-        private const string MESSAGE_TYPE_HEADER_ID = "_MessageType";
-
+        private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private bool disposedValue;
         
         private readonly IConnectionFactory connectionFactory;
@@ -37,32 +32,34 @@ namespace MQContract.ActiveMQ
         /// </summary>
         public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
 
-        public ValueTask<PingResult> PingAsync()
-            => throw new NotImplementedException();
-
         private async ValueTask<IBytesMessage> ProduceMessage(ServiceMessage message)
         {
             var msg = await session.CreateBytesMessageAsync(message.Data.ToArray());
             msg.NMSMessageId=message.ID;
-            msg.Properties[MESSAGE_TYPE_HEADER_ID] = message.MessageTypeID;
+            msg.Properties[MESSAGE_TYPE_HEADER] = message.MessageTypeID;
             foreach (var key in message.Header.Keys)
                 msg.Properties[key] = message.Header[key];
             return msg;
         }
 
+        private static MessageHeader ExtractHeaders(IPrimitiveMap properties, out string? messageTypeID)
+        {
+            var result = new Dictionary<string, string?>();
+            messageTypeID = (string?)(properties.Contains(MESSAGE_TYPE_HEADER) ? properties[MESSAGE_TYPE_HEADER] : null);
+            foreach (var key in properties.Keys.OfType<string>()
+                .Where(h =>!Equals(h, MESSAGE_TYPE_HEADER)))
+                result.Add(key, (string)properties[key]);
+            return new(result);
+        }
+
         internal static RecievedServiceMessage ProduceMessage(string channel, IMessage message)
         {
-            var headers = new Dictionary<string, string?>();
-            foreach(var key in message.Properties.Keys.OfType<string>())
-            {
-                if (!Equals(key, MESSAGE_TYPE_HEADER_ID))
-                    headers.Add(key, (string)message.Properties[key]);
-            }
+            var headers = ExtractHeaders(message.Properties, out var messageTypeID);
             return new(
                 message.NMSMessageId,
-                (string)message.Properties[MESSAGE_TYPE_HEADER_ID],
+                messageTypeID!,
                 channel,
-                new(headers),
+                headers,
                 message.Body<byte[]>()
             );
         }
@@ -80,19 +77,11 @@ namespace MQContract.ActiveMQ
             }
         }
 
-        public ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
-        }
-
-        public ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
+            var result = new SubscriptionBase((msg)=>messageRecieved(ProduceMessage(channel,msg)), errorRecieved,session, channel, group);
+            await result.StartAsync();
+            return result;
         }
 
         public async ValueTask CloseAsync()
@@ -100,7 +89,7 @@ namespace MQContract.ActiveMQ
 
         public async ValueTask DisposeAsync()
         {
-            await connection.StopAsync().ConfigureAwait(false);
+            await connection.StopAsync().ConfigureAwait(true);
 
             Dispose(disposing: false);
             GC.SuppressFinalize(this);

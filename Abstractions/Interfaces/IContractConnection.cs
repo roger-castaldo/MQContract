@@ -61,11 +61,13 @@ namespace MQContract.Interfaces
         /// <param name="message">The message to send</param>
         /// <param name="timeout">The allowed timeout prior to a response being recieved</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class.</param>
+        /// <param name="responseChannel">Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+        /// only used when the underlying connection does not support a QueryResponse style messaging.</param>
         /// <param name="messageHeader">The headers to pass along with the message</param>
         /// <param name="options">Any required Service Channel Options that will be passed down to the service Connection</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A result indicating the success or failure as well as the returned message</returns>
-        ValueTask<QueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<QueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel=null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class;
         /// <summary>
@@ -76,11 +78,13 @@ namespace MQContract.Interfaces
         /// <param name="message">The message to send</param>
         /// <param name="timeout">The allowed timeout prior to a response being recieved</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class.</param>
+        /// /// <param name="responseChannel">Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+        /// only used when the underlying connection does not support a QueryResponse style messaging.</param>
         /// <param name="messageHeader">The headers to pass along with the message</param>
         /// <param name="options">Any required Service Channel Options that will be passed down to the service Connection</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A result indicating the success or failure as well as the returned message</returns>
-        ValueTask<QueryResult<object>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<QueryResult<object>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null,string? responseChannel=null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class;
         /// <summary>
         /// Called to create a subscription into the underlying service Query/Reponse style and have the messages processed asynchronously

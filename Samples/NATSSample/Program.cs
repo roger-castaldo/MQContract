@@ -1,6 +1,5 @@
 ﻿using Messages;
 using MQContract;
-using MQContract.Messages;
 using MQContract.NATS;
 using MQContract.NATS.Options;
 using NATS.Client.JetStream.Models;

@@ -1,11 +1,6 @@
 ﻿using Moq;
 using MQContract.Interfaces.Service;
 using MQContract;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutomatedTesting.ContractConnectionTests
 {

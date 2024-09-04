@@ -2,7 +2,6 @@
 using MQContract;
 using MQContract.KubeMQ;
 using MQContract.KubeMQ.Options;
-using MQContract.Messages;
 
 using var sourceCancel = new CancellationTokenSource();
 

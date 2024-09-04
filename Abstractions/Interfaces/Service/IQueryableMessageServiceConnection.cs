@@ -1,0 +1,31 @@
+﻿using MQContract.Messages;
+
+namespace MQContract.Interfaces.Service
+{
+    /// <summary>
+    /// Extends the base MessageServiceConnection Interface to Response Query messaging methodology if the underlying service supports it
+    /// </summary>
+    public interface IQueryableMessageServiceConnection : IMessageServiceConnection
+    {
+        /// <summary>
+        /// Implements a call to submit a response query request into the underlying service
+        /// </summary>
+        /// <param name="message">The message to query with</param>
+        /// <param name="timeout">The timeout for recieving a response</param>
+        /// <param name="options">The Service Channel Options instance that was supplied at the Contract Connection level</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>A Query Result instance based on what happened</returns>
+        ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken());
+        /// <summary>
+        /// Implements a call to create a subscription to a given channel as a member of a given group for responding to queries
+        /// </summary>
+        /// <param name="messageRecieved">The callback to be invoked when a message is recieved, returning the response message</param>
+        /// <param name="errorRecieved">The callback to invoke when an exception occurs</param>
+        /// <param name="channel">The name of the channel to subscribe to</param>
+        /// <param name="group">The subscription groupt to subscribe as</param>
+        /// <param name="options">The Service Channel Options instance that was supplied at the Contract Connection level</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>A service subscription object</returns>
+        ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken());
+    }
+}

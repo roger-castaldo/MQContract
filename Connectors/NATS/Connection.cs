@@ -13,7 +13,7 @@ namespace MQContract.NATS
     /// <summary>
     /// This is the MessageServiceConnection implementation for using NATS.io
     /// </summary>
-    public sealed class Connection : IMessageServiceConnection, IAsyncDisposable,IDisposable
+    public sealed class Connection : IQueryableMessageServiceConnection,IPingableMessageServiceConnection, IAsyncDisposable,IDisposable
     {
         private const string MESSAGE_IDENTIFIER_HEADER = "_MessageID";
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";

@@ -3,7 +3,6 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using System.Threading.Channels;
 
 namespace MQContract.Subscriptions
 {

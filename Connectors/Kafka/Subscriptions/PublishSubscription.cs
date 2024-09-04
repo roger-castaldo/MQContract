@@ -1,10 +1,9 @@
 ﻿using MQContract.Messages;
-using MQContract.NATS.Subscriptions;
 
 namespace MQContract.Kafka.Subscriptions
 {
-    internal class PublishSubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, CancellationToken cancellationToken)
-        : SubscriptionBase(consumer,channel,cancellationToken)
+    internal class PublishSubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel)
+        : SubscriptionBase(consumer,channel)
     {
         protected override ValueTask RunAction()
         {

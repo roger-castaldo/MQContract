@@ -17,7 +17,7 @@ namespace MQContract.KubeMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using KubeMQ
     /// </summary>
-    public sealed class Connection : IMessageServiceConnection,IDisposable,IAsyncDisposable
+    public sealed class Connection : IQueryableMessageServiceConnection,IPingableMessageServiceConnection, IDisposable,IAsyncDisposable
     {
         private static readonly Regex regURL = new("^http(s)?://(.+)$", RegexOptions.Compiled|RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(500));
 

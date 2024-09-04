@@ -20,14 +20,43 @@ namespace MQContract.Subscriptions
 
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)
         {
-            serviceSubscription = await connection.SubscribeQueryAsync(
-                serviceMessage => ProcessServiceMessageAsync(serviceMessage),
-                error => errorRecieved(error),
-                MessageChannel,
-                group??Guid.NewGuid().ToString(),
-                options: options,
-                cancellationToken: cancellationToken
-            );
+            if (connection is IQueryableMessageServiceConnection queryableMessageServiceConnection)
+                serviceSubscription = await queryableMessageServiceConnection.SubscribeQueryAsync(
+                    serviceMessage => ProcessServiceMessageAsync(serviceMessage),
+                    error => errorRecieved(error),
+                    MessageChannel,
+                    group??Guid.NewGuid().ToString(),
+                    options: options,
+                    cancellationToken: cancellationToken
+                );
+            else
+            {
+                serviceSubscription = await connection.SubscribeAsync(
+                    async (serviceMessage) =>
+                    {
+                        if (!QueryResponseHelper.IsValidMessage(serviceMessage))
+                            errorRecieved(new InvalidQueryResponseMessageRecieved());
+                        else
+                        {
+                            var result = await ProcessServiceMessageAsync(
+                                new(
+                                    serviceMessage.ID,
+                                    serviceMessage.MessageTypeID,
+                                    serviceMessage.Channel,
+                                    QueryResponseHelper.StripHeaders(serviceMessage, out var queryClientID, out var replyID, out var replyChannel),
+                                    serviceMessage.Data
+                                )
+                            );
+                            await connection.PublishAsync(QueryResponseHelper.EncodeMessage(result, queryClientID, replyID, null,replyChannel), null, cancellationToken);
+                        }
+                    },
+                    error=> errorRecieved(error),
+                    MessageChannel,
+                    group??Guid.NewGuid().ToString(),
+                    options:options,
+                    cancellationToken:cancellationToken
+                );
+            }
             return serviceSubscription!=null;
         }
 

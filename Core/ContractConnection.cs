@@ -31,6 +31,7 @@ namespace MQContract
         ChannelMapper? channelMapper = null)
                 : IContractConnection
     {
+        private readonly Guid Indentifier = Guid.NewGuid();
         private readonly SemaphoreSlim dataLock = new(1, 1);
         private IEnumerable<IMessageTypeFactory> typeFactories = [];
         private bool disposedValue;
@@ -59,7 +60,7 @@ namespace MQContract
         /// </summary>
         /// <returns>The ping result from the service layer, if supported</returns>
         public ValueTask<PingResult> PingAsync()
-            => serviceConnection.PingAsync();
+            => (serviceConnection is IPingableMessageServiceConnection pingableService ? pingableService.PingAsync() : throw new NotSupportedException("The underlying service does not support Ping"));
 
         /// <summary>
         /// Called to publish a message out into the service layer in the Pub/Sub style
@@ -80,7 +81,7 @@ namespace MQContract
             );
 
         private async ValueTask<ServiceMessage> ProduceServiceMessage<T>(ChannelMapper.MapTypes mapType,T message, string? channel = null, MessageHeader? messageHeader = null) where T : class
-            => await GetMessageFactory<T>().ConvertMessageAsync(message, channel, messageHeader,(originalChannel)=>MapChannel(mapType,originalChannel));
+            => await GetMessageFactory<T>().ConvertMessageAsync(message, channel, messageHeader,(originalChannel)=>MapChannel(mapType,originalChannel)!);
 
         /// <summary>
         /// Called to establish a Subscription in the sevice layer for the Pub/Sub style messaging processing messages asynchronously
@@ -125,7 +126,7 @@ namespace MQContract
             var subscription = new PubSubSubscription<T>(GetMessageFactory<T>(ignoreMessageHeader),
                 messageRecieved,
                 errorRecieved,
-                (originalChannel) => MapChannel(ChannelMapper.MapTypes.PublishSubscription, originalChannel),
+                (originalChannel) => MapChannel(ChannelMapper.MapTypes.PublishSubscription, originalChannel)!,
                 channel: channel,
                 group: group,
                 synchronous: synchronous,
@@ -136,15 +137,49 @@ namespace MQContract
             throw new SubscriptionFailedException();
         }
 
-        private async ValueTask<QueryResult<R>> ExecuteQueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        private async ValueTask<QueryResult<R>> ExecuteQueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class
-            => await ProduceResultAsync<R>(await serviceConnection.QueryAsync(
-                await ProduceServiceMessage<Q>(ChannelMapper.MapTypes.Query,message, channel: channel, messageHeader: messageHeader),
-                timeout??TimeSpan.FromMilliseconds(typeof(Q).GetCustomAttribute<MessageResponseTimeoutAttribute>()?.Value??serviceConnection.DefaultTimout.TotalMilliseconds),
-                options,
+        {
+            var realTimeout = timeout??TimeSpan.FromMilliseconds(typeof(Q).GetCustomAttribute<MessageResponseTimeoutAttribute>()?.Value??serviceConnection.DefaultTimout.TotalMilliseconds);
+            var serviceMessage = await ProduceServiceMessage<Q>(ChannelMapper.MapTypes.Query, message, channel: channel, messageHeader: messageHeader);
+            if (serviceConnection is IQueryableMessageServiceConnection queryableMessageServiceConnection)
+                return await ProduceResultAsync<R>(await queryableMessageServiceConnection.QueryAsync(
+                    serviceMessage,
+                    realTimeout,
+                    options,
+                    cancellationToken
+                ));
+            responseChannel ??=typeof(Q).GetCustomAttribute<QueryResponseChannelAttribute>()?.Name;
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(responseChannel);
+            var replyChannel = await MapChannel(ChannelMapper.MapTypes.QueryResponse, responseChannel!);
+            var callID = Guid.NewGuid();
+            var (tcs,token) = await QueryResponseHelper.StartResponseListenerAsync(
+                serviceConnection,
+                realTimeout,
+                Indentifier,
+                callID,
+                replyChannel,
                 cancellationToken
-            ));
+            );
+            var msg = QueryResponseHelper.EncodeMessage(
+                serviceMessage,
+                Indentifier,
+                callID,
+                replyChannel,
+                null
+            );
+            await serviceConnection.PublishAsync(msg, cancellationToken: cancellationToken);
+            try
+            {
+                await tcs.Task.WaitAsync(cancellationToken);
+            }finally
+            {
+                if (!token.IsCancellationRequested)
+                    await token.CancelAsync();
+            }
+            return await ProduceResultAsync<R>(tcs.Task.Result);
+        }
 
         /// <summary>
         /// Called to publish a message in the Query/Response style
@@ -154,14 +189,16 @@ namespace MQContract
         /// <param name="message">The message to transmit for the query</param>
         /// <param name="timeout">The timeout to allow for waiting for a response</param>
         /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to transmit the message on</param>
+        /// <param name="responseChannel">Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+        /// only used when the underlying connection does not support a QueryResponse style messaging.</param>
         /// <param name="messageHeader">A message header to be sent across with the message</param>
         /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A QueryResult that will contain the response message and or an error</returns>
-        public async ValueTask<QueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        public async ValueTask<QueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class
-            => await ExecuteQueryAsync<Q, R>(message, timeout: timeout, channel: channel, messageHeader: messageHeader, options: options, cancellationToken: cancellationToken);
+            => await ExecuteQueryAsync<Q, R>(message, timeout: timeout, channel: channel,responseChannel:responseChannel, messageHeader: messageHeader, options: options, cancellationToken: cancellationToken);
 
         /// <summary>
         /// Called to publish a message in the Query/Response style except the response Type is gathered from the QueryResponseTypeAttribute
@@ -170,15 +207,19 @@ namespace MQContract
         /// <param name="message">The message to transmit for the query</param>
         /// <param name="timeout">The timeout to allow for waiting for a response</param>
         /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to transmit the message on</param>
+        /// <param name="responseChannel">Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+        /// only used when the underlying connection does not support a QueryResponse style messaging.</param>
         /// <param name="messageHeader">A message header to be sent across with the message</param>
         /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A QueryResult that will contain the response message and or an error</returns>
         /// <exception cref="UnknownResponseTypeException">Thrown when the supplied Query type does not have a QueryResponseTypeAttribute and therefore a response type cannot be determined</exception>
-        public async ValueTask<QueryResult<object>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, MessageHeader? messageHeader = null,
+        public async ValueTask<QueryResult<object>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null,
             IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where Q : class
         {
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 #pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             var methodInfo = typeof(ContractConnection).GetMethod(nameof(ContractConnection.ExecuteQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
@@ -188,6 +229,7 @@ namespace MQContract
                     message,
                     timeout,
                     channel,
+                    responseChannel,
                     messageHeader,
                     options,
                     cancellationToken

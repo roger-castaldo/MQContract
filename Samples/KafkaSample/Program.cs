@@ -1,8 +1,6 @@
 ﻿using Messages;
 using MQContract;
 using MQContract.Kafka;
-using MQContract.Kafka.Options;
-using MQContract.Messages;
 
 using var sourceCancel = new CancellationTokenSource();
 
@@ -66,9 +64,9 @@ Console.WriteLine($"Result 1 [Success:{!result.IsError}, ID:{result.ID}]");
 result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
 Console.WriteLine($"Result 2 [Success:{!result.IsError}, ID:{result.ID}]");
 
-var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Bob", "Loblaw"), options:new QueryChannelOptions("Greeting.Response"), cancellationToken: sourceCancel.Token);
+var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Bob", "Loblaw"), responseChannel: "Greeting.Response", cancellationToken: sourceCancel.Token);
 Console.WriteLine($"Response 1 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
-response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Fred", "Flintstone"), options: new QueryChannelOptions("Greeting.Response"), cancellationToken: sourceCancel.Token);
+response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Fred", "Flintstone"), responseChannel: "Greeting.Response", cancellationToken: sourceCancel.Token);
 Console.WriteLine($"Response 2 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
 
 var storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);

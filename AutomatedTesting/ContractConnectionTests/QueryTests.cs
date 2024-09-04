@@ -38,7 +38,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -93,7 +93,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -148,7 +148,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -208,7 +208,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -263,7 +263,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -321,7 +321,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -391,7 +391,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     new KeyValuePair<string,string?>("test","test")
                 ]);
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -459,7 +459,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -516,7 +516,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<IServiceChannelOptions> options = [];
             var serviceChannelOptions = new TestServiceChannelOptions("QWueryAsync");
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), Capture.In<IServiceChannelOptions>(options), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -574,7 +574,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -629,7 +629,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -686,7 +686,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -743,7 +743,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -800,7 +800,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -855,7 +855,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -900,7 +900,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -948,7 +948,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -1019,7 +1019,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)
@@ -1074,7 +1074,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
             List<TimeSpan> timeouts = [];
 
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), Capture.In<TimeSpan>(timeouts), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
             serviceConnection.Setup(x => x.DefaultTimout)

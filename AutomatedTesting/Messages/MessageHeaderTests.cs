@@ -1,13 +1,4 @@
-﻿using Moq;
-using MQContract.Interfaces.Service;
-using MQContract;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AutomatedTesting.Messages
+﻿namespace AutomatedTesting.Messages
 {
     [TestClass]
     public class MessageHeaderTests
@@ -39,9 +30,9 @@ namespace AutomatedTesting.Messages
         public void TestMessageHeaderDictionaryConstructor()
         {
             #region Arrange
-            var data = new Dictionary<string,string>([
-                new KeyValuePair<string,string>("key1","value1"),
-                new KeyValuePair<string,string>("key2","value2")
+            var data = new Dictionary<string,string?>([
+                new KeyValuePair<string,string?>("key1","value1"),
+                new KeyValuePair<string,string?>("key2","value2")
             ]);
             #endregion
 
