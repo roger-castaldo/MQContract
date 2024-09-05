@@ -1,26 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="../Shared.props"/>
+	
   <PropertyGroup>
 	  <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>MQContract</AssemblyName>
     <RootNamespace>MQContract</RootNamespace>
-	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
-	  <DocumentationMarkdown>$(MSBuildProjectDirectory)\Readme.md</DocumentationMarkdown>
-	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-	  <Authors>roger-castaldo</Authors>
 	  <Title>Core for MQContract</Title>
 	  <Company>$(AssemblyName)</Company>
-	  <PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
-	  <PackageReadmeFile>Readme.md</PackageReadmeFile>
-	  <RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>
-	  <PackageTags>Message Queue MQ Contract</PackageTags>
-	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-	  <IncludeSymbols>True</IncludeSymbols>
-	  <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
-	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
