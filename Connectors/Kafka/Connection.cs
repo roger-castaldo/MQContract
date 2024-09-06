@@ -9,14 +9,13 @@ namespace MQContract.Kafka
     /// <summary>
     /// This is the MessageServiceConnection implementation for using Kafka
     /// </summary>
-    /// <param name="clientConfig"></param>
+    /// <param name="clientConfig">The Kafka Client Configuration to provide</param>
     public sealed class Connection(ClientConfig clientConfig) : IMessageServiceConnection
     {
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
 
         private readonly IProducer<string, byte[]> producer = new ProducerBuilder<string, byte[]>(clientConfig).Build();
         private readonly ClientConfig clientConfig = clientConfig;
-        private readonly Guid Identifier = Guid.NewGuid();
         private bool disposedValue;
 
         /// <summary>
@@ -62,7 +61,7 @@ namespace MQContract.Kafka
         /// Called to publish a message into the Kafka server
         /// </summary>
         /// <param name="message">The service message being sent</param>
-        /// <param name="options">The service channel options, if desired, specifically the PublishChannelOptions which is used to access the storage capabilities of KubeMQ</param>
+        /// <param name="options">The service channel options which should be null as there is no implementations for Kafka</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>Transmition result identifying if it worked or not</returns>
         /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
@@ -92,7 +91,7 @@ namespace MQContract.Kafka
         /// <param name="errorRecieved">Callback for when an error occurs</param>
         /// <param name="channel">The name of the channel to bind to</param>
         /// <param name="group">The group to subscribe as part of</param>
-        /// <param name="options"></param>
+        /// <param name="options">should be null</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>

@@ -27,7 +27,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kafka", "Connectors\Kafka\K
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KafkaSample", "Samples\KafkaSample\KafkaSample.csproj", "{76FFF0EF-C7F4-4D07-9CE1-CA695037CC11}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActiveMQ", "Connectors\ActiveMQ\ActiveMQ.csproj", "{3DF8097C-D24F-4AB9-98E3-A17607ECCE25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ActiveMQ", "Connectors\ActiveMQ\ActiveMQ.csproj", "{3DF8097C-D24F-4AB9-98E3-A17607ECCE25}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ActiveMQSample", "Samples\ActiveMQSample\ActiveMQSample.csproj", "{F734932E-2624-4ADC-8EBE-FCE579AF09D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -79,6 +81,10 @@ Global
 		{3DF8097C-D24F-4AB9-98E3-A17607ECCE25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DF8097C-D24F-4AB9-98E3-A17607ECCE25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3DF8097C-D24F-4AB9-98E3-A17607ECCE25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F734932E-2624-4ADC-8EBE-FCE579AF09D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F734932E-2624-4ADC-8EBE-FCE579AF09D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F734932E-2624-4ADC-8EBE-FCE579AF09D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F734932E-2624-4ADC-8EBE-FCE579AF09D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -92,6 +98,7 @@ Global
 		{E3CE4E3B-8500-4888-BBA5-0256A129C9F5} = {FCAD12F9-6992-44D7-8E78-464181584E06}
 		{76FFF0EF-C7F4-4D07-9CE1-CA695037CC11} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
 		{3DF8097C-D24F-4AB9-98E3-A17607ECCE25} = {FCAD12F9-6992-44D7-8E78-464181584E06}
+		{F734932E-2624-4ADC-8EBE-FCE579AF09D9} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4431E3A-7CBE-469C-A7FE-0A48F6768E02}

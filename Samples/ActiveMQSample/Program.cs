@@ -1,6 +1,6 @@
 ﻿using Messages;
 using MQContract;
-using MQContract.Kafka;
+using MQContract.ActiveMQ;
 
 using var sourceCancel = new CancellationTokenSource();
 
@@ -8,11 +8,7 @@ Console.CancelKeyPress += delegate {
     sourceCancel.Cancel();
 };
 
-await using var serviceConnection = new Connection(new Confluent.Kafka.ClientConfig()
-{
-    ClientId="KafkaSample",
-    BootstrapServers="localhost:56497"
-});
+var serviceConnection = new Connection(new Uri("amqp:tcp://localhost:5672"),"artemis","artemis");
 
 var contractConnection = new ContractConnection(serviceConnection);
 
