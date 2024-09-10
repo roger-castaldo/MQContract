@@ -5,13 +5,12 @@
 
 - [Connection](#T-MQContract-ActiveMQ-Connection 'MQContract.ActiveMQ.Connection')
   - [#ctor(ConnectUri,username,password)](#M-MQContract-ActiveMQ-Connection-#ctor-System-Uri,System-String,System-String- 'MQContract.ActiveMQ.Connection.#ctor(System.Uri,System.String,System.String)')
-  - [DefaultTimout](#P-MQContract-ActiveMQ-Connection-DefaultTimout 'MQContract.ActiveMQ.Connection.DefaultTimout')
   - [MaxMessageBodySize](#P-MQContract-ActiveMQ-Connection-MaxMessageBodySize 'MQContract.ActiveMQ.Connection.MaxMessageBodySize')
   - [CloseAsync()](#M-MQContract-ActiveMQ-Connection-CloseAsync 'MQContract.ActiveMQ.Connection.CloseAsync')
   - [Dispose()](#M-MQContract-ActiveMQ-Connection-Dispose 'MQContract.ActiveMQ.Connection.Dispose')
   - [DisposeAsync()](#M-MQContract-ActiveMQ-Connection-DisposeAsync 'MQContract.ActiveMQ.Connection.DisposeAsync')
-  - [PublishAsync(message,options,cancellationToken)](#M-MQContract-ActiveMQ-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ActiveMQ.Connection.PublishAsync(MQContract.Messages.ServiceMessage,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
-  - [SubscribeAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken)](#M-MQContract-ActiveMQ-Connection-SubscribeAsync-System-Action{MQContract-Messages-RecievedServiceMessage},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.ActiveMQ.Connection.SubscribeAsync(System.Action{MQContract.Messages.RecievedServiceMessage},System.Action{System.Exception},System.String,System.String,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
+  - [PublishAsync(message,cancellationToken)](#M-MQContract-ActiveMQ-Connection-PublishAsync-MQContract-Messages-ServiceMessage,System-Threading-CancellationToken- 'MQContract.ActiveMQ.Connection.PublishAsync(MQContract.Messages.ServiceMessage,System.Threading.CancellationToken)')
+  - [SubscribeAsync(messageRecieved,errorRecieved,channel,group,cancellationToken)](#M-MQContract-ActiveMQ-Connection-SubscribeAsync-System-Action{MQContract-Messages-RecievedServiceMessage},System-Action{System-Exception},System-String,System-String,System-Threading-CancellationToken- 'MQContract.ActiveMQ.Connection.SubscribeAsync(System.Action{MQContract.Messages.RecievedServiceMessage},System.Action{System.Exception},System.String,System.String,System.Threading.CancellationToken)')
 
 <a name='T-MQContract-ActiveMQ-Connection'></a>
 ## Connection `type`
@@ -38,14 +37,6 @@ Default constructor for creating instance
 | ConnectUri | [System.Uri](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Uri 'System.Uri') | The connection url to use |
 | username | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The username to use |
 | password | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The password to use |
-
-<a name='P-MQContract-ActiveMQ-Connection-DefaultTimout'></a>
-### DefaultTimout `property`
-
-##### Summary
-
-The default timeout to use for RPC calls when not specified by the class or in the call.
-DEFAULT:1 minute if not specified inside the connection options
 
 <a name='P-MQContract-ActiveMQ-Connection-MaxMessageBodySize'></a>
 ### MaxMessageBodySize `property`
@@ -95,8 +86,8 @@ A task required for disposal
 
 This method has no parameters.
 
-<a name='M-MQContract-ActiveMQ-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
-### PublishAsync(message,options,cancellationToken) `method`
+<a name='M-MQContract-ActiveMQ-Connection-PublishAsync-MQContract-Messages-ServiceMessage,System-Threading-CancellationToken-'></a>
+### PublishAsync(message,cancellationToken) `method`
 
 ##### Summary
 
@@ -111,17 +102,10 @@ Transmition result identifying if it worked or not
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | message | [MQContract.Messages.ServiceMessage](#T-MQContract-Messages-ServiceMessage 'MQContract.Messages.ServiceMessage') | The service message being sent |
-| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | The service channel options which should be null as there is no implementations for ActiveMQ |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
-##### Exceptions
-
-| Name | Description |
-| ---- | ----------- |
-| [MQContract.NoChannelOptionsAvailableException](#T-MQContract-NoChannelOptionsAvailableException 'MQContract.NoChannelOptionsAvailableException') | Thrown if options was supplied because there are no implemented options for this call |
-
-<a name='M-MQContract-ActiveMQ-Connection-SubscribeAsync-System-Action{MQContract-Messages-RecievedServiceMessage},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
-### SubscribeAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken) `method`
+<a name='M-MQContract-ActiveMQ-Connection-SubscribeAsync-System-Action{MQContract-Messages-RecievedServiceMessage},System-Action{System-Exception},System-String,System-String,System-Threading-CancellationToken-'></a>
+### SubscribeAsync(messageRecieved,errorRecieved,channel,group,cancellationToken) `method`
 
 ##### Summary
 
@@ -138,12 +122,5 @@ Called to create a subscription to the underlying ActiveMQ server
 | messageRecieved | [System.Action{MQContract.Messages.RecievedServiceMessage}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{MQContract.Messages.RecievedServiceMessage}') | Callback for when a message is recieved |
 | errorRecieved | [System.Action{System.Exception}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Exception}') | Callback for when an error occurs |
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel to bind to |
-| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The group to subscribe as part of |
-| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | should be null |
-| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') |  |
-
-##### Exceptions
-
-| Name | Description |
-| ---- | ----------- |
-| [MQContract.NoChannelOptionsAvailableException](#T-MQContract-NoChannelOptionsAvailableException 'MQContract.NoChannelOptionsAvailableException') | Thrown if options was supplied because there are no implemented options for this call |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The group to bind the consumer to |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |

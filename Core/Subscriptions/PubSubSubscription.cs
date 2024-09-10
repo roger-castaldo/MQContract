@@ -8,19 +8,18 @@ namespace MQContract.Subscriptions
 {
     internal sealed class PubSubSubscription<T>(IMessageFactory<T> messageFactory, Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved,
         Func<string, ValueTask<string>> mapChannel,
-        string? channel = null, string? group = null, bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
+        string? channel = null, string? group = null, bool synchronous=false,ILogger? logger=null)
         : SubscriptionBase<T>(mapChannel,channel,synchronous)
         where T : class
     {
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection,CancellationToken cancellationToken)
         {
             serviceSubscription = await connection.SubscribeAsync(
-                async serviceMessage=> await ProcessMessage(serviceMessage),
-                error=>errorRecieved(error),
+                async serviceMessage => await ProcessMessage(serviceMessage),
+                error => errorRecieved(error),
                 MessageChannel,
-                group??Guid.NewGuid().ToString(),
-                options:options,
-                cancellationToken:cancellationToken
+                group:group,
+                cancellationToken: cancellationToken
             );
             if (serviceSubscription==null)
                 return false;

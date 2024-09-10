@@ -25,14 +25,14 @@ namespace MQContract.Factories
         private readonly IMessageTypeEncoder<T>? messageEncoder;
         private readonly IMessageTypeEncryptor<T>? messageEncryptor;
         private readonly IEnumerable<IConversionPath<T>> converters;
-        private readonly int maxMessageSize;
+        private readonly uint maxMessageSize;
         public bool IgnoreMessageHeader { get; private init; }
 
         private readonly string messageName = typeof(T).GetCustomAttributes<MessageNameAttribute>().Select(mn => mn.Value).FirstOrDefault(Utility.TypeName<T>());
         private readonly string messageVersion = typeof(T).GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0");
         private readonly string messageChannel = typeof(T).GetCustomAttributes<MessageChannelAttribute>().Select(mc => mc.Name).FirstOrDefault(string.Empty);
 
-        public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider, bool ignoreMessageHeader, int? maxMessageSize)
+        public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider, bool ignoreMessageHeader, uint? maxMessageSize)
         {
             this.maxMessageSize = maxMessageSize??int.MaxValue;
             this.globalMessageEncryptor = globalMessageEncryptor;

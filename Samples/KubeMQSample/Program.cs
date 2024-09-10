@@ -13,7 +13,8 @@ await using var serviceConnection = new Connection(new ConnectionOptions()
 {
     Logger=new Microsoft.Extensions.Logging.Debug.DebugLoggerProvider().CreateLogger("Messages"),
     ClientId="KubeMQSample"
-});
+})
+    .RegisterStoredChannel("StoredArrivals");
 
 var contractConnection = new ContractConnection(serviceConnection);
 
@@ -45,7 +46,6 @@ var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredAr
         return ValueTask.CompletedTask;
     },
     (error) => Console.WriteLine($"Stored Announcement error: {error.Message}"),
-    options:new StoredEventsSubscriptionOptions(StoredEventsSubscriptionOptions.MessageReadStyle.StartNewOnly),
     cancellationToken: sourceCancel.Token
 );
 
@@ -59,19 +59,19 @@ sourceCancel.Token.Register(async () =>
     await contractConnection.CloseAsync().ConfigureAwait(true);
 }, true);
 
-var result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken:sourceCancel.Token);
+var result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
 Console.WriteLine($"Result 1 [Success:{!result.IsError}, ID:{result.ID}]");
 result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
 Console.WriteLine($"Result 2 [Success:{!result.IsError}, ID:{result.ID}]");
 
-var response = await contractConnection.QueryAsync<Greeting,string>(new Greeting("Bob","Loblaw"),cancellationToken:sourceCancel.Token);
+var response = await contractConnection.QueryAsync<Greeting,string>(new Greeting("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
 Console.WriteLine($"Response 1 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
 response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
 Console.WriteLine($"Response 2 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
 
-var storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Bob","Loblaw"),options:new PublishChannelOptions(true), cancellationToken:sourceCancel.Token);
+var storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
 Console.WriteLine($"Stored Result 1 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
-storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Fred", "Flintstone"), options: new PublishChannelOptions(true), cancellationToken: sourceCancel.Token);
+storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
 Console.WriteLine($"Stored Result 2 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
 
 Console.WriteLine("Press Ctrl+C to close");

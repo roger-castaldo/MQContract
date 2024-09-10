@@ -6,7 +6,7 @@
 		<RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>
 		<AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
 		<FileVersion>$(VersionPrefix)</FileVersion>
-		<PackageTags>Message Queue MQ Contract</PackageTags>
+		<PackageTags>Message Queue MQ Contract ServiceBus Messaging Abstraction PubSub QueryResponse</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 		<IncludeSymbols>True</IncludeSymbols>

@@ -62,7 +62,6 @@ namespace MQContract.Subscriptions
                 },
                 error => { },
                 replyChannel,
-                Guid.NewGuid().ToString(),
                 cancellationToken: token.Token
             )??throw new QueryExecutionFailedException();
             token.Token.Register(async () => {

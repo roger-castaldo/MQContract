@@ -52,7 +52,6 @@ var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredAr
         return ValueTask.CompletedTask;
     },
     (error) => Console.WriteLine($"Stored Announcement error: {error.Message}"),
-    options: new StreamPublishSubscriberOptions(),
     cancellationToken: sourceCancel.Token
 );
 

@@ -69,14 +69,13 @@ namespace MQContract
         /// <param name="message">The instance of the message to publish</param>
         /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to transmit the message on</param>
         /// <param name="messageHeader">A message header to be sent across with the message</param>
-        /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
+        /// 
         /// <returns>An instance of the TransmissionResult record to indicate success or failure and an ID</returns>
-        public async ValueTask<TransmissionResult> PublishAsync<T>(T message, string? channel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        public async ValueTask<TransmissionResult> PublishAsync<T>(T message, string? channel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken())
             where T : class
             => await serviceConnection.PublishAsync(
-                await ProduceServiceMessage<T>(ChannelMapper.MapTypes.Publish,message, channel: channel, messageHeader: messageHeader),
-                options,
+                await ProduceServiceMessage<T>(ChannelMapper.MapTypes.Publish, message, channel: channel, messageHeader: messageHeader),
                 cancellationToken
             );
 
@@ -92,12 +91,11 @@ namespace MQContract
         /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on</param>
         /// <param name="group">Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc)</param>
         /// <param name="ignoreMessageHeader">If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T</param>
-        /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>An instance of the Subscription that can be held or called to end</returns>
         /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
-        public ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
-            => SubscribeAsync<T>(messageRecieved, errorRecieved, channel, group, ignoreMessageHeader, false, options, cancellationToken);
+        public ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = default) where T : class
+            => CreateSubscriptionAsync<T>(messageRecieved, errorRecieved, channel, group, ignoreMessageHeader,false, cancellationToken);
 
         /// <summary>
         /// Called to establish a Subscription in the sevice layer for the Pub/Sub style messaging processing messages synchronously
@@ -108,19 +106,18 @@ namespace MQContract
         /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on</param>
         /// <param name="group">Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc)</param>
         /// <param name="ignoreMessageHeader">If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T</param>
-        /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>An instance of the Subscription that can be held or called to end</returns>
         /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
-        public ValueTask<ISubscription> SubscribeAsync<T>(Action<IRecievedMessage<T>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where T : class
-            => SubscribeAsync<T>((msg) =>
+        public ValueTask<ISubscription> SubscribeAsync<T>(Action<IRecievedMessage<T>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = default) where T : class
+            => CreateSubscriptionAsync<T>((msg) =>
             {
                 messageRecieved(msg);
                 return ValueTask.CompletedTask;
             }, 
-            errorRecieved, channel, group, ignoreMessageHeader, true, options, cancellationToken);
+            errorRecieved, channel, group, ignoreMessageHeader, true, cancellationToken);
 
-        private async ValueTask<ISubscription> SubscribeAsync<T>(Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string? channel, string? group, bool ignoreMessageHeader,bool synchronous, IServiceChannelOptions? options, CancellationToken cancellationToken)
+        private async ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string? channel, string? group, bool ignoreMessageHeader,bool synchronous, CancellationToken cancellationToken)
             where T : class
         {
             var subscription = new PubSubSubscription<T>(GetMessageFactory<T>(ignoreMessageHeader),
@@ -130,24 +127,22 @@ namespace MQContract
                 channel: channel,
                 group: group,
                 synchronous: synchronous,
-                options: options,
                 logger: logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
                 return subscription;
             throw new SubscriptionFailedException();
         }
 
-        private async ValueTask<QueryResult<R>> ExecuteQueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        private async ValueTask<QueryResult<R>> ExecuteQueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class
         {
-            var realTimeout = timeout??TimeSpan.FromMilliseconds(typeof(Q).GetCustomAttribute<MessageResponseTimeoutAttribute>()?.Value??serviceConnection.DefaultTimout.TotalMilliseconds);
+            var realTimeout = timeout??typeof(Q).GetCustomAttribute<MessageResponseTimeoutAttribute>()?.TimeSpanValue;
             var serviceMessage = await ProduceServiceMessage<Q>(ChannelMapper.MapTypes.Query, message, channel: channel, messageHeader: messageHeader);
-            if (serviceConnection is IQueryableMessageServiceConnection queryableMessageServiceConnection)
+            if (serviceConnection is IQueryableMessageServiceConnection queryableMessageServiceConnection) 
                 return await ProduceResultAsync<R>(await queryableMessageServiceConnection.QueryAsync(
                     serviceMessage,
-                    realTimeout,
-                    options,
+                    realTimeout??queryableMessageServiceConnection.DefaultTimout,
                     cancellationToken
                 ));
             responseChannel ??=typeof(Q).GetCustomAttribute<QueryResponseChannelAttribute>()?.Name;
@@ -156,7 +151,7 @@ namespace MQContract
             var callID = Guid.NewGuid();
             var (tcs,token) = await QueryResponseHelper.StartResponseListenerAsync(
                 serviceConnection,
-                realTimeout,
+                realTimeout??TimeSpan.FromMinutes(1),
                 Indentifier,
                 callID,
                 replyChannel,
@@ -192,13 +187,13 @@ namespace MQContract
         /// <param name="responseChannel">Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
         /// only used when the underlying connection does not support a QueryResponse style messaging.</param>
         /// <param name="messageHeader">A message header to be sent across with the message</param>
-        /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
+        /// 
         /// <returns>A QueryResult that will contain the response message and or an error</returns>
-        public async ValueTask<QueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, IServiceChannelOptions? options = null, CancellationToken cancellationToken = new CancellationToken())
+        public async ValueTask<QueryResult<R>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken())
             where Q : class
             where R : class
-            => await ExecuteQueryAsync<Q, R>(message, timeout: timeout, channel: channel,responseChannel:responseChannel, messageHeader: messageHeader, options: options, cancellationToken: cancellationToken);
+            => await ExecuteQueryAsync<Q, R>(message, timeout: timeout, channel: channel,responseChannel:responseChannel, messageHeader: messageHeader, cancellationToken: cancellationToken);
 
         /// <summary>
         /// Called to publish a message in the Query/Response style except the response Type is gathered from the QueryResponseTypeAttribute
@@ -210,12 +205,12 @@ namespace MQContract
         /// <param name="responseChannel">Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
         /// only used when the underlying connection does not support a QueryResponse style messaging.</param>
         /// <param name="messageHeader">A message header to be sent across with the message</param>
-        /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
+        /// 
         /// <returns>A QueryResult that will contain the response message and or an error</returns>
         /// <exception cref="UnknownResponseTypeException">Thrown when the supplied Query type does not have a QueryResponseTypeAttribute and therefore a response type cannot be determined</exception>
         public async ValueTask<QueryResult<object>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null,
-            IServiceChannelOptions? options = null, CancellationToken cancellationToken = default) where Q : class
+            CancellationToken cancellationToken = default) where Q : class
         {
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
@@ -231,7 +226,6 @@ namespace MQContract
                     channel,
                     responseChannel,
                     messageHeader,
-                    options,
                     cancellationToken
                 ]
             );
@@ -277,14 +271,14 @@ namespace MQContract
         /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on</param>
         /// <param name="group">Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc)</param>
         /// <param name="ignoreMessageHeader">If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T</param>
-        /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
+        /// 
         /// <returns>An instance of the Subscription that can be held or called to end</returns>
         /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
-        public ValueTask<ISubscription> SubscribeQueryAsyncResponseAsync<Q, R>(Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public ValueTask<ISubscription> SubscribeQueryAsyncResponseAsync<Q, R>(Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = default)
             where Q : class
             where R : class
-        => SubscribeQueryResponseAsync<Q,R>(messageRecieved,errorRecieved,channel,group,ignoreMessageHeader,false,options,cancellationToken);
+        => ProduceSubscribeQueryResponseAsync<Q,R>(messageRecieved, errorRecieved, channel, group, ignoreMessageHeader,false, cancellationToken);
 
         /// <summary>
         /// Creates a subscription with the underlying service layer for the Query/Response style processing messages synchronously
@@ -296,20 +290,20 @@ namespace MQContract
         /// <param name="channel">Used to override the MessageChannelAttribute from the class or to specify a channel to listen for messages on</param>
         /// <param name="group">Used to specify a group to associate to at the service layer (refer to groups in KubeMQ, Nats.IO, etc)</param>
         /// <param name="ignoreMessageHeader">If set to true this will cause the subscription to ignore the message type specified and assume that the type of message is of type T</param>
-        /// <param name="options">An instance of a ServiceChannelOptions to pass down to the service layer if desired and/or necessary</param>
         /// <param name="cancellationToken">A cancellation token</param>
+        /// 
         /// <returns>An instance of the Subscription that can be held or called to end</returns>
         /// <exception cref="SubscriptionFailedException">An exception thrown when the subscription has failed to establish</exception>
-        public ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IRecievedMessage<Q>, QueryResponseMessage<R>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IRecievedMessage<Q>, QueryResponseMessage<R>> messageRecieved, Action<Exception> errorRecieved, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = default)
             where Q : class
             where R : class
-        => SubscribeQueryResponseAsync<Q, R>((msg) =>
+        => ProduceSubscribeQueryResponseAsync<Q, R>((msg) =>
             {
                 var result = messageRecieved(msg);
                 return ValueTask.FromResult(result);
-            }, errorRecieved, channel, group, ignoreMessageHeader, true, options, cancellationToken);
+            }, errorRecieved, channel, group, ignoreMessageHeader, true, cancellationToken);
 
-        private async ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, IServiceChannelOptions? options, CancellationToken cancellationToken)
+        private async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<Q, R>(Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
             where Q : class
             where R : class
         {
@@ -322,7 +316,6 @@ namespace MQContract
                 channel: channel,
                 group: group,
                 synchronous: synchronous,
-                options: options,
                 logger: logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
                 return subscription;

@@ -10,7 +10,7 @@ namespace MQContract.Subscriptions
         Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, 
-        bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
+        bool synchronous=false,ILogger? logger=null)
         : SubscriptionBase<Q>(mapChannel,channel,synchronous)
         where Q : class
         where R : class
@@ -25,8 +25,7 @@ namespace MQContract.Subscriptions
                     serviceMessage => ProcessServiceMessageAsync(serviceMessage),
                     error => errorRecieved(error),
                     MessageChannel,
-                    group??Guid.NewGuid().ToString(),
-                    options: options,
+                    group:group,
                     cancellationToken: cancellationToken
                 );
             else
@@ -47,14 +46,12 @@ namespace MQContract.Subscriptions
                                     serviceMessage.Data
                                 )
                             );
-                            await connection.PublishAsync(QueryResponseHelper.EncodeMessage(result, queryClientID, replyID, null,replyChannel), null, cancellationToken);
+                            await connection.PublishAsync(QueryResponseHelper.EncodeMessage(result, queryClientID, replyID, null, replyChannel), cancellationToken);
                         }
                     },
-                    error=> errorRecieved(error),
+                    error => errorRecieved(error),
                     MessageChannel,
-                    group??Guid.NewGuid().ToString(),
-                    options:options,
-                    cancellationToken:cancellationToken
+                    cancellationToken: cancellationToken
                 );
             }
             return serviceSubscription!=null;

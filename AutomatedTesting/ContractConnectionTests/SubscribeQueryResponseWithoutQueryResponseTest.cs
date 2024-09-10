@@ -23,23 +23,19 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             List<ServiceMessage> messages = [];
             List<Action<RecievedServiceMessage>> messageActions = [];
-            var defaultTimeout = TimeSpan.FromMinutes(1);
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<RecievedServiceMessage>>(messageActions), It.IsAny<Action<Exception>>(),
-                Capture.In<string>(channels), Capture.In<string>(groups),
-                It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+                Capture.In<string>(channels), Capture.In<string>(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubObject);
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, IServiceChannelOptions options, CancellationToken cancellationToken) =>
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
                     messages.Add(message);
                     foreach (var action in messageActions)
                         action(new RecievedServiceMessage(message.ID,message.MessageTypeID,message.Channel,message.Header,message.Data));
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
 
             var contractConnection = new ContractConnection(serviceConnection.Object);
 
@@ -50,7 +46,8 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Act
             var recievedMessages = new List<IRecievedMessage<BasicQueryMessage>>();
             var exceptions = new List<Exception>();
-            var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) => {
+            var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
+            {
                 recievedMessages.Add(msg);
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => exceptions.Add(error));
@@ -72,7 +69,8 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(2, messages.Count);
             Assert.AreEqual(1, exceptions.Count);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
-            Assert.IsFalse(string.IsNullOrWhiteSpace(groups[0]));
+            Assert.IsNull(groups[0]);
+            Assert.IsNull(groups[1]);
             Assert.AreEqual(recievedMessages[0].ID, messages[0].ID);
             Assert.AreEqual(0,recievedMessages[0].Headers.Keys.Count());
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
@@ -83,10 +81,9 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<RecievedServiceMessage>>(), It.IsAny<Action<Exception>>(),
-               It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+               It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             serviceSubscription.Verify(x => x.EndAsync(), Times.Exactly(2));
             #endregion
         }

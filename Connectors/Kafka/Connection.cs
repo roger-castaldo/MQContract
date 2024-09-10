@@ -21,13 +21,7 @@ namespace MQContract.Kafka
         /// <summary>
         /// The maximum message body size allowed
         /// </summary>
-        public int? MaxMessageBodySize => clientConfig.MessageMaxBytes;
-
-        /// <summary>
-        /// The default timeout to use for RPC calls when not specified by the class or in the call.
-        /// DEFAULT:1 minute if not specified inside the connection options
-        /// </summary>
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
+        public uint? MaxMessageBodySize => (uint)Math.Abs(clientConfig.MessageMaxBytes??(1024*1024));
 
         internal static byte[] EncodeHeaderValue(string value)
             => UTF8Encoding.UTF8.GetBytes(value);
@@ -61,13 +55,10 @@ namespace MQContract.Kafka
         /// Called to publish a message into the Kafka server
         /// </summary>
         /// <param name="message">The service message being sent</param>
-        /// <param name="options">The service channel options which should be null as there is no implementations for Kafka</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>Transmition result identifying if it worked or not</returns>
-        /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken = default)
         {
-            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             try
             {
                 var result = await producer.ProduceAsync(message.Channel, new Message<string, byte[]>()
@@ -90,14 +81,11 @@ namespace MQContract.Kafka
         /// <param name="messageRecieved">Callback for when a message is recieved</param>
         /// <param name="errorRecieved">Callback for when an error occurs</param>
         /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The group to subscribe as part of</param>
-        /// <param name="options">should be null</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="group">The name of the group to bind the consumer to</param>
+        /// <param name="cancellationToken">A cancellation token</param>
         /// <returns></returns>
-        /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
         {
-            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             var subscription = new PublishSubscription(
                 new ConsumerBuilder<string,byte[]>(new ConsumerConfig(clientConfig)
                 {

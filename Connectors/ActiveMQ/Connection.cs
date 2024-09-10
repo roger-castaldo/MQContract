@@ -35,13 +35,7 @@ namespace MQContract.ActiveMQ
         /// <summary>
         /// The maximum message body size allowed
         /// </summary>
-        public int? MaxMessageBodySize => 4*1024*1024;
-
-        /// <summary>
-        /// The default timeout to use for RPC calls when not specified by the class or in the call.
-        /// DEFAULT:1 minute if not specified inside the connection options
-        /// </summary>
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
+        public uint? MaxMessageBodySize => 4*1024*1024;
 
         private async ValueTask<IBytesMessage> ProduceMessage(ServiceMessage message)
         {
@@ -79,13 +73,10 @@ namespace MQContract.ActiveMQ
         /// Called to publish a message into the ActiveMQ server
         /// </summary>
         /// <param name="message">The service message being sent</param>
-        /// <param name="options">The service channel options which should be null as there is no implementations for ActiveMQ</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>Transmition result identifying if it worked or not</returns>
-        /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken = default)
         {
-            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             try
             {
                 await producer.SendAsync(SessionUtil.GetTopic(session, message.Channel), await ProduceMessage(message));
@@ -103,15 +94,12 @@ namespace MQContract.ActiveMQ
         /// <param name="messageRecieved">Callback for when a message is recieved</param>
         /// <param name="errorRecieved">Callback for when an error occurs</param>
         /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The group to subscribe as part of</param>
-        /// <param name="options">should be null</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="group">The group to bind the consumer to</param>
+        /// <param name="cancellationToken">A cancellation token</param>
         /// <returns></returns>
-        /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
         {
-            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
-            var result = new SubscriptionBase((msg)=>messageRecieved(ProduceMessage(channel,msg)), errorRecieved,session, channel, group);
+            var result = new SubscriptionBase((msg)=>messageRecieved(ProduceMessage(channel,msg)), errorRecieved,session, channel, group??Guid.NewGuid().ToString());
             await result.StartAsync();
             return result;
         }
