@@ -218,17 +218,24 @@ namespace MQContract
 #pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             var methodInfo = typeof(ContractConnection).GetMethod(nameof(ContractConnection.ExecuteQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            var queryResult = (dynamic?)await Utility.InvokeMethodAsync(
-                methodInfo,
-                this, [
-                    message,
+            dynamic? queryResult;
+            try
+            {
+                queryResult = (dynamic?)await Utility.InvokeMethodAsync(
+                    methodInfo,
+                    this, [
+                        message,
                     timeout,
                     channel,
                     responseChannel,
                     messageHeader,
                     cancellationToken
-                ]
-            );
+                    ]
+                );
+            }catch(TimeoutException)
+            {
+                throw new QueryTimeoutException();
+            }
             return new QueryResult<object>(queryResult?.ID??string.Empty, queryResult?.Header??new MessageHeader([]), queryResult?.Result, queryResult?.Error);
         }
 

@@ -65,7 +65,8 @@ namespace MQContract.ActiveMQ
                 messageTypeID!,
                 channel,
                 headers,
-                message.Body<byte[]>()
+                message.Body<byte[]>(),
+                async ()=>await message.AcknowledgeAsync()
             );
         }
 

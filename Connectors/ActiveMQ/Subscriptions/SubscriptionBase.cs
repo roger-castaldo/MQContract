@@ -21,7 +21,7 @@ namespace MQContract.ActiveMQ.Subscriptions
                     try
                     {
                         var msg = await consumer.ReceiveAsync();
-                        if (msg!=null)
+                        if (msg!=null)  
                             messageRecieved(msg);
                     }
                     catch (Exception ex)

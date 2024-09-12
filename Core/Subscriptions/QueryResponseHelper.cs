@@ -44,13 +44,15 @@ namespace MQContract.Subscriptions
             var reg = cancellationToken.Register(() => token.Cancel());
             var result = new TaskCompletionSource<ServiceQueryResult>();
             var consumer = await connection.SubscribeAsync(
-                (message) =>
+                async (message) =>
                 {
                     if (!result.Task.IsCompleted)
                     {
                         var headers = StripHeaders(message, out var queryClientID, out var replyID, out _);
                         if (Equals(queryClientID, identifier) && Equals(replyID, callID))
                         {
+                            if (message.Acknowledge!=null)
+                                await message.Acknowledge();
                             result.TrySetResult(new(
                                 message.ID,
                                 headers,

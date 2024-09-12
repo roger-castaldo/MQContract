@@ -89,7 +89,8 @@
   - [Header](#P-MQContract-Messages-QueryResult`1-Header 'MQContract.Messages.QueryResult`1.Header')
   - [Result](#P-MQContract-Messages-QueryResult`1-Result 'MQContract.Messages.QueryResult`1.Result')
 - [RecievedServiceMessage](#T-MQContract-Messages-RecievedServiceMessage 'MQContract.Messages.RecievedServiceMessage')
-  - [#ctor(ID,MessageTypeID,Channel,Header,Data)](#M-MQContract-Messages-RecievedServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte}- 'MQContract.Messages.RecievedServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.ReadOnlyMemory{System.Byte})')
+  - [#ctor(ID,MessageTypeID,Channel,Header,Data,Acknowledge)](#M-MQContract-Messages-RecievedServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte},System-Func{System-Threading-Tasks-ValueTask}- 'MQContract.Messages.RecievedServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.ReadOnlyMemory{System.Byte},System.Func{System.Threading.Tasks.ValueTask})')
+  - [Acknowledge](#P-MQContract-Messages-RecievedServiceMessage-Acknowledge 'MQContract.Messages.RecievedServiceMessage.Acknowledge')
   - [RecievedTimestamp](#P-MQContract-Messages-RecievedServiceMessage-RecievedTimestamp 'MQContract.Messages.RecievedServiceMessage.RecievedTimestamp')
 - [ServiceMessage](#T-MQContract-Messages-ServiceMessage 'MQContract.Messages.ServiceMessage')
   - [#ctor(ID,MessageTypeID,Channel,Header,Data)](#M-MQContract-Messages-ServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte}- 'MQContract.Messages.ServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.ReadOnlyMemory{System.Byte})')
@@ -1420,8 +1421,8 @@ A Recieved Service Message that gets passed back up into the Contract Connection
 | ---- | ---- | ----------- |
 | ID | [T:MQContract.Messages.RecievedServiceMessage](#T-T-MQContract-Messages-RecievedServiceMessage 'T:MQContract.Messages.RecievedServiceMessage') | The unique ID of the message |
 
-<a name='M-MQContract-Messages-RecievedServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte}-'></a>
-### #ctor(ID,MessageTypeID,Channel,Header,Data) `constructor`
+<a name='M-MQContract-Messages-RecievedServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte},System-Func{System-Threading-Tasks-ValueTask}-'></a>
+### #ctor(ID,MessageTypeID,Channel,Header,Data,Acknowledge) `constructor`
 
 ##### Summary
 
@@ -1436,6 +1437,14 @@ A Recieved Service Message that gets passed back up into the Contract Connection
 | Channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel the message was recieved on |
 | Header | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message headers that came through |
 | Data | [System.ReadOnlyMemory{System.Byte}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.ReadOnlyMemory 'System.ReadOnlyMemory{System.Byte}') | The binary content of the message that should be the encoded class |
+| Acknowledge | [System.Func{System.Threading.Tasks.ValueTask}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.Threading.Tasks.ValueTask}') | The acknowledgement callback to be called when the message is recieved if the underlying service requires it |
+
+<a name='P-MQContract-Messages-RecievedServiceMessage-Acknowledge'></a>
+### Acknowledge `property`
+
+##### Summary
+
+The acknowledgement callback to be called when the message is recieved if the underlying service requires it
 
 <a name='P-MQContract-Messages-RecievedServiceMessage-RecievedTimestamp'></a>
 ### RecievedTimestamp `property`
