@@ -37,6 +37,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Redis", "Connectors\Redis\R
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedisSample", "Samples\RedisSample\RedisSample.csproj", "{EA577C5C-036F-4647-80F1-03F0EFAF6081}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMQSample", "Samples\RabbitMQSample\RabbitMQSample.csproj", "{0740514D-A6AB-41CC-9820-A619125C6C90}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,6 +105,10 @@ Global
 		{EA577C5C-036F-4647-80F1-03F0EFAF6081}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA577C5C-036F-4647-80F1-03F0EFAF6081}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA577C5C-036F-4647-80F1-03F0EFAF6081}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0740514D-A6AB-41CC-9820-A619125C6C90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0740514D-A6AB-41CC-9820-A619125C6C90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0740514D-A6AB-41CC-9820-A619125C6C90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0740514D-A6AB-41CC-9820-A619125C6C90}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -120,6 +126,7 @@ Global
 		{0B5C5567-6EA2-4DA9-9DB5-E775630F5655} = {FCAD12F9-6992-44D7-8E78-464181584E06}
 		{DF36557A-1F5B-4C45-8B4D-9B3C7EE5A541} = {FCAD12F9-6992-44D7-8E78-464181584E06}
 		{EA577C5C-036F-4647-80F1-03F0EFAF6081} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
+		{0740514D-A6AB-41CC-9820-A619125C6C90} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4431E3A-7CBE-469C-A7FE-0A48F6768E02}

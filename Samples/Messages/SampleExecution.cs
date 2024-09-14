@@ -10,8 +10,14 @@ namespace Messages
 {
     public static class SampleExecution
     {
-        public static async ValueTask ExecuteSample(IMessageServiceConnection serviceConnection,string serviceName,CancellationTokenSource sourceCancel,ChannelMapper? mapper=null)
+        public static async ValueTask ExecuteSample(IMessageServiceConnection serviceConnection,string serviceName,ChannelMapper? mapper=null)
         {
+            using var sourceCancel = new CancellationTokenSource();
+
+            Console.CancelKeyPress += delegate {
+                sourceCancel.Cancel();
+            };
+
             var contractConnection = new ContractConnection(serviceConnection,channelMapper:mapper);
 
             var announcementSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(

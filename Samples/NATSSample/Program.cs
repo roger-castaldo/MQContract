@@ -4,12 +4,6 @@ using MQContract.NATS;
 using MQContract.NATS.Options;
 using NATS.Client.JetStream.Models;
 
-using var sourceCancel = new CancellationTokenSource();
-
-Console.CancelKeyPress += delegate {
-    sourceCancel.Cancel();
-};
-
 var serviceConnection = new Connection(new NATS.Client.Core.NatsOpts()
 {
     LoggerFactory=new Microsoft.Extensions.Logging.LoggerFactory(),
@@ -22,4 +16,4 @@ await serviceConnection.CreateStreamAsync(streamConfig);
 var mapper = new ChannelMapper()
     .AddPublishSubscriptionMap("StoredArrivals", "StoredArrivalsStream");
 
-await SampleExecution.ExecuteSample(serviceConnection, "NatsIO", sourceCancel,mapper);
+await SampleExecution.ExecuteSample(serviceConnection, "NatsIO", mapper);
