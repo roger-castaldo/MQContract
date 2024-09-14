@@ -7,8 +7,6 @@
   - [#ctor(clientConfig)](#M-MQContract-Kafka-Connection-#ctor-Confluent-Kafka-ClientConfig- 'MQContract.Kafka.Connection.#ctor(Confluent.Kafka.ClientConfig)')
   - [MaxMessageBodySize](#P-MQContract-Kafka-Connection-MaxMessageBodySize 'MQContract.Kafka.Connection.MaxMessageBodySize')
   - [CloseAsync()](#M-MQContract-Kafka-Connection-CloseAsync 'MQContract.Kafka.Connection.CloseAsync')
-  - [Dispose()](#M-MQContract-Kafka-Connection-Dispose 'MQContract.Kafka.Connection.Dispose')
-  - [DisposeAsync()](#M-MQContract-Kafka-Connection-DisposeAsync 'MQContract.Kafka.Connection.DisposeAsync')
   - [PublishAsync(message,cancellationToken)](#M-MQContract-Kafka-Connection-PublishAsync-MQContract-Messages-ServiceMessage,System-Threading-CancellationToken- 'MQContract.Kafka.Connection.PublishAsync(MQContract.Messages.ServiceMessage,System.Threading.CancellationToken)')
   - [SubscribeAsync(messageRecieved,errorRecieved,channel,group,cancellationToken)](#M-MQContract-Kafka-Connection-SubscribeAsync-System-Action{MQContract-Messages-RecievedServiceMessage},System-Action{System-Exception},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Kafka.Connection.SubscribeAsync(System.Action{MQContract.Messages.RecievedServiceMessage},System.Action{System.Exception},System.String,System.String,System.Threading.CancellationToken)')
 
@@ -59,32 +57,6 @@ Called to close off the underlying Kafka Connection
 ##### Returns
 
 
-
-##### Parameters
-
-This method has no parameters.
-
-<a name='M-MQContract-Kafka-Connection-Dispose'></a>
-### Dispose() `method`
-
-##### Summary
-
-Called to dispose of the required resources
-
-##### Parameters
-
-This method has no parameters.
-
-<a name='M-MQContract-Kafka-Connection-DisposeAsync'></a>
-### DisposeAsync() `method`
-
-##### Summary
-
-Called to dispose of the object correctly and allow it to clean up it's resources
-
-##### Returns
-
-A task required for disposal
 
 ##### Parameters
 

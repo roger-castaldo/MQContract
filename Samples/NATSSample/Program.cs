@@ -1,7 +1,6 @@
 ﻿using Messages;
 using MQContract;
 using MQContract.NATS;
-using MQContract.NATS.Options;
 using NATS.Client.JetStream.Models;
 
 var serviceConnection = new Connection(new NATS.Client.Core.NatsOpts()

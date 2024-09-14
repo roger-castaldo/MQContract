@@ -63,7 +63,7 @@ namespace MQContract.NATS
         /// The default timeout to use for RPC calls when not specified by class or in the call.
         /// DEFAULT: 30 seconds
         /// </summary>
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromSeconds(30);
+        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// Called to define a Stream inside the underlying NATS context.  This is an exposure of the NatsJSContext.CreateStreamAsync
@@ -196,11 +196,11 @@ namespace MQContract.NATS
         /// <param name="group">The name of the group to bind the consumer to</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A subscription instance</returns>
-
         public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
         {
             SubscriptionBase subscription;
             var isStream = false;
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
             await foreach(var name in natsJSContext.ListStreamNamesAsync(cancellationToken: cancellationToken))
             {
                 if (Equals(channel, name))
@@ -209,6 +209,7 @@ namespace MQContract.NATS
                     break;
                 }
             }
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
             if (isStream)
             {
                 var config = subscriptionConsumerConfigs.Find(scc => Equals(scc.Channel, channel)
@@ -240,9 +241,10 @@ namespace MQContract.NATS
         /// <param name="messageRecieved">Callback for when a query is recieved</param>
         /// <param name="errorRecieved">Callback for when an error occurs</param>
         /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group"></param>
-        /// <returns>A subscription instance</returns>
+        /// <param name="group">The group to bind to</param>
         /// <param name="cancellationToken">A cancellation token</param>
+        /// <returns>A subscription instance</returns>
+
         public ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
         {
             var sub = new QuerySubscription(

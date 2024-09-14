@@ -1,7 +1,5 @@
 ﻿using Messages;
-using MQContract;
 using MQContract.KubeMQ;
-using MQContract.KubeMQ.Options;
 
 await using var serviceConnection = new Connection(new ConnectionOptions()
 {

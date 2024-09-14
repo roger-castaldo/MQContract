@@ -9,7 +9,7 @@ namespace MQContract.ActiveMQ
     /// <summary>
     /// This is the MessageServiceConnection implemenation for using ActiveMQ
     /// </summary>
-    public class Connection : IMessageServiceConnection,IAsyncDisposable,IDisposable
+    public sealed class Connection : IMessageServiceConnection,IAsyncDisposable,IDisposable
     {
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private bool disposedValue;
@@ -124,7 +124,7 @@ namespace MQContract.ActiveMQ
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!disposedValue)
             {

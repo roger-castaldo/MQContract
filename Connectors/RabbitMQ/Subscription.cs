@@ -1,12 +1,6 @@
 ﻿using MQContract.Interfaces.Service;
-using MQContract.Messages;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MQContract.RabbitMQ
 {
@@ -16,23 +10,22 @@ namespace MQContract.RabbitMQ
         private readonly Guid subscriptionID = Guid.NewGuid();
         private readonly string consumerTag;
 
-        public Subscription(IConnection conn,string channel,string group, Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved)
+        public Subscription(IConnection conn,string channel,string group, Action<BasicDeliverEventArgs,IModel,Func<ValueTask>> messageRecieved, Action<Exception> errorRecieved)
         {
             this.channel = conn.CreateModel();
             this.channel.QueueBind(group, channel, subscriptionID.ToString());
+            this.channel.BasicQos(0, 1, false);
             var consumer = new EventingBasicConsumer(this.channel);
             consumer.Received+=(sender, @event) =>
             {
                 messageRecieved(
-                    Connection.ConvertMessage(
-                        @event, 
-                        channel, 
-                        () =>
-                        {
-                            this.channel.BasicAck(@event.DeliveryTag, false);
-                            return ValueTask.CompletedTask;
-                        }
-                    )
+                    @event,
+                    this.channel,
+                    () =>
+                    {
+                        this.channel.BasicAck(@event.DeliveryTag, false);
+                        return ValueTask.CompletedTask;
+                    }
                 );
             };
 

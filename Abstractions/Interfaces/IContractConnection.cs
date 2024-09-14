@@ -1,5 +1,4 @@
-﻿using MQContract.Interfaces.Service;
-using MQContract.Messages;
+﻿using MQContract.Messages;
 
 namespace MQContract.Interfaces
 {

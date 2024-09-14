@@ -16,7 +16,6 @@ namespace MQContract.Kafka
 
         private readonly IProducer<string, byte[]> producer = new ProducerBuilder<string, byte[]>(clientConfig).Build();
         private readonly ClientConfig clientConfig = clientConfig;
-        private bool disposedValue;
 
         /// <summary>
         /// The maximum message body size allowed
@@ -104,39 +103,8 @@ namespace MQContract.Kafka
         /// <returns></returns>
         public ValueTask CloseAsync()
         {
-            Dispose(true);
+            producer.Dispose();
             return ValueTask.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called to dispose of the object correctly and allow it to clean up it's resources
-        /// </summary>
-        /// <returns>A task required for disposal</returns>
-        public ValueTask DisposeAsync()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-            return ValueTask.CompletedTask;
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                    producer.Dispose();
-                disposedValue=true;
-            }
-        }
-
-        /// <summary>
-        /// Called to dispose of the required resources
-        /// </summary>
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

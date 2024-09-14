@@ -183,7 +183,7 @@ namespace MQContract.KubeMQ
                     Channel=message.Channel,
                     ClientID=connectionOptions.ClientId,
                     EventID=message.ID,
-                    Store=storedChannelOptions.Any(sco=>Equals(message.Channel,sco.ChannelName)),
+                    Store=storedChannelOptions.Exists(sco=>Equals(message.Channel,sco.ChannelName)),
                     Tags={ ConvertMessageHeader(message.Header) }
                 }, connectionOptions.GrpcMetadata, cancellationToken);
                 return new TransmissionResult(res.EventID, res.Error);
@@ -211,6 +211,7 @@ namespace MQContract.KubeMQ
         /// <exception cref="RPCErrorException">Thrown when there is an RPC exception from the KubeMQ server</exception>
         public async ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
+#pragma warning disable S2139 // Exceptions should be either logged or rethrown but not both
             try
             {
                 var res = await client.SendRequestAsync(new Request()
@@ -242,6 +243,7 @@ namespace MQContract.KubeMQ
                 connectionOptions.Logger?.LogError(ex, "Exception occured in Send Message:{ErrorMessage}", ex.Message);
                 throw;
             }
+#pragma warning restore S2139 // Exceptions should be either logged or rethrown but not both
         }
 
         /// <summary>

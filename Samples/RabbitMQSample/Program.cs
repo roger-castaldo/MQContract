@@ -13,7 +13,6 @@ var factory = new ConnectionFactory()
 
 var serviceConnection = new Connection(factory)
     .ExchangeDeclare("Greeting", ExchangeType.Fanout)
-    .ExchangeDeclare("Greeting.Response", ExchangeType.Fanout)
     .ExchangeDeclare("StoredArrivals", ExchangeType.Fanout,true)
     .ExchangeDeclare("Arrivals", ExchangeType.Fanout);
 
