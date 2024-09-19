@@ -5,6 +5,7 @@ namespace MQContract.Interfaces.Factories
 {
     internal interface IMessageFactory<T> : IMessageTypeFactory, IConversionPath<T> where T : class
     {
-        ValueTask<ServiceMessage> ConvertMessageAsync(T message, string? channel, MessageHeader? messageHeader,Func<string, ValueTask<string>>? mapChannel=null);
+        string? MessageChannel { get; }
+        ValueTask<ServiceMessage> ConvertMessageAsync(T message, string? channel, MessageHeader messageHeader);
     }
 }

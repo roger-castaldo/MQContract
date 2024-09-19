@@ -3,8 +3,8 @@ using StackExchange.Redis;
 
 namespace MQContract.Redis.Subscriptions
 {
-    internal class QueryResponseSubscription(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, IDatabase database, Guid connectionID, string channel, string? group)
-        : SubscriptionBase(errorRecieved,database,connectionID,channel,group)
+    internal class QueryResponseSubscription(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, IDatabase database, Guid connectionID, string channel, string? group)
+        : SubscriptionBase(errorReceived,database,connectionID,channel,group)
     {
         protected override async ValueTask ProcessMessage(StreamEntry streamEntry, string channel, string? group)
         {
@@ -13,7 +13,7 @@ namespace MQContract.Redis.Subscriptions
                     channel,
                     ()=> Acknowledge(streamEntry.Id)
                  );
-            var result = await messageRecieved(message);
+            var result = await messageReceived(message);
             await Database.StreamDeleteAsync(Channel, [streamEntry.Id]);
             await Database.StringSetAsync(responseChannel, Connection.EncodeMessage(result), expiry: timeout);
         }

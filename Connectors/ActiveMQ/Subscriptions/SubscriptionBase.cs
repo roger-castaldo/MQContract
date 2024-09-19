@@ -4,7 +4,7 @@ using MQContract.Interfaces.Service;
 
 namespace MQContract.ActiveMQ.Subscriptions
 {
-    internal class SubscriptionBase(Action<IMessage> messageRecieved,Action<Exception> errorRecieved,ISession session, string channel,string group) : IServiceSubscription
+    internal class SubscriptionBase(Action<IMessage> messageReceived,Action<Exception> errorReceived,ISession session, string channel,string group) : IServiceSubscription
     {
         private bool disposedValue;
         private IMessageConsumer? consumer;
@@ -22,11 +22,11 @@ namespace MQContract.ActiveMQ.Subscriptions
                     {
                         var msg = await consumer.ReceiveAsync();
                         if (msg!=null)  
-                            messageRecieved(msg);
+                            messageReceived(msg);
                     }
                     catch (Exception ex)
                     {
-                        errorRecieved(ex);
+                        errorReceived(ex);
                     }
                 }
             });

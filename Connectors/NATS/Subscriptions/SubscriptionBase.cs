@@ -11,13 +11,13 @@ namespace MQContract.NATS.Subscriptions
 
         protected CancellationToken CancelToken => CancelTokenSource.Token;
 
-        protected static RecievedServiceMessage ExtractMessage(NatsJSMsg<byte[]> recievedMessage)
-            => ExtractMessage(recievedMessage.Headers, recievedMessage.Subject, recievedMessage.Data);
+        protected static ReceivedServiceMessage ExtractMessage(NatsJSMsg<byte[]> receivedMessage)
+            => ExtractMessage(receivedMessage.Headers, receivedMessage.Subject, receivedMessage.Data);
 
-        protected static RecievedServiceMessage ExtractMessage(NatsMsg<byte[]> recievedMessage)
-            => ExtractMessage(recievedMessage.Headers, recievedMessage.Subject, recievedMessage.Data);
+        protected static ReceivedServiceMessage ExtractMessage(NatsMsg<byte[]> receivedMessage)
+            => ExtractMessage(receivedMessage.Headers, receivedMessage.Subject, receivedMessage.Data);
 
-        private static RecievedServiceMessage ExtractMessage(NatsHeaders? headers, string subject, byte[]? data)
+        private static ReceivedServiceMessage ExtractMessage(NatsHeaders? headers, string subject, byte[]? data)
         {
             var convertedHeaders = Connection.ExtractHeader(headers, out var messageID, out var messageTypeID);
             return new(

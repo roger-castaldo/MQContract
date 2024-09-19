@@ -12,7 +12,7 @@ namespace AutomatedTesting
             return services.BuildServiceProvider();
         }
 
-        public static RecievedServiceMessage ProduceRecievedServiceMessage(ServiceMessage message, string? messageTypeID = null)
+        public static ReceivedServiceMessage ProduceReceivedServiceMessage(ServiceMessage message, string? messageTypeID = null)
             => new(message.ID, messageTypeID??message.MessageTypeID, message.Channel, message.Header, message.Data);
 
         public static ServiceQueryResult ProduceQueryResult(ServiceMessage message)

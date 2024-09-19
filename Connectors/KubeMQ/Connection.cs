@@ -123,16 +123,9 @@ namespace MQContract.KubeMQ
             return this;
         }
 
-        /// <summary>
-        /// The maximum message body size allowed
-        /// </summary>
-        public uint? MaxMessageBodySize => (uint)Math.Abs(connectionOptions.MaxBodySize);
+        uint? IMessageServiceConnection.MaxMessageBodySize => (uint)Math.Abs(connectionOptions.MaxBodySize);
 
-        /// <summary>
-        /// The default timeout to use for RPC calls when not specified by the class or in the call.
-        /// DEFAULT:30 seconds if not specified inside the connection options
-        /// </summary>
-        public TimeSpan DefaultTimout => TimeSpan.FromMilliseconds(connectionOptions.DefaultRPCTimeout??30000);
+        TimeSpan IQueryableMessageServiceConnection.DefaultTimout => TimeSpan.FromMilliseconds(connectionOptions.DefaultRPCTimeout??30000);
 
         private KubeClient EstablishConnection()
         { 
@@ -142,12 +135,7 @@ namespace MQContract.KubeMQ
             return result;
         }
         
-        /// <summary>
-        /// Called to ping the KubeMQ service
-        /// </summary>
-        /// <returns>The Ping result, specically a PingResponse instance</returns>
-        /// <exception cref="UnableToConnectException">Thrown when the Ping fails</exception>
-        public ValueTask<MQContract.Messages.PingResult> PingAsync()
+        ValueTask<MQContract.Messages.PingResult> IPingableMessageServiceConnection.PingAsync()
         {
             var watch = new Stopwatch();
             watch.Start();
@@ -167,13 +155,7 @@ namespace MQContract.KubeMQ
         internal static MessageHeader ConvertMessageHeader(MapField<string, string> header)
             => new(header.AsEnumerable());
 
-        /// <summary>
-        /// Called to publish a message into the KubeMQ server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>Transmition result identifying if it worked or not</returns>
-        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken = default)
+        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             try { 
                 var res = await client.SendEventAsync(new Event()
@@ -200,16 +182,7 @@ namespace MQContract.KubeMQ
             }
         }
 
-        /// <summary>
-        /// Called to publish a query into the KubeMQ server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="timeout">The timeout supplied for the query to response</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>The resulting response</returns>
-        /// <exception cref="NullResponseException">Thrown when the response from KubeMQ is null</exception>
-        /// <exception cref="RPCErrorException">Thrown when there is an RPC exception from the KubeMQ server</exception>
-        public async ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken = default)
+        async ValueTask<ServiceQueryResult> IQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
 #pragma warning disable S2139 // Exceptions should be either logged or rethrown but not both
             try
@@ -246,22 +219,13 @@ namespace MQContract.KubeMQ
 #pragma warning restore S2139 // Exceptions should be either logged or rethrown but not both
         }
 
-        /// <summary>
-        /// Called to create a subscription to the underlying KubeMQ server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a message is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group"></param>
-        /// <returns>A subscription instance</returns>
-        /// <param name="cancellationToken">A cancellation token</param>
-        public ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var sub = new PubSubscription(
                 connectionOptions,
                 EstablishConnection(),
-                messageRecieved,
-                errorRecieved,
+                messageReceived,
+                errorReceived,
                 channel,
                 group??Guid.NewGuid().ToString(),
                 storedChannelOptions.Find(sco=>Equals(sco.ChannelName,channel)),
@@ -271,22 +235,13 @@ namespace MQContract.KubeMQ
             return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
 
-        /// <summary>
-        /// Called to create a subscription for queries to the underlying KubeMQ server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a query is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The group to bind the consumer to</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A subscription instance</returns>
-        public ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var sub = new QuerySubscription(
                 connectionOptions,
                 EstablishConnection(),
-                messageRecieved,
-                errorRecieved,
+                messageReceived,
+                errorReceived,
                 channel,
                 group??Guid.NewGuid().ToString(),
                 cancellationToken
@@ -294,18 +249,11 @@ namespace MQContract.KubeMQ
             sub.Run();
             return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
-        /// <summary>
-        /// Called to close the underlying KubeMQ Client connection
-        /// </summary>
-        /// <returns></returns>
-        public ValueTask CloseAsync()
+        
+        ValueTask IMessageServiceConnection.CloseAsync()
             => client.DisposeAsync();
 
-        /// <summary>
-        /// Called to dispose of the object correctly and allow it to clean up it's resources
-        /// </summary>
-        /// <returns>A task required for disposal</returns>
-        public async ValueTask DisposeAsync()
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             await client.DisposeAsync();
 
@@ -322,10 +270,8 @@ namespace MQContract.KubeMQ
                 disposedValue=true;
             }
         }
-        /// <summary>
-        /// Called to dispose of the underlying resources
-        /// </summary>
-        public void Dispose()
+        
+        void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);

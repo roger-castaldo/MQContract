@@ -87,11 +87,7 @@ namespace MQContract.NATS
             return this;
         }
 
-        /// <summary>
-        /// Called to ping the NATS.io service
-        /// </summary>
-        /// <returns>The Ping Result including service information</returns>
-        public async ValueTask<PingResult> PingAsync()
+        async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
             => new PingResult(natsConnection.ServerInfo?.Host??string.Empty,
                 natsConnection.ServerInfo?.Version??string.Empty,
                 await natsConnection.PingAsync()
@@ -135,13 +131,7 @@ namespace MQContract.NATS
             ]));
         }
 
-        /// <summary>
-        /// Called to publish a message into the NATS io server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>Transmition result identifying if it worked or not</returns>
-        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken = default)
+        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             try
             {
@@ -159,15 +149,7 @@ namespace MQContract.NATS
             }
         }
 
-        /// <summary>
-        /// Called to publish a query into the NATS io server 
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="timeout">The timeout supplied for the query to response</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>The resulting response</returns>
-        /// <exception cref="QueryAsyncReponseException">Thrown when an error comes from the responding service</exception>
-        public async ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken = default)
+        async ValueTask<ServiceQueryResult> IQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var result = await natsConnection.RequestAsync<byte[], byte[]>(
                 message.Channel,
@@ -187,16 +169,7 @@ namespace MQContract.NATS
             );
         }
 
-        /// <summary>
-        /// Called to create a subscription to the underlying nats server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a message is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The name of the group to bind the consumer to</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A subscription instance</returns>
-        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             SubscriptionBase subscription;
             var isStream = false;
@@ -219,7 +192,7 @@ namespace MQContract.NATS
                     ||Equals(group, scc.Configuration.DurableName)
                 ));
                 var consumer = await natsJSContext.CreateOrUpdateConsumerAsync(channel, config?.Configuration??new ConsumerConfig(group??Guid.NewGuid().ToString()) { AckPolicy = ConsumerConfigAckPolicy.Explicit }, cancellationToken);
-                subscription = new StreamSubscription(consumer, messageRecieved, errorRecieved);
+                subscription = new StreamSubscription(consumer, messageReceived, errorReceived);
             }
             else
                 subscription = new PublishSubscription(
@@ -228,24 +201,14 @@ namespace MQContract.NATS
                         queueGroup: group,
                         cancellationToken: cancellationToken
                     ),
-                    messageRecieved,
-                    errorRecieved
+                    messageReceived,
+                    errorReceived
                 );
             subscription.Run();
             return subscription;
         }
 
-        /// <summary>
-        /// Called to create a subscription for queries to the underlying NATS server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a query is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The group to bind to</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A subscription instance</returns>
-
-        public ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var sub = new QuerySubscription(
                 natsConnection.SubscribeAsync<byte[]>(
@@ -253,24 +216,17 @@ namespace MQContract.NATS
                     queueGroup: group,
                     cancellationToken: cancellationToken
                 ),
-                messageRecieved,
-                errorRecieved
+                messageReceived,
+                errorReceived
             );
             sub.Run();
             return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
-        /// <summary>
-        /// Called to close off the contract connection and close it's underlying service connection
-        /// </summary>
-        /// <returns>A task for the closure of the connection</returns>
-        public ValueTask CloseAsync()
+        
+        ValueTask IMessageServiceConnection.CloseAsync()
             => natsConnection.DisposeAsync();
 
-        /// <summary>
-        /// Called to dispose of the object correctly and allow it to clean up it's resources
-        /// </summary>
-        /// <returns>A task required for disposal</returns>
-        public async ValueTask DisposeAsync()
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             await natsConnection.DisposeAsync().ConfigureAwait(true);
 
@@ -287,10 +243,8 @@ namespace MQContract.NATS
                 disposedValue=true;
             }
         }
-        /// <summary>
-        /// Called to dispose of the object correctly and allow it to clean up it's resources
-        /// </summary>
-        public void Dispose()
+        
+        void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);

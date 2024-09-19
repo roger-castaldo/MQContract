@@ -22,12 +22,12 @@ namespace MQContract.Interfaces.Service
         /// <summary>
         /// Implements a call to create a subscription to a given channel as a member of a given group for responding to queries
         /// </summary>
-        /// <param name="messageRecieved">The callback to be invoked when a message is recieved, returning the response message</param>
-        /// <param name="errorRecieved">The callback to invoke when an exception occurs</param>
+        /// <param name="messageReceived">The callback to be invoked when a message is received, returning the response message</param>
+        /// <param name="errorReceived">The callback to invoke when an exception occurs</param>
         /// <param name="channel">The name of the channel to subscribe to</param>
         /// <param name="group">The group to bind a consumer to</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A service subscription object</returns>
-        ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group = null, CancellationToken cancellationToken = new CancellationToken());
     }
 }

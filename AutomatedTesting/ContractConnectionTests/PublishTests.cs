@@ -34,7 +34,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
             
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -74,7 +74,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -116,7 +116,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var messageHeader = new MessageHeader([new("testing", "testing")]);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -160,7 +160,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(35);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -207,7 +207,7 @@ namespace AutomatedTesting.ContractConnectionTests
             globalEncoder.Setup(x => x.EncodeAsync<BasicMessage>(It.IsAny<BasicMessage>()))
                 .ReturnsAsync(encodedData);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, defaultMessageEncoder: globalEncoder.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, defaultMessageEncoder: globalEncoder.Object);
             #endregion
 
             #region Act
@@ -256,7 +256,7 @@ namespace AutomatedTesting.ContractConnectionTests
             globalEncryptor.Setup(x => x.EncryptAsync(Capture.In<byte[]>(binaries), out headers))
                 .ReturnsAsync((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, defaultMessageEncryptor: globalEncryptor.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, defaultMessageEncryptor: globalEncryptor.Object);
             #endregion
 
             #region Act
@@ -299,7 +299,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -339,7 +339,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -382,7 +382,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, serviceProvider: services);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, serviceProvider: services);
             #endregion
 
             #region Act
@@ -424,7 +424,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -466,7 +466,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, serviceProvider: services);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, serviceProvider: services);
             #endregion
 
             #region Act
@@ -506,7 +506,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -543,7 +543,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(1);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -579,7 +579,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act

@@ -6,7 +6,7 @@ using MQContract.KubeMQ.SDK.Connection;
 namespace MQContract.KubeMQ.Subscriptions
 {
     internal abstract class SubscriptionBase<T>(ILogger? logger,int reconnectInterval, KubeClient client,
-        Action<Exception> errorRecieved, CancellationToken cancellationToken) : IServiceSubscription
+        Action<Exception> errorReceived, CancellationToken cancellationToken) : IServiceSubscription
         where T : class
     {
         private bool disposedValue;
@@ -15,7 +15,7 @@ namespace MQContract.KubeMQ.Subscriptions
         protected readonly CancellationTokenSource cancelToken = new();
 
         protected abstract AsyncServerStreamingCall<T> EstablishCall();
-        protected abstract ValueTask MessageRecieved(T message);
+        protected abstract ValueTask MessageReceived(T message);
 
         public void Run()
         {
@@ -40,7 +40,7 @@ namespace MQContract.KubeMQ.Subscriptions
                         await foreach (var resp in call.ResponseStream.ReadAllAsync(cancelToken.Token))
                         {
                             if (active)
-                                await MessageRecieved(resp);
+                                await MessageReceived(resp);
                             else
                                 break;
                         }
@@ -60,19 +60,19 @@ namespace MQContract.KubeMQ.Subscriptions
                                 case StatusCode.Unavailable:
                                 case StatusCode.DataLoss:
                                 case StatusCode.DeadlineExceeded:
-                                    logger?.LogTrace("RPC Error recieved on subscription {SubscriptionID}, retrying connection after delay {ReconnectDelay}ms.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, reconnectInterval, rpcx.StatusCode, rpcx.Message);
+                                    logger?.LogTrace("RPC Error received on subscription {SubscriptionID}, retrying connection after delay {ReconnectDelay}ms.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, reconnectInterval, rpcx.StatusCode, rpcx.Message);
                                     break;
                                 default:
-                                    logger?.LogError(rpcx, "RPC Error recieved on subscription {SubscriptionID}.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, rpcx.StatusCode, rpcx.Message);
-                                    errorRecieved(rpcx);
+                                    logger?.LogError(rpcx, "RPC Error received on subscription {SubscriptionID}.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, rpcx.StatusCode, rpcx.Message);
+                                    errorReceived(rpcx);
                                     break;
                             }
                         }
                     }
                     catch (Exception e)
                     {
-                        logger?.LogError(e, "Error recieved on subscription {SubscriptionID}.  Message:{ErrorMessage}", ID, e.Message);
-                        errorRecieved(e);
+                        logger?.LogError(e, "Error received on subscription {SubscriptionID}.  Message:{ErrorMessage}", ID, e.Message);
+                        errorReceived(e);
                     }
                     if (active && !cancellationToken.IsCancellationRequested)
                         await Task.Delay(reconnectInterval);

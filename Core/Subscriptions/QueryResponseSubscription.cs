@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Interfaces;
-using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class QueryResponseSubscription<Q,R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, 
-        Func<IRecievedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageRecieved, Action<Exception> errorRecieved,
+    internal sealed class QueryResponseSubscription<Q,R>(
+        Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> processMessage,
+        Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, 
         bool synchronous=false,ILogger? logger=null)
@@ -23,7 +22,7 @@ namespace MQContract.Subscriptions
             if (connection is IQueryableMessageServiceConnection queryableMessageServiceConnection)
                 serviceSubscription = await queryableMessageServiceConnection.SubscribeQueryAsync(
                     serviceMessage => ProcessServiceMessageAsync(serviceMessage),
-                    error => errorRecieved(error),
+                    error => errorReceived(error),
                     MessageChannel,
                     group:group,
                     cancellationToken: cancellationToken
@@ -34,7 +33,7 @@ namespace MQContract.Subscriptions
                     async (serviceMessage) =>
                     {
                         if (!QueryResponseHelper.IsValidMessage(serviceMessage))
-                            errorRecieved(new InvalidQueryResponseMessageRecieved());
+                            errorReceived(new InvalidQueryResponseMessageReceived());
                         else
                         {
                             var result = await ProcessServiceMessageAsync(
@@ -49,7 +48,7 @@ namespace MQContract.Subscriptions
                             await connection.PublishAsync(QueryResponseHelper.EncodeMessage(result, queryClientID, replyID, null, replyChannel), cancellationToken);
                         }
                     },
-                    error => errorRecieved(error),
+                    error => errorReceived(error),
                     MessageChannel,
                     cancellationToken: cancellationToken
                 );
@@ -57,7 +56,7 @@ namespace MQContract.Subscriptions
             return serviceSubscription!=null;
         }
 
-        private async ValueTask<ServiceMessage> ProcessServiceMessageAsync(RecievedServiceMessage message)
+        private async ValueTask<ServiceMessage> ProcessServiceMessageAsync(ReceivedServiceMessage message)
         {
             if (Synchronous&&!(token?.IsCancellationRequested??false))
                 manualResetEvent!.Wait(cancellationToken:token!.Token);
@@ -65,15 +64,12 @@ namespace MQContract.Subscriptions
             ServiceMessage? response = null;
             try
             {
-                var taskMessage = await queryMessageFactory.ConvertMessageAsync(logger, message)
-                                        ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(Q).FullName}");
-                var result = await messageRecieved(new RecievedMessage<Q>(message.ID, taskMessage,message.Header,message.RecievedTimestamp,DateTime.Now));
-                response = await responseMessageFactory.ConvertMessageAsync(result.Message, message.Channel, new MessageHeader(result.Headers));
+                response = await processMessage(message);
                 if (message.Acknowledge!=null)
                     await message.Acknowledge();
             }catch(Exception e)
             {
-                errorRecieved(e);
+                errorReceived(e);
                 error=e;
             }
             if (Synchronous)

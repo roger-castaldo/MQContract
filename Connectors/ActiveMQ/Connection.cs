@@ -32,10 +32,7 @@ namespace MQContract.ActiveMQ
             producer = session.CreateProducer();
         }
 
-        /// <summary>
-        /// The maximum message body size allowed
-        /// </summary>
-        public uint? MaxMessageBodySize => 4*1024*1024;
+        uint? IMessageServiceConnection.MaxMessageBodySize => 4*1024*1024;
 
         private async ValueTask<IBytesMessage> ProduceMessage(ServiceMessage message)
         {
@@ -57,7 +54,7 @@ namespace MQContract.ActiveMQ
             return new(result);
         }
 
-        internal static RecievedServiceMessage ProduceMessage(string channel, IMessage message)
+        internal static ReceivedServiceMessage ProduceMessage(string channel, IMessage message)
         {
             var headers = ExtractHeaders(message.Properties, out var messageTypeID);
             return new(
@@ -70,13 +67,7 @@ namespace MQContract.ActiveMQ
             );
         }
 
-        /// <summary>
-        /// Called to publish a message into the ActiveMQ server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>Transmition result identifying if it worked or not</returns>
-        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken = default)
+        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             try
             {
@@ -89,34 +80,17 @@ namespace MQContract.ActiveMQ
             }
         }
 
-        /// <summary>
-        /// Called to create a subscription to the underlying ActiveMQ server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a message is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The group to bind the consumer to</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns></returns>
-        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
-            var result = new SubscriptionBase((msg)=>messageRecieved(ProduceMessage(channel,msg)), errorRecieved,session, channel, group??Guid.NewGuid().ToString());
+            var result = new SubscriptionBase((msg)=>messageReceived(ProduceMessage(channel,msg)), errorReceived,session, channel, group??Guid.NewGuid().ToString());
             await result.StartAsync();
             return result;
         }
 
-        /// <summary>
-        /// Called to close off the underlying ActiveMQ Connection
-        /// </summary>
-        /// <returns></returns>
-        public async ValueTask CloseAsync()
+        async ValueTask IMessageServiceConnection.CloseAsync()
             => await connection.StopAsync();
 
-        /// <summary>
-        /// Called to dispose of the object correctly and allow it to clean up it's resources
-        /// </summary>
-        /// <returns>A task required for disposal</returns>
-        public async ValueTask DisposeAsync()
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             await connection.StopAsync().ConfigureAwait(true);
 
@@ -138,10 +112,7 @@ namespace MQContract.ActiveMQ
             }
         }
 
-        /// <summary>
-        /// Called to dispose of the required resources
-        /// </summary>
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);

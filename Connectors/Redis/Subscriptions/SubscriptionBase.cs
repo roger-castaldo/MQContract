@@ -3,7 +3,7 @@ using StackExchange.Redis;
 
 namespace MQContract.Redis.Subscriptions
 {
-    internal abstract class SubscriptionBase(Action<Exception> errorRecieved, IDatabase database, Guid connectionID, string channel, string? group) : IServiceSubscription,IDisposable
+    internal abstract class SubscriptionBase(Action<Exception> errorReceived, IDatabase database, Guid connectionID, string channel, string? group) : IServiceSubscription,IDisposable
     {
         private readonly CancellationTokenSource tokenSource = new();
         private bool disposedValue;
@@ -35,7 +35,7 @@ namespace MQContract.Redis.Subscriptions
                     }
                     catch (Exception ex)
                     {
-                        errorRecieved(ex);
+                        errorReceived(ex);
                     }
                 }
             });

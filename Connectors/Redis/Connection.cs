@@ -50,13 +50,9 @@ namespace MQContract.Redis
         /// <summary>
         /// The default timeout to allow for a Query Response call to execute, defaults to 1 minute
         /// </summary>
-        public TimeSpan DefaultTimout => TimeSpan.FromMinutes(1);
+        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
 
-        /// <summary>
-        /// Called to close off the underlying Redis Connection
-        /// </summary>
-        /// <returns></returns>
-        public async ValueTask CloseAsync()
+        async ValueTask IMessageServiceConnection.CloseAsync()
             => await connectionMultiplexer.CloseAsync();
 
         private const string MESSAGE_TYPE_KEY = "_MessageTypeID";
@@ -77,7 +73,7 @@ namespace MQContract.Redis
             .Concat(messageTimeout==null ? [] : [new NameValueEntry(MESSAGE_TIMEOUT_KEY,messageTimeout.ToString())] )
             .ToArray();
 
-        internal static (RecievedServiceMessage recievedMessage,string? replyChannel,TimeSpan? messageTimeout) ConvertMessage(NameValueEntry[] data, string channel,Func<ValueTask>? acknowledge)
+        internal static (ReceivedServiceMessage receivedMessage,string? replyChannel,TimeSpan? messageTimeout) ConvertMessage(NameValueEntry[] data, string channel,Func<ValueTask>? acknowledge)
 #pragma warning disable S6580 // Use a format provider when parsing date and time
             => (
                 new(
@@ -124,13 +120,7 @@ namespace MQContract.Redis
             );
         }
 
-        /// <summary>
-        /// Called to publish a message into the Redis server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>Transmition result identifying if it worked or not</returns>
-        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken = default)
+        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             try
             {
@@ -142,33 +132,16 @@ namespace MQContract.Redis
             }
         }
 
-        /// <summary>
-        /// Called to create a subscription to the underlying Redis server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a message is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The name of the group to bind the consumer to</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns></returns>
-        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             if (group!=null)
                 await DefineConsumerGroupAsync(channel, group!);
-            var result = new PubSubscription(messageRecieved, errorRecieved, database, connectionID, channel, group);
+            var result = new PubSubscription(messageReceived, errorReceived, database, connectionID, channel, group);
             await result.StartAsync();
             return result;
         }
 
-        /// <summary>
-        /// Called to publish a query into the Redis server 
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="timeout">The timeout supplied for the query to response</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>The resulting response</returns>
-        /// <exception cref="TimeoutException">Thrown when the response times out</exception>
-        public async ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken = default)
+        async ValueTask<ServiceQueryResult> IQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var replyID = $"_inbox.{Guid.NewGuid()}";
             await database.StreamAddAsync(message.Channel, ConvertMessage(message, replyID, timeout));
@@ -185,29 +158,16 @@ namespace MQContract.Redis
             throw new TimeoutException();
         }
 
-        /// <summary>
-        /// Called to create a subscription for queries to the underlying Redis server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a query is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The group to bind to</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A subscription instance</returns>
-        public async ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             if (group!=null)
                 await DefineConsumerGroupAsync(channel, group!);
-            var result = new QueryResponseSubscription(messageRecieved, errorRecieved, database, connectionID, channel, group);
+            var result = new QueryResponseSubscription(messageReceived, errorReceived, database, connectionID, channel, group);
             await result.StartAsync();
             return result;
         }
 
-        /// <summary>
-        /// Called to dispose of the object correctly and allow it to clean up it's resources
-        /// </summary>
-        /// <returns>A task required for disposal</returns>
-        public async ValueTask DisposeAsync()
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             await connectionMultiplexer.DisposeAsync();
 
@@ -225,10 +185,7 @@ namespace MQContract.Redis
             }
         }
 
-        /// <summary>
-        /// Called to dispose of the object correctly and allow it to clean up it's resources
-        /// </summary>
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);

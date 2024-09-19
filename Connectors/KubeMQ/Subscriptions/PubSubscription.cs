@@ -9,9 +9,9 @@ using static MQContract.KubeMQ.SDK.Grpc.Subscribe.Types;
 namespace MQContract.KubeMQ.Subscriptions
 {
     internal class PubSubscription(ConnectionOptions options, KubeClient client,
-        Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group,
+        Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string group,
         StoredChannelOptions? storageOptions, CancellationToken cancellationToken) :
-        SubscriptionBase<EventReceive>(options.Logger,options.ReconnectInterval,client,errorRecieved,cancellationToken)
+        SubscriptionBase<EventReceive>(options.Logger,options.ReconnectInterval,client,errorReceived,cancellationToken)
     {
         private readonly KubeClient Client = client;
 
@@ -31,9 +31,9 @@ namespace MQContract.KubeMQ.Subscriptions
             cancelToken.Token);
         }
 
-        protected override ValueTask MessageRecieved(EventReceive message)
+        protected override ValueTask MessageReceived(EventReceive message)
         {
-            messageRecieved(new(message.EventID,message.Metadata,message.Channel,Connection.ConvertMessageHeader(message.Tags),message.Body.ToArray()));
+            messageReceived(new(message.EventID,message.Metadata,message.Channel,Connection.ConvertMessageHeader(message.Tags),message.Body.ToArray()));
             return ValueTask.CompletedTask;
         }
     }

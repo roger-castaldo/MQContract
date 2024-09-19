@@ -17,10 +17,7 @@ namespace MQContract.Kafka
         private readonly IProducer<string, byte[]> producer = new ProducerBuilder<string, byte[]>(clientConfig).Build();
         private readonly ClientConfig clientConfig = clientConfig;
 
-        /// <summary>
-        /// The maximum message body size allowed
-        /// </summary>
-        public uint? MaxMessageBodySize => (uint)Math.Abs(clientConfig.MessageMaxBytes??(1024*1024));
+        uint? IMessageServiceConnection.MaxMessageBodySize => (uint)Math.Abs(clientConfig.MessageMaxBytes??(1024*1024));
 
         internal static byte[] EncodeHeaderValue(string value)
             => UTF8Encoding.UTF8.GetBytes(value);
@@ -50,13 +47,7 @@ namespace MQContract.Kafka
             return ExtractHeaders(header);
         }
 
-        /// <summary>
-        /// Called to publish a message into the Kafka server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>Transmition result identifying if it worked or not</returns>
-        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken = default)
+        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             try
             {
@@ -74,34 +65,21 @@ namespace MQContract.Kafka
             }
         }
 
-        /// <summary>
-        /// Called to create a subscription to the underlying Kafka server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a message is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The name of the group to bind the consumer to</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns></returns>
-        public async ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var subscription = new PublishSubscription(
                 new ConsumerBuilder<string,byte[]>(new ConsumerConfig(clientConfig)
                 {
                     GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString())
                 }).Build(),
-                messageRecieved,
-                errorRecieved,
+                messageReceived,
+                errorReceived,
                 channel);
             await subscription.Run();
             return subscription;
         }
 
-        /// <summary>
-        /// Called to close off the underlying Kafka Connection
-        /// </summary>
-        /// <returns></returns>
-        public ValueTask CloseAsync()
+        ValueTask IMessageServiceConnection.CloseAsync()
         {
             producer.Dispose();
             return ValueTask.CompletedTask;

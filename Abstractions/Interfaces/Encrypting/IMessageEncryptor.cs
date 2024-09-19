@@ -10,7 +10,7 @@ namespace MQContract.Interfaces.Encrypting
     public interface IMessageEncryptor
     {
         /// <summary>
-        /// Called to decrypt the message body stream recieved as a message
+        /// Called to decrypt the message body stream received as a message
         /// </summary>
         /// <param name="stream">The stream representing the message body binary data</param>
         /// <param name="headers">The message headers that were provided by the message</param>

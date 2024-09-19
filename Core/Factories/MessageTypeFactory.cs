@@ -28,9 +28,9 @@ namespace MQContract.Factories
         private readonly uint maxMessageSize;
         public bool IgnoreMessageHeader { get; private init; }
 
-        private readonly string messageName = typeof(T).GetCustomAttributes<MessageNameAttribute>().Select(mn => mn.Value).FirstOrDefault(Utility.TypeName<T>());
-        private readonly string messageVersion = typeof(T).GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0");
-        private readonly string messageChannel = typeof(T).GetCustomAttributes<MessageChannelAttribute>().Select(mc => mc.Name).FirstOrDefault(string.Empty);
+        private readonly string messageName = Utility.MessageTypeName<T>();
+        private readonly string messageVersion = Utility.MessageVersionString<T>();
+        public string? MessageChannel => typeof(T).GetCustomAttributes<MessageChannelAttribute>().Select(mc => mc.Name).FirstOrDefault();
 
         public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider, bool ignoreMessageHeader, uint? maxMessageSize)
         {
@@ -146,9 +146,8 @@ namespace MQContract.Factories
             return false;
         }
 
-        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message, string? channel, MessageHeader? messageHeader, Func<string, ValueTask<string>>? mapChannel=null)
+        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message, string? channel, MessageHeader messageHeader)
         {
-            channel ??= messageChannel;
             if (string.IsNullOrWhiteSpace(channel))
                 throw new MessageChannelNullException();
 
@@ -171,8 +170,6 @@ namespace MQContract.Factories
             else
                 metaData="U";
             metaData+=$"-{messageName}-{messageVersion}";
-            if (mapChannel!=null)
-                channel=await mapChannel(channel);
 
             return new ServiceMessage(Guid.NewGuid().ToString(), metaData, channel, new MessageHeader(messageHeader, messageHeaders), body);
         }

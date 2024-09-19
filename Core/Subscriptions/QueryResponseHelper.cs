@@ -35,7 +35,7 @@ namespace MQContract.Subscriptions
                 originalMessage.Data
             );
 
-        public static bool IsValidMessage(RecievedServiceMessage serviceMessage)
+        public static bool IsValidMessage(ReceivedServiceMessage serviceMessage)
             => REQUIRED_HEADERS.All(key=>serviceMessage.Header.Keys.Contains(key));
 
         public static async Task<Tuple<TaskCompletionSource<ServiceQueryResult>, CancellationTokenSource>> StartResponseListenerAsync(IMessageServiceConnection connection,TimeSpan timeout,Guid identifier,Guid callID,string replyChannel,CancellationToken cancellationToken)

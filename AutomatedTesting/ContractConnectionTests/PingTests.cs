@@ -17,7 +17,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PingAsync())
                 .ReturnsAsync(pingResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act

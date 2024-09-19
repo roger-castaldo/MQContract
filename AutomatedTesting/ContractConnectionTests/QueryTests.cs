@@ -44,7 +44,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -99,7 +99,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -156,7 +156,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var messageHeader = new MessageHeader([new("testing", "testing")]);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -214,7 +214,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -271,7 +271,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(37);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -338,7 +338,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     return result;
                 });
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, defaultMessageEncoder: globalEncoder.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, defaultMessageEncoder: globalEncoder.Object);
             #endregion
 
             #region Act
@@ -408,7 +408,7 @@ namespace AutomatedTesting.ContractConnectionTests
                     return new MemoryStream(buff.Reverse().ToArray());
                 });
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, defaultMessageEncryptor: globalEncryptor.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, defaultMessageEncryptor: globalEncryptor.Object);
             #endregion
 
             #region Act
@@ -465,7 +465,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -520,7 +520,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -575,7 +575,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -632,7 +632,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, serviceProvider: services);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, serviceProvider: services);
             #endregion
 
             #region Act
@@ -689,7 +689,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -746,7 +746,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, serviceProvider: services);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, serviceProvider: services);
             #endregion
 
             #region Act
@@ -801,7 +801,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -848,7 +848,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(1);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -894,7 +894,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -965,7 +965,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -1020,7 +1020,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.DefaultTimout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act

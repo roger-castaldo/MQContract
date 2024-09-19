@@ -1,5 +1,7 @@
 ﻿using MQContract;
+using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
+using System.Text.Json;
 
 namespace Messages
 {
@@ -13,12 +15,13 @@ namespace Messages
                 sourceCancel.Cancel();
             };
 
-            var contractConnection = new ContractConnection(serviceConnection,channelMapper:mapper);
+            var contractConnection = ContractConnection.Instance(serviceConnection,channelMapper:mapper);
+            contractConnection.AddMetrics(false, true);
 
             var announcementSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
                 (announcement) =>
                 {
-                    Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");
+                    Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.ReceivedTimestamp}]");
                     return ValueTask.CompletedTask;
                 },
                 (error) => Console.WriteLine($"Announcement error: {error.Message}"),
@@ -28,8 +31,8 @@ namespace Messages
             var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
                 (greeting) =>
                 {
-                    Console.WriteLine($"Greeting recieved for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.RecievedTimestamp}]");
-                    System.Diagnostics.Debug.WriteLine($"Time to convert message: {greeting.ProcessedTimestamp.Subtract(greeting.RecievedTimestamp).TotalMilliseconds}ms");
+                    Console.WriteLine($"Greeting received for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.ReceivedTimestamp}]");
+                    System.Diagnostics.Debug.WriteLine($"Time to convert message: {greeting.ProcessedTimestamp.Subtract(greeting.ReceivedTimestamp).TotalMilliseconds}ms");
                     return new(
                         $"Welcome {greeting.Message.FirstName} {greeting.Message.LastName} to the {serviceName} sample"
                     );
@@ -41,7 +44,7 @@ namespace Messages
             var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredArrivalAnnouncement>(
                 (announcement) =>
                 {
-                    Console.WriteLine($"Stored Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.RecievedTimestamp}]");
+                    Console.WriteLine($"Stored Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.ReceivedTimestamp}]");
                     return ValueTask.CompletedTask;
                 },
                 (error) => Console.WriteLine($"Stored Announcement error: {error.Message}"),
@@ -77,6 +80,16 @@ namespace Messages
 
             sourceCancel.Token.WaitHandle.WaitOne();
             Console.WriteLine("System completed operation");
+            var jsonOptions = new JsonSerializerOptions()
+            {
+                WriteIndented = true
+            };
+            Console.WriteLine($"Greetings Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting),true),jsonOptions)}");
+            Console.WriteLine($"Greetings Recieved: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting),false), jsonOptions)}");
+            Console.WriteLine($"StoredArrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), true), jsonOptions)}");
+            Console.WriteLine($"StoredArrivals Recieved: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), false), jsonOptions)}");
+            Console.WriteLine($"Arrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), true), jsonOptions)}");
+            Console.WriteLine($"Arrivals Recieved: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), false), jsonOptions)}");
         }
     }
 }

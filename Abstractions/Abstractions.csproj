@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="../Shared.props"/>
+	<Import Project="../Shared.props" />
 	
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>

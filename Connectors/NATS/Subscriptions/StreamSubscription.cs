@@ -3,8 +3,8 @@ using NATS.Client.JetStream;
 
 namespace MQContract.NATS.Subscriptions
 {
-    internal class StreamSubscription(INatsJSConsumer consumer, Action<RecievedServiceMessage> messageRecieved, 
-        Action<Exception> errorRecieved) 
+    internal class StreamSubscription(INatsJSConsumer consumer, Action<ReceivedServiceMessage> messageReceived, 
+        Action<Exception> errorReceived) 
         : SubscriptionBase()
     {
         protected override async Task RunAction()
@@ -20,12 +20,12 @@ namespace MQContract.NATS.Subscriptions
                         var success = true;
                         try
                         {
-                            messageRecieved(ExtractMessage(msg));
+                            messageReceived(ExtractMessage(msg));
                         }
                         catch (Exception ex)
                         {
                             success=false;
-                            errorRecieved(ex);
+                            errorReceived(ex);
                             await msg.NakAsync(cancellationToken: CancelToken);
                         }
                         if (success)
@@ -34,11 +34,11 @@ namespace MQContract.NATS.Subscriptions
                 }
                 catch (NatsJSProtocolException e)
                 {
-                    errorRecieved(e);
+                    errorReceived(e);
                 }
                 catch (NatsJSException e)
                 {
-                    errorRecieved(e);
+                    errorReceived(e);
                     // log exception
                     await Task.Delay(1000, CancelToken); // backoff
                 }

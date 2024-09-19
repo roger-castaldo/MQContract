@@ -115,7 +115,7 @@ namespace MQContract.RabbitMQ
             return (props, ms.ToArray());
         }
 
-        internal static RecievedServiceMessage ConvertMessage(BasicDeliverEventArgs eventArgs,string channel, Func<ValueTask> acknowledge,out Guid? messageId)
+        internal static ReceivedServiceMessage ConvertMessage(BasicDeliverEventArgs eventArgs,string channel, Func<ValueTask> acknowledge,out Guid? messageId)
         {
             using var ms = new MemoryStream(eventArgs.Body.ToArray());
             using var br = new BinaryReader(ms);
@@ -141,13 +141,8 @@ namespace MQContract.RabbitMQ
                 acknowledge
             );
         }
-        /// <summary>
-        /// Called to publish a message into the ActiveMQ server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>Transmition result identifying if it worked or not</returns>
-        public async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken = default)
+       
+        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             await semaphore.WaitAsync(cancellationToken);
             TransmissionResult result;
@@ -164,46 +159,28 @@ namespace MQContract.RabbitMQ
             return result;
         }
 
-        private Subscription ProduceSubscription(IConnection conn, string channel, string? group, Action<BasicDeliverEventArgs,IModel, Func<ValueTask>> messageRecieved, Action<Exception> errorRecieved)
+        private Subscription ProduceSubscription(IConnection conn, string channel, string? group, Action<BasicDeliverEventArgs,IModel, Func<ValueTask>> messageReceived, Action<Exception> errorReceived)
         {
             if (group==null)
             {
                 group = Guid.NewGuid().ToString();
                 this.channel.QueueDeclare(queue:group, durable:false, exclusive:false, autoDelete:true);
             }
-            return new Subscription(conn, channel, group,messageRecieved,errorRecieved);
+            return new Subscription(conn, channel, group,messageReceived,errorReceived);
         }
 
-        /// <summary>
-        /// Called to create a subscription to the underlying RabbitMQ server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a message is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public ValueTask<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => ValueTask.FromResult<IServiceSubscription?>(ProduceSubscription(conn, channel, group,
                 (@event,modelChannel, acknowledge) =>
                 {
-                    messageRecieved(ConvertMessage(@event, channel, acknowledge,out _));
+                    messageReceived(ConvertMessage(@event, channel, acknowledge,out _));
                 },
-                errorRecieved
+                errorReceived
             ));
 
         private const string InboxChannel = "_Inbox";
 
-        /// <summary>
-        /// Called to publish a query into the RabbitMQ server 
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="timeout">The timeout supplied for the query to response</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>The resulting response</returns>
-        /// <exception cref="InvalidOperationException">Thrown when the query fails to send</exception>
-        /// <exception cref="TimeoutException">Thrown when the query times out</exception>
-        public async ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken = default)
+        async ValueTask<ServiceQueryResult> IQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var messageID = Guid.NewGuid();
             (var props, var data) = ConvertMessage(message, this.channel,messageID);
@@ -261,20 +238,11 @@ namespace MQContract.RabbitMQ
             throw new TimeoutException();
         }
 
-        /// <summary>
-        /// Called to create a subscription for queries to the underlying RabbitMQ server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a query is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The group to bind to</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A subscription instance</returns>
-        public ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, ValueTask<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string? group = null, CancellationToken cancellationToken = default)
+        ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
          => ValueTask.FromResult<IServiceSubscription?>(ProduceSubscription(conn, channel, group,
                 async (@event,model, acknowledge) =>
                 {
-                    var result = await messageRecieved(ConvertMessage(@event, channel, acknowledge,out var messageID));
+                    var result = await messageReceived(ConvertMessage(@event, channel, acknowledge,out var messageID));
                     await semaphore.WaitAsync(cancellationToken);
                     try
                     {
@@ -283,18 +251,14 @@ namespace MQContract.RabbitMQ
                     }
                     catch (Exception e)
                     {
-                        errorRecieved(e);
+                        errorReceived(e);
                     }
                     semaphore.Release();
                 },
-                errorRecieved
+                errorReceived
             ));
 
-        /// <summary>
-        /// Called to close off the contract connection and close it's underlying service connection
-        /// </summary>
-        /// <returns>A task for the closure of the connection</returns>
-        public ValueTask CloseAsync()
+        ValueTask IMessageServiceConnection.CloseAsync()
         {
             Dispose(true);
             return ValueTask.CompletedTask;
@@ -323,10 +287,7 @@ namespace MQContract.RabbitMQ
             }
         }
 
-        /// <summary>
-        /// Called to dispose of the object correctly and allow it to clean up it's resources
-        /// </summary>
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);

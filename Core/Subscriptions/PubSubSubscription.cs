@@ -1,12 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Interfaces;
-using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class PubSubSubscription<T>(IMessageFactory<T> messageFactory, Func<IRecievedMessage<T>, ValueTask> messageRecieved, Action<Exception> errorRecieved,
+    internal sealed class PubSubSubscription<T>(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, bool synchronous=false,ILogger? logger=null)
         : SubscriptionBase<T>(mapChannel,channel,synchronous)
@@ -16,7 +14,7 @@ namespace MQContract.Subscriptions
         {
             serviceSubscription = await connection.SubscribeAsync(
                 async serviceMessage => await ProcessMessage(serviceMessage),
-                error => errorRecieved(error),
+                error => errorReceived(error),
                 MessageChannel,
                 group:group,
                 cancellationToken: cancellationToken
@@ -26,21 +24,18 @@ namespace MQContract.Subscriptions
             return true;
         }
 
-        private async ValueTask ProcessMessage(RecievedServiceMessage serviceMessage)
+        private async ValueTask ProcessMessage(ReceivedServiceMessage serviceMessage)
         {
             try
             {
-                var taskMessage = await messageFactory.ConvertMessageAsync(logger, serviceMessage)
-                    ??throw new InvalidCastException($"Unable to convert incoming message {serviceMessage.MessageTypeID} to {typeof(T).FullName}");
-                var tsk = messageRecieved(new RecievedMessage<T>(serviceMessage.ID, taskMessage!, serviceMessage.Header, serviceMessage.RecievedTimestamp, DateTime.Now));
+                var tsk = messageReceived(serviceMessage);
+                await tsk.ConfigureAwait(!Synchronous);
                 if (serviceMessage.Acknowledge!=null)
                     await serviceMessage.Acknowledge();
-                if (Synchronous)
-                    await tsk.ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                errorRecieved(e);
+                errorReceived(e);
             }
         }
     }

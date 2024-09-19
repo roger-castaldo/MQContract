@@ -2,7 +2,7 @@
 {
     /// <summary>
     /// Used to define a message converter.  These are called upon if a 
-    /// message is recieved on a channel of type T but it is waiting for 
+    /// message is received on a channel of type T but it is waiting for 
     /// message of type V
     /// </summary>
     /// <typeparam name="T">The source message type</typeparam>

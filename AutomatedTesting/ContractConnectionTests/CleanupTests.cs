@@ -15,7 +15,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.CloseAsync())
                 .Returns(ValueTask.CompletedTask);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -36,7 +36,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var serviceConnection = new Mock<IDisposable>();
 
-            var contractConnection = new ContractConnection(serviceConnection.As<IMessageServiceConnection>().Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.As<IMessageServiceConnection>().Object);
             #endregion
 
             #region Act
@@ -58,7 +58,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var serviceConnection = new Mock<IAsyncDisposable>();
             serviceConnection.Setup(x=>x.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
-            var contractConnection = new ContractConnection(serviceConnection.As<IMessageServiceConnection>().Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.As<IMessageServiceConnection>().Object);
             #endregion
 
             #region Act
@@ -79,7 +79,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var serviceConnection = new Mock<IDisposable>();
 
-            var contractConnection = new ContractConnection(serviceConnection.As<IMessageServiceConnection>().Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.As<IMessageServiceConnection>().Object);
             #endregion
 
             #region Act
@@ -100,7 +100,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var serviceConnection = new Mock<IAsyncDisposable>();
 
-            var contractConnection = new ContractConnection(serviceConnection.As<IMessageServiceConnection>().Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.As<IMessageServiceConnection>().Object);
             #endregion
 
             #region Act
@@ -121,7 +121,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var serviceConnection = new Mock<IAsyncDisposable>();
 
-            var contractConnection = new ContractConnection(serviceConnection.As<IDisposable>().As<IMessageServiceConnection>().Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.As<IDisposable>().As<IMessageServiceConnection>().Object);
             #endregion
 
             #region Act
