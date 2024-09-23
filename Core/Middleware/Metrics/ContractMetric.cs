@@ -8,7 +8,7 @@ namespace MQContract.Middleware.Metrics
 
         public ulong MessageBytes { get; private set; } = 0;
 
-        public ulong MessageBytesAverage => MessageBytes / Messages;
+        public ulong MessageBytesAverage => (Messages==0 ? 0 : MessageBytes / Messages);
 
         public ulong MessageBytesMin { get; private set; } = ulong.MaxValue;
 
@@ -16,7 +16,7 @@ namespace MQContract.Middleware.Metrics
 
         public TimeSpan MessageConversionDuration { get; private set; } = TimeSpan.Zero;
 
-        public TimeSpan MessageConversionAverage => MessageConversionDuration / Messages;
+        public TimeSpan MessageConversionAverage => (Messages==0 ? TimeSpan.Zero : MessageConversionDuration / Messages);
 
         public TimeSpan MessageConversionMin { get; private set; } = TimeSpan.MaxValue;
 

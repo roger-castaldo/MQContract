@@ -3,6 +3,7 @@ using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using MQContract.Middleware.Metrics;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Threading.Channels;
 
 namespace MQContract.Middleware
@@ -17,10 +18,10 @@ namespace MQContract.Middleware
         private readonly InternalMetricTracker? internalTracker;
         private readonly Channel<MetricEntryValue> channel = Channel.CreateUnbounded<MetricEntryValue>();
 
-        public MetricsMiddleware(bool useMeter,bool useInternal)
+        public MetricsMiddleware(Meter? meter,bool useInternal)
         {
-            if (useMeter)
-                systemTracker=new();
+            if (meter!=null)
+                systemTracker=new(meter!);
             if (useInternal)
                 internalTracker=new();
             Start();
@@ -57,6 +58,9 @@ namespace MQContract.Middleware
             var stopWatch = (Stopwatch?)context[StopWatchKey];
             stopWatch?.Stop();
             await AddStat(typeof(T), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageRecievedSizeKey]??0, stopWatch);
+            context[StopWatchKey]=null;
+            context[MessageReceivedChannelKey]=null;
+            context[MessageRecievedSizeKey]=null;
             return (message,messageHeader);
         }
 
@@ -65,6 +69,7 @@ namespace MQContract.Middleware
             var stopWatch = (Stopwatch?)context[StopWatchKey];
             stopWatch?.Stop();
             await AddStat(messageType, message.Channel,true,message.Data.Length,stopWatch);
+            context[StopWatchKey] = null;
             return message;
         }
 

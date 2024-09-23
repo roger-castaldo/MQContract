@@ -18,11 +18,11 @@
 - [IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext')
   - [Item](#P-MQContract-Interfaces-Middleware-IContext-Item-System-String- 'MQContract.Interfaces.Middleware.IContext.Item(System.String)')
 - [IContractConnection](#T-MQContract-Interfaces-IContractConnection 'MQContract.Interfaces.IContractConnection')
-  - [AddMetrics(useMeter,useInternal)](#M-MQContract-Interfaces-IContractConnection-AddMetrics-System-Boolean,System-Boolean- 'MQContract.Interfaces.IContractConnection.AddMetrics(System.Boolean,System.Boolean)')
   - [CloseAsync()](#M-MQContract-Interfaces-IContractConnection-CloseAsync 'MQContract.Interfaces.IContractConnection.CloseAsync')
   - [GetSnapshot(sent)](#M-MQContract-Interfaces-IContractConnection-GetSnapshot-System-Boolean- 'MQContract.Interfaces.IContractConnection.GetSnapshot(System.Boolean)')
   - [GetSnapshot(messageType,sent)](#M-MQContract-Interfaces-IContractConnection-GetSnapshot-System-Type,System-Boolean- 'MQContract.Interfaces.IContractConnection.GetSnapshot(System.Type,System.Boolean)')
   - [GetSnapshot(channel,sent)](#M-MQContract-Interfaces-IContractConnection-GetSnapshot-System-String,System-Boolean- 'MQContract.Interfaces.IContractConnection.GetSnapshot(System.String,System.Boolean)')
+  - [GetSnapshot\`\`1(sent)](#M-MQContract-Interfaces-IContractConnection-GetSnapshot``1-System-Boolean- 'MQContract.Interfaces.IContractConnection.GetSnapshot``1(System.Boolean)')
   - [PingAsync()](#M-MQContract-Interfaces-IContractConnection-PingAsync 'MQContract.Interfaces.IContractConnection.PingAsync')
   - [PublishAsync\`\`1(message,channel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-PublishAsync``1-``0,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.PublishAsync``1(``0,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
   - [QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.QueryAsync``1(``0,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
@@ -385,20 +385,6 @@ MQContract.Interfaces
 
 This interface represents the Core class for the MQContract system, IE the ContractConnection
 
-<a name='M-MQContract-Interfaces-IContractConnection-AddMetrics-System-Boolean,System-Boolean-'></a>
-### AddMetrics(useMeter,useInternal) `method`
-
-##### Summary
-
-Called to activate the metrics tracking middleware for this connection instance
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| useMeter | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates if the Meter style metrics should be enabled |
-| useInternal | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates if the internal metrics collector should be used |
-
 <a name='M-MQContract-Interfaces-IContractConnection-CloseAsync'></a>
 ### CloseAsync() `method`
 
@@ -466,6 +452,29 @@ A record of the current metric snapshot or null if not available
 | ---- | ---- | ----------- |
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to look for |
 | sent | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | true when the sent metrics are desired, false when received are desired |
+
+<a name='M-MQContract-Interfaces-IContractConnection-GetSnapshot``1-System-Boolean-'></a>
+### GetSnapshot\`\`1(sent) `method`
+
+##### Summary
+
+Called to get a snapshot of the metrics for a given message type.  Will return null if internal metrics are not enabled.
+
+##### Returns
+
+A record of the current metric snapshot or null if not available
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| sent | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | true when the sent metrics are desired, false when received are desired |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The type of message to look for |
 
 <a name='M-MQContract-Interfaces-IContractConnection-PingAsync'></a>
 ### PingAsync() `method`

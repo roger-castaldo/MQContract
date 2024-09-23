@@ -1,5 +1,6 @@
 ﻿using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
+using System.Diagnostics.Metrics;
 
 namespace MQContract.Interfaces
 {
@@ -45,9 +46,31 @@ namespace MQContract.Interfaces
         /// <summary>
         /// Called to activate the metrics tracking middleware for this connection instance
         /// </summary>
-        /// <param name="useMeter">Indicates if the Meter style metrics should be enabled</param>
+        /// <param name="meter">The Meter item to create all system metrics against</param>
         /// <param name="useInternal">Indicates if the internal metrics collector should be used</param>
-        void AddMetrics(bool useMeter, bool useInternal);
+        /// <returns>The Contract Connection instance to allow chaining calls</returns>
+        /// <remarks>
+        /// For the Meter metrics, all durations are in ms and the following values and patterns will apply:
+        /// mqcontract.messages.sent.count = count of messages sent (Counter<long>)
+        /// mqcontract.messages.sent.bytes = count of bytes sent (message data) (Counter<long>)
+        /// mqcontract.messages.received.count = count of messages received (Counter<long>)
+        /// mqcontract.messages.received.bytes = count of bytes received (message data) (Counter<long>)
+        /// mqcontract.messages.encodingduration = milliseconds to encode messages (Histogram<double>)
+        /// mqcontract.messages.decodingduration = milliseconds to decode messages (Histogram<double>)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.sent.count = count of messages sent of a given type (Counter<long>)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.sent.bytes = count of bytes sent (message data) of a given type (Counter<long>)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.received.count = count of messages received of a given type (Counter<long>)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.received.bytes = count of bytes received (message data) of a given type (Counter<long>)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.encodingduration = milliseconds to encode messages of a given type (Histogram<double>)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.decodingduration = milliseconds to decode messages of a given type (Histogram<double>)
+        /// mqcontract.channels.{Channel}.sent.count = count of messages sent for a given channel (Counter<long>)
+        /// mqcontract.channels.{Channel}.sent.bytes = count of bytes sent (message data) for a given channel (Counter<long>)
+        /// mqcontract.channels.{Channel}.received.count = count of messages received for a given channel (Counter<long>)
+        /// mqcontract.channels.{Channel}.received.bytes = count of bytes received (message data) for a given channel (Counter<long>)
+        /// mqcontract.channels.{Channel}.encodingduration = milliseconds to encode messages for a given channel (Histogram<double>)
+        /// mqcontract.channels.{Channel}.decodingduration = milliseconds to decode messages for a given channel (Histogram<double>)
+        /// </remarks>
+        IContractConnection AddMetrics(Meter? meter, bool useInternal);
         /// <summary>
         /// Called to get a snapshot of the current global metrics.  Will return null if internal metrics are not enabled.
         /// </summary>
@@ -61,6 +84,14 @@ namespace MQContract.Interfaces
         /// <param name="sent">true when the sent metrics are desired, false when received are desired</param>
         /// <returns>A record of the current metric snapshot or null if not available</returns>
         IContractMetric? GetSnapshot(Type messageType,bool sent);
+        /// <summary>
+        /// Called to get a snapshot of the metrics for a given message type.  Will return null if internal metrics are not enabled.
+        /// </summary>
+        /// <typeparam name="T">The type of message to look for</typeparam>
+        /// <param name="sent">true when the sent metrics are desired, false when received are desired</param>
+        /// <returns>A record of the current metric snapshot or null if not available</returns>
+        IContractMetric? GetSnapshot<T>(bool sent)
+            where T : class;
         /// <summary>
         /// Called to get a snapshot of the metrics for a given message channel.  Will return null if internal metrics are not enabled.
         /// </summary>

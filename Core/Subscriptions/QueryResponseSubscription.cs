@@ -5,7 +5,7 @@ using MQContract.Messages;
 namespace MQContract.Subscriptions
 {
     internal sealed class QueryResponseSubscription<Q,R>(
-        Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> processMessage,
+        Func<ReceivedServiceMessage,string, ValueTask<ServiceMessage>> processMessage,
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, 
@@ -21,7 +21,7 @@ namespace MQContract.Subscriptions
         {
             if (connection is IQueryableMessageServiceConnection queryableMessageServiceConnection)
                 serviceSubscription = await queryableMessageServiceConnection.SubscribeQueryAsync(
-                    serviceMessage => ProcessServiceMessageAsync(serviceMessage),
+                    serviceMessage => ProcessServiceMessageAsync(serviceMessage,string.Empty),
                     error => errorReceived(error),
                     MessageChannel,
                     group:group,
@@ -43,7 +43,8 @@ namespace MQContract.Subscriptions
                                     serviceMessage.Channel,
                                     QueryResponseHelper.StripHeaders(serviceMessage, out var queryClientID, out var replyID, out var replyChannel),
                                     serviceMessage.Data
-                                )
+                                ),
+                                replyChannel
                             );
                             await connection.PublishAsync(QueryResponseHelper.EncodeMessage(result, queryClientID, replyID, null, replyChannel), cancellationToken);
                         }
@@ -56,7 +57,7 @@ namespace MQContract.Subscriptions
             return serviceSubscription!=null;
         }
 
-        private async ValueTask<ServiceMessage> ProcessServiceMessageAsync(ReceivedServiceMessage message)
+        private async ValueTask<ServiceMessage> ProcessServiceMessageAsync(ReceivedServiceMessage message,string replyChannel)
         {
             if (Synchronous&&!(token?.IsCancellationRequested??false))
                 manualResetEvent!.Wait(cancellationToken:token!.Token);
@@ -64,7 +65,7 @@ namespace MQContract.Subscriptions
             ServiceMessage? response = null;
             try
             {
-                response = await processMessage(message);
+                response = await processMessage(message,replyChannel);
                 if (message.Acknowledge!=null)
                     await message.Acknowledge();
             }catch(Exception e)
@@ -75,8 +76,8 @@ namespace MQContract.Subscriptions
             if (Synchronous)
                 manualResetEvent!.Set();
             if (error!=null)
-                return ErrorServiceMessage.Produce(message.Channel,error);
-            return response??ErrorServiceMessage.Produce(message.Channel, new NullReferenceException());
+                return ErrorServiceMessage.Produce(replyChannel,error);
+            return response??ErrorServiceMessage.Produce(replyChannel, new NullReferenceException());
         }
 
         protected override void InternalDispose()

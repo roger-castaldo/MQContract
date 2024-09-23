@@ -2,7 +2,6 @@
 using MQContract.Interfaces;
 using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
-using MQContract.Middleware;
 
 namespace MQContract
 {

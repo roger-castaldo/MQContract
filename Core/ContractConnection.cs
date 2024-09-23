@@ -93,7 +93,7 @@ namespace MQContract
             var context = new Context(mapType);
             (message, channel, messageHeader) = await BeforeMessageEncodeAsync<T>(context, message, channel??factory.MessageChannel, messageHeader??new([]));
             var serviceMessage = await AfterMessageEncodeAsync<T>(context,
-                await factory.ConvertMessageAsync(message, channel, messageHeader)
+                await factory.ConvertMessageAsync(message,false, channel, messageHeader)
             );
             return (context, serviceMessage);
         }
@@ -179,7 +179,7 @@ namespace MQContract
                 result = new QueryResult<R>(
                     queryResult.ID,
                     messageHeader,
-                    Result: await GetMessageFactory<R>().ConvertMessageAsync(logger, new ServiceQueryResult(queryResult.ID, messageHeader, queryResult.MessageTypeID, data))
+                    Result: await GetMessageFactory<R>(true).ConvertMessageAsync(logger, new ServiceQueryResult(queryResult.ID, messageHeader, queryResult.MessageTypeID, data))
                 );
             }
             catch (QueryResponseException qre)
@@ -210,7 +210,7 @@ namespace MQContract
             var queryMessageFactory = GetMessageFactory<Q>(ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<R>();
             var subscription = new QueryResponseSubscription<Q, R>(
-                async (message) =>
+                async (message,replyChannel) =>
                 {
                     var context = new Context(ChannelMapper.MapTypes.QuerySubscription);
                     (var messageHeader, var data) = await BeforeMessageDecodeAsync(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
@@ -219,8 +219,8 @@ namespace MQContract
                     (taskMessage, messageHeader) = await AfterMessageDecodeAsync<Q>(context, taskMessage!, message.ID, messageHeader, message.ReceivedTimestamp, DateTime.Now);
                     var result = await messageReceived(new ReceivedMessage<Q>(message.ID, taskMessage, messageHeader, message.ReceivedTimestamp, DateTime.Now));
                     context = new Context(ChannelMapper.MapTypes.QueryResponse);
-                    (var resultMessage, var resultChannel, var resultHeader) = await BeforeMessageEncodeAsync<R>(context, result.Message, message.Channel, message.Header);
-                    var encodedMessage = await responseMessageFactory.ConvertMessageAsync(resultMessage, resultChannel, resultHeader);
+                    (var resultMessage, var resultChannel, var resultHeader) = await BeforeMessageEncodeAsync<R>(context, result.Message, replyChannel, message.Header);
+                    var encodedMessage = await responseMessageFactory.ConvertMessageAsync(resultMessage,true, resultChannel??replyChannel, resultHeader);
                     return await AfterMessageEncodeAsync<R>(context, encodedMessage);
                 },
                 errorReceived,

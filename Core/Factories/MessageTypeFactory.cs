@@ -146,9 +146,9 @@ namespace MQContract.Factories
             return false;
         }
 
-        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message, string? channel, MessageHeader messageHeader)
+        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message,bool ignoreChannel, string? channel, MessageHeader messageHeader)
         {
-            if (string.IsNullOrWhiteSpace(channel))
+            if (string.IsNullOrWhiteSpace(channel)&&!ignoreChannel)
                 throw new MessageChannelNullException();
 
             var encodedData = await (messageEncoder?.EncodeAsync(message)??globalMessageEncoder!.EncodeAsync<T>(message));
@@ -171,7 +171,7 @@ namespace MQContract.Factories
                 metaData="U";
             metaData+=$"-{messageName}-{messageVersion}";
 
-            return new ServiceMessage(Guid.NewGuid().ToString(), metaData, channel, new MessageHeader(messageHeader, messageHeaders), body);
+            return new ServiceMessage(Guid.NewGuid().ToString(), metaData, channel??string.Empty, new MessageHeader(messageHeader, messageHeaders), body);
         }
 
         async ValueTask<T?> IConversionPath<T>.ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)

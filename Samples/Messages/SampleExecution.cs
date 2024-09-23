@@ -16,7 +16,7 @@ namespace Messages
             };
 
             var contractConnection = ContractConnection.Instance(serviceConnection,channelMapper:mapper);
-            contractConnection.AddMetrics(false, true);
+            contractConnection.AddMetrics(null, true);
 
             var announcementSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
                 (announcement) =>

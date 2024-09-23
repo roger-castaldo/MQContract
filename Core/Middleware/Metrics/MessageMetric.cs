@@ -2,7 +2,7 @@
 
 namespace MQContract.Middleware.Metrics
 {
-    internal record MessageMetric(Counter<long> Sent,Counter<long> SentBytes, Counter<long> Received,Counter<long> ReceivedBytes, 
+    internal record MessageMetric(UpDownCounter<long> Sent, UpDownCounter<long> SentBytes, UpDownCounter<long> Received, UpDownCounter<long> ReceivedBytes, 
         Histogram<double> EncodingDuration, Histogram<double> DecodingDuration)
     {
         public void AddEntry(MetricEntryValue entry)
