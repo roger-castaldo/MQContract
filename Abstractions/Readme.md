@@ -18,6 +18,7 @@
 - [IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext')
   - [Item](#P-MQContract-Interfaces-Middleware-IContext-Item-System-String- 'MQContract.Interfaces.Middleware.IContext.Item(System.String)')
 - [IContractConnection](#T-MQContract-Interfaces-IContractConnection 'MQContract.Interfaces.IContractConnection')
+  - [AddMetrics(meter,useInternal)](#M-MQContract-Interfaces-IContractConnection-AddMetrics-System-Diagnostics-Metrics-Meter,System-Boolean- 'MQContract.Interfaces.IContractConnection.AddMetrics(System.Diagnostics.Metrics.Meter,System.Boolean)')
   - [CloseAsync()](#M-MQContract-Interfaces-IContractConnection-CloseAsync 'MQContract.Interfaces.IContractConnection.CloseAsync')
   - [GetSnapshot(sent)](#M-MQContract-Interfaces-IContractConnection-GetSnapshot-System-Boolean- 'MQContract.Interfaces.IContractConnection.GetSnapshot(System.Boolean)')
   - [GetSnapshot(messageType,sent)](#M-MQContract-Interfaces-IContractConnection-GetSnapshot-System-Type,System-Boolean- 'MQContract.Interfaces.IContractConnection.GetSnapshot(System.Type,System.Boolean)')
@@ -66,6 +67,7 @@
   - [DecodeAsync(stream)](#M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-DecodeAsync-System-IO-Stream- 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1.DecodeAsync(System.IO.Stream)')
   - [EncodeAsync(message)](#M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-EncodeAsync-`0- 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1.EncodeAsync(`0)')
 - [IMessageTypeEncryptor\`1](#T-MQContract-Interfaces-Encrypting-IMessageTypeEncryptor`1 'MQContract.Interfaces.Encrypting.IMessageTypeEncryptor`1')
+- [IMiddleware](#T-MQContract-Interfaces-Middleware-IMiddleware 'MQContract.Interfaces.Middleware.IMiddleware')
 - [IPingableMessageServiceConnection](#T-MQContract-Interfaces-Service-IPingableMessageServiceConnection 'MQContract.Interfaces.Service.IPingableMessageServiceConnection')
   - [PingAsync()](#M-MQContract-Interfaces-Service-IPingableMessageServiceConnection-PingAsync 'MQContract.Interfaces.Service.IPingableMessageServiceConnection.PingAsync')
 - [IQueryableMessageServiceConnection](#T-MQContract-Interfaces-Service-IQueryableMessageServiceConnection 'MQContract.Interfaces.Service.IQueryableMessageServiceConnection')
@@ -80,6 +82,7 @@
   - [ReceivedTimestamp](#P-MQContract-Interfaces-IReceivedMessage`1-ReceivedTimestamp 'MQContract.Interfaces.IReceivedMessage`1.ReceivedTimestamp')
 - [IServiceSubscription](#T-MQContract-Interfaces-Service-IServiceSubscription 'MQContract.Interfaces.Service.IServiceSubscription')
   - [EndAsync()](#M-MQContract-Interfaces-Service-IServiceSubscription-EndAsync 'MQContract.Interfaces.Service.IServiceSubscription.EndAsync')
+- [ISpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.ISpecificTypeMiddleware`1')
 - [ISubscription](#T-MQContract-Interfaces-ISubscription 'MQContract.Interfaces.ISubscription')
   - [EndAsync()](#M-MQContract-Interfaces-ISubscription-EndAsync 'MQContract.Interfaces.ISubscription.EndAsync')
 - [MessageChannelAttribute](#T-MQContract-Attributes-MessageChannelAttribute 'MQContract.Attributes.MessageChannelAttribute')
@@ -384,6 +387,46 @@ MQContract.Interfaces
 ##### Summary
 
 This interface represents the Core class for the MQContract system, IE the ContractConnection
+
+<a name='M-MQContract-Interfaces-IContractConnection-AddMetrics-System-Diagnostics-Metrics-Meter,System-Boolean-'></a>
+### AddMetrics(meter,useInternal) `method`
+
+##### Summary
+
+Called to activate the metrics tracking middleware for this connection instance
+
+##### Returns
+
+The Contract Connection instance to allow chaining calls
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| meter | [System.Diagnostics.Metrics.Meter](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Diagnostics.Metrics.Meter 'System.Diagnostics.Metrics.Meter') | The Meter item to create all system metrics against |
+| useInternal | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates if the internal metrics collector should be used |
+
+##### Remarks
+
+For the Meter metrics, all durations are in ms and the following values and patterns will apply:
+mqcontract.messages.sent.count = count of messages sent (Counter<long>)
+mqcontract.messages.sent.bytes = count of bytes sent (message data) (Counter<long>)
+mqcontract.messages.received.count = count of messages received (Counter<long>)
+mqcontract.messages.received.bytes = count of bytes received (message data) (Counter<long>)
+mqcontract.messages.encodingduration = milliseconds to encode messages (Histogram<double>)
+mqcontract.messages.decodingduration = milliseconds to decode messages (Histogram<double>)
+mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.sent.count = count of messages sent of a given type (Counter<long>)
+mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.sent.bytes = count of bytes sent (message data) of a given type (Counter<long>)
+mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.received.count = count of messages received of a given type (Counter<long>)
+mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.received.bytes = count of bytes received (message data) of a given type (Counter<long>)
+mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.encodingduration = milliseconds to encode messages of a given type (Histogram<double>)
+mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.decodingduration = milliseconds to decode messages of a given type (Histogram<double>)
+mqcontract.channels.{Channel}.sent.count = count of messages sent for a given channel (Counter<long>)
+mqcontract.channels.{Channel}.sent.bytes = count of bytes sent (message data) for a given channel (Counter<long>)
+mqcontract.channels.{Channel}.received.count = count of messages received for a given channel (Counter<long>)
+mqcontract.channels.{Channel}.received.bytes = count of bytes received (message data) for a given channel (Counter<long>)
+mqcontract.channels.{Channel}.encodingduration = milliseconds to encode messages for a given channel (Histogram<double>)
+mqcontract.channels.{Channel}.decodingduration = milliseconds to decode messages for a given channel (Histogram<double>)
 
 <a name='M-MQContract-Interfaces-IContractConnection-CloseAsync'></a>
 ### CloseAsync() `method`
@@ -1179,6 +1222,17 @@ as well as the default of not encrypting the message body
 | ---- | ----------- |
 | T | The type of message that this encryptor supports |
 
+<a name='T-MQContract-Interfaces-Middleware-IMiddleware'></a>
+## IMiddleware `type`
+
+##### Namespace
+
+MQContract.Interfaces.Middleware
+
+##### Summary
+
+Base Middleware just used to limit Generic Types for Register Middleware
+
 <a name='T-MQContract-Interfaces-Service-IPingableMessageServiceConnection'></a>
 ## IPingableMessageServiceConnection `type`
 
@@ -1340,6 +1394,17 @@ A task to allow for asynchronous ending of the subscription
 ##### Parameters
 
 This method has no parameters.
+
+<a name='T-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware`1'></a>
+## ISpecificTypeMiddleware\`1 `type`
+
+##### Namespace
+
+MQContract.Interfaces.Middleware
+
+##### Summary
+
+Base Specific Type Middleware just used to limit Generic Types for Register Middleware
 
 <a name='T-MQContract-Interfaces-ISubscription'></a>
 ## ISubscription `type`

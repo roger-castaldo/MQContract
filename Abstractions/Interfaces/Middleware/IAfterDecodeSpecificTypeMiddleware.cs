@@ -5,7 +5,7 @@ namespace MQContract.Interfaces.Middleware
     /// <summary>
     /// This interface represents a Middleware to execute after a Message of the given type T has been decoded from a ServiceMessage to the expected Class
     /// </summary>
-    public interface IAfterDecodeSpecificTypeMiddleware<T>
+    public interface IAfterDecodeSpecificTypeMiddleware<T> : ISpecificTypeMiddleware<T>
         where T : class
     {
         /// <summary>

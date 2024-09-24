@@ -5,7 +5,7 @@ namespace MQContract.Interfaces.Middleware
     /// <summary>
     /// This interface represents a Middleware to execute Before a specific message type is encoded
     /// </summary>
-    public interface IBeforeEncodeSpecificTypeMiddleware<T>
+    public interface IBeforeEncodeSpecificTypeMiddleware<T> : ISpecificTypeMiddleware<T>
         where T : class
     {
         /// <summary>

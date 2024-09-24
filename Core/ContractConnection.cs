@@ -209,7 +209,7 @@ namespace MQContract
         {
             var queryMessageFactory = GetMessageFactory<Q>(ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<R>();
-            var subscription = new QueryResponseSubscription<Q, R>(
+            var subscription = new QueryResponseSubscription<Q>(
                 async (message,replyChannel) =>
                 {
                     var context = new Context(ChannelMapper.MapTypes.QuerySubscription);

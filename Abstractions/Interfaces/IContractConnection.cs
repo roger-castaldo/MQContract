@@ -15,7 +15,7 @@ namespace MQContract.Interfaces
         /// <typeparam name="T">The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware</typeparam>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         IContractConnection RegisterMiddleware<T>()
-            where T : IBeforeDecodeMiddleware, IBeforeEncodeMiddleware, IAfterDecodeMiddleware, IAfterEncodeMiddleware;
+            where T : IMiddleware;
         /// <summary>
         /// Register a middleware of a given type T to be used by the contract connection
         /// </summary>
@@ -23,15 +23,15 @@ namespace MQContract.Interfaces
         /// <typeparam name="T">The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware</typeparam>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         IContractConnection RegisterMiddleware<T>(Func<T> constructInstance)
-            where T : IBeforeDecodeMiddleware, IBeforeEncodeMiddleware, IAfterDecodeMiddleware, IAfterEncodeMiddleware;
+            where T : IMiddleware;
         /// <summary>
         /// Register a middleware of a given type T to be used by the contract connection
         /// </summary>
         /// <typeparam name="T">The type of middle ware to register, it must implement IBeforeEncodeSpecificTypeMiddleware&lt;M&gt; or IAfterDecodeSpecificTypeMiddleware&lt;M&gt;</typeparam>
         /// <typeparam name="M">The message type that this middleware is specifically called for</typeparam>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        IContractConnection RegisterMiddleware<T,M>()
-            where T : IBeforeEncodeSpecificTypeMiddleware<M>, IAfterDecodeSpecificTypeMiddleware<M>
+        IContractConnection RegisterMiddleware<T, M>()
+            where T : ISpecificTypeMiddleware<M>
             where M : class;
         /// <summary>
         /// Register a middleware of a given type T to be used by the contract connection
@@ -41,7 +41,7 @@ namespace MQContract.Interfaces
         /// <typeparam name="M">The message type that this middleware is specifically called for</typeparam>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         IContractConnection RegisterMiddleware<T, M>(Func<T> constructInstance)
-            where T : IBeforeEncodeSpecificTypeMiddleware<M>, IAfterDecodeSpecificTypeMiddleware<M>
+            where T : ISpecificTypeMiddleware<M>
             where M : class;
         /// <summary>
         /// Called to activate the metrics tracking middleware for this connection instance
@@ -51,24 +51,24 @@ namespace MQContract.Interfaces
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         /// <remarks>
         /// For the Meter metrics, all durations are in ms and the following values and patterns will apply:
-        /// mqcontract.messages.sent.count = count of messages sent (Counter<long>)
-        /// mqcontract.messages.sent.bytes = count of bytes sent (message data) (Counter<long>)
-        /// mqcontract.messages.received.count = count of messages received (Counter<long>)
-        /// mqcontract.messages.received.bytes = count of bytes received (message data) (Counter<long>)
-        /// mqcontract.messages.encodingduration = milliseconds to encode messages (Histogram<double>)
-        /// mqcontract.messages.decodingduration = milliseconds to decode messages (Histogram<double>)
-        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.sent.count = count of messages sent of a given type (Counter<long>)
-        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.sent.bytes = count of bytes sent (message data) of a given type (Counter<long>)
-        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.received.count = count of messages received of a given type (Counter<long>)
-        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.received.bytes = count of bytes received (message data) of a given type (Counter<long>)
-        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.encodingduration = milliseconds to encode messages of a given type (Histogram<double>)
-        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.decodingduration = milliseconds to decode messages of a given type (Histogram<double>)
-        /// mqcontract.channels.{Channel}.sent.count = count of messages sent for a given channel (Counter<long>)
-        /// mqcontract.channels.{Channel}.sent.bytes = count of bytes sent (message data) for a given channel (Counter<long>)
-        /// mqcontract.channels.{Channel}.received.count = count of messages received for a given channel (Counter<long>)
-        /// mqcontract.channels.{Channel}.received.bytes = count of bytes received (message data) for a given channel (Counter<long>)
-        /// mqcontract.channels.{Channel}.encodingduration = milliseconds to encode messages for a given channel (Histogram<double>)
-        /// mqcontract.channels.{Channel}.decodingduration = milliseconds to decode messages for a given channel (Histogram<double>)
+        /// mqcontract.messages.sent.count = count of messages sent (Counter&lt;long&gt;)
+        /// mqcontract.messages.sent.bytes = count of bytes sent (message data) (Counter&lt;long&gt;)
+        /// mqcontract.messages.received.count = count of messages received (Counter&lt;long&gt;)
+        /// mqcontract.messages.received.bytes = count of bytes received (message data) (Counter&lt;long&gt;)
+        /// mqcontract.messages.encodingduration = milliseconds to encode messages (Histogram&lt;double&gt;)
+        /// mqcontract.messages.decodingduration = milliseconds to decode messages (Histogram&lt;double&gt;)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.sent.count = count of messages sent of a given type (Counter&lt;long&gt;)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.sent.bytes = count of bytes sent (message data) of a given type (Counter&lt;long&gt;)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.received.count = count of messages received of a given type (Counter&lt;long&gt;)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.received.bytes = count of bytes received (message data) of a given type (Counter&lt;long&gt;)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.encodingduration = milliseconds to encode messages of a given type (Histogram&lt;double&gt;)
+        /// mqcontract.types.{MessageTypeName}.{MessageVersion(_ instead of .)}.decodingduration = milliseconds to decode messages of a given type (Histogram&lt;double&gt;)
+        /// mqcontract.channels.{Channel}.sent.count = count of messages sent for a given channel (Counter&lt;long&gt;)
+        /// mqcontract.channels.{Channel}.sent.bytes = count of bytes sent (message data) for a given channel (Counter&lt;long&gt;)
+        /// mqcontract.channels.{Channel}.received.count = count of messages received for a given channel (Counter&lt;long&gt;)
+        /// mqcontract.channels.{Channel}.received.bytes = count of bytes received (message data) for a given channel (Counter&lt;long&gt;)
+        /// mqcontract.channels.{Channel}.encodingduration = milliseconds to encode messages for a given channel (Histogram&lt;double&gt;)
+        /// mqcontract.channels.{Channel}.decodingduration = milliseconds to decode messages for a given channel (Histogram&lt;double&gt;)
         /// </remarks>
         IContractConnection AddMetrics(Meter? meter, bool useInternal);
         /// <summary>

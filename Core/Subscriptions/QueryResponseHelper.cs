@@ -8,7 +8,7 @@ namespace MQContract.Subscriptions
         private const string QUERY_IDENTIFIER_HEADER = "_QueryClientID";
         private const string REPLY_ID = "_QueryReplyID";
         private const string REPLY_CHANNEL_HEADER = "_QueryReplyChannel";
-        private static readonly List<string> REQUIRED_HEADERS = [QUERY_IDENTIFIER_HEADER, REPLY_ID, REPLY_CHANNEL_HEADER];
+        private static readonly string[] REQUIRED_HEADERS = [QUERY_IDENTIFIER_HEADER, REPLY_ID, REPLY_CHANNEL_HEADER];
 
         public static MessageHeader StripHeaders(ServiceMessage originalMessage,out Guid queryClientID,out Guid replyID,out string? replyChannel)
         {
@@ -36,7 +36,7 @@ namespace MQContract.Subscriptions
             );
 
         public static bool IsValidMessage(ReceivedServiceMessage serviceMessage)
-            => REQUIRED_HEADERS.All(key=>serviceMessage.Header.Keys.Contains(key));
+            => Array.TrueForAll(REQUIRED_HEADERS,key=>serviceMessage.Header.Keys.Contains(key));
 
         public static async Task<Tuple<TaskCompletionSource<ServiceQueryResult>, CancellationTokenSource>> StartResponseListenerAsync(IMessageServiceConnection connection,TimeSpan timeout,Guid identifier,Guid callID,string replyChannel,CancellationToken cancellationToken)
         {

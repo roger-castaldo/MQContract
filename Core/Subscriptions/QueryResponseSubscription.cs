@@ -4,15 +4,14 @@ using MQContract.Messages;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class QueryResponseSubscription<Q,R>(
+    internal sealed class QueryResponseSubscription<T>(
         Func<ReceivedServiceMessage,string, ValueTask<ServiceMessage>> processMessage,
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, 
         bool synchronous=false,ILogger? logger=null)
-        : SubscriptionBase<Q>(mapChannel,channel,synchronous)
-        where Q : class
-        where R : class
+        : SubscriptionBase<T>(mapChannel,channel,synchronous)
+        where T : class
     {
         private ManualResetEventSlim? manualResetEvent = new(true);
         private CancellationTokenSource? token = new();
@@ -44,7 +43,7 @@ namespace MQContract.Subscriptions
                                     QueryResponseHelper.StripHeaders(serviceMessage, out var queryClientID, out var replyID, out var replyChannel),
                                     serviceMessage.Data
                                 ),
-                                replyChannel
+                                replyChannel!
                             );
                             await connection.PublishAsync(QueryResponseHelper.EncodeMessage(result, queryClientID, replyID, null, replyChannel), cancellationToken);
                         }
