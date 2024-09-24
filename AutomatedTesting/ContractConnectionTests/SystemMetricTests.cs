@@ -135,6 +135,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 channel:channel);
             var result = await contractConnection.PublishAsync<BasicMessage>(testMessage,channel:channel);
             _ = await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1));
+            await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
             #endregion
 
             #region Assert
@@ -215,6 +216,7 @@ namespace AutomatedTesting.ContractConnectionTests
             }, (error) => { },
             channel:channel);
             _ = await contractConnection.QueryAsync<BasicQueryMessage>(message,channel:channel);
+            await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
             #endregion
 
             #region Assert

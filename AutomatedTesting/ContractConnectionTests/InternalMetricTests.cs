@@ -66,6 +66,41 @@ namespace AutomatedTesting.ContractConnectionTests
         }
 
         [TestMethod]
+        public void TestInternalMetricGetSnapshotsWithoutEnabling()
+        {
+            #region Arrange
+            var channel = "TestInternalMetricsChannel";
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
+                .AddMetrics(null, false);
+            #endregion
+
+            #region Act
+            IContractMetric?[] sentMetrics = [
+                contractConnection.GetSnapshot(true),
+                contractConnection.GetSnapshot(typeof(BasicMessage),true),
+                contractConnection.GetSnapshot<BasicMessage>(true),
+                contractConnection.GetSnapshot(channel,true)
+            ];
+            IContractMetric?[] receivedMetrics = [
+                contractConnection.GetSnapshot(false),
+                contractConnection.GetSnapshot(typeof(BasicMessage),false),
+                contractConnection.GetSnapshot<BasicMessage>(false),
+                contractConnection.GetSnapshot(channel,false)
+            ];
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(Array.TrueForAll(sentMetrics,m => m==null));
+            Assert.IsTrue(Array.TrueForAll(receivedMetrics,m => m==null));
+            #endregion
+
+            #region Verify
+            #endregion
+        }
+
+        [TestMethod]
         public async Task TestPublishAsyncSubscribeInternalMetrics()
         {
             #region Arrange
@@ -102,6 +137,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 channel:channel);
             var result = await contractConnection.PublishAsync<BasicMessage>(testMessage,channel:channel);
             _ = await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1));
+            await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
             IContractMetric?[] sentMetrics = [
                 contractConnection.GetSnapshot(true),
                 contractConnection.GetSnapshot(typeof(BasicMessage),true),
@@ -192,6 +228,7 @@ namespace AutomatedTesting.ContractConnectionTests
             }, (error) => { },
             channel:channel);
             _ = await contractConnection.QueryAsync<BasicQueryMessage>(message,channel:channel);
+            await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
             IContractMetric?[] querySentMetrics = [
                 contractConnection.GetSnapshot(typeof(BasicQueryMessage),true),
                 contractConnection.GetSnapshot<BasicQueryMessage>(true)
