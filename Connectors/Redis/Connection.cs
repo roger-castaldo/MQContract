@@ -20,7 +20,7 @@ namespace MQContract.Redis
         /// <summary>
         /// Default constructor that requires the Redis Configuration settings to be provided
         /// </summary>
-        /// <param name="configuration"></param>
+        /// <param name="configuration">The configuration to use for the redis connections</param>
         public Connection(ConfigurationOptions configuration)
         {
             connectionMultiplexer = ConnectionMultiplexer.Connect(configuration);

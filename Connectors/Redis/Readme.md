@@ -31,7 +31,7 @@ Default constructor that requires the Redis Configuration settings to be provide
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| configuration | [StackExchange.Redis.ConfigurationOptions](#T-StackExchange-Redis-ConfigurationOptions 'StackExchange.Redis.ConfigurationOptions') |  |
+| configuration | [StackExchange.Redis.ConfigurationOptions](#T-StackExchange-Redis-ConfigurationOptions 'StackExchange.Redis.ConfigurationOptions') | The configuration to use for the redis connections |
 
 <a name='P-MQContract-Redis-Connection-DefaultTimout'></a>
 ### DefaultTimout `property`

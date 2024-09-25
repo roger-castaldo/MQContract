@@ -1,18 +1,11 @@
 ﻿using HiveMQtt.Client;
 using HiveMQtt.Client.Options;
-using HiveMQtt.Client.Results;
+using HiveMQtt.MQTT5.Types;
 using MQContract.Interfaces.Service;
-using MQContract.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MQContract.HiveMQ
 {
-    internal class Subscription(HiveMQClientOptions clientOptions, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, 
-        string channel, string? group) : IServiceSubscription,IDisposable
+    internal class Subscription(HiveMQClientOptions clientOptions, Action<MQTT5PublishMessage> messageReceived,string channel, string? group) : IServiceSubscription,IDisposable
     {
         private readonly HiveMQClient client = new(CloneOptions(clientOptions,channel));
 
@@ -31,16 +24,8 @@ namespace MQContract.HiveMQ
 
         public async ValueTask EstablishAsync()
         {
-            client.OnMessageReceived += (sender, args) =>
-            {
-                try
-                {
-                    messageReceived(Connection.ConvertMessage(args.PublishMessage));
-                }catch(Exception e)
-                {
-                    errorReceived(e);
-                }
-            };
+            client.OnMessageReceived += (sender, args)
+                => messageReceived(args.PublishMessage);
             var connectResult = await client.ConnectAsync();
             if (connectResult.ReasonCode != HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
                 throw new Exception($"Failed to connect: {connectResult.ReasonString}");

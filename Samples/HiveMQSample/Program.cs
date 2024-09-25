@@ -1,5 +1,4 @@
-﻿using HiveMQtt.Client;
-using HiveMQtt.Client.Options;
+﻿using HiveMQtt.Client.Options;
 using Messages;
 using MQContract.HiveMQ;
 
