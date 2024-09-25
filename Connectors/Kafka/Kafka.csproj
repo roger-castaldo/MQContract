@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="../../Shared.props"/>
+	<Import Project="../../Shared.props" />
 	
   <PropertyGroup>
 	  <TargetFramework>net8.0</TargetFramework>
@@ -16,7 +16,7 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
-    <PackageReference Include="Confluent.Kafka" Version="2.5.0" />
+    <PackageReference Include="Confluent.Kafka" Version="2.5.3" />
   </ItemGroup>
 
   <ItemGroup>
