@@ -61,6 +61,10 @@ namespace Messages
                 await contractConnection.CloseAsync().ConfigureAwait(true);
             }, true);
 
+            Console.WriteLine("Awaiting 5 seconds to ensure that all subscriptions are established fully.");
+            await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            Console.WriteLine("Beginning message transmissions...");
+
             var result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Result 1 [Success:{!result.IsError}, ID:{result.ID}]");
             result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
