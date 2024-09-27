@@ -197,7 +197,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var receivedActions = new List<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 Capture.In<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(receivedActions),
                 It.IsAny<Action<Exception>>(),
@@ -248,7 +248,7 @@ namespace AutomatedTesting.ContractConnectionTests
             IContractMetric? globalSentMetrics = contractConnection.GetSnapshot(true);
             IContractMetric? globalReceivedMetrics = contractConnection.GetSnapshot(false);
             IContractMetric? channelSentMetrics = contractConnection.GetSnapshot(channel, true);
-            IContractMetric? channelRecievedMetrics = contractConnection.GetSnapshot(channel, false);
+            IContractMetric? channelReceivedMetrics = contractConnection.GetSnapshot(channel, false);
             #endregion
 
             #region Assert
@@ -258,8 +258,8 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual<ulong?>(2, globalReceivedMetrics.Messages);
             Assert.IsNotNull(channelSentMetrics);
             Assert.AreEqual<ulong?>(1, channelSentMetrics.Messages);
-            Assert.IsNotNull(channelRecievedMetrics);
-            Assert.AreEqual<ulong?>(1, channelRecievedMetrics.Messages);
+            Assert.IsNotNull(channelReceivedMetrics);
+            Assert.AreEqual<ulong?>(1, channelReceivedMetrics.Messages);
             Assert.IsTrue(Array.TrueForAll(querySentMetrics, (q) => q!=null));
             Assert.IsTrue(Array.TrueForAll(queryReceivedMetrics, (q) => q!=null));
             Assert.IsTrue(Array.TrueForAll(responseSentMetrics, (q) => q!=null));

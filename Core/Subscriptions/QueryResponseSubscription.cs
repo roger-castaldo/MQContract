@@ -20,10 +20,10 @@ namespace MQContract.Subscriptions
         {
             if (connection is IQueryableMessageServiceConnection queryableMessageServiceConnection)
                 serviceSubscription = await queryableMessageServiceConnection.SubscribeQueryAsync(
-                    serviceMessage => ProcessServiceMessageAsync(serviceMessage,string.Empty),
+                    serviceMessage => ProcessServiceMessageAsync(serviceMessage, string.Empty),
                     error => errorReceived(error),
                     MessageChannel,
-                    group:group,
+                    group: group,
                     cancellationToken: cancellationToken
                 );
             else

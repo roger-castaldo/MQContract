@@ -519,10 +519,10 @@ namespace AutomatedTesting
 
             List<ServiceMessage> messages = [];
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
+            serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
@@ -570,10 +570,10 @@ namespace AutomatedTesting
 
             List<ServiceMessage> messages = [];
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
+            serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
@@ -628,10 +628,10 @@ namespace AutomatedTesting
 
             List<ServiceMessage> messages = [];
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
+            serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
@@ -684,10 +684,10 @@ namespace AutomatedTesting
 
             List<ServiceMessage> messages = [];
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
+            serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
@@ -741,10 +741,10 @@ namespace AutomatedTesting
 
             List<ServiceMessage> messages = [];
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
+            serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
@@ -788,7 +788,7 @@ namespace AutomatedTesting
 
             var channels = new List<string>();
             
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
@@ -831,7 +831,7 @@ namespace AutomatedTesting
 
             var channels = new List<string>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
@@ -889,7 +889,7 @@ namespace AutomatedTesting
 
             var channels = new List<string>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
@@ -945,7 +945,7 @@ namespace AutomatedTesting
 
             var channels = new List<string>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
@@ -1002,7 +1002,7 @@ namespace AutomatedTesting
 
             var channels = new List<string>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),

@@ -8,6 +8,6 @@ namespace AutomatedTesting.ContractConnectionTests.Middlewares
         public static string ChangeChannel(string? channel)
             => $"{channel}-ModifiedSpecifically";
         public ValueTask<(BasicMessage message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync(IContext context, BasicMessage message, string? channel, MessageHeader messageHeader)
-            => ValueTask.FromResult((message, ChangeChannel(channel), messageHeader));
+            => ValueTask.FromResult<(BasicMessage message, string? channel, MessageHeader messageHeader)>((message, ChangeChannel(channel), messageHeader));
     }
 }

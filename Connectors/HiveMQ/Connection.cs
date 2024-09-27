@@ -9,14 +9,11 @@ namespace MQContract.HiveMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using HiveMQ
     /// </summary>
-    public class Connection : IQueryableMessageServiceConnection, IDisposable
+    public class Connection : IInboxQueryableMessageServiceConnection, IDisposable
     {
         private readonly HiveMQClientOptions clientOptions;
         private readonly HiveMQClient client;
         private readonly Guid connectionID = Guid.NewGuid();
-        private readonly SemaphoreSlim semQueryLock = new(1, 1);
-        private Subscription? responseInboxSubscription = null;
-        private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> waitingResponses = [];
         private bool disposedValue;
 
         /// <summary>
@@ -30,7 +27,7 @@ namespace MQContract.HiveMQ
             var connectTask = client.ConnectAsync();
             connectTask.Wait();
             if (connectTask.Result.ReasonCode!=HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
-                throw new Exception($"Failed to connect: {connectTask.Result.ReasonString}");
+                throw new ConnectionFailedException(connectTask.Result.ReasonString);
         }
 
         uint? IMessageServiceConnection.MaxMessageBodySize => (uint?)clientOptions.ClientMaximumPacketSize;
@@ -38,14 +35,10 @@ namespace MQContract.HiveMQ
         /// <summary>
         /// The default timeout to allow for a Query Response call to execute, defaults to 1 minute
         /// </summary>
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
+        public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
 
         async ValueTask IMessageServiceConnection.CloseAsync()
-        {
-            if (responseInboxSubscription!=null)
-                await ((IServiceSubscription)responseInboxSubscription).EndAsync();
-            await client.DisconnectAsync();
-        }
+            => await client.DisconnectAsync();
 
         private const string MessageID = "_ID";
         private const string MessageTypeID = "_MessageTypeID";
@@ -65,7 +58,7 @@ namespace MQContract.HiveMQ
                         new(MessageID,message.ID),
                         new(MessageTypeID,message.MessageTypeID)
                     ])
-                    .Concat(responseID!=null ?[new(ResponseID,responseID.ToString())] : [])
+                    .Concat(responseID!=null ?[new(ResponseID,responseID.Value.ToString())] : [])
                 )
             };
 
@@ -114,62 +107,44 @@ namespace MQContract.HiveMQ
 
         private string InboxChannel => $"_inbox/{connectionID}";
 
-        async ValueTask EnsureResponseSubscriptionRunning()
+        async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
         {
-            await semQueryLock.WaitAsync();
-            if (responseInboxSubscription==null)
-            {
-                responseInboxSubscription = new Subscription(
-                    clientOptions,
-                    async (msg) =>
+            var result = new Subscription(
+                clientOptions,
+                (msg) =>
+                {
+                    var incomingMessage = ConvertMessage(msg, out var responseID);
+                    if (responseID!=null && Guid.TryParse(responseID, out var responseGuid))
                     {
-                        var incomingMessage = ConvertMessage(msg, out var responseID);
-                        if (responseID!=null && Guid.TryParse(responseID,out var responseGuid))
-                        {
-                            await semQueryLock.WaitAsync();
-                            if (waitingResponses.TryGetValue(responseGuid,out var taskCompletion))
-                            {
-                                taskCompletion.TrySetResult(new(
-                                    incomingMessage.ID,
-                                    incomingMessage.Header,
-                                    incomingMessage.MessageTypeID,
-                                    incomingMessage.Data
-                                ));
-                            }
-                            semQueryLock.Release();
-                        }
-                    },
-                    InboxChannel,
-                    null
-                );
-                await responseInboxSubscription.EstablishAsync();
-            }
-            semQueryLock.Release();
+                        messageReceived(new(
+                            incomingMessage.ID,
+                            incomingMessage.MessageTypeID,
+                            InboxChannel,
+                            incomingMessage.Header,
+                            responseGuid,
+                            incomingMessage.Data,
+                            incomingMessage.Acknowledge
+                        ));
+                    }
+                },
+                InboxChannel,
+                null
+            );
+            await result.EstablishAsync();
+            return result;
         }
 
-        async ValueTask<ServiceQueryResult> IQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
+        async ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
         {
-            await EnsureResponseSubscriptionRunning();
-            var responseGuid = Guid.NewGuid();
-            var responseSource = new TaskCompletionSource<ServiceQueryResult>();
-            await semQueryLock.WaitAsync();
-            waitingResponses.Add(responseGuid, responseSource);
-            semQueryLock.Release();
             try
             {
-                _ = await client.PublishAsync(ConvertMessage(message,InboxChannel,responseGuid), cancellationToken);
+                _ = await client.PublishAsync(ConvertMessage(message,responseTopic:InboxChannel,responseID:correlationID), cancellationToken);
             }
             catch (Exception e)
             {
-                await semQueryLock.WaitAsync();
-                waitingResponses.Remove(responseGuid);
-                semQueryLock.Release();
-                throw new InvalidOperationException("Unable to transmit query request");
+                return new(message.ID, e.Message);
             }
-            await responseSource.Task.WaitAsync(timeout, cancellationToken);
-            if (responseSource.Task.IsCompleted)
-                return responseSource.Task.Result;
-            throw new TimeoutException();
+            return new(message.ID);
         }
 
         async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
@@ -181,14 +156,16 @@ namespace MQContract.HiveMQ
                     try
                     {
                         var result = await messageReceived(ConvertMessage(msg, out var responseID));
-                        _ = await client.PublishAsync(ConvertMessage(result,responseID:new Guid(responseID!),respondToTopic:msg.ResponseTopic), cancellationToken);
+                        _ = await client.PublishAsync(ConvertMessage(result, responseID: new Guid(responseID!), respondToTopic: msg.ResponseTopic), cancellationToken);
                     }
                     catch (Exception e)
                     {
                         errorReceived(e);
                     }
-                }
-                , channel, group);
+                }, 
+                channel, 
+                group
+            );
             await result.EstablishAsync();
             return result;
         }
@@ -200,8 +177,6 @@ namespace MQContract.HiveMQ
                 if (disposing)
                 {
                     client.Dispose();
-                    ((IDisposable?)responseInboxSubscription)?.Dispose();
-                    semQueryLock.Dispose();
                 }
                 disposedValue=true;
             }

@@ -7,6 +7,6 @@ namespace AutomatedTesting.ContractConnectionTests.Middlewares
         : IBeforeEncodeMiddleware
     {
         public ValueTask<(T message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
-            => ValueTask.FromResult((message, service.Name, messageHeader));
+            => ValueTask.FromResult<(T message, string? channel, MessageHeader messageHeader)>((message, service.Name, messageHeader));
     }
 }

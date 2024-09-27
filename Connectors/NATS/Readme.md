@@ -5,7 +5,7 @@
 
 - [Connection](#T-MQContract-NATS-Connection 'MQContract.NATS.Connection')
   - [#ctor(options)](#M-MQContract-NATS-Connection-#ctor-NATS-Client-Core-NatsOpts- 'MQContract.NATS.Connection.#ctor(NATS.Client.Core.NatsOpts)')
-  - [DefaultTimout](#P-MQContract-NATS-Connection-DefaultTimout 'MQContract.NATS.Connection.DefaultTimout')
+  - [DefaultTimeout](#P-MQContract-NATS-Connection-DefaultTimeout 'MQContract.NATS.Connection.DefaultTimeout')
   - [MaxMessageBodySize](#P-MQContract-NATS-Connection-MaxMessageBodySize 'MQContract.NATS.Connection.MaxMessageBodySize')
   - [CreateStreamAsync(streamConfig,cancellationToken)](#M-MQContract-NATS-Connection-CreateStreamAsync-NATS-Client-JetStream-Models-StreamConfig,System-Threading-CancellationToken- 'MQContract.NATS.Connection.CreateStreamAsync(NATS.Client.JetStream.Models.StreamConfig,System.Threading.CancellationToken)')
   - [RegisterConsumerConfig(channelName,consumerConfig)](#M-MQContract-NATS-Connection-RegisterConsumerConfig-System-String,NATS-Client-JetStream-Models-ConsumerConfig- 'MQContract.NATS.Connection.RegisterConsumerConfig(System.String,NATS.Client.JetStream.Models.ConsumerConfig)')
@@ -35,8 +35,8 @@ Primary constructor to create an instance using the supplied configuration optio
 | ---- | ---- | ----------- |
 | options | [NATS.Client.Core.NatsOpts](#T-NATS-Client-Core-NatsOpts 'NATS.Client.Core.NatsOpts') |  |
 
-<a name='P-MQContract-NATS-Connection-DefaultTimout'></a>
-### DefaultTimout `property`
+<a name='P-MQContract-NATS-Connection-DefaultTimeout'></a>
+### DefaultTimeout `property`
 
 ##### Summary
 

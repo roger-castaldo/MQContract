@@ -1,24 +1,21 @@
 ﻿using MQContract.Messages;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MQContract.Interfaces.Service
 {
     /// <summary>
-    /// Extends the base MessageServiceConnection Interface to Response Query messaging methodology if the underlying service supports it
+    /// Used to identify a message service that supports response query style messaging, either through inbox or directly
     /// </summary>
     public interface IQueryableMessageServiceConnection : IMessageServiceConnection
     {
         /// <summary>
         /// The default timeout to use for RPC calls when it's not specified
         /// </summary>
-        TimeSpan DefaultTimout { get; }
-        /// <summary>
-        /// Implements a call to submit a response query request into the underlying service
-        /// </summary>
-        /// <param name="message">The message to query with</param>
-        /// <param name="timeout">The timeout for recieving a response</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A Query Result instance based on what happened</returns>
-        ValueTask<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken = new CancellationToken());
+        TimeSpan DefaultTimeout { get; }
         /// <summary>
         /// Implements a call to create a subscription to a given channel as a member of a given group for responding to queries
         /// </summary>

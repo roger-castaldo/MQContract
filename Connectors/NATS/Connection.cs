@@ -13,7 +13,7 @@ namespace MQContract.NATS
     /// <summary>
     /// This is the MessageServiceConnection implementation for using NATS.io
     /// </summary>
-    public sealed class Connection : IQueryableMessageServiceConnection,IPingableMessageServiceConnection, IAsyncDisposable,IDisposable
+    public sealed class Connection : IQueryResponseMessageServiceConnection,IPingableMessageServiceConnection, IAsyncDisposable,IDisposable
     {
         private const string MESSAGE_IDENTIFIER_HEADER = "_MessageID";
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
@@ -63,7 +63,7 @@ namespace MQContract.NATS
         /// The default timeout to use for RPC calls when not specified by class or in the call.
         /// DEFAULT: 30 seconds
         /// </summary>
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
+        public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// Called to define a Stream inside the underlying NATS context.  This is an exposure of the NatsJSContext.CreateStreamAsync
@@ -149,7 +149,7 @@ namespace MQContract.NATS
             }
         }
 
-        async ValueTask<ServiceQueryResult> IQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
+        async ValueTask<ServiceQueryResult> IQueryResponseMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var result = await natsConnection.RequestAsync<byte[], byte[]>(
                 message.Channel,

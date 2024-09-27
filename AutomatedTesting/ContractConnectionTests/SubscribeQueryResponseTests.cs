@@ -25,7 +25,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 Capture.In<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(receivedActions),
                 Capture.In<Action<Exception>>(errorActions),
@@ -103,7 +103,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var channels = new List<string>();
             var channelName = "TestSubscribeQueryResponseWithSpecificChannel";
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
@@ -151,7 +151,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var groupName = "TestSubscribeQueryResponseWithSpecificGroup";
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
@@ -194,7 +194,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var serviceSubscription = new Mock<IServiceSubscription>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
@@ -228,7 +228,7 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeQueryResponseAsyncReturnFailedSubscription()
         {
             #region Arrange
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
@@ -264,7 +264,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceSubscription.Setup(x => x.EndAsync())
                 .Returns(ValueTask.CompletedTask);
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
                 It.IsAny<Action<Exception>>(),
@@ -306,7 +306,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 Capture.In<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(receivedActions),
                 Capture.In<Action<Exception>>(errorActions),
@@ -396,7 +396,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 Capture.In<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(receivedActions),
                 Capture.In<Action<Exception>>(errorActions),
@@ -462,7 +462,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceSubscription.Setup(x => x.EndAsync())
                 .Returns(ValueTask.CompletedTask);
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
 
             serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -498,7 +498,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceSubscription.Setup(x => x.DisposeAsync())
                 .Returns(ValueTask.CompletedTask);
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
 
             serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -531,7 +531,7 @@ namespace AutomatedTesting.ContractConnectionTests
         {
             #region Arrange
             var serviceSubscription = new Mock<IDisposable>();
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
 
             serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -565,7 +565,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var serviceSubscription = new Mock<IDisposable>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
 
             serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -612,7 +612,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var receivedActions = new List<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 Capture.In<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(receivedActions),
                 It.IsAny<Action<Exception>>(),

@@ -12,7 +12,7 @@ namespace MQContract.Middleware
     {
         private const string StopWatchKey = "_MetricStopwatch";
         private const string MessageReceivedChannelKey = "_MetricMessageReceivedChannel";
-        private const string MessageRecievedSizeKey = "_MetricMessageRecievedSize";
+        private const string MessageReceivedSizeKey = "_MetricMessageReceivedSize";
 
         private readonly SystemMetricTracker? systemTracker;
         private readonly InternalMetricTracker? internalTracker;
@@ -57,10 +57,10 @@ namespace MQContract.Middleware
         {
             var stopWatch = (Stopwatch?)context[StopWatchKey];
             stopWatch?.Stop();
-            await AddStat(typeof(T), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageRecievedSizeKey]??0, stopWatch);
+            await AddStat(typeof(T), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageReceivedSizeKey]??0, stopWatch);
             context[StopWatchKey]=null;
             context[MessageReceivedChannelKey]=null;
-            context[MessageRecievedSizeKey]=null;
+            context[MessageReceivedSizeKey]=null;
             return (message,messageHeader);
         }
 
@@ -76,7 +76,7 @@ namespace MQContract.Middleware
         public ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID,string messageChannel, ReadOnlyMemory<byte> data)
         {
             context[MessageReceivedChannelKey] = messageChannel;
-            context[MessageRecievedSizeKey] = data.Length;
+            context[MessageReceivedSizeKey] = data.Length;
             var stopwatch = new Stopwatch();
             context[StopWatchKey] = stopwatch;
             stopwatch.Start();

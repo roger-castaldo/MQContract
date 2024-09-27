@@ -17,7 +17,7 @@ namespace MQContract.KubeMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using KubeMQ
     /// </summary>
-    public sealed class Connection : IQueryableMessageServiceConnection,IPingableMessageServiceConnection, IDisposable,IAsyncDisposable
+    public sealed class Connection : IQueryResponseMessageServiceConnection,IPingableMessageServiceConnection, IDisposable,IAsyncDisposable
     {
         /// <summary>
         /// These are the different read styles to use when subscribing to a stored Event PubSub
@@ -125,7 +125,7 @@ namespace MQContract.KubeMQ
 
         uint? IMessageServiceConnection.MaxMessageBodySize => (uint)Math.Abs(connectionOptions.MaxBodySize);
 
-        TimeSpan IQueryableMessageServiceConnection.DefaultTimout => TimeSpan.FromMilliseconds(connectionOptions.DefaultRPCTimeout??30000);
+        TimeSpan IQueryableMessageServiceConnection.DefaultTimeout => TimeSpan.FromMilliseconds(connectionOptions.DefaultRPCTimeout??30000);
 
         private KubeClient EstablishConnection()
         { 
@@ -182,7 +182,7 @@ namespace MQContract.KubeMQ
             }
         }
 
-        async ValueTask<ServiceQueryResult> IQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
+        async ValueTask<ServiceQueryResult> IQueryResponseMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
 #pragma warning disable S2139 // Exceptions should be either logged or rethrown but not both
             try

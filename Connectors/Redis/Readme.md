@@ -5,7 +5,7 @@
 
 - [Connection](#T-MQContract-Redis-Connection 'MQContract.Redis.Connection')
   - [#ctor(configuration)](#M-MQContract-Redis-Connection-#ctor-StackExchange-Redis-ConfigurationOptions- 'MQContract.Redis.Connection.#ctor(StackExchange.Redis.ConfigurationOptions)')
-  - [DefaultTimout](#P-MQContract-Redis-Connection-DefaultTimout 'MQContract.Redis.Connection.DefaultTimout')
+  - [DefaultTimeout](#P-MQContract-Redis-Connection-DefaultTimeout 'MQContract.Redis.Connection.DefaultTimeout')
   - [MaxMessageBodySize](#P-MQContract-Redis-Connection-MaxMessageBodySize 'MQContract.Redis.Connection.MaxMessageBodySize')
   - [DefineConsumerGroupAsync(channel,group)](#M-MQContract-Redis-Connection-DefineConsumerGroupAsync-System-String,System-String- 'MQContract.Redis.Connection.DefineConsumerGroupAsync(System.String,System.String)')
 
@@ -33,8 +33,8 @@ Default constructor that requires the Redis Configuration settings to be provide
 | ---- | ---- | ----------- |
 | configuration | [StackExchange.Redis.ConfigurationOptions](#T-StackExchange-Redis-ConfigurationOptions 'StackExchange.Redis.ConfigurationOptions') | The configuration to use for the redis connections |
 
-<a name='P-MQContract-Redis-Connection-DefaultTimout'></a>
-### DefaultTimout `property`
+<a name='P-MQContract-Redis-Connection-DefaultTimeout'></a>
+### DefaultTimeout `property`
 
 ##### Summary
 

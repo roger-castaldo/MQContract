@@ -31,6 +31,7 @@
 - [MessageConversionException](#T-MQContract-MessageConversionException 'MQContract.MessageConversionException')
 - [QueryExecutionFailedException](#T-MQContract-QueryExecutionFailedException 'MQContract.QueryExecutionFailedException')
 - [QueryResponseException](#T-MQContract-QueryResponseException 'MQContract.QueryResponseException')
+- [QuerySubmissionFailedException](#T-MQContract-QuerySubmissionFailedException 'MQContract.QuerySubmissionFailedException')
 - [QueryTimeoutException](#T-MQContract-QueryTimeoutException 'MQContract.QueryTimeoutException')
 - [SubscriptionFailedException](#T-MQContract-SubscriptionFailedException 'MQContract.SubscriptionFailedException')
 - [UnknownResponseTypeException](#T-MQContract-UnknownResponseTypeException 'MQContract.UnknownResponseTypeException')
@@ -489,6 +490,17 @@ MQContract
 ##### Summary
 
 Thrown when a Query call is made and there is an error in the response
+
+<a name='T-MQContract-QuerySubmissionFailedException'></a>
+## QuerySubmissionFailedException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown when a query call is being made to an inbox style service and the message fails to transmit
 
 <a name='T-MQContract-QueryTimeoutException'></a>
 ## QueryTimeoutException `type`

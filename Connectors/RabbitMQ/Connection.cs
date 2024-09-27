@@ -9,15 +9,15 @@ namespace MQContract.RabbitMQ
     /// <summary>
     /// This is the MessageServiceConnection implemenation for using RabbitMQ
     /// </summary>
-    public sealed class Connection : IQueryableMessageServiceConnection, IDisposable
+    public sealed class Connection : IInboxQueryableMessageServiceConnection, IDisposable
     {
+        private const string InboxExchange = "_Inbox";
+
         private readonly ConnectionFactory factory;
         private readonly IConnection conn;
         private readonly IModel channel;
         private readonly SemaphoreSlim semaphore = new(1, 1);
-        private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> awaitingResponses = [];
-        private IModel? responseListener;
-        private string? responseListenerTag;
+        private readonly string inboxChannel;
         private bool disposedValue;
 
         /// <summary>
@@ -32,6 +32,7 @@ namespace MQContract.RabbitMQ
             conn = this.factory.CreateConnection();
             channel = conn.CreateModel();
             MaxMessageBodySize = factory.MaxMessageSize;
+            inboxChannel = $"{InboxExchange}.{factory.ClientProvidedName}";
         }
 
         /// <summary>
@@ -84,7 +85,7 @@ namespace MQContract.RabbitMQ
         /// The default timeout to use for RPC calls when not specified by class or in the call.
         /// DEFAULT: 1 minute
         /// </summary>
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
+        public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
 
         internal static (IBasicProperties props, ReadOnlyMemory<byte>) ConvertMessage(ServiceMessage message, IModel channel, Guid? messageId = null)
         {
@@ -178,76 +179,62 @@ namespace MQContract.RabbitMQ
                 errorReceived
             ));
 
-        private const string InboxChannel = "_Inbox";
-
-        async ValueTask<ServiceQueryResult> IQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
         {
-            var messageID = Guid.NewGuid();
-            (var props, var data) = ConvertMessage(message, this.channel,messageID);
-            props.ReplyTo = $"{InboxChannel}.${factory.ClientProvidedName}";
-            var success = true;
-            await semaphore.WaitAsync(cancellationToken);
-            var result = new TaskCompletionSource<ServiceQueryResult>();
-            awaitingResponses.Add(messageID, result);
-            if (responseListener==null)
-            {
-                ExchangeDeclare(InboxChannel, ExchangeType.Direct);
-                QueueDeclare(props.ReplyTo);
-                responseListener = this.conn.CreateModel();
-                responseListener.QueueBind(props.ReplyTo, InboxChannel, props.ReplyTo);
-                responseListener.BasicQos(0, 1, false);
-                var consumer = new EventingBasicConsumer(responseListener!);
-                consumer.Received+=(sender, @event) =>
+            channel.ExchangeDeclare(InboxExchange, ExchangeType.Direct, durable: false, autoDelete: true);
+            channel.QueueDeclare(inboxChannel, durable: false, exclusive: false, autoDelete: true);
+            return ValueTask.FromResult<IServiceSubscription>(new Subscription(
+                conn,
+                InboxExchange,
+                inboxChannel,
+                (@event, model, acknowledge) =>
                 {
-                    var responseMessage = ConvertMessage(@event, string.Empty, () => ValueTask.CompletedTask, out var messageId);
+                    var responseMessage = ConvertMessage(@event, string.Empty, acknowledge, out var messageId);
                     if (messageId!=null)
-                    {
-                        semaphore.Wait();
-                        if (awaitingResponses.TryGetValue(messageId.Value, out var taskCompletionSource))
-                        {
-                            taskCompletionSource.TrySetResult(new(
-                                responseMessage.ID,
-                                responseMessage.Header,
-                                responseMessage.MessageTypeID,
-                                responseMessage.Data
-                            ));
-                            responseListener.BasicAck(@event.DeliveryTag, false);
-                            awaitingResponses.Remove(messageId.Value);
-                        }
-                        semaphore.Release();
-                    }
-                };
-                responseListenerTag = responseListener.BasicConsume(props.ReplyTo, false, consumer);
-            }
+                        messageReceived(new(
+                            responseMessage.ID,
+                            responseMessage.MessageTypeID,
+                            inboxChannel,
+                            responseMessage.Header,
+                            messageId.Value,
+                            responseMessage.Data,
+                            acknowledge
+                        ));
+                },
+                (error) => { },
+                routingKey:inboxChannel
+            ));
+        }
+
+        async ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
+        {
+            (var props, var data) = ConvertMessage(message, this.channel, correlationID);
+            props.ReplyTo = inboxChannel;
+            await semaphore.WaitAsync(cancellationToken);
+            TransmissionResult result;
             try
             {
                 channel.BasicPublish(message.Channel, string.Empty, props, data);
+                result = new TransmissionResult(message.ID);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                success=false;
+                result = new TransmissionResult(message.ID, e.Message);
             }
-            if (!success)
-                awaitingResponses.Remove(messageID);
             semaphore.Release();
-            if (!success)
-                throw new InvalidOperationException("An error occured attempting to submit the requested query");
-            await result.Task.WaitAsync(timeout, cancellationToken);
-            if (result.Task.IsCompleted)
-                return result.Task.Result;
-            throw new TimeoutException();
+            return result;
         }
 
         ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-         => ValueTask.FromResult<IServiceSubscription?>(ProduceSubscription(conn, channel, group,
-                async (@event,model, acknowledge) =>
+        => ValueTask.FromResult<IServiceSubscription?>(ProduceSubscription(conn, channel, group,
+                async (@event, model, acknowledge) =>
                 {
-                    var result = await messageReceived(ConvertMessage(@event, channel, acknowledge,out var messageID));
+                    var result = await messageReceived(ConvertMessage(@event, channel, acknowledge, out var messageID));
+                    (var props, var data) = ConvertMessage(result, model, messageID);
                     await semaphore.WaitAsync(cancellationToken);
                     try
                     {
-                        (var props, var data) = ConvertMessage(result,model,messageID);
-                        this.channel.BasicPublish(InboxChannel, @event.BasicProperties.ReplyTo, props, data);
+                        this.channel.BasicPublish(InboxExchange, @event.BasicProperties.ReplyTo, props, data);
                     }
                     catch (Exception e)
                     {
@@ -273,11 +260,6 @@ namespace MQContract.RabbitMQ
                     semaphore.Wait();
                     channel.Close();
                     channel.Dispose();
-                    if (responseListener!=null)
-                    {
-                        responseListener.BasicCancel(responseListenerTag);
-                        responseListener.Close();
-                    }
                     conn.Close();
                     conn.Dispose();
                     semaphore.Release();

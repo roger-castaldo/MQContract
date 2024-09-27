@@ -5,7 +5,7 @@
 
 - [Connection](#T-MQContract-RabbitMQ-Connection 'MQContract.RabbitMQ.Connection')
   - [#ctor(factory)](#M-MQContract-RabbitMQ-Connection-#ctor-RabbitMQ-Client-ConnectionFactory- 'MQContract.RabbitMQ.Connection.#ctor(RabbitMQ.Client.ConnectionFactory)')
-  - [DefaultTimout](#P-MQContract-RabbitMQ-Connection-DefaultTimout 'MQContract.RabbitMQ.Connection.DefaultTimout')
+  - [DefaultTimeout](#P-MQContract-RabbitMQ-Connection-DefaultTimeout 'MQContract.RabbitMQ.Connection.DefaultTimeout')
   - [MaxMessageBodySize](#P-MQContract-RabbitMQ-Connection-MaxMessageBodySize 'MQContract.RabbitMQ.Connection.MaxMessageBodySize')
   - [ExchangeDeclare(exchange,type,durable,autoDelete,arguments)](#M-MQContract-RabbitMQ-Connection-ExchangeDeclare-System-String,System-String,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}- 'MQContract.RabbitMQ.Connection.ExchangeDeclare(System.String,System.String,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})')
   - [QueueDeclare(queue,durable,exclusive,autoDelete,arguments)](#M-MQContract-RabbitMQ-Connection-QueueDeclare-System-String,System-Boolean,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}- 'MQContract.RabbitMQ.Connection.QueueDeclare(System.String,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})')
@@ -35,8 +35,8 @@ Default constructor for creating instance
 | ---- | ---- | ----------- |
 | factory | [RabbitMQ.Client.ConnectionFactory](#T-RabbitMQ-Client-ConnectionFactory 'RabbitMQ.Client.ConnectionFactory') | The connection factory to use that was built with required authentication and connection information |
 
-<a name='P-MQContract-RabbitMQ-Connection-DefaultTimout'></a>
-### DefaultTimout `property`
+<a name='P-MQContract-RabbitMQ-Connection-DefaultTimeout'></a>
+### DefaultTimeout `property`
 
 ##### Summary
 

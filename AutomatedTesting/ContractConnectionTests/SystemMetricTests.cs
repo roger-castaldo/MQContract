@@ -177,7 +177,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var receivedActions = new List<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>();
 
-            var serviceConnection = new Mock<IQueryableMessageServiceConnection>();
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 Capture.In<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(receivedActions),
                 It.IsAny<Action<Exception>>(),

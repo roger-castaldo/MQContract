@@ -10,7 +10,7 @@ namespace MQContract.Redis
     /// <summary>
     /// This is the MessageServiceConnection implementation for using Redis
     /// </summary>
-    public class Connection : IQueryableMessageServiceConnection,IAsyncDisposable,IDisposable
+    public class Connection : IQueryResponseMessageServiceConnection,IAsyncDisposable,IDisposable
     {
         private readonly ConnectionMultiplexer connectionMultiplexer;
         private readonly IDatabase database;
@@ -50,7 +50,7 @@ namespace MQContract.Redis
         /// <summary>
         /// The default timeout to allow for a Query Response call to execute, defaults to 1 minute
         /// </summary>
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromMinutes(1);
+        public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
 
         async ValueTask IMessageServiceConnection.CloseAsync()
             => await connectionMultiplexer.CloseAsync();
@@ -141,7 +141,7 @@ namespace MQContract.Redis
             return result;
         }
 
-        async ValueTask<ServiceQueryResult> IQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
+        async ValueTask<ServiceQueryResult> IQueryResponseMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var replyID = $"_inbox.{Guid.NewGuid()}";
             await database.StreamAddAsync(message.Channel, ConvertMessage(message, replyID, timeout));

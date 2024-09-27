@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MQContract.Interfaces;
+using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
+using MQContract.Middleware;
 
 namespace MQContract
 {
@@ -84,6 +86,25 @@ namespace MQContract
             foreach (var handler in specificHandlers)
                 (message, messageHeader) = await handler.AfterMessageDecodeAsync(context, message, ID, messageHeader, receivedTimestamp, processedTimeStamp);
             return (message, messageHeader);
+        }
+
+        private async ValueTask<ServiceMessage> ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes mapType,IMessageFactory<T> messageFactory, T message, bool ignoreChannel, string? channel = null, MessageHeader? messageHeader = null) 
+            where T : class
+        {
+            var context = new Context(mapType);
+            (message, channel, messageHeader) = await BeforeMessageEncodeAsync<T>(context, message, channel??messageFactory.MessageChannel, messageHeader??new([]));
+            return await AfterMessageEncodeAsync<T>(context,
+                await messageFactory.ConvertMessageAsync(message, ignoreChannel, channel, messageHeader)
+            );
+        }
+        private async ValueTask<(T message,MessageHeader header)> DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, ReceivedServiceMessage message)
+            where T : class
+        {
+            var context = new Context(mapType);
+            (var messageHeader, var data) = await BeforeMessageDecodeAsync(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
+            var taskMessage = await messageFactory.ConvertMessageAsync(logger, new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, messageHeader, data, message.Acknowledge))
+                                ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
+            return await AfterMessageDecodeAsync<T>(context, taskMessage!, message.ID, messageHeader, message.ReceivedTimestamp, DateTime.Now);
         }
     }
 }

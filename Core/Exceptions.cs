@@ -56,6 +56,15 @@
     }
 
     /// <summary>
+    /// Thrown when a query call is being made to an inbox style service and the message fails to transmit
+    /// </summary>
+    public class QuerySubmissionFailedException : Exception
+    {
+        internal QuerySubmissionFailedException(string message)
+            : base(message) { }
+    }
+
+    /// <summary>
     /// Thrown when a query call times out waiting for the response
     /// </summary>
     public class QueryTimeoutException : Exception

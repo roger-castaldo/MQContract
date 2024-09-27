@@ -54,7 +54,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var messageChannel = "TestRegisterGenericMiddlewareThrouwFunction";
             var newChannel = "NewTestRegisterGenericMiddlewareThrouwFunction";
             var headers = new MessageHeader([
-                new KeyValuePair<string,string?>("test","test")
+                new KeyValuePair<string,string>("test","test")
             ]);
 
             List<ServiceMessage> messages = [];
@@ -67,7 +67,7 @@ namespace AutomatedTesting.ContractConnectionTests
             mockMiddleware.Setup(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()))
                 .Returns((IContext context, BasicMessage message, string? channel, MessageHeader messageHeader) =>
                 {
-                    return ValueTask.FromResult((message,newChannel,headers));
+                    return ValueTask.FromResult<(BasicMessage message, string? channel, MessageHeader messageHeader)>((message,newChannel,headers));
                 });
 
 
@@ -135,7 +135,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var messageChannel = "TestRegisterSpecificTypeMiddlewareThroughFunction";
             var newChannel = "NewTestRegisterSpecificTypeMiddlewareThroughFunction";
             var headers = new MessageHeader([
-                new KeyValuePair<string,string?>("test","test")
+                new KeyValuePair<string,string>("test","test")
             ]);
 
             List<ServiceMessage> messages = [];
@@ -219,7 +219,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var testMessage = new BasicMessage("testMessage");
             var messageChannel = "TestRegisterSpecificTypeMiddlewareThroughFunction";
             var headers = new MessageHeader([
-                new KeyValuePair<string,string?>("test","test")
+                new KeyValuePair<string,string>("test","test")
             ]);
 
             var actions = new List<Action<ReceivedServiceMessage>>();

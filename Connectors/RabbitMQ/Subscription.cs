@@ -10,10 +10,10 @@ namespace MQContract.RabbitMQ
         private readonly Guid subscriptionID = Guid.NewGuid();
         private readonly string consumerTag;
 
-        public Subscription(IConnection conn,string channel,string group, Action<BasicDeliverEventArgs,IModel,Func<ValueTask>> messageReceived, Action<Exception> errorReceived)
+        public Subscription(IConnection conn,string channel,string group, Action<BasicDeliverEventArgs,IModel,Func<ValueTask>> messageReceived, Action<Exception> errorReceived,string? routingKey=null)
         {
             this.channel = conn.CreateModel();
-            this.channel.QueueBind(group, channel, subscriptionID.ToString());
+            this.channel.QueueBind(group, channel, routingKey??subscriptionID.ToString());
             this.channel.BasicQos(0, 1, false);
             var consumer = new EventingBasicConsumer(this.channel);
             consumer.Received+=(sender, @event) =>
