@@ -11,10 +11,6 @@ namespace Messages
         {
             using var sourceCancel = new CancellationTokenSource();
 
-            Console.CancelKeyPress += delegate {
-                sourceCancel.Cancel();
-            };
-
             var contractConnection = ContractConnection.Instance(serviceConnection,channelMapper:mapper);
             contractConnection.AddMetrics(null, true);
 
@@ -80,16 +76,18 @@ namespace Messages
             storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Stored Result 2 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
 
-            Console.WriteLine("Press Ctrl+C to close");
+            Console.WriteLine("Press Enter to close");
 
-            sourceCancel.Token.WaitHandle.WaitOne();
+            Console.ReadLine();
+            await sourceCancel.CancelAsync();
+
             Console.WriteLine("System completed operation");
             var jsonOptions = new JsonSerializerOptions()
             {
                 WriteIndented = true
             };
-            Console.WriteLine($"Greetings Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting),true),jsonOptions)}");
-            Console.WriteLine($"Greetings Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting),false), jsonOptions)}");
+            Console.WriteLine($"Greetings Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting), true), jsonOptions)}");
+            Console.WriteLine($"Greetings Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting), false), jsonOptions)}");
             Console.WriteLine($"StoredArrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), true), jsonOptions)}");
             Console.WriteLine($"StoredArrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), false), jsonOptions)}");
             Console.WriteLine($"Arrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), true), jsonOptions)}");

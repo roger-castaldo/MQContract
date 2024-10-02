@@ -148,7 +148,7 @@ namespace AutomatedTesting.ContractConnectionTests
             mockMiddleware.Setup(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()))
                 .Returns((IContext context, BasicMessage message, string? channel, MessageHeader messageHeader) =>
                 {
-                    return ValueTask.FromResult((message, newChannel, headers));
+                    return ValueTask.FromResult<(BasicMessage message,string? channel,MessageHeader headers)>((message, newChannel, headers));
                 });
 
 

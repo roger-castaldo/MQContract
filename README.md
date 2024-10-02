@@ -15,6 +15,7 @@ global level or on a per message type level through implementation of the approp
 * Connectors
 	* [ActiveMQ](/Connectors/ActiveMQ/Readme.md)
 	* [HiveMQ](/Connectors/HiveMQ/Readme.md)
+	* [InMemory](/Connectors/InMemory/Readme.md)
 	* [Kafka](/Connectors/Kafka/Readme.md)
 	* [KubeMQ](/Connectors/KubeMQ/Readme.md)
 	* [Nats.io](/Connectors/NATS/Readme.md)
