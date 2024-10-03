@@ -1,0 +1,36 @@
+name: "Dot Net Test Reporter"
+
+on:
+  pull_request_target:
+    types: [ opened, synchronize ]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: |
+          8.0.x
+    - name: Restore dependencies
+      run: dotnet restore  -p:TargetFramework=net8.0 AutomatedTesting
+    - name: Build-8.0
+      run: dotnet build --framework net8.0 --no-restore AutomatedTesting
+    - name: Test-8.0
+      run: dotnet test --framework net8.0 --no-build --verbosity normal AutomatedTesting
+    - name: report results
+      uses: bibipkins/dotnet-test-reporter@v1.4.0
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        comment-title: 'Unit Test Results'
+        results-path: ./**/*.trx
+        coverage-path: ./**/coverage.xml
+        coverage-threshold: 90

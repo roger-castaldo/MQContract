@@ -45,4 +45,40 @@
         internal QueryResponseException(string message)
             : base(message) { }
     }
+
+    /// <summary>
+    /// Thrown when a query call is being made to a service that does not support query response and the listener cannot be created
+    /// </summary>
+    public class QueryExecutionFailedException : Exception
+    {
+        internal QueryExecutionFailedException()
+            : base("Failed to execute query") { }
+    }
+
+    /// <summary>
+    /// Thrown when a query call is being made to an inbox style service and the message fails to transmit
+    /// </summary>
+    public class QuerySubmissionFailedException : Exception
+    {
+        internal QuerySubmissionFailedException(string message)
+            : base(message) { }
+    }
+
+    /// <summary>
+    /// Thrown when a query call times out waiting for the response
+    /// </summary>
+    public class QueryTimeoutException : Exception
+    {
+        internal QueryTimeoutException()
+            : base("Query Response request timed out") { }
+    }
+
+    /// <summary>
+    /// Thrown when a query call message is received without proper data
+    /// </summary>
+    public class InvalidQueryResponseMessageReceived : Exception
+    {
+        internal InvalidQueryResponseMessageReceived()
+            : base("A service message was received on a query response channel without the proper data") { }
+    }
 }

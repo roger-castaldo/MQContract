@@ -5,7 +5,7 @@ namespace AutomatedTesting.Converters
 {
     internal class NoChannelMessageToBasicMessage : IMessageConverter<NoChannelMessage, BasicMessage>
     {
-        public BasicMessage Convert(NoChannelMessage source)
-            => new(source.TestName);
+        public ValueTask<BasicMessage> ConvertAsync(NoChannelMessage source)
+            => ValueTask.FromResult<BasicMessage>(new(source.TestName));
     }
 }

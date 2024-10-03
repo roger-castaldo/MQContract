@@ -27,17 +27,14 @@ namespace AutomatedTesting.ContractConnectionTests
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new BasicMessage("testMessage");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
-
+            
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
-
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -59,7 +56,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -74,10 +71,10 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -99,7 +96,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -114,12 +111,12 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
             var messageHeader = new MessageHeader([new("testing", "testing")]);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -143,7 +140,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -154,19 +151,16 @@ namespace AutomatedTesting.ContractConnectionTests
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new BasicMessage("AAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaa");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(35);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -190,7 +184,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -206,14 +200,14 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
             var globalEncoder = new Mock<IMessageEncoder>();
-            globalEncoder.Setup(x => x.Encode<BasicMessage>(It.IsAny<BasicMessage>()))
-                .Returns(encodedData);
+            globalEncoder.Setup(x => x.EncodeAsync<BasicMessage>(It.IsAny<BasicMessage>()))
+                .ReturnsAsync(encodedData);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, defaultMessageEncoder: globalEncoder.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, defaultMessageEncoder: globalEncoder.Object);
             #endregion
 
             #region Act
@@ -235,8 +229,8 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            globalEncoder.Verify(x => x.Encode<BasicMessage>(It.IsAny<BasicMessage>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            globalEncoder.Verify(x => x.EncodeAsync<BasicMessage>(It.IsAny<BasicMessage>()), Times.Once);
             #endregion
         }
 
@@ -255,14 +249,14 @@ namespace AutomatedTesting.ContractConnectionTests
                 ]);
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
             var globalEncryptor = new Mock<IMessageEncryptor>();
-            globalEncryptor.Setup(x => x.Encrypt(Capture.In<byte[]>(binaries), out headers))
-                .Returns((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
+            globalEncryptor.Setup(x => x.EncryptAsync(Capture.In<byte[]>(binaries), out headers))
+                .ReturnsAsync((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, defaultMessageEncryptor: globalEncryptor.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, defaultMessageEncryptor: globalEncryptor.Object);
             #endregion
 
             #region Act
@@ -286,56 +280,8 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
-            globalEncryptor.Verify(x => x.Encrypt(It.IsAny<byte[]>(), out headers), Times.Once);
-            #endregion
-        }
-
-        [TestMethod]
-        public async Task TestPublishAsyncWithServiceChannelOptions()
-        {
-            #region Arrange
-            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
-
-            var testMessage = new BasicMessage("testMessage");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
-            var serviceChannelOptions = new TestServiceChannelOptions("PublishAsync");
-
-            List<ServiceMessage> messages = [];
-            List<IServiceChannelOptions> options = [];
-
-            var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), Capture.In<IServiceChannelOptions>(options), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
-
-            var contractConnection = new ContractConnection(serviceConnection.Object);
-            #endregion
-
-            #region Act
-            var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, options: serviceChannelOptions);
-            stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            #endregion
-
-            #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
-            Assert.IsNotNull(result);
-            Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
-            Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length>0);
-            Assert.AreEqual(testMessage, JsonSerializer.Deserialize<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
-            Assert.AreEqual(1, options.Count);
-            Assert.IsInstanceOfType<TestServiceChannelOptions>(options[0]);
-            Assert.AreEqual(serviceChannelOptions, options[0]);
-            #endregion
-
-            #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            globalEncryptor.Verify(x => x.EncryptAsync(It.IsAny<byte[]>(), out headers), Times.Once);
             #endregion
         }
 
@@ -346,17 +292,14 @@ namespace AutomatedTesting.ContractConnectionTests
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new NamedAndVersionedMessage("testMessage");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -378,7 +321,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -389,17 +332,14 @@ namespace AutomatedTesting.ContractConnectionTests
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new CustomEncoderMessage("testMessage");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages),It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -417,11 +357,11 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-CustomEncoderMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            Assert.AreEqual(testMessage, new TestMessageEncoder().Decode(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await new TestMessageEncoder().DecodeAsync(new MemoryStream(messages[0].Data.ToArray())));
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -433,19 +373,16 @@ namespace AutomatedTesting.ContractConnectionTests
 
 
             var testMessage = new CustomEncoderWithInjectionMessage("testMessage");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
             var serviceName = "TestPublishAsyncWithMessageWithDefinedServiceInjectableEncoder";
             var services = Helper.ProduceServiceProvider(serviceName);
 
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, serviceProvider: services);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, serviceProvider: services);
             #endregion
 
             #region Act
@@ -464,12 +401,12 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual("U-CustomEncoderWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
             Assert.AreEqual(testMessage,
-                new TestMessageEncoderWithInjection(services.GetRequiredService<IInjectableService>()).Decode(new MemoryStream(messages[0].Data.ToArray()))
+                await new TestMessageEncoderWithInjection(services.GetRequiredService<IInjectableService>()).DecodeAsync(new MemoryStream(messages[0].Data.ToArray()))
             );
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -480,17 +417,14 @@ namespace AutomatedTesting.ContractConnectionTests
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new CustomEncryptorMessage("testMessage");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -507,12 +441,12 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual("U-CustomEncryptorMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            var decodedData = new TestMessageEncryptor().Decrypt(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
+            var decodedData = await new TestMessageEncryptor().DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorMessage>(decodedData));
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -523,19 +457,16 @@ namespace AutomatedTesting.ContractConnectionTests
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new CustomEncryptorWithInjectionMessage("testMessage");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
             var serviceName = "TestPublishAsyncWithMessageWithDefinedServiceInjectableEncryptor";
             var services = Helper.ProduceServiceProvider(serviceName);
 
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object, serviceProvider: services);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, serviceProvider: services);
             #endregion
 
             #region Act
@@ -552,12 +483,12 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual("U-CustomEncryptorWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length>0);
-            var decodedData = new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).Decrypt(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
+            var decodedData = await new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorWithInjectionMessage>(decodedData));
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -568,22 +499,19 @@ namespace AutomatedTesting.ContractConnectionTests
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new NoChannelMessage("testMessage");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(() => contractConnection.PublishAsync<NoChannelMessage>(testMessage));
+            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.PublishAsync<NoChannelMessage>(testMessage));
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -595,7 +523,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Never);
             #endregion
         }
 
@@ -606,24 +534,21 @@ namespace AutomatedTesting.ContractConnectionTests
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new BasicMessage("testMessage");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(1);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(() => contractConnection.PublishAsync<BasicMessage>(testMessage));
+            var exception = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(async () => await contractConnection.PublishAsync<BasicMessage>(testMessage));
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -635,7 +560,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Never);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Never);
             #endregion
         }
 
@@ -647,17 +572,14 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var testMessage1 = new BasicMessage("testMessage1");
             var testMessage2 = new NoChannelMessage("testMessage2");
-            var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            serviceConnection.Setup(x => x.DefaultTimout)
-                .Returns(defaultTimeout);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
@@ -691,7 +613,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<IServiceChannelOptions>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
     }

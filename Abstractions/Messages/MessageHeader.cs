@@ -20,8 +20,12 @@
         /// <param name="appendedHeader">The additional properties to add</param>
         public MessageHeader(MessageHeader? originalHeader, Dictionary<string, string?>? appendedHeader)
             : this(
-                  (appendedHeader?.AsEnumerable().Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value??string.Empty))?? [])
-                  .Concat(originalHeader?.Keys.Select(k => new KeyValuePair<string, string>(k, originalHeader?[k]!))?? [])
+                  (appendedHeader?.AsEnumerable()
+                  .Where(pair=>pair.Value!=null)
+                  .Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value!))?? [])
+                  .Concat(originalHeader?.Keys
+                      .Where(k => !(appendedHeader?? []).Any(pair=>Equals(k,pair.Key)))
+                      .Select(k => new KeyValuePair<string, string>(k, originalHeader?[k]!))?? [])
                   .DistinctBy(k => k.Key)
             )
         { }

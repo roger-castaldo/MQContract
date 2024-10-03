@@ -16,5 +16,10 @@
         /// The number of milliseconds for the timeout to trigger for this RPC call class
         /// </summary>
         public int Value => value;
+
+        /// <summary>
+        /// The converted TimeSpan value from the supplied milliseconds value in the constructor
+        /// </summary>
+        public TimeSpan TimeSpanValue => TimeSpan.FromMilliseconds(value);
     }
 }

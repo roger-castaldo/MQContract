@@ -4,20 +4,20 @@ using NATS.Client.Core;
 namespace MQContract.NATS.Subscriptions
 {
     internal class PublishSubscription(IAsyncEnumerable<NatsMsg<byte[]>> asyncEnumerable,
-        Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved,
-        CancellationToken cancellationToken) : SubscriptionBase(cancellationToken)
+        Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived) 
+        : SubscriptionBase()
     {
         protected override async Task RunAction()
         {
-            await foreach (var msg in asyncEnumerable.WithCancellation(cancelToken.Token))
+            await foreach (var msg in asyncEnumerable.WithCancellation(CancelToken))
             {
                 try
                 {
-                    messageRecieved(ExtractMessage(msg));
+                    messageReceived(ExtractMessage(msg));
                 }
                 catch (Exception ex)
                 {
-                    errorRecieved(ex);
+                    errorReceived(ex);
                 }
             }
         }

@@ -16,15 +16,9 @@
 - [ClientDisposedException](#T-MQContract-KubeMQ-ClientDisposedException 'MQContract.KubeMQ.ClientDisposedException')
 - [Connection](#T-MQContract-KubeMQ-Connection 'MQContract.KubeMQ.Connection')
   - [#ctor(options)](#M-MQContract-KubeMQ-Connection-#ctor-MQContract-KubeMQ-ConnectionOptions- 'MQContract.KubeMQ.Connection.#ctor(MQContract.KubeMQ.ConnectionOptions)')
-  - [DefaultTimout](#P-MQContract-KubeMQ-Connection-DefaultTimout 'MQContract.KubeMQ.Connection.DefaultTimout')
-  - [MaxMessageBodySize](#P-MQContract-KubeMQ-Connection-MaxMessageBodySize 'MQContract.KubeMQ.Connection.MaxMessageBodySize')
-  - [Dispose(disposing)](#M-MQContract-KubeMQ-Connection-Dispose-System-Boolean- 'MQContract.KubeMQ.Connection.Dispose(System.Boolean)')
-  - [Dispose()](#M-MQContract-KubeMQ-Connection-Dispose 'MQContract.KubeMQ.Connection.Dispose')
-  - [PingAsync()](#M-MQContract-KubeMQ-Connection-PingAsync 'MQContract.KubeMQ.Connection.PingAsync')
-  - [PublishAsync(message,options,cancellationToken)](#M-MQContract-KubeMQ-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.KubeMQ.Connection.PublishAsync(MQContract.Messages.ServiceMessage,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
-  - [QueryAsync(message,timeout,options,cancellationToken)](#M-MQContract-KubeMQ-Connection-QueryAsync-MQContract-Messages-ServiceMessage,System-TimeSpan,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.KubeMQ.Connection.QueryAsync(MQContract.Messages.ServiceMessage,System.TimeSpan,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
-  - [SubscribeAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken)](#M-MQContract-KubeMQ-Connection-SubscribeAsync-System-Action{MQContract-Messages-RecievedServiceMessage},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.KubeMQ.Connection.SubscribeAsync(System.Action{MQContract.Messages.RecievedServiceMessage},System.Action{System.Exception},System.String,System.String,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
-  - [SubscribeQueryAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken)](#M-MQContract-KubeMQ-Connection-SubscribeQueryAsync-System-Func{MQContract-Messages-RecievedServiceMessage,System-Threading-Tasks-Task{MQContract-Messages-ServiceMessage}},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken- 'MQContract.KubeMQ.Connection.SubscribeQueryAsync(System.Func{MQContract.Messages.RecievedServiceMessage,System.Threading.Tasks.Task{MQContract.Messages.ServiceMessage}},System.Action{System.Exception},System.String,System.String,MQContract.Interfaces.Service.IServiceChannelOptions,System.Threading.CancellationToken)')
+  - [RegisterStoredChannel(channelName)](#M-MQContract-KubeMQ-Connection-RegisterStoredChannel-System-String- 'MQContract.KubeMQ.Connection.RegisterStoredChannel(System.String)')
+  - [RegisterStoredChannel(channelName,readStyle)](#M-MQContract-KubeMQ-Connection-RegisterStoredChannel-System-String,MQContract-KubeMQ-Connection-MessageReadStyle- 'MQContract.KubeMQ.Connection.RegisterStoredChannel(System.String,MQContract.KubeMQ.Connection.MessageReadStyle)')
+  - [RegisterStoredChannel(channelName,readStyle,readOffset)](#M-MQContract-KubeMQ-Connection-RegisterStoredChannel-System-String,MQContract-KubeMQ-Connection-MessageReadStyle,System-Int64- 'MQContract.KubeMQ.Connection.RegisterStoredChannel(System.String,MQContract.KubeMQ.Connection.MessageReadStyle,System.Int64)')
 - [ConnectionOptions](#T-MQContract-KubeMQ-ConnectionOptions 'MQContract.KubeMQ.ConnectionOptions')
   - [Address](#P-MQContract-KubeMQ-ConnectionOptions-Address 'MQContract.KubeMQ.ConnectionOptions.Address')
   - [AuthToken](#P-MQContract-KubeMQ-ConnectionOptions-AuthToken 'MQContract.KubeMQ.ConnectionOptions.AuthToken')
@@ -60,13 +54,13 @@
   - [Version](#P-MQContract-KubeMQ-Interfaces-IKubeMQPingResult-Version 'MQContract.KubeMQ.Interfaces.IKubeMQPingResult.Version')
 - [KubemqReflection](#T-MQContract-KubeMQ-SDK-Grpc-KubemqReflection 'MQContract.KubeMQ.SDK.Grpc.KubemqReflection')
   - [Descriptor](#P-MQContract-KubeMQ-SDK-Grpc-KubemqReflection-Descriptor 'MQContract.KubeMQ.SDK.Grpc.KubemqReflection.Descriptor')
-- [MessageReadStyle](#T-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle')
-  - [StartAtSequence](#F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartAtSequence 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle.StartAtSequence')
-  - [StartAtTime](#F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartAtTime 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle.StartAtTime')
-  - [StartAtTimeDelta](#F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartAtTimeDelta 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle.StartAtTimeDelta')
-  - [StartFromFirst](#F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartFromFirst 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle.StartFromFirst')
-  - [StartFromLast](#F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartFromLast 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle.StartFromLast')
-  - [StartNewOnly](#F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartNewOnly 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle.StartNewOnly')
+- [MessageReadStyle](#T-MQContract-KubeMQ-Connection-MessageReadStyle 'MQContract.KubeMQ.Connection.MessageReadStyle')
+  - [StartAtSequence](#F-MQContract-KubeMQ-Connection-MessageReadStyle-StartAtSequence 'MQContract.KubeMQ.Connection.MessageReadStyle.StartAtSequence')
+  - [StartAtTime](#F-MQContract-KubeMQ-Connection-MessageReadStyle-StartAtTime 'MQContract.KubeMQ.Connection.MessageReadStyle.StartAtTime')
+  - [StartAtTimeDelta](#F-MQContract-KubeMQ-Connection-MessageReadStyle-StartAtTimeDelta 'MQContract.KubeMQ.Connection.MessageReadStyle.StartAtTimeDelta')
+  - [StartFromFirst](#F-MQContract-KubeMQ-Connection-MessageReadStyle-StartFromFirst 'MQContract.KubeMQ.Connection.MessageReadStyle.StartFromFirst')
+  - [StartFromLast](#F-MQContract-KubeMQ-Connection-MessageReadStyle-StartFromLast 'MQContract.KubeMQ.Connection.MessageReadStyle.StartFromLast')
+  - [StartNewOnly](#F-MQContract-KubeMQ-Connection-MessageReadStyle-StartNewOnly 'MQContract.KubeMQ.Connection.MessageReadStyle.StartNewOnly')
 - [MessageResponseTransmissionException](#T-MQContract-KubeMQ-MessageResponseTransmissionException 'MQContract.KubeMQ.MessageResponseTransmissionException')
 - [PingResult](#T-MQContract-KubeMQ-SDK-Grpc-PingResult 'MQContract.KubeMQ.SDK.Grpc.PingResult')
   - [HostFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-PingResult-HostFieldNumber 'MQContract.KubeMQ.SDK.Grpc.PingResult.HostFieldNumber')
@@ -90,9 +84,6 @@
   - [RefRequestIdFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-PollResponse-RefRequestIdFieldNumber 'MQContract.KubeMQ.SDK.Grpc.PollResponse.RefRequestIdFieldNumber')
   - [StreamRequestTypeDataFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-PollResponse-StreamRequestTypeDataFieldNumber 'MQContract.KubeMQ.SDK.Grpc.PollResponse.StreamRequestTypeDataFieldNumber')
   - [TransactionIdFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-PollResponse-TransactionIdFieldNumber 'MQContract.KubeMQ.SDK.Grpc.PollResponse.TransactionIdFieldNumber')
-- [PublishChannelOptions](#T-MQContract-KubeMQ-Options-PublishChannelOptions 'MQContract.KubeMQ.Options.PublishChannelOptions')
-  - [#ctor(Stored)](#M-MQContract-KubeMQ-Options-PublishChannelOptions-#ctor-System-Boolean- 'MQContract.KubeMQ.Options.PublishChannelOptions.#ctor(System.Boolean)')
-  - [Stored](#P-MQContract-KubeMQ-Options-PublishChannelOptions-Stored 'MQContract.KubeMQ.Options.PublishChannelOptions.Stored')
 - [QueueMessage](#T-MQContract-KubeMQ-SDK-Grpc-QueueMessage 'MQContract.KubeMQ.SDK.Grpc.QueueMessage')
   - [AttributesFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-QueueMessage-AttributesFieldNumber 'MQContract.KubeMQ.SDK.Grpc.QueueMessage.AttributesFieldNumber')
   - [BodyFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-QueueMessage-BodyFieldNumber 'MQContract.KubeMQ.SDK.Grpc.QueueMessage.BodyFieldNumber')
@@ -174,10 +165,6 @@
   - [IsErrorFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-SendQueueMessageResult-IsErrorFieldNumber 'MQContract.KubeMQ.SDK.Grpc.SendQueueMessageResult.IsErrorFieldNumber')
   - [MessageIDFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-SendQueueMessageResult-MessageIDFieldNumber 'MQContract.KubeMQ.SDK.Grpc.SendQueueMessageResult.MessageIDFieldNumber')
   - [SentAtFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-SendQueueMessageResult-SentAtFieldNumber 'MQContract.KubeMQ.SDK.Grpc.SendQueueMessageResult.SentAtFieldNumber')
-- [StoredEventsSubscriptionOptions](#T-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions')
-  - [#ctor(ReadStyle,ReadOffset)](#M-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-#ctor-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle,System-Int64- 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.#ctor(MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle,System.Int64)')
-  - [ReadOffset](#P-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-ReadOffset 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.ReadOffset')
-  - [ReadStyle](#P-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-ReadStyle 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.ReadStyle')
 - [StreamQueueMessagesRequest](#T-MQContract-KubeMQ-SDK-Grpc-StreamQueueMessagesRequest 'MQContract.KubeMQ.SDK.Grpc.StreamQueueMessagesRequest')
   - [ChannelFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-StreamQueueMessagesRequest-ChannelFieldNumber 'MQContract.KubeMQ.SDK.Grpc.StreamQueueMessagesRequest.ChannelFieldNumber')
   - [ClientIDFieldNumber](#F-MQContract-KubeMQ-SDK-Grpc-StreamQueueMessagesRequest-ClientIDFieldNumber 'MQContract.KubeMQ.SDK.Grpc.StreamQueueMessagesRequest.ClientIDFieldNumber')
@@ -323,174 +310,59 @@ Primary constructor to create an instance using the supplied configuration optio
 | ---- | ----------- |
 | [MQContract.KubeMQ.UnableToConnectException](#T-MQContract-KubeMQ-UnableToConnectException 'MQContract.KubeMQ.UnableToConnectException') | Thrown when the initial attempt to connect fails |
 
-<a name='P-MQContract-KubeMQ-Connection-DefaultTimout'></a>
-### DefaultTimout `property`
+<a name='M-MQContract-KubeMQ-Connection-RegisterStoredChannel-System-String-'></a>
+### RegisterStoredChannel(channelName) `method`
 
 ##### Summary
 
-The default timeout to use for RPC calls when not specified by the class or in the call.
-DEFAULT:30 seconds if not specified inside the connection options
+Called to flag a particular channel as Stored Events when publishing or subscribing
 
-<a name='P-MQContract-KubeMQ-Connection-MaxMessageBodySize'></a>
-### MaxMessageBodySize `property`
+##### Returns
 
-##### Summary
-
-The maximum message body size allowed
-
-<a name='M-MQContract-KubeMQ-Connection-Dispose-System-Boolean-'></a>
-### Dispose(disposing) `method`
-
-##### Summary
-
-Called to dispose of the resources used
+The current connection to allow for chaining
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| disposing | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates if it is disposing |
+| channelName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel |
 
-<a name='M-MQContract-KubeMQ-Connection-Dispose'></a>
-### Dispose() `method`
-
-##### Summary
-
-Called to dispose of the resources used
-
-##### Parameters
-
-This method has no parameters.
-
-<a name='M-MQContract-KubeMQ-Connection-PingAsync'></a>
-### PingAsync() `method`
+<a name='M-MQContract-KubeMQ-Connection-RegisterStoredChannel-System-String,MQContract-KubeMQ-Connection-MessageReadStyle-'></a>
+### RegisterStoredChannel(channelName,readStyle) `method`
 
 ##### Summary
 
-Called to ping the KubeMQ service
+Called to flag a particular channel as Stored Events when publishing or subscribing
 
 ##### Returns
 
-The Ping result, specically a PingResponse instance
-
-##### Parameters
-
-This method has no parameters.
-
-##### Exceptions
-
-| Name | Description |
-| ---- | ----------- |
-| [MQContract.KubeMQ.UnableToConnectException](#T-MQContract-KubeMQ-UnableToConnectException 'MQContract.KubeMQ.UnableToConnectException') | Thrown when the Ping fails |
-
-<a name='M-MQContract-KubeMQ-Connection-PublishAsync-MQContract-Messages-ServiceMessage,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
-### PublishAsync(message,options,cancellationToken) `method`
-
-##### Summary
-
-Called to publish a message into the KubeMQ server
-
-##### Returns
-
-Transmition result identifying if it worked or not
+The current connection to allow for chaining
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| message | [MQContract.Messages.ServiceMessage](#T-MQContract-Messages-ServiceMessage 'MQContract.Messages.ServiceMessage') | The service message being sent |
-| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | The service channel options, if desired, specifically the PublishChannelOptions which is used to access the storage capabilities of KubeMQ |
-| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+| channelName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel |
+| readStyle | [MQContract.KubeMQ.Connection.MessageReadStyle](#T-MQContract-KubeMQ-Connection-MessageReadStyle 'MQContract.KubeMQ.Connection.MessageReadStyle') | Set the message reading style when subscribing |
 
-##### Exceptions
-
-| Name | Description |
-| ---- | ----------- |
-| [MQContract.InvalidChannelOptionsTypeException](#T-MQContract-InvalidChannelOptionsTypeException 'MQContract.InvalidChannelOptionsTypeException') | Thrown when an attempt to pass an options object that is not of the type PublishChannelOptions |
-
-<a name='M-MQContract-KubeMQ-Connection-QueryAsync-MQContract-Messages-ServiceMessage,System-TimeSpan,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
-### QueryAsync(message,timeout,options,cancellationToken) `method`
+<a name='M-MQContract-KubeMQ-Connection-RegisterStoredChannel-System-String,MQContract-KubeMQ-Connection-MessageReadStyle,System-Int64-'></a>
+### RegisterStoredChannel(channelName,readStyle,readOffset) `method`
 
 ##### Summary
 
-Called to publish a query into the KubeMQ server
+Called to flag a particular channel as Stored Events when publishing or subscribing
 
 ##### Returns
 
-The resulting response
+The current connection to allow for chaining
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| message | [MQContract.Messages.ServiceMessage](#T-MQContract-Messages-ServiceMessage 'MQContract.Messages.ServiceMessage') | The service message being sent |
-| timeout | [System.TimeSpan](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.TimeSpan 'System.TimeSpan') | The timeout supplied for the query to response |
-| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | Should be null here as there is no Service Channel Options implemented for this call |
-| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
-
-##### Exceptions
-
-| Name | Description |
-| ---- | ----------- |
-| [MQContract.NoChannelOptionsAvailableException](#T-MQContract-NoChannelOptionsAvailableException 'MQContract.NoChannelOptionsAvailableException') | Thrown if options was supplied because there are no implemented options for this call |
-| [MQContract.KubeMQ.NullResponseException](#T-MQContract-KubeMQ-NullResponseException 'MQContract.KubeMQ.NullResponseException') | Thrown when the response from KubeMQ is null |
-| [MQContract.KubeMQ.RPCErrorException](#T-MQContract-KubeMQ-RPCErrorException 'MQContract.KubeMQ.RPCErrorException') | Thrown when there is an RPC exception from the KubeMQ server |
-
-<a name='M-MQContract-KubeMQ-Connection-SubscribeAsync-System-Action{MQContract-Messages-RecievedServiceMessage},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
-### SubscribeAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken) `method`
-
-##### Summary
-
-Called to create a subscription to the underlying KubeMQ server
-
-##### Returns
-
-A subscription instance
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| messageRecieved | [System.Action{MQContract.Messages.RecievedServiceMessage}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{MQContract.Messages.RecievedServiceMessage}') | Callback for when a message is recieved |
-| errorRecieved | [System.Action{System.Exception}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Exception}') | Callback for when an error occurs |
-| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel to bind to |
-| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The group to subscribe as part of |
-| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | The service channel options, if desired, specifically the StoredEventsSubscriptionOptions which is used to access stored event streams |
-| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
-
-##### Exceptions
-
-| Name | Description |
-| ---- | ----------- |
-| [MQContract.InvalidChannelOptionsTypeException](#T-MQContract-InvalidChannelOptionsTypeException 'MQContract.InvalidChannelOptionsTypeException') | Thrown when options is not null and is not an instance of the type StoredEventsSubscriptionOptions |
-
-<a name='M-MQContract-KubeMQ-Connection-SubscribeQueryAsync-System-Func{MQContract-Messages-RecievedServiceMessage,System-Threading-Tasks-Task{MQContract-Messages-ServiceMessage}},System-Action{System-Exception},System-String,System-String,MQContract-Interfaces-Service-IServiceChannelOptions,System-Threading-CancellationToken-'></a>
-### SubscribeQueryAsync(messageRecieved,errorRecieved,channel,group,options,cancellationToken) `method`
-
-##### Summary
-
-Called to create a subscription for queries to the underlying KubeMQ server
-
-##### Returns
-
-A subscription instance
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| messageRecieved | [System.Func{MQContract.Messages.RecievedServiceMessage,System.Threading.Tasks.Task{MQContract.Messages.ServiceMessage}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Messages.RecievedServiceMessage,System.Threading.Tasks.Task{MQContract.Messages.ServiceMessage}}') | Callback for when a query is recieved |
-| errorRecieved | [System.Action{System.Exception}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Exception}') | Callback for when an error occurs |
-| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel to bind to |
-| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The group to subscribe as part of |
-| options | [MQContract.Interfaces.Service.IServiceChannelOptions](#T-MQContract-Interfaces-Service-IServiceChannelOptions 'MQContract.Interfaces.Service.IServiceChannelOptions') | Should be null here as there is no Service Channel Options implemented for this call |
-| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
-
-##### Exceptions
-
-| Name | Description |
-| ---- | ----------- |
-| [MQContract.NoChannelOptionsAvailableException](#T-MQContract-NoChannelOptionsAvailableException 'MQContract.NoChannelOptionsAvailableException') | Thrown if options was supplied because there are no implemented options for this call |
+| channelName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel |
+| readStyle | [MQContract.KubeMQ.Connection.MessageReadStyle](#T-MQContract-KubeMQ-Connection-MessageReadStyle 'MQContract.KubeMQ.Connection.MessageReadStyle') | Set the message reading style when subscribing |
+| readOffset | [System.Int64](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Int64 'System.Int64') | Set the readoffset to use for the given reading style |
 
 <a name='T-MQContract-KubeMQ-ConnectionOptions'></a>
 ## ConnectionOptions `type`
@@ -754,53 +626,53 @@ Holder for reflection information generated from SDK/Grpc/kubemq.proto
 
 File descriptor for SDK/Grpc/kubemq.proto
 
-<a name='T-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle'></a>
+<a name='T-MQContract-KubeMQ-Connection-MessageReadStyle'></a>
 ## MessageReadStyle `type`
 
 ##### Namespace
 
-MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions
+MQContract.KubeMQ.Connection
 
 ##### Summary
 
 These are the different read styles to use when subscribing to a stored Event PubSub
 
-<a name='F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartAtSequence'></a>
+<a name='F-MQContract-KubeMQ-Connection-MessageReadStyle-StartAtSequence'></a>
 ### StartAtSequence `constants`
 
 ##### Summary
 
 Start at message number X (this value is specified when creating the listener)
 
-<a name='F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartAtTime'></a>
+<a name='F-MQContract-KubeMQ-Connection-MessageReadStyle-StartAtTime'></a>
 ### StartAtTime `constants`
 
 ##### Summary
 
 Start at time X (this value is specified when creating the listener)
 
-<a name='F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartAtTimeDelta'></a>
+<a name='F-MQContract-KubeMQ-Connection-MessageReadStyle-StartAtTimeDelta'></a>
 ### StartAtTimeDelta `constants`
 
 ##### Summary
 
 Start at Time Delte X (this value is specified when creating the listener)
 
-<a name='F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartFromFirst'></a>
+<a name='F-MQContract-KubeMQ-Connection-MessageReadStyle-StartFromFirst'></a>
 ### StartFromFirst `constants`
 
 ##### Summary
 
 Start at the beginning
 
-<a name='F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartFromLast'></a>
+<a name='F-MQContract-KubeMQ-Connection-MessageReadStyle-StartFromLast'></a>
 ### StartFromLast `constants`
 
 ##### Summary
 
 Start at the last message
 
-<a name='F-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle-StartNewOnly'></a>
+<a name='F-MQContract-KubeMQ-Connection-MessageReadStyle-StartNewOnly'></a>
 ### StartNewOnly `constants`
 
 ##### Summary
@@ -971,43 +843,6 @@ Field number for the "StreamRequestTypeData" field.
 ##### Summary
 
 Field number for the "TransactionId" field.
-
-<a name='T-MQContract-KubeMQ-Options-PublishChannelOptions'></a>
-## PublishChannelOptions `type`
-
-##### Namespace
-
-MQContract.KubeMQ.Options
-
-##### Summary
-
-Houses the Publish Channel options used when calling the Publish command
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| Stored | [T:MQContract.KubeMQ.Options.PublishChannelOptions](#T-T-MQContract-KubeMQ-Options-PublishChannelOptions 'T:MQContract.KubeMQ.Options.PublishChannelOptions') | Indicates if the publish should be using storage |
-
-<a name='M-MQContract-KubeMQ-Options-PublishChannelOptions-#ctor-System-Boolean-'></a>
-### #ctor(Stored) `constructor`
-
-##### Summary
-
-Houses the Publish Channel options used when calling the Publish command
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| Stored | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates if the publish should be using storage |
-
-<a name='P-MQContract-KubeMQ-Options-PublishChannelOptions-Stored'></a>
-### Stored `property`
-
-##### Summary
-
-Indicates if the publish should be using storage
 
 <a name='T-MQContract-KubeMQ-SDK-Grpc-QueueMessage'></a>
 ## QueueMessage `type`
@@ -1575,51 +1410,6 @@ Field number for the "MessageID" field.
 ##### Summary
 
 Field number for the "SentAt" field.
-
-<a name='T-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions'></a>
-## StoredEventsSubscriptionOptions `type`
-
-##### Namespace
-
-MQContract.KubeMQ.Options
-
-##### Summary
-
-Houses the configuration for a subscription going to a stored message channel
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| ReadStyle | [T:MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions](#T-T-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions 'T:MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions') | The read style to use |
-
-<a name='M-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-#ctor-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle,System-Int64-'></a>
-### #ctor(ReadStyle,ReadOffset) `constructor`
-
-##### Summary
-
-Houses the configuration for a subscription going to a stored message channel
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| ReadStyle | [MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle](#T-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-MessageReadStyle 'MQContract.KubeMQ.Options.StoredEventsSubscriptionOptions.MessageReadStyle') | The read style to use |
-| ReadOffset | [System.Int64](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Int64 'System.Int64') | The read offset to use |
-
-<a name='P-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-ReadOffset'></a>
-### ReadOffset `property`
-
-##### Summary
-
-The read offset to use
-
-<a name='P-MQContract-KubeMQ-Options-StoredEventsSubscriptionOptions-ReadStyle'></a>
-### ReadStyle `property`
-
-##### Summary
-
-The read style to use
 
 <a name='T-MQContract-KubeMQ-SDK-Grpc-StreamQueueMessagesRequest'></a>
 ## StreamQueueMessagesRequest `type`

@@ -13,6 +13,11 @@ global level or on a per message type level through implementation of the approp
 * [Abstractions](/Abstractions/Readme.md)
 * [Core](/Core/Readme.md)
 * Connectors
-	* [KubeMQ](/Connectors/KubeMQ/Readme.md)
+	* [ActiveMQ](/Connectors/ActiveMQ/Readme.md)
+	* [HiveMQ](/Connectors/HiveMQ/Readme.md)
+	* [InMemory](/Connectors/InMemory/Readme.md)
 	* [Kafka](/Connectors/Kafka/Readme.md)
+	* [KubeMQ](/Connectors/KubeMQ/Readme.md)
 	* [Nats.io](/Connectors/NATS/Readme.md)
+	* [RabbitMQ](/Connectors/RabbitMQ/Readme.md)
+	* [Redis](/Connectors/Redis/Readme.md)

@@ -1,26 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="../../Shared.props" />
+	
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AssemblyName>MQContract.$(MSBuildProjectName)</AssemblyName>
-    <RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
-	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
-	  <DocumentationMarkdown>$(MSBuildProjectDirectory)\Readme.md</DocumentationMarkdown>
-	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-	  <Authors>roger-castaldo</Authors>
+	  <TargetFramework>net8.0</TargetFramework>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <Nullable>enable</Nullable>
+	  <AssemblyName>MQContract.$(MSBuildProjectName)</AssemblyName>
+	  <RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
 	  <Title>Kafka Connector for MQContract</Title>
-	  <Company>$(AssemblyName)</Company>
-	  <PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
-	  <PackageReadmeFile>Readme.md</PackageReadmeFile>
-	  <RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>
-	  <PackageTags>Message Queue MQ Contract Kafka</PackageTags>
-	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-	  <IncludeSymbols>True</IncludeSymbols>
-	  <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
-	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,7 +16,7 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
-    <PackageReference Include="Confluent.Kafka" Version="2.5.0" />
+    <PackageReference Include="Confluent.Kafka" Version="2.5.3" />
   </ItemGroup>
 
   <ItemGroup>

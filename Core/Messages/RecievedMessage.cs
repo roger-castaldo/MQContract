@@ -2,8 +2,8 @@
 
 namespace MQContract.Messages
 {
-    internal record RecievedMessage<T>(string ID,T Message,MessageHeader Headers,DateTime RecievedTimestamp,DateTime ProcessedTimestamp)
-        : IRecievedMessage<T>
+    internal record ReceivedMessage<T>(string ID,T Message,MessageHeader Headers,DateTime ReceivedTimestamp,DateTime ProcessedTimestamp)
+        : IReceivedMessage<T>
         where T : class
     {}
 }

@@ -31,27 +31,30 @@ namespace MQContract.Factories
             messageEncryptor = (IMessageTypeEncryptor<T>)(serviceProvider!=null ? ActivatorUtilities.CreateInstance(serviceProvider, encryptorType) : Activator.CreateInstance(encryptorType)!);
         }
 
-        public V? ConvertMessage(ILogger? logger, IEncodedMessage message, Stream? dataStream = null)
+        public async ValueTask<V?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream = null)
         {
-            dataStream = (globalMessageEncryptor!=null && messageEncryptor is NonEncryptor<T> ? globalMessageEncryptor : messageEncryptor).Decrypt(dataStream??new MemoryStream(message.Data.ToArray()), message.Header);
-            object? result = (globalMessageEncoder!=null && messageEncoder is JsonEncoder<T> ? globalMessageEncoder.Decode<T>(dataStream) : messageEncoder.Decode(dataStream));
+            dataStream = await (globalMessageEncryptor!=null && messageEncryptor is NonEncryptor<T> ? globalMessageEncryptor : messageEncryptor).DecryptAsync(dataStream??new MemoryStream(message.Data.ToArray()), message.Header);
+            object? result = await (globalMessageEncoder!=null && messageEncoder is JsonEncoder<T> ? globalMessageEncoder.DecodeAsync<T>(dataStream) : messageEncoder.DecodeAsync(dataStream));
             foreach (var converter in path)
             {
                 logger?.LogTrace("Attempting to convert {SourceType} to {DestiniationType} through converters for {IntermediateType}", Utility.TypeName<T>(), Utility.TypeName<V>(), Utility.TypeName(ExtractGenericArguements(converter.GetType())[0]));
-                result = ExecuteConverter(converter, result, ExtractGenericArguements(converter.GetType())[1]);
+                result = await ExecuteConverter(converter, result, ExtractGenericArguements(converter.GetType())[1]);
             }
             return (V?)result;
         }
 
         private static Type[] ExtractGenericArguements(Type t) => t.GetInterfaces().First(iface => iface.IsGenericType && iface.GetGenericTypeDefinition()==typeof(IMessageConverter<,>)).GetGenericArguments();
 
-        private static object? ExecuteConverter(object converter, object? source, Type destination)
+        private static async ValueTask<object?> ExecuteConverter(object converter, object? source, Type destination)
         {
             if (source==null)
                 return null;
-            return typeof(IMessageConverter<,>).MakeGenericType(source.GetType(), destination)
-                .GetMethod("Convert")!
-                .Invoke(converter, [source]);
+            return await Utility.InvokeMethodAsync(
+                typeof(IMessageConverter<,>).MakeGenericType(source.GetType(), destination)
+                .GetMethod("ConvertAsync")!,
+                converter, 
+                [source]
+            );
         }
     }
 }

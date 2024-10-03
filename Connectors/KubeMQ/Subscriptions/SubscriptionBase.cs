@@ -6,7 +6,7 @@ using MQContract.KubeMQ.SDK.Connection;
 namespace MQContract.KubeMQ.Subscriptions
 {
     internal abstract class SubscriptionBase<T>(ILogger? logger,int reconnectInterval, KubeClient client,
-        Action<Exception> errorRecieved, CancellationToken cancellationToken) : IServiceSubscription
+        Action<Exception> errorReceived, CancellationToken cancellationToken) : IServiceSubscription
         where T : class
     {
         private bool disposedValue;
@@ -15,7 +15,7 @@ namespace MQContract.KubeMQ.Subscriptions
         protected readonly CancellationTokenSource cancelToken = new();
 
         protected abstract AsyncServerStreamingCall<T> EstablishCall();
-        protected abstract Task MessageRecieved(T message);
+        protected abstract ValueTask MessageReceived(T message);
 
         public void Run()
         {
@@ -24,10 +24,10 @@ namespace MQContract.KubeMQ.Subscriptions
                 cancelToken.Cancel();
             });
 
-            cancelToken.Token.Register(() =>
+            cancelToken.Token.Register(async () =>
             {
                 active = false;
-                client.Dispose();
+                await client.DisposeAsync();
             });
             Task.Run(async () =>
             {
@@ -40,7 +40,7 @@ namespace MQContract.KubeMQ.Subscriptions
                         await foreach (var resp in call.ResponseStream.ReadAllAsync(cancelToken.Token))
                         {
                             if (active)
-                                await MessageRecieved(resp);
+                                await MessageReceived(resp);
                             else
                                 break;
                         }
@@ -54,25 +54,25 @@ namespace MQContract.KubeMQ.Subscriptions
                                 case StatusCode.Cancelled:
                                 case StatusCode.PermissionDenied:
                                 case StatusCode.Aborted:
-                                    EndAsync().Wait();
+                                    await EndAsync();
                                     break;
                                 case StatusCode.Unknown:
                                 case StatusCode.Unavailable:
                                 case StatusCode.DataLoss:
                                 case StatusCode.DeadlineExceeded:
-                                    logger?.LogTrace("RPC Error recieved on subscription {SubscriptionID}, retrying connection after delay {ReconnectDelay}ms.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, reconnectInterval, rpcx.StatusCode, rpcx.Message);
+                                    logger?.LogTrace("RPC Error received on subscription {SubscriptionID}, retrying connection after delay {ReconnectDelay}ms.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, reconnectInterval, rpcx.StatusCode, rpcx.Message);
                                     break;
                                 default:
-                                    logger?.LogError(rpcx, "RPC Error recieved on subscription {SubscriptionID}.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, rpcx.StatusCode, rpcx.Message);
-                                    errorRecieved(rpcx);
+                                    logger?.LogError(rpcx, "RPC Error received on subscription {SubscriptionID}.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, rpcx.StatusCode, rpcx.Message);
+                                    errorReceived(rpcx);
                                     break;
                             }
                         }
                     }
                     catch (Exception e)
                     {
-                        logger?.LogError(e, "Error recieved on subscription {SubscriptionID}.  Message:{ErrorMessage}", ID, e.Message);
-                        errorRecieved(e);
+                        logger?.LogError(e, "Error received on subscription {SubscriptionID}.  Message:{ErrorMessage}", ID, e.Message);
+                        errorReceived(e);
                     }
                     if (active && !cancellationToken.IsCancellationRequested)
                         await Task.Delay(reconnectInterval);
@@ -80,7 +80,7 @@ namespace MQContract.KubeMQ.Subscriptions
             });
         }
 
-        public async Task EndAsync()
+        public async ValueTask EndAsync()
         {
             if (active)
             {
@@ -88,28 +88,20 @@ namespace MQContract.KubeMQ.Subscriptions
                 try
                 {
                     await cancelToken.CancelAsync();
-                    client.Dispose();
+                    await client.DisposeAsync();
                     cancelToken.Dispose();
                 }
                 catch{ }
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        public async ValueTask DisposeAsync()
         {
-            if (!disposedValue)
+            if (!disposedValue && active)
             {
-                if (disposing && active)
-                    EndAsync().Wait();
-                disposedValue = true;
+                disposedValue=true;
+                await EndAsync();
             }
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

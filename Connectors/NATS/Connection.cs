@@ -13,7 +13,7 @@ namespace MQContract.NATS
     /// <summary>
     /// This is the MessageServiceConnection implementation for using NATS.io
     /// </summary>
-    public class Connection : IMessageServiceConnection
+    public sealed class Connection : IQueryResponseMessageServiceConnection,IPingableMessageServiceConnection, IAsyncDisposable,IDisposable
     {
         private const string MESSAGE_IDENTIFIER_HEADER = "_MessageID";
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
@@ -21,9 +21,8 @@ namespace MQContract.NATS
 
         private readonly NatsConnection natsConnection;
         private readonly NatsJSContext natsJSContext;
+        private readonly List<SubscriptionConsumerConfig> subscriptionConsumerConfigs = [];
         private readonly ILogger? logger;
-        private readonly List<IInternalServiceSubscription> subscriptions = [];
-        private readonly SemaphoreSlim dataLock = new(1, 1);
         private bool disposedValue;
 
         /// <summary>
@@ -58,13 +57,13 @@ namespace MQContract.NATS
         /// The maximum message body size allowed.
         /// DEFAULT: 1MB
         /// </summary>
-        public int? MaxMessageBodySize { get; init; } = 1024*1024*1; //1MB default
+        public uint? MaxMessageBodySize { get; init; } = 1024*1024*1; //1MB default
 
         /// <summary>
         /// The default timeout to use for RPC calls when not specified by class or in the call.
         /// DEFAULT: 30 seconds
         /// </summary>
-        public TimeSpan DefaultTimout { get; init; } = TimeSpan.FromSeconds(30);
+        public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// Called to define a Stream inside the underlying NATS context.  This is an exposure of the NatsJSContext.CreateStreamAsync
@@ -76,10 +75,19 @@ namespace MQContract.NATS
             => natsJSContext.CreateStreamAsync(streamConfig, cancellationToken);
 
         /// <summary>
-        /// Called to ping the NATS.io service
+        /// Called to register a consumer configuration for a given channel.  This is only used for stream channels and allows for configuring
+        /// storing and reading patterns
         /// </summary>
-        /// <returns>The Ping Result including service information</returns>
-        public async Task<PingResult> PingAsync()
+        /// <param name="channelName">The underlying stream name that this configuration applies to</param>
+        /// <param name="consumerConfig">The consumer configuration to use for that stream</param>
+        /// <returns>The underlying connection to allow for chaining</returns>
+        public Connection RegisterConsumerConfig(string channelName, ConsumerConfig consumerConfig)
+        {
+            subscriptionConsumerConfigs.Add(new(channelName, consumerConfig));
+            return this;
+        }
+
+        async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
             => new PingResult(natsConnection.ServerInfo?.Host??string.Empty,
                 natsConnection.ServerInfo?.Version??string.Empty,
                 await natsConnection.PingAsync()
@@ -123,60 +131,26 @@ namespace MQContract.NATS
             ]));
         }
 
-        /// <summary>
-        /// Called to publish a message into the NATS io server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="options">The service channel options, if desired, specifically the StreamPublishChannelOptions which is used to access streams vs standard publish method</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>Transmition result identifying if it worked or not</returns>
-        /// <exception cref="InvalidChannelOptionsTypeException">Thrown when an attempt to pass an options object that is not of the type StreamPublishChannelOptions</exception>
-        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
-            InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<StreamPublishChannelOptions>(options);
             try
             {
-                if (options is StreamPublishChannelOptions publishChannelOptions)
-                {
-                    if (publishChannelOptions.Config!=null)
-                        await CreateStreamAsync(publishChannelOptions.Config, cancellationToken);
-                    var ack = await natsJSContext.PublishAsync<byte[]>(
+                await natsConnection.PublishAsync<byte[]>(
                         message.Channel,
                         message.Data.ToArray(),
                         headers: ExtractHeader(message),
                         cancellationToken: cancellationToken
                     );
-                    return new TransmissionResult(message.ID, (ack.Error!=null ? $"{ack.Error.Code}:{ack.Error.Description}" : null));
-                }
-                else
-                {
-                    await natsConnection.PublishAsync<byte[]>(
-                        message.Channel,
-                        message.Data.ToArray(),
-                        headers: ExtractHeader(message),
-                        cancellationToken: cancellationToken
-                    );
-                    return new TransmissionResult(message.ID);
-                }
-            }catch(Exception ex)
+                return new TransmissionResult(message.ID);
+            }
+            catch(Exception ex)
             {
                 return new TransmissionResult(message.ID, ex.Message);
             }
         }
 
-        /// <summary>
-        /// Called to publish a query into the NATS io server 
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="timeout">The timeout supplied for the query to response</param>
-        /// <param name="options">Should be null here as there is no Service Channel Options implemented for this call</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>The resulting response</returns>
-        /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        /// <exception cref="QueryAsyncReponseException">Thrown when an error comes from the responding service</exception>
-        public async Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        async ValueTask<ServiceQueryResult> IQueryResponseMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             var result = await natsConnection.RequestAsync<byte[], byte[]>(
                 message.Channel,
                 message.Data.ToArray(),
@@ -195,27 +169,30 @@ namespace MQContract.NATS
             );
         }
 
-        /// <summary>
-        /// Called to create a subscription to the underlying nats server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a message is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The queueGroup to use for the subscription</param>
-        /// <param name="options">The service channel options, if desired, specifically the StreamPublishSubscriberOptions which is used to access streams vs standard subscription</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A subscription instance</returns>
-        /// <exception cref="InvalidChannelOptionsTypeException">Thrown when options is not null and is not an instance of the type StreamPublishSubscriberOptions</exception>
-        public async Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
-            InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<StreamPublishChannelOptions>(options);
-            IInternalServiceSubscription? subscription = null;
-            if (options is StreamPublishSubscriberOptions subscriberOptions)
+            SubscriptionBase subscription;
+            var isStream = false;
+#pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
+            await foreach(var name in natsJSContext.ListStreamNamesAsync(cancellationToken: cancellationToken))
             {
-                if (subscriberOptions.StreamConfig!=null)
-                    await CreateStreamAsync(subscriberOptions.StreamConfig, cancellationToken);
-                var consumer = await natsJSContext.CreateOrUpdateConsumerAsync(subscriberOptions.StreamConfig?.Name??channel, subscriberOptions.ConsumerConfig??new ConsumerConfig(group) { AckPolicy = ConsumerConfigAckPolicy.Explicit }, cancellationToken);
-                subscription = new StreamSubscription(consumer, messageRecieved, errorRecieved, cancellationToken);
+                if (Equals(channel, name))
+                {
+                    isStream=true;
+                    break;
+                }
+            }
+#pragma warning restore S3267 // Loops should be simplified with "LINQ" expressions
+            if (isStream)
+            {
+                var config = subscriptionConsumerConfigs.Find(scc => Equals(scc.Channel, channel)
+                &&(
+                    (group==null && string.IsNullOrWhiteSpace(scc.Configuration.Name) && string.IsNullOrWhiteSpace(scc.Configuration.DurableName))
+                    ||Equals(group, scc.Configuration.Name)
+                    ||Equals(group, scc.Configuration.DurableName)
+                ));
+                var consumer = await natsJSContext.CreateOrUpdateConsumerAsync(channel, config?.Configuration??new ConsumerConfig(group??Guid.NewGuid().ToString()) { AckPolicy = ConsumerConfigAckPolicy.Explicit }, cancellationToken);
+                subscription = new StreamSubscription(consumer, messageReceived, errorReceived);
             }
             else
                 subscription = new PublishSubscription(
@@ -224,74 +201,50 @@ namespace MQContract.NATS
                         queueGroup: group,
                         cancellationToken: cancellationToken
                     ),
-                    messageRecieved,
-                    errorRecieved,
-                    cancellationToken
+                    messageReceived,
+                    errorReceived
                 );
             subscription.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(subscription);
-            dataLock.Release();
             return subscription;
         }
 
-        /// <summary>
-        /// Called to create a subscription for queries to the underlying NATS server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a query is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The queueGroup to use for the subscription</param>
-        /// <param name="options">Should be null here as there is no Service Channel Options implemented for this call</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A subscription instance</returns>
-        /// /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
-            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             var sub = new QuerySubscription(
                 natsConnection.SubscribeAsync<byte[]>(
                     channel,
                     queueGroup: group,
                     cancellationToken: cancellationToken
                 ),
-                messageRecieved,
-                errorRecieved,
-                cancellationToken
+                messageReceived,
+                errorReceived
             );
             sub.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(sub);
-            dataLock.Release();
-            return sub;
+            return ValueTask.FromResult<IServiceSubscription?>(sub);
+        }
+        
+        ValueTask IMessageServiceConnection.CloseAsync()
+            => natsConnection.DisposeAsync();
+
+        async ValueTask IAsyncDisposable.DisposeAsync()
+        {
+            await natsConnection.DisposeAsync().ConfigureAwait(true);
+
+            Dispose(disposing: false);
+            GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        /// Called to dispose of the resources used
-        /// </summary>
-        /// <param name="disposing">Indicates if it is disposing</param>
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
                 if (disposing)
-                {
-                    dataLock.Wait();
-                    foreach (var sub in subscriptions)
-                        sub.EndAsync().Wait();
-                    subscriptions.Clear();
-                    Task.Run(async () => await natsConnection.DisposeAsync()).Wait();
-                    dataLock.Release();
-                    dataLock.Dispose();
-                }
+                    natsConnection.DisposeAsync().AsTask().Wait();
                 disposedValue=true;
             }
         }
-
-        /// <summary>
-        /// Called to dispose of the resources used
-        /// </summary>
-        public void Dispose()
+        
+        void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);

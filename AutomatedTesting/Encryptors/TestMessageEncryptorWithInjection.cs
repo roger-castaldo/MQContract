@@ -9,21 +9,21 @@ namespace AutomatedTesting.Encryptors
     {
         private const string HeaderKey = "TestMessageEncryptorWithInjectionKey";
 
-        public Stream Decrypt(Stream stream, MessageHeader headers)
+        public ValueTask<Stream> DecryptAsync(Stream stream, MessageHeader headers)
         {
             Assert.IsNotNull(headers);
             Assert.IsTrue(headers.Keys.Contains(HeaderKey));
             Assert.AreEqual(injectableService.Name, headers[HeaderKey]);
             var data = new BinaryReader(stream).ReadBytes((int)stream.Length);
-            return new MemoryStream(data.Reverse().ToArray());
+            return ValueTask.FromResult<Stream>(new MemoryStream(data.Reverse().ToArray()));
         }
 
-        public byte[] Encrypt(byte[] data, out Dictionary<string, string?> headers)
+        public ValueTask<byte[]> EncryptAsync(byte[] data, out Dictionary<string, string?> headers)
         {
             headers = new([
                 new(HeaderKey,injectableService.Name)
                 ]);
-            return data.Reverse().ToArray();
+            return ValueTask.FromResult<byte[]>(data.Reverse().ToArray());
         }
     }
 }

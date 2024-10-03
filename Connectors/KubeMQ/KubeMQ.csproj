@@ -1,25 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="../../Shared.props" />
+	
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AssemblyName>MQContract.$(MSBuildProjectName)</AssemblyName>
-    <RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
-	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
-	  <DocumentationMarkdown>$(MSBuildProjectDirectory)\Readme.md</DocumentationMarkdown>
-	  <Authors>roger-castaldo</Authors>
+	  <TargetFramework>net8.0</TargetFramework>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <Nullable>enable</Nullable>
+	  <AssemblyName>MQContract.$(MSBuildProjectName)</AssemblyName>
+	  <RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
 	  <Title>KubeMQ Connector for MQContract</Title>
-	  <Company>$(AssemblyName)</Company>
-	  <PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
-	  <PackageReadmeFile>Readme.md</PackageReadmeFile>
-	  <RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>
-	  <PackageTags>Message Queue MQ Contract KubeMQ</PackageTags>
-	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-	  <IncludeSymbols>True</IncludeSymbols>
-	  <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
-	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,9 +16,9 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
-	  <PackageReference Include="Google.Protobuf" Version="3.27.2" />
-	  <PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
-	  <PackageReference Include="Grpc.Tools" Version="2.65.0">
+	  <PackageReference Include="Google.Protobuf" Version="3.28.2" />
+	  <PackageReference Include="Grpc.Net.Client" Version="2.66.0" />
+	  <PackageReference Include="Grpc.Tools" Version="2.66.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>

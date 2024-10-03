@@ -10,44 +10,44 @@ namespace MQContract.Subscriptions
         where T : class
     {
         protected IServiceSubscription? serviceSubscription;
-        protected readonly CancellationTokenSource token = new();
         private bool disposedValue;
+
         protected string MessageChannel { get; private init; }
         protected bool Synchronous { get; private init; }
 
-        protected SubscriptionBase(Func<string, Task<string>> mapChannel, string? channel=null,bool synchronous = false){
+        public Guid ID { get; private init; }
+
+        protected SubscriptionBase(Func<string, ValueTask<string>> mapChannel, string? channel=null,bool synchronous = false){
+            ID = Guid.NewGuid();
             var chan = channel??typeof(T).GetCustomAttribute<MessageChannelAttribute>(false)?.Name??throw new MessageChannelNullException();
             Synchronous = synchronous;
-            var tsk = mapChannel(chan);
+            var tsk = mapChannel(chan).AsTask();
             tsk.Wait();
             MessageChannel=tsk.Result;
         }
 
-        protected void SyncToken(CancellationToken cancellationToken)
-            => cancellationToken.Register(() => EndAsync().Wait());
-
-        [ExcludeFromCodeCoverage(Justification ="Virtual function that is implemented elsewhere")]
+        [ExcludeFromCodeCoverage(Justification = "Virtual function that is implemented elsewhere")]
         protected virtual void InternalDispose()
-        { }
+        {  }
 
-        public async Task EndAsync()
+        public async ValueTask EndAsync()
         {
             if (serviceSubscription!=null)
+            {
+                System.Diagnostics.Debug.WriteLine("Calling subscription end async...");
                 await serviceSubscription.EndAsync();
-            await token.CancelAsync();
+                System.Diagnostics.Debug.WriteLine("Subscription ended async");
+                serviceSubscription=null;
+            }
         }
 
-        protected void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    EndAsync().Wait();
-                    InternalDispose();
-                    serviceSubscription?.Dispose();
-                    token.Dispose();
-                }
+                if (disposing && serviceSubscription is IDisposable disposable)
+                    disposable.Dispose();
+                InternalDispose();
                 disposedValue=true;
             }
         }
@@ -56,6 +56,17 @@ namespace MQContract.Subscriptions
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (serviceSubscription is IAsyncDisposable asyncDisposable)
+                await asyncDisposable.DisposeAsync().ConfigureAwait(true);
+            else if (serviceSubscription is IDisposable disposable)
+                disposable.Dispose();
+
+            Dispose(false);
             GC.SuppressFinalize(this);
         }
     }

@@ -1,58 +1,48 @@
 ﻿using MQContract.Interfaces.Service;
 
-namespace MQContract.NATS.Subscriptions
+namespace MQContract.Kafka.Subscriptions
 {
-    internal abstract class SubscriptionBase(Confluent.Kafka.IConsumer<string, byte[]> consumer,string channel,CancellationToken cancellationToken) : IServiceSubscription
+    internal abstract class SubscriptionBase(Confluent.Kafka.IConsumer<string, byte[]> consumer,string channel) : IServiceSubscription
     {
         protected readonly Confluent.Kafka.IConsumer<string, byte[]> Consumer = consumer;
         protected readonly string Channel = channel;
         private bool disposedValue;
         protected readonly CancellationTokenSource cancelToken = new();
 
-        protected abstract Task RunAction();
-        public void Run()
+        protected abstract ValueTask RunAction();
+        public Task Run()
         {
-            cancellationToken.Register(() =>
-            {
-                cancelToken.Cancel();
-            });
+            var resultSource = new TaskCompletionSource();
             Task.Run(async () =>
             {
                 Consumer.Subscribe(Channel);
+                resultSource.TrySetResult();
                 await RunAction();
                 Consumer.Close();
             });
+            return resultSource.Task;
         }
 
-        public async Task EndAsync()
+        public async ValueTask EndAsync()
         {
             try { await cancelToken.CancelAsync(); } catch { }
         }
 
-        protected virtual void Dispose(bool disposing)
+        public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    if (!cancellationToken.IsCancellationRequested) 
-                        cancelToken.Cancel();
-                    try
-                    {
-                        Consumer.Close();
-                    }
-                    catch (Exception) { }
-                    Consumer.Dispose();
-                    cancelToken.Dispose();
-                }
                 disposedValue=true;
+                if (!cancelToken.IsCancellationRequested)
+                    await cancelToken.CancelAsync();
+                try
+                {
+                    Consumer.Close();
+                }
+                catch (Exception) { }
+                Consumer.Dispose();
+                cancelToken.Dispose();
             }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

@@ -14,10 +14,14 @@ namespace MQContract.Defaults
             ReadCommentHandling=JsonCommentHandling.Skip
         };
 
-        public T? Decode(Stream stream)
-            => JsonSerializer.Deserialize<T>(stream, options: JsonOptions);
+        public async ValueTask<T?> DecodeAsync(Stream stream)
+            => await JsonSerializer.DeserializeAsync<T>(stream, options: JsonOptions);
 
-        public byte[] Encode(T message)
-            => System.Text.UTF8Encoding.UTF8.GetBytes(JsonSerializer.Serialize<T>(message, options: JsonOptions));
+        public async ValueTask<byte[]> EncodeAsync(T message)
+        {
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync<T>(ms, message, options: JsonOptions);
+            return ms.ToArray();
+        }
     }
 }

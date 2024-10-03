@@ -1,70 +1,42 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Interfaces;
-using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using System.Threading.Channels;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class PubSubSubscription<T>(IMessageFactory<T> messageFactory, Func<IRecievedMessage<T>,Task> messageRecieved, Action<Exception> errorRecieved,
-        Func<string, Task<string>> mapChannel, 
-        string? channel = null, string? group = null, bool synchronous=false,IServiceChannelOptions? options = null,ILogger? logger=null)
+    internal sealed class PubSubSubscription<T>(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived,
+        Func<string, ValueTask<string>> mapChannel,
+        string? channel = null, string? group = null, bool synchronous=false,ILogger? logger=null)
         : SubscriptionBase<T>(mapChannel,channel,synchronous)
         where T : class
     {
-        private readonly Channel<RecievedServiceMessage> dataChannel = Channel.CreateUnbounded<RecievedServiceMessage>(new UnboundedChannelOptions()
+        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection,CancellationToken cancellationToken)
         {
-            SingleReader=true,
-            SingleWriter=true
-        });
-
-        public async Task<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken = new CancellationToken())
-        {
-            SyncToken(cancellationToken);
             serviceSubscription = await connection.SubscribeAsync(
-                async serviceMessage=>await dataChannel.Writer.WriteAsync(serviceMessage,token.Token),
-                error=>errorRecieved(error),
+                async serviceMessage => await ProcessMessage(serviceMessage),
+                error => errorReceived(error),
                 MessageChannel,
-                group??Guid.NewGuid().ToString(),
-                options:options,
-                cancellationToken:token.Token
+                group:group,
+                cancellationToken: cancellationToken
             );
             if (serviceSubscription==null)
                 return false;
-            EstablishReader();
             return true;
         }
 
-        private void EstablishReader()
+        private async ValueTask ProcessMessage(ReceivedServiceMessage serviceMessage)
         {
-            Task.Run(async () =>
+            try
             {
-                while (await dataChannel.Reader.WaitToReadAsync(token.Token))
-                {
-                    while (dataChannel.Reader.TryRead(out var message))
-                    {
-                        var tsk = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                var taskMessage = messageFactory.ConvertMessage(logger, message)
-                                    ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
-                                await messageRecieved(new RecievedMessage<T>(message.ID,taskMessage!,message.Header,message.RecievedTimestamp,DateTime.Now));
-                            }
-                            catch (Exception e)
-                            {
-                                errorRecieved(e);
-                            }
-                        });
-                        if (Synchronous)
-                            await tsk;
-                    }
-                }
-            });
+                var tsk = messageReceived(serviceMessage);
+                await tsk.ConfigureAwait(!Synchronous);
+                if (serviceMessage.Acknowledge!=null)
+                    await serviceMessage.Acknowledge();
+            }
+            catch (Exception e)
+            {
+                errorReceived(e);
+            }
         }
-
-        protected override void InternalDispose()
-            =>dataChannel.Writer.Complete();
     }
 }

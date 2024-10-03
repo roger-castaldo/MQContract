@@ -17,14 +17,44 @@ namespace MQContract.KubeMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using KubeMQ
     /// </summary>
-    public class Connection : IMessageServiceConnection
+    public sealed class Connection : IQueryResponseMessageServiceConnection,IPingableMessageServiceConnection, IDisposable,IAsyncDisposable
     {
+        /// <summary>
+        /// These are the different read styles to use when subscribing to a stored Event PubSub
+        /// </summary>
+        public enum MessageReadStyle
+        {
+            /// <summary>
+            /// Start from the new ones (unread ones) only
+            /// </summary>
+            StartNewOnly = 1,
+            /// <summary>
+            /// Start at the beginning
+            /// </summary>
+            StartFromFirst = 2,
+            /// <summary>
+            /// Start at the last message
+            /// </summary>
+            StartFromLast = 3,
+            /// <summary>
+            /// Start at message number X (this value is specified when creating the listener)
+            /// </summary>
+            StartAtSequence = 4,
+            /// <summary>
+            /// Start at time X (this value is specified when creating the listener)
+            /// </summary>
+            StartAtTime = 5,
+            /// <summary>
+            /// Start at Time Delte X (this value is specified when creating the listener)
+            /// </summary>
+            StartAtTimeDelta = 6
+        };
+
         private static readonly Regex regURL = new("^http(s)?://(.+)$", RegexOptions.Compiled|RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(500));
 
         private readonly ConnectionOptions connectionOptions;
         private readonly KubeClient client;
-        private readonly List<IServiceSubscription> subscriptions = [];
-        private readonly SemaphoreSlim dataLock = new(1, 1);
+        private readonly List<StoredChannelOptions> storedChannelOptions = [];
         private bool disposedValue;
 
         /// <summary>
@@ -58,15 +88,44 @@ namespace MQContract.KubeMQ
         }
 
         /// <summary>
-        /// The maximum message body size allowed
+        /// Called to flag a particular channel as Stored Events when publishing or subscribing
         /// </summary>
-        public int? MaxMessageBodySize => connectionOptions.MaxBodySize;
+        /// <param name="channelName">The name of the channel</param>
+        /// <returns>The current connection to allow for chaining</returns>
+        public Connection RegisterStoredChannel(string channelName)
+        {
+            storedChannelOptions.Add(new(channelName));
+            return this;
+        }
 
         /// <summary>
-        /// The default timeout to use for RPC calls when not specified by the class or in the call.
-        /// DEFAULT:30 seconds if not specified inside the connection options
+        /// Called to flag a particular channel as Stored Events when publishing or subscribing
         /// </summary>
-        public TimeSpan DefaultTimout => TimeSpan.FromMilliseconds(connectionOptions.DefaultRPCTimeout??30000);
+        /// <param name="channelName">The name of the channel</param>
+        /// <param name="readStyle">Set the message reading style when subscribing</param>
+        /// <returns>The current connection to allow for chaining</returns>
+        public Connection RegisterStoredChannel(string channelName, MessageReadStyle readStyle)
+        {
+            storedChannelOptions.Add(new(channelName, readStyle));
+            return this;
+        }
+
+        /// <summary>
+        /// Called to flag a particular channel as Stored Events when publishing or subscribing
+        /// </summary>
+        /// <param name="channelName">The name of the channel</param>
+        /// <param name="readStyle">Set the message reading style when subscribing</param>
+        /// <param name="readOffset">Set the readoffset to use for the given reading style</param>
+        /// <returns>The current connection to allow for chaining</returns>
+        public Connection RegisterStoredChannel(string channelName, MessageReadStyle readStyle, long readOffset)
+        {
+            storedChannelOptions.Add(new(channelName, readStyle, readOffset));
+            return this;
+        }
+
+        uint? IMessageServiceConnection.MaxMessageBodySize => (uint)Math.Abs(connectionOptions.MaxBodySize);
+
+        TimeSpan IQueryableMessageServiceConnection.DefaultTimeout => TimeSpan.FromMilliseconds(connectionOptions.DefaultRPCTimeout??30000);
 
         private KubeClient EstablishConnection()
         { 
@@ -76,18 +135,13 @@ namespace MQContract.KubeMQ
             return result;
         }
         
-        /// <summary>
-        /// Called to ping the KubeMQ service
-        /// </summary>
-        /// <returns>The Ping result, specically a PingResponse instance</returns>
-        /// <exception cref="UnableToConnectException">Thrown when the Ping fails</exception>
-        public Task<MQContract.Messages.PingResult> PingAsync()
+        ValueTask<MQContract.Messages.PingResult> IPingableMessageServiceConnection.PingAsync()
         {
             var watch = new Stopwatch();
             watch.Start();
             var res = client.Ping()??throw new UnableToConnectException();
             watch.Stop();
-            return Task.FromResult<MQContract.Messages.PingResult>(new PingResponse(res,watch.Elapsed));
+            return ValueTask.FromResult<MQContract.Messages.PingResult>(new PingResponse(res,watch.Elapsed));
         }
 
         internal static MapField<string, string> ConvertMessageHeader(MessageHeader header)
@@ -101,17 +155,8 @@ namespace MQContract.KubeMQ
         internal static MessageHeader ConvertMessageHeader(MapField<string, string> header)
             => new(header.AsEnumerable());
 
-        /// <summary>
-        /// Called to publish a message into the KubeMQ server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="options">The service channel options, if desired, specifically the PublishChannelOptions which is used to access the storage capabilities of KubeMQ</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>Transmition result identifying if it worked or not</returns>
-        /// /// <exception cref="InvalidChannelOptionsTypeException">Thrown when an attempt to pass an options object that is not of the type PublishChannelOptions</exception>
-        public async Task<TransmissionResult> PublishAsync(ServiceMessage message, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
-            InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<PublishChannelOptions>(options);
             try { 
                 var res = await client.SendEventAsync(new Event()
                 {
@@ -120,7 +165,7 @@ namespace MQContract.KubeMQ
                     Channel=message.Channel,
                     ClientID=connectionOptions.ClientId,
                     EventID=message.ID,
-                    Store=(options is PublishChannelOptions pbc && pbc.Stored),
+                    Store=storedChannelOptions.Exists(sco=>Equals(message.Channel,sco.ChannelName)),
                     Tags={ ConvertMessageHeader(message.Header) }
                 }, connectionOptions.GrpcMetadata, cancellationToken);
                 return new TransmissionResult(res.EventID, res.Error);
@@ -137,20 +182,9 @@ namespace MQContract.KubeMQ
             }
         }
 
-        /// <summary>
-        /// Called to publish a query into the KubeMQ server
-        /// </summary>
-        /// <param name="message">The service message being sent</param>
-        /// <param name="timeout">The timeout supplied for the query to response</param>
-        /// <param name="options">Should be null here as there is no Service Channel Options implemented for this call</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>The resulting response</returns>
-        /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        /// <exception cref="NullResponseException">Thrown when the response from KubeMQ is null</exception>
-        /// <exception cref="RPCErrorException">Thrown when there is an RPC exception from the KubeMQ server</exception>
-        public async Task<ServiceQueryResult> QueryAsync(ServiceMessage message, TimeSpan timeout, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        async ValueTask<ServiceQueryResult> IQueryResponseMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
+#pragma warning disable S2139 // Exceptions should be either logged or rethrown but not both
             try
             {
                 var res = await client.SendRequestAsync(new Request()
@@ -182,94 +216,62 @@ namespace MQContract.KubeMQ
                 connectionOptions.Logger?.LogError(ex, "Exception occured in Send Message:{ErrorMessage}", ex.Message);
                 throw;
             }
+#pragma warning restore S2139 // Exceptions should be either logged or rethrown but not both
         }
 
-        /// <summary>
-        /// Called to create a subscription to the underlying KubeMQ server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a message is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The group to subscribe as part of</param>
-        /// <param name="options">The service channel options, if desired, specifically the StoredEventsSubscriptionOptions which is used to access stored event streams</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A subscription instance</returns>
-        /// <exception cref="InvalidChannelOptionsTypeException">Thrown when options is not null and is not an instance of the type StoredEventsSubscriptionOptions</exception>
-        public async Task<IServiceSubscription?> SubscribeAsync(Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
-            InvalidChannelOptionsTypeException.ThrowIfNotNullAndNotOfType<StoredEventsSubscriptionOptions>(options);
             var sub = new PubSubscription(
                 connectionOptions,
                 EstablishConnection(),
-                messageRecieved,
-                errorRecieved,
+                messageReceived,
+                errorReceived,
                 channel,
-                group,
-                (StoredEventsSubscriptionOptions?)options,
+                group??Guid.NewGuid().ToString(),
+                storedChannelOptions.Find(sco=>Equals(sco.ChannelName,channel)),
                 cancellationToken
             );
             sub.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(sub);
-            dataLock.Release();
-            return sub;
+            return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
 
-        /// <summary>
-        /// Called to create a subscription for queries to the underlying KubeMQ server
-        /// </summary>
-        /// <param name="messageRecieved">Callback for when a query is recieved</param>
-        /// <param name="errorRecieved">Callback for when an error occurs</param>
-        /// <param name="channel">The name of the channel to bind to</param>
-        /// <param name="group">The group to subscribe as part of</param>
-        /// <param name="options">Should be null here as there is no Service Channel Options implemented for this call</param>
-        /// <param name="cancellationToken">A cancellation token</param>
-        /// <returns>A subscription instance</returns>
-        /// <exception cref="NoChannelOptionsAvailableException">Thrown if options was supplied because there are no implemented options for this call</exception>
-        public async Task<IServiceSubscription?> SubscribeQueryAsync(Func<RecievedServiceMessage, Task<ServiceMessage>> messageRecieved, Action<Exception> errorRecieved, string channel, string group, IServiceChannelOptions? options = null, CancellationToken cancellationToken = default)
+        ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
-            NoChannelOptionsAvailableException.ThrowIfNotNull(options);
             var sub = new QuerySubscription(
                 connectionOptions,
                 EstablishConnection(),
-                messageRecieved,
-                errorRecieved,
+                messageReceived,
+                errorReceived,
                 channel,
-                group,
+                group??Guid.NewGuid().ToString(),
                 cancellationToken
             );
             sub.Run();
-            await dataLock.WaitAsync(cancellationToken);
-            subscriptions.Add(sub);
-            dataLock.Release();
-            return sub;
+            return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
-        /// <summary>
-        /// Called to dispose of the resources used
-        /// </summary>
-        /// <param name="disposing">Indicates if it is disposing</param>
-        protected virtual void Dispose(bool disposing)
+        
+        ValueTask IMessageServiceConnection.CloseAsync()
+            => client.DisposeAsync();
+
+        async ValueTask IAsyncDisposable.DisposeAsync()
+        {
+            await client.DisposeAsync();
+
+            Dispose(disposing: false);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
                 if (disposing)
-                {
-                    dataLock.Wait();
-                    foreach (var sub in subscriptions)
-                        sub.EndAsync().Wait();
-                    subscriptions.Clear();
-                    client.Dispose();
-                    dataLock.Release();
-                    dataLock.Dispose();
-                }
+                    client.DisposeAsync().AsTask().Wait();
                 disposedValue=true;
             }
         }
-
-        /// <summary>
-        /// Called to dispose of the resources used
-        /// </summary>
-        public void Dispose()
+        
+        void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);

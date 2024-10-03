@@ -1,0 +1,21 @@
+<Project>
+	<PropertyGroup>
+		<VersionPrefix>1.1</VersionPrefix>
+		<PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
+		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>
+		<AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+		<FileVersion>$(VersionPrefix)</FileVersion>
+		<PackageTags>Message Queue MQ Contract ServiceBus Messaging Abstraction PubSub QueryResponse</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<IncludeSymbols>True</IncludeSymbols>
+		<RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DocumentationMarkdown>$(MSBuildProjectDirectory)\Readme.md</DocumentationMarkdown>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Authors>roger-castaldo</Authors>
+		<Company>$(AssemblyName)</Company>
+	</PropertyGroup>
+</Project>

@@ -1,12 +1,11 @@
 ﻿using MQContract.Messages;
-using MQContract.NATS.Subscriptions;
 
 namespace MQContract.Kafka.Subscriptions
 {
-    internal class PublishSubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Action<RecievedServiceMessage> messageRecieved, Action<Exception> errorRecieved, string channel, CancellationToken cancellationToken)
-        : SubscriptionBase(consumer,channel,cancellationToken)
+    internal class PublishSubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel)
+        : SubscriptionBase(consumer,channel)
     {
-        protected override Task RunAction()
+        protected override ValueTask RunAction()
         {
             while (!cancelToken.IsCancellationRequested)
             {
@@ -14,7 +13,7 @@ namespace MQContract.Kafka.Subscriptions
                 {
                     var msg = Consumer.Consume(cancellationToken:cancelToken.Token);
                     var headers = Connection.ExtractHeaders(msg.Message.Headers, out var messageTypeID);
-                    messageRecieved(new RecievedServiceMessage(
+                    messageReceived(new ReceivedServiceMessage(
                         msg.Message.Key??string.Empty,
                         messageTypeID??string.Empty,
                         Channel,
@@ -25,11 +24,11 @@ namespace MQContract.Kafka.Subscriptions
                 catch (OperationCanceledException) { }
                 catch (Exception ex)
                 {
-                    errorRecieved(ex);
+                    errorReceived(ex);
                 }
                 finally { }
             }
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
     }
 }

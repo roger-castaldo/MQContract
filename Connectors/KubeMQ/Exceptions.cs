@@ -33,7 +33,7 @@ namespace MQContract.KubeMQ
     internal class NullResponseException : NullReferenceException
     {
         internal NullResponseException()
-            : base("null response recieved from KubeMQ server") { }
+            : base("null response received from KubeMQ server") { }
     }
 
     internal class RPCErrorException : Exception

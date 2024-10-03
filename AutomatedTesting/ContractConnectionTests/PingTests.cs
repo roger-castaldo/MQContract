@@ -13,11 +13,11 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var pingResult = new PingResult("TestHost", "1.0.0", TimeSpan.FromSeconds(5));
             
-            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var serviceConnection = new Mock<IPingableMessageServiceConnection>();
             serviceConnection.Setup(x => x.PingAsync())
                 .ReturnsAsync(pingResult);
 
-            var contractConnection = new ContractConnection(serviceConnection.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act

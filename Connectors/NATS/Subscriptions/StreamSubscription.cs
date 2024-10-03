@@ -3,44 +3,44 @@ using NATS.Client.JetStream;
 
 namespace MQContract.NATS.Subscriptions
 {
-    internal class StreamSubscription(INatsJSConsumer consumer, Action<RecievedServiceMessage> messageRecieved, 
-        Action<Exception> errorRecieved, CancellationToken cancellationToken) 
-        : SubscriptionBase(cancellationToken)
+    internal class StreamSubscription(INatsJSConsumer consumer, Action<ReceivedServiceMessage> messageReceived, 
+        Action<Exception> errorReceived) 
+        : SubscriptionBase()
     {
         protected override async Task RunAction()
         {
-            while (!cancelToken.Token.IsCancellationRequested)
+            while (!CancelToken.IsCancellationRequested)
             {
                 try
                 {
-                    await consumer.RefreshAsync(cancelToken.Token); // or try to recreate consumer
+                    await consumer.RefreshAsync(CancelToken); // or try to recreate consumer
 
-                    await foreach (var msg in consumer.ConsumeAsync<byte[]>().WithCancellation(cancelToken.Token))
+                    await foreach (var msg in consumer.ConsumeAsync<byte[]>().WithCancellation(CancelToken))
                     {
                         var success = true;
                         try
                         {
-                            messageRecieved(ExtractMessage(msg));
+                            messageReceived(ExtractMessage(msg));
                         }
                         catch (Exception ex)
                         {
                             success=false;
-                            errorRecieved(ex);
-                            await msg.NakAsync(cancellationToken: cancelToken.Token);
+                            errorReceived(ex);
+                            await msg.NakAsync(cancellationToken: CancelToken);
                         }
                         if (success)
-                            await msg.AckAsync(cancellationToken: cancelToken.Token);
+                            await msg.AckAsync(cancellationToken: CancelToken);
                     }
                 }
                 catch (NatsJSProtocolException e)
                 {
-                    errorRecieved(e);
+                    errorReceived(e);
                 }
                 catch (NatsJSException e)
                 {
-                    errorRecieved(e);
+                    errorReceived(e);
                     // log exception
-                    await Task.Delay(1000, cancelToken.Token); // backoff
+                    await Task.Delay(1000, CancelToken); // backoff
                 }
             }
         }

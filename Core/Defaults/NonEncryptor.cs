@@ -5,12 +5,13 @@ namespace MQContract.Defaults
 {
     internal class NonEncryptor<T> : IMessageTypeEncryptor<T>
     {
-        public Stream Decrypt(Stream stream, MessageHeader headers) => stream;
+        public ValueTask<Stream> DecryptAsync(Stream stream, MessageHeader headers) 
+            => ValueTask.FromResult(stream);
 
-        public byte[] Encrypt(byte[] data, out Dictionary<string, string?> headers)
+        public ValueTask<byte[]> EncryptAsync(byte[] data, out Dictionary<string, string?> headers)
         {
             headers = [];
-            return data;
+            return ValueTask.FromResult(data);
         }
     }
 }
