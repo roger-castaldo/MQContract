@@ -5,25 +5,25 @@ namespace MQContract.InMemory
 {
     internal class MessageChannel
     {
-        private readonly SemaphoreSlim semLock = new(1, 1);
+        private readonly ReaderWriterLockSlim locker = new();
         private readonly List<MessageGroup> groups = [];
 
         private async ValueTask<bool> Publish(InternalServiceMessage message, CancellationToken cancellationToken)
         {
-            await semLock.WaitAsync(cancellationToken);
+            locker.EnterReadLock();
             var tasks = groups.Select(grp => grp.PublishMessage(message).AsTask()).ToArray();
-            semLock.Release();
+            locker.ExitReadLock();
             await Task.WhenAll(tasks);
             return Array.TrueForAll(tasks, t => t.Result);
         }
 
         public void Close()
         {
-            semLock.Wait();
+            locker.EnterWriteLock();
             foreach (var group in groups.ToArray())
                 group.Close();
             groups.Clear();
-            semLock.Release();
+            locker.ExitWriteLock();
         }
 
         internal async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
@@ -46,19 +46,19 @@ namespace MQContract.InMemory
         private async ValueTask<MessageGroup> GetGroupAsync(string? group)
         {
             group??=Guid.NewGuid().ToString();
-            await semLock.WaitAsync();
+            locker.EnterWriteLock();
             var grp = groups.Find(g => Equals(g.Group, group));
             if (grp==null)
             {
                 grp = new MessageGroup(group, g =>
                 {
-                    semLock.Wait();
+                    locker.EnterWriteLock();
                     groups.Remove(g);
-                    semLock.Release();
+                    locker.ExitWriteLock();
                 });
                 groups.Add(grp);
             }
-            semLock.Release();
+            locker.ExitWriteLock();
             return grp;
         }
 
