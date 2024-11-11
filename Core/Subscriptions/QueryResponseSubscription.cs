@@ -32,7 +32,7 @@ namespace MQContract.Subscriptions
                     async (serviceMessage) =>
                     {
                         if (!QueryResponseHelper.IsValidMessage(serviceMessage))
-                            errorReceived(new InvalidQueryResponseMessageReceived());
+                            errorReceived(new InvalidQueryResponseMessageReceivedException());
                         else
                         {
                             var result = await ProcessServiceMessageAsync(

@@ -26,7 +26,7 @@
   - [AddQuerySubscriptionMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
 - [ContractConnection](#T-MQContract-ContractConnection 'MQContract.ContractConnection')
   - [Instance(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-Instance-MQContract-Interfaces-Service-IMessageServiceConnection,MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.Instance(MQContract.Interfaces.Service.IMessageServiceConnection,MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
-- [InvalidQueryResponseMessageReceived](#T-MQContract-InvalidQueryResponseMessageReceived 'MQContract.InvalidQueryResponseMessageReceived')
+- [InvalidQueryResponseMessageReceivedException](#T-MQContract-InvalidQueryResponseMessageReceivedException 'MQContract.InvalidQueryResponseMessageReceivedException')
 - [MessageChannelNullException](#T-MQContract-MessageChannelNullException 'MQContract.MessageChannelNullException')
 - [MessageConversionException](#T-MQContract-MessageConversionException 'MQContract.MessageConversionException')
 - [QueryExecutionFailedException](#T-MQContract-QueryExecutionFailedException 'MQContract.QueryExecutionFailedException')
@@ -436,8 +436,8 @@ An instance of IContractConnection
 | channelMapper | [MQContract.ChannelMapper](#T-MQContract-ChannelMapper 'MQContract.ChannelMapper') | An instance of a ChannelMapper used to translate channels from one instance to another based on class channel attributes or supplied channels if necessary.
 For example, it might be necessary for a Nats.IO instance when you are trying to read from a stored message stream that is comprised of another channel or set of channels |
 
-<a name='T-MQContract-InvalidQueryResponseMessageReceived'></a>
-## InvalidQueryResponseMessageReceived `type`
+<a name='T-MQContract-InvalidQueryResponseMessageReceivedException'></a>
+## InvalidQueryResponseMessageReceivedException `type`
 
 ##### Namespace
 

@@ -76,9 +76,9 @@
     /// <summary>
     /// Thrown when a query call message is received without proper data
     /// </summary>
-    public class InvalidQueryResponseMessageReceived : Exception
+    public class InvalidQueryResponseMessageReceivedException : Exception
     {
-        internal InvalidQueryResponseMessageReceived()
+        internal InvalidQueryResponseMessageReceivedException()
             : base("A service message was received on a query response channel without the proper data") { }
     }
 }

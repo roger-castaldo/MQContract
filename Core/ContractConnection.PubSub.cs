@@ -1,4 +1,5 @@
 ﻿using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using MQContract.Subscriptions;
 
@@ -28,10 +29,33 @@ namespace MQContract
         }
 
         async ValueTask<TransmissionResult> IContractConnection.PublishAsync<T>(T message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
-            => await serviceConnection.PublishAsync(
-                await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish,GetMessageFactory<T>(),message,false,channel,messageHeader),
+        {
+            await publishLock.WaitAsync(cancellationToken);
+            var result = await serviceConnection.PublishAsync(
+                await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(), message, false, channel, messageHeader),
                 cancellationToken
             );
+            publishLock.Release();
+            return result;
+        }
+
+        async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel = null, CancellationToken cancellationToken = new CancellationToken())
+        {
+            var serviceMessages = await Task.WhenAll(
+                messages.Select(m => 
+                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(), m.message, false, channel, m.messageHeader).AsTask())
+                .ToArray()
+            );
+            IEnumerable<TransmissionResult> result = [];
+            await publishLock.WaitAsync(cancellationToken);
+            if (serviceConnection is IBulkPublishableMessageServiceConnection bulkPublishableMessageServiceConnection)
+                result = await bulkPublishableMessageServiceConnection.BulkPublishAsync(serviceMessages, cancellationToken);
+            else
+                foreach(var message in serviceMessages)
+                    result=result.Append(await serviceConnection.PublishAsync(message,cancellationToken));
+            publishLock.Release();
+            return result;
+        }
 
         ValueTask<ISubscription> IContractConnection.SubscribeAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken) where T : class
             => CreateSubscriptionAsync<T>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, false, cancellationToken);

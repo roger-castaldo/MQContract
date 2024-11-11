@@ -5,6 +5,8 @@ namespace MQContract.InMemory
 {
     internal class MessageChannel
     {
+        private const string TransmissionResultError = "Unable to transmit";
+
         private readonly ReaderWriterLockSlim locker = new();
         private readonly List<MessageGroup> groups = [];
 
@@ -29,8 +31,21 @@ namespace MQContract.InMemory
         internal async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             if (!await Publish(new(message.ID,message.MessageTypeID,message.Channel,message.Header,message.Data), cancellationToken))
-                return new(message.ID, "Unable to trasmit");
+                return new(message.ID, TransmissionResultError);
             return new(message.ID);
+        }
+
+        internal async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> messages,CancellationToken cancellationToken)
+        {
+            IEnumerable<TransmissionResult> results = [];
+            locker.EnterReadLock();
+            foreach(var message in messages)
+            {
+                var messageResults = await Task.WhenAll(groups.Select(grp => grp.PublishMessage(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data)).AsTask()).ToArray());
+                results=results.Append(new(message.ID, Array.TrueForAll(messageResults, mr => mr) ? null : TransmissionResultError));
+            }
+            locker.ExitReadLock();
+            return results;
         }
 
         internal async ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)

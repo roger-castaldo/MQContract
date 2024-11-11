@@ -117,6 +117,17 @@ namespace MQContract.Interfaces
         ValueTask<TransmissionResult> PublishAsync<T>(T message, string? channel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken())
             where T : class;
         /// <summary>
+        /// Called to send a bulk set of messages into the underlying service Pub/Sub style
+        /// </summary>
+        /// <typeparam name="T">The type of message to send</typeparam>
+        /// <param name="messages">The set of messages to transmit, optionally with their given headers</param>
+        /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class.</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// 
+        /// <returns>A result indicating the tranmission results</returns>
+        ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<(T message,MessageHeader? messageHeader)> messages, string? channel = null, CancellationToken cancellationToken = new CancellationToken())
+            where T : class;
+        /// <summary>
         /// Called to create a subscription into the underlying service Pub/Sub style and have the messages processed asynchronously
         /// </summary>
         /// <typeparam name="T">The type of message to listen for</typeparam>

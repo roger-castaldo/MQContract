@@ -18,6 +18,7 @@ namespace MQContract
     {
         private readonly Guid indentifier = Guid.NewGuid();
         private readonly SemaphoreSlim dataLock = new(1, 1);
+        private readonly SemaphoreSlim publishLock = new(1, 1);
         private readonly IMessageServiceConnection serviceConnection;
         private readonly IMessageEncoder? defaultMessageEncoder;
         private readonly IMessageEncryptor? defaultMessageEncryptor;
@@ -112,7 +113,8 @@ namespace MQContract
                 }
                 dataLock.Dispose();
                 inboxSemaphore.Dispose();
-                disposedValue=true;
+                publishLock.Dispose();
+                disposedValue =true;
             }
         }
 
