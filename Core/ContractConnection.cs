@@ -1,53 +1,16 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Factories;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
-using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Service;
-using MQContract.Messages;
-using MQContract.Middleware;
 
 namespace MQContract
 {
     /// <summary>
-    /// The primary ContractConnection item which implements IContractConnection
+    /// The primary class for producing an instance of either an IContractConnection or an IMultiServiceContractConnection
     /// </summary>
-    public sealed partial class ContractConnection
-                : IContractConnection
+    public static class ContractConnection
     {
-        private readonly Guid indentifier = Guid.NewGuid();
-        private readonly SemaphoreSlim dataLock = new(1, 1);
-        private readonly SemaphoreSlim publishLock = new(1, 1);
-        private readonly IMessageServiceConnection serviceConnection;
-        private readonly IMessageEncoder? defaultMessageEncoder;
-        private readonly IMessageEncryptor? defaultMessageEncryptor;
-        private readonly IServiceProvider? serviceProvider;
-        private readonly ILogger? logger;
-        private readonly ChannelMapper? channelMapper;
-        private readonly List<object> middleware;
-        private readonly SemaphoreSlim inboxSemaphore = new(1, 1);
-        private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
-        private IServiceSubscription? inboxSubscription;
-        private IEnumerable<IMessageTypeFactory> typeFactories = [];
-        private bool disposedValue;
-
-        private ContractConnection(IMessageServiceConnection serviceConnection,
-        IMessageEncoder? defaultMessageEncoder = null,
-        IMessageEncryptor? defaultMessageEncryptor = null,
-        IServiceProvider? serviceProvider = null,
-        ILogger? logger = null,
-        ChannelMapper? channelMapper = null)
-        {
-            this.serviceConnection = serviceConnection;
-            this.defaultMessageEncoder = defaultMessageEncoder;
-            this.defaultMessageEncryptor= defaultMessageEncryptor;
-            this.serviceProvider = serviceProvider;
-            this.logger=logger;
-            this.channelMapper=channelMapper;
-            this.middleware= [new ChannelMappingMiddleware(this.channelMapper)];
-        }
-
         /// <summary>
         /// This is the call used to create an instance of a Contract Connection which will return the Interface
         /// </summary>
@@ -66,78 +29,7 @@ namespace MQContract
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,
         ChannelMapper? channelMapper = null)
-            => new ContractConnection(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger, channelMapper);
+            => new MQContract.Connections.Connection(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger, channelMapper);
 
-        private IMessageFactory<T> GetMessageFactory<T>(bool ignoreMessageHeader = false) where T : class
-        {
-            dataLock.Wait();
-            var result = (IMessageFactory<T>?)typeFactories.FirstOrDefault(fact => fact.GetType().GetGenericArguments()[0]==typeof(T));
-            dataLock.Release();
-            if (result==null)
-            {
-                result = new MessageTypeFactory<T>(defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, ignoreMessageHeader, serviceConnection.MaxMessageBodySize);
-                dataLock.Wait();
-                if (!typeFactories.Any(fact => fact.GetType().GetGenericArguments()[0]==typeof(T) && fact.IgnoreMessageHeader==ignoreMessageHeader))
-                    typeFactories = typeFactories.Concat([(IMessageTypeFactory)result]);
-                dataLock.Release();
-            }
-            return result;
-        }
-
-        private ValueTask<string> MapChannel(ChannelMapper.MapTypes mapType, string originalChannel)
-            => channelMapper?.MapChannel(mapType, originalChannel)??ValueTask.FromResult<string>(originalChannel);
-
-        ValueTask<PingResult> IContractConnection.PingAsync()
-            => (serviceConnection is IPingableMessageServiceConnection pingableService ? pingableService.PingAsync() : throw new NotSupportedException("The underlying service does not support Ping"));
-
-        async ValueTask IContractConnection.CloseAsync()
-        {
-            await (inboxSubscription?.EndAsync()??ValueTask.CompletedTask);
-            await (serviceConnection?.CloseAsync()??ValueTask.CompletedTask);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    if (inboxSubscription is IDisposable subDisposable)
-                        subDisposable.Dispose();
-                    else if (inboxSubscription is IAsyncDisposable asyncSubDisposable)
-                        asyncSubDisposable.DisposeAsync().AsTask().Wait();
-                    if (serviceConnection is IDisposable disposable)
-                        disposable.Dispose();
-                    else if (serviceConnection is IAsyncDisposable asyncDisposable)
-                        asyncDisposable.DisposeAsync().AsTask().Wait();
-                }
-                dataLock.Dispose();
-                inboxSemaphore.Dispose();
-                publishLock.Dispose();
-                disposedValue =true;
-            }
-        }
-
-        void IDisposable.Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        async ValueTask IAsyncDisposable.DisposeAsync()
-        {
-            if (inboxSubscription is IAsyncDisposable asyncSubDisposable)
-                asyncSubDisposable.DisposeAsync().AsTask().Wait();
-            else if (inboxSubscription is IDisposable subDisposable)
-                subDisposable.Dispose();
-            if (serviceConnection is IAsyncDisposable asyncDisposable)
-                await asyncDisposable.DisposeAsync().ConfigureAwait(true);
-            else if (serviceConnection is IDisposable disposable)
-                disposable.Dispose();
-
-            Dispose(false);
-            GC.SuppressFinalize(this);
-        }
     }
 }

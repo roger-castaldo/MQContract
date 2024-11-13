@@ -1,18 +1,10 @@
-﻿using AutomatedTesting.Encoders;
-using AutomatedTesting.Encryptors;
-using AutomatedTesting.Messages;
-using AutomatedTesting.ServiceInjection;
-using Microsoft.Extensions.DependencyInjection;
+﻿using AutomatedTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
-using MQContract.Interfaces.Encoding;
-using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
 using System.Diagnostics;
-using System.IO.Compression;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 
 namespace AutomatedTesting.ContractConnectionTests

@@ -58,7 +58,7 @@ namespace MQContract.InMemory
             return new(message.ID);
         }
 
-        private async ValueTask<MessageGroup> GetGroupAsync(string? group)
+        private MessageGroup GetGroup(string? group)
         {
             group??=Guid.NewGuid().ToString();
             locker.EnterWriteLock();
@@ -79,7 +79,7 @@ namespace MQContract.InMemory
 
         private async ValueTask<IServiceSubscription> CreateSubscription(Func<InternalServiceMessage,ValueTask>  processMessage,Action<Exception> errorReceived,string? group,CancellationToken cancellationToken)
         {
-            var sub = new Subscription(await GetGroupAsync(group), async (recievedMessage) =>
+            var sub = new Subscription(GetGroup(group), async (recievedMessage) =>
             {
                 try
                 {

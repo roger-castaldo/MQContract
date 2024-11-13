@@ -5,9 +5,9 @@ using MQContract.Messages;
 using MQContract.Subscriptions;
 using System.Reflection;
 
-namespace MQContract
+namespace MQContract.Connections
 {
-    public partial class ContractConnection
+    internal partial class Connection
     {
         private async ValueTask<QueryResult<R>> ProcessPubSubQuery<Q, R>(string? responseChannel, TimeSpan? realTimeout, ServiceMessage serviceMessage, CancellationToken cancellationToken)
             where Q : class
@@ -55,7 +55,7 @@ namespace MQContract
                         await inboxSemaphore.WaitAsync();
                         if (message.Acknowledge!=null)
                             await message.Acknowledge();
-                        if (inboxResponses.TryGetValue(message.CorrelationID,out var taskCompletionSource))
+                        if (inboxResponses.TryGetValue(message.CorrelationID, out var taskCompletionSource))
                         {
                             taskCompletionSource.TrySetResult(new(
                                 message.ID,
@@ -107,7 +107,7 @@ namespace MQContract
                 where R : class
         {
             var realTimeout = timeout??typeof(Q).GetCustomAttribute<MessageResponseTimeoutAttribute>()?.TimeSpanValue;
-            var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(), message, false,channel: channel, messageHeader: messageHeader);
+            var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(serviceConnection.MaxMessageBodySize), message, false, channel: channel, messageHeader: messageHeader);
             if (serviceConnection is IQueryResponseMessageServiceConnection queryableMessageServiceConnection)
                 return await ProduceResultAsync<R>(
                     await queryableMessageServiceConnection.QueryAsync(
@@ -118,7 +118,7 @@ namespace MQContract
                 );
             else if (serviceConnection is IInboxQueryableMessageServiceConnection inboxMessageServiceConnection)
                 return await ProduceResultAsync<R>(
-                    await ProcessInboxMessage(inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout,cancellationToken)
+                    await ProcessInboxMessage(inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, cancellationToken)
                 );
             return await ProcessPubSubQuery<Q, R>(responseChannel, realTimeout, serviceMessage, cancellationToken);
         }
@@ -128,7 +128,7 @@ namespace MQContract
             QueryResult<R> result;
             try
             {
-                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(ChannelMapper.MapTypes.QueryResponse, GetMessageFactory<R>(true), new(queryResult.ID, queryResult.MessageTypeID, string.Empty, queryResult.Header, queryResult.Data));
+                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(ChannelMapper.MapTypes.QueryResponse, GetMessageFactory<R>(serviceConnection.MaxMessageBodySize,true), new(queryResult.ID, queryResult.MessageTypeID, string.Empty, queryResult.Header, queryResult.Data));
                 result = new QueryResult<R>(
                     queryResult.ID,
                     messageHeader,
@@ -159,8 +159,8 @@ namespace MQContract
             where Q : class
             where R : class
         {
-            var queryMessageFactory = GetMessageFactory<Q>(ignoreMessageHeader);
-            var responseMessageFactory = GetMessageFactory<R>();
+            var queryMessageFactory = GetMessageFactory<Q>(serviceConnection.MaxMessageBodySize,ignoreMessageHeader);
+            var responseMessageFactory = GetMessageFactory<R>(serviceConnection.MaxMessageBodySize);
             var subscription = new QueryResponseSubscription<Q>(
                 async (message, replyChannel) =>
                 {
@@ -184,7 +184,7 @@ namespace MQContract
                 channel: channel,
                 group: group,
                 synchronous: synchronous,
-                logger: logger);
+                logger: Logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
                 return subscription;
             throw new SubscriptionFailedException();
@@ -200,7 +200,7 @@ namespace MQContract
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 #pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            var methodInfo = typeof(ContractConnection).GetMethod(nameof(ContractConnection.ExecuteQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
+            var methodInfo = typeof(Connection).GetMethod(nameof(Connection.ExecuteQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             dynamic? queryResult;
             try
@@ -229,9 +229,9 @@ namespace MQContract
 
         ValueTask<ISubscription> IContractConnection.SubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, QueryResponseMessage<R>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
             => ProduceSubscribeQueryResponseAsync<Q, R>((msg) =>
-        {
-            var result = messageReceived(msg);
-            return ValueTask.FromResult(result);
-        }, errorReceived, channel, group, ignoreMessageHeader, true, cancellationToken);
+            {
+                var result = messageReceived(msg);
+                return ValueTask.FromResult(result);
+            }, errorReceived, channel, group, ignoreMessageHeader, true, cancellationToken);
     }
 }

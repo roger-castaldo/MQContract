@@ -1,5 +1,4 @@
 ﻿using Apache.NMS;
-using Apache.NMS.Util;
 using MQContract.Interfaces.Service;
 
 namespace MQContract.ActiveMQ.Subscriptions

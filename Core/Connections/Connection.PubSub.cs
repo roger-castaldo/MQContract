@@ -1,16 +1,16 @@
-﻿using MQContract.Interfaces;
-using MQContract.Interfaces.Service;
+﻿using MQContract.Interfaces.Service;
+using MQContract.Interfaces;
 using MQContract.Messages;
 using MQContract.Subscriptions;
 
-namespace MQContract
+namespace MQContract.Connections
 {
-    public partial class ContractConnection
+    internal partial class Connection
     {
         private async ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
             where T : class
         {
-            var messageFactory = GetMessageFactory<T>(ignoreMessageHeader);
+            var messageFactory = GetMessageFactory<T>(serviceConnection.MaxMessageBodySize,ignoreMessageHeader);
             var subscription = new PubSubSubscription<T>(
                 async (serviceMessage) =>
                 {
@@ -22,7 +22,7 @@ namespace MQContract
                 channel: channel,
                 group: group,
                 synchronous: synchronous,
-                logger: logger);
+                logger: Logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
                 return subscription;
             throw new SubscriptionFailedException();
@@ -32,7 +32,7 @@ namespace MQContract
         {
             await publishLock.WaitAsync(cancellationToken);
             var result = await serviceConnection.PublishAsync(
-                await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(), message, false, channel, messageHeader),
+                await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), message, false, channel, messageHeader),
                 cancellationToken
             );
             publishLock.Release();
@@ -42,8 +42,8 @@ namespace MQContract
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel = null, CancellationToken cancellationToken = new CancellationToken())
         {
             var serviceMessages = await Task.WhenAll(
-                messages.Select(m => 
-                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(), m.message, false, channel, m.messageHeader).AsTask())
+                messages.Select(m =>
+                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), m.message, false, channel, m.messageHeader).AsTask())
                 .ToArray()
             );
             IEnumerable<TransmissionResult> result = [];
@@ -51,8 +51,8 @@ namespace MQContract
             if (serviceConnection is IBulkPublishableMessageServiceConnection bulkPublishableMessageServiceConnection)
                 result = await bulkPublishableMessageServiceConnection.BulkPublishAsync(serviceMessages, cancellationToken);
             else
-                foreach(var message in serviceMessages)
-                    result=result.Append(await serviceConnection.PublishAsync(message,cancellationToken));
+                foreach (var message in serviceMessages)
+                    result=result.Append(await serviceConnection.PublishAsync(message, cancellationToken));
             publishLock.Release();
             return result;
         }
