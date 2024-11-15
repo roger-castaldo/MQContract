@@ -2,7 +2,7 @@
 using MQContract;
 using MQContract.Interfaces.Service;
 
-namespace AutomatedTesting.ContractConnectionTests
+namespace AutomatedTesting.ConnectionTests.SingleService
 {
     [TestClass]
     public class PingTests
@@ -12,7 +12,7 @@ namespace AutomatedTesting.ContractConnectionTests
         {
             #region Arrange
             var pingResult = new PingResult("TestHost", "1.0.0", TimeSpan.FromSeconds(5));
-            
+
             var serviceConnection = new Mock<IPingableMessageServiceConnection>();
             serviceConnection.Setup(x => x.PingAsync())
                 .ReturnsAsync(pingResult);

@@ -7,7 +7,7 @@ using MQContract.Interfaces.Service;
 using MQContract.Interfaces;
 using System.Reflection;
 
-namespace AutomatedTesting.ContractConnectionTests
+namespace AutomatedTesting.ConnectionTests.SingleService
 {
     [TestClass]
     public class SubscribeTests
@@ -16,7 +16,7 @@ namespace AutomatedTesting.ContractConnectionTests
         public async Task TestSubscribeAsyncWithNoExtendedAspects()
         {
             #region Arrange
-            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());   
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
@@ -26,8 +26,8 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
-                Capture.In<string>(groups), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -56,14 +56,14 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IReceivedMessage<BasicMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
@@ -79,7 +79,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
-            System.Diagnostics.Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
+            Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion
 
             #region Verify
@@ -98,10 +98,10 @@ namespace AutomatedTesting.ContractConnectionTests
             var channels = new List<string>();
             var channelName = "TestSubscribeAsyncWithSpecificChannel";
 
-            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), Capture.In<string>(channels),
+            serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), Capture.In(channels),
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            
+
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
@@ -134,7 +134,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var groupName = "TestSubscribeAsyncWithSpecificGroup";
 
             serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
-                Capture.In<string>(groups), It.IsAny<CancellationToken>()))
+                Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
@@ -201,7 +201,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async ()=> await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }));
+            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }));
             #endregion
 
             #region Assert
@@ -351,8 +351,8 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
-                Capture.In<string>(groups), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -381,18 +381,18 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result1 = await contractConnection.PublishAsync<BasicMessage>(message1);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             stopwatch.Restart();
             var result2 = await contractConnection.PublishAsync<BasicMessage>(message2);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IReceivedMessage<BasicMessage>>(messages, 2, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result1);
             Assert.IsNotNull(result2);
@@ -410,7 +410,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(message1, messages[0].Message);
             Assert.AreEqual(message2, messages[1].Message);
             Assert.AreEqual(exception, exceptions[0]);
-            System.Diagnostics.Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
+            Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion
 
             #region Verify
@@ -433,8 +433,8 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
-                Capture.In<string>(groups), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -462,11 +462,11 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<Exception>(exceptions, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(exceptions, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
@@ -500,13 +500,13 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
-                Capture.In<string>(groups), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
-                    var rmessage = Helper.ProduceReceivedServiceMessage(message,$"{message.MessageTypeID}:XXXX");
+                    var rmessage = Helper.ProduceReceivedServiceMessage(message, $"{message.MessageTypeID}:XXXX");
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
@@ -525,11 +525,11 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<Exception>(exceptions, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(exceptions, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
@@ -564,8 +564,8 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
-                Capture.In<string>(groups), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -594,14 +594,14 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IReceivedMessage<BasicMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
@@ -617,14 +617,15 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
-            System.Diagnostics.Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
+            Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             Exception? disposeError = null;
             try
             {
                 await subscription.EndAsync();
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
-                disposeError=e;
+                disposeError = e;
             }
             Assert.IsNull(disposeError);
             #endregion
@@ -649,8 +650,8 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
-                Capture.In<string>(groups), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -679,14 +680,14 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IReceivedMessage<NamedAndVersionedMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
@@ -702,7 +703,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message.Name, messages[0].Message.TestName);
             Assert.AreEqual(exception, exceptions[0]);
-            System.Diagnostics.Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
+            Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion
 
             #region Verify
@@ -725,8 +726,8 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
-                Capture.In<string>(groups), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -755,14 +756,14 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<NoChannelMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IReceivedMessage<NamedAndVersionedMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);
@@ -778,7 +779,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message.TestName, messages[0].Message.TestName);
             Assert.AreEqual(exception, exceptions[0]);
-            System.Diagnostics.Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
+            Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion
 
             #region Verify
@@ -801,8 +802,8 @@ namespace AutomatedTesting.ContractConnectionTests
             var groups = new List<string>();
             var serviceMessages = new List<ReceivedServiceMessage>();
 
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(actions), Capture.In<Action<Exception>>(errorActions), Capture.In<string>(channels),
-                Capture.In<string>(groups), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -831,14 +832,14 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.PublishAsync<BasicQueryMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<Exception>(exceptions, 2, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(exceptions, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, actions.Count);

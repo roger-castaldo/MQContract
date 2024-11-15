@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 
-namespace AutomatedTesting.ContractConnectionTests
+namespace AutomatedTesting.ConnectionTests.SingleService
 {
     [TestClass]
     public class BulkPublishTests
@@ -18,17 +18,17 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Arrange
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
-            IEnumerable<(BasicMessage message,MessageHeader? messageHeader)> testMessages = [
+            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
                 (new("testMessage"),null),
                 (new("testMessage2"),null)
             ];
-            
+
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            
+
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
@@ -36,11 +36,11 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, testMessages.Count(), TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, testMessages.Count(), TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.AreEqual(testMessages.Count(), messages.Count);
@@ -48,7 +48,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
                 && Equals("U-BasicMessage-0.0.0.0", m.MessageTypeID)
-                && m.Data.Length>0
+                && m.Data.Length > 0
             ));
             Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[1].Data.ToArray())));
@@ -74,7 +74,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
@@ -82,13 +82,13 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages,channel:channelName);
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channelName);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 2, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.AreEqual(2, messages.Count);
@@ -96,7 +96,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Equals(channelName, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
                 && Equals("U-BasicMessage-0.0.0.0", m.MessageTypeID)
-                && m.Data.Length>0
+                && m.Data.Length > 0
             ));
             Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[1].Data.ToArray())));
@@ -121,7 +121,7 @@ namespace AutomatedTesting.ContractConnectionTests
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
@@ -131,18 +131,18 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 2, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.AreEqual(2, messages.Count);
             Assert.IsTrue(messages.All(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals("U-BasicMessage-0.0.0.0", m.MessageTypeID)
-                && m.Data.Length>0
+                && m.Data.Length > 0
             ));
             Assert.IsTrue(testMessages.ElementAt(0).messageHeader.Keys.All(k => Equals(messages[0].Header[k], testMessages.ElementAt(0).messageHeader[k])));
             Assert.IsTrue(testMessages.ElementAt(1).messageHeader.Keys.All(k => Equals(messages[1].Header[k], testMessages.ElementAt(1).messageHeader[k])));
@@ -169,8 +169,8 @@ namespace AutomatedTesting.ContractConnectionTests
             List<IEnumerable<ServiceMessage>> messages = [];
 
             var serviceConnection = new Mock<IBulkPublishableMessageServiceConnection>();
-            serviceConnection.Setup(x => x.BulkPublishAsync(Capture.In<IEnumerable<ServiceMessage>>(messages), It.IsAny<CancellationToken>()))
-                .Returns((IEnumerable<ServiceMessage> messages,CancellationToken cancellationToken)=> ValueTask.FromResult(messages.Select(m=>transmissionResult)));
+            serviceConnection.Setup(x => x.BulkPublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .Returns((IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken) => ValueTask.FromResult(messages.Select(m => transmissionResult)));
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
@@ -179,19 +179,19 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<IEnumerable<ServiceMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages.SelectMany(messageSet=>messageSet.Select(m=>m)).All(m =>
+            Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
                 && Equals("U-BasicMessage-0.0.0.0", m.MessageTypeID)
-                && m.Data.Length>0
+                && m.Data.Length > 0
             ));
             Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(0).Data.ToArray())));
             Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(1).Data.ToArray())));

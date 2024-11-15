@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Reflection;
 using Castle.Core.Internal;
 
-namespace AutomatedTesting.ContractConnectionTests
+namespace AutomatedTesting.ConnectionTests.SingleService
 {
     [TestClass]
     public class QueryWithoutQueryResponseTests
@@ -25,7 +25,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
 
@@ -36,8 +36,8 @@ namespace AutomatedTesting.ContractConnectionTests
             List<string> channels = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(messageActions), It.IsAny<Action<Exception>>(),
-                Capture.In<string>(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(messageActions), It.IsAny<Action<Exception>>(),
+                Capture.In(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -56,11 +56,11 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
@@ -68,7 +68,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages[0].Data.Length>0);
+            Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -93,7 +93,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var headerKey = "MyHeaderKey";
             var headerValue = "MyHeaderValue";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -103,8 +103,8 @@ namespace AutomatedTesting.ContractConnectionTests
             List<string> channels = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(messageActions), It.IsAny<Action<Exception>>(),
-                Capture.In<string>(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(messageActions), It.IsAny<Action<Exception>>(),
+                Capture.In(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -123,11 +123,11 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, messageHeader: new([new KeyValuePair<string, string>(headerKey, headerValue)]), responseChannel: responseChannel);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
@@ -135,7 +135,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages[0].Data.Length>0);
+            Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(4, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -160,7 +160,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -170,8 +170,8 @@ namespace AutomatedTesting.ContractConnectionTests
             List<string> channels = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(messageActions), It.IsAny<Action<Exception>>(),
-                Capture.In<string>(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(messageActions), It.IsAny<Action<Exception>>(),
+                Capture.In(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -197,11 +197,11 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
@@ -209,7 +209,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages[0].Data.Length>0);
+            Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -232,7 +232,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = typeof(BasicQueryMessage).GetAttribute<QueryResponseChannelAttribute>()?.Name;
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync<BasicResponseMessage>(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -242,8 +242,8 @@ namespace AutomatedTesting.ContractConnectionTests
             List<string> channels = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(messageActions), It.IsAny<Action<Exception>>(),
-                Capture.In<string>(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(messageActions), It.IsAny<Action<Exception>>(),
+                Capture.In(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
@@ -262,11 +262,11 @@ namespace AutomatedTesting.ContractConnectionTests
             var stopwatch = Stopwatch.StartNew();
             var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage);
             stopwatch.Stop();
-            System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
@@ -274,7 +274,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual(1, channels.Count);
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages[0].Data.Length>0);
+            Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -305,7 +305,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<QueryExecutionFailedException>(async()=> await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel));
+            var error = await Assert.ThrowsExceptionAsync<QueryExecutionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel));
             #endregion
 
             #region Assert
@@ -364,8 +364,8 @@ namespace AutomatedTesting.ContractConnectionTests
             List<string> channels = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In<Action<ReceivedServiceMessage>>(messageActions), It.IsAny<Action<Exception>>(),
-                Capture.In<string>(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(messageActions), It.IsAny<Action<Exception>>(),
+                Capture.In(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>

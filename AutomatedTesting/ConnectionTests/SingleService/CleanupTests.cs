@@ -2,7 +2,7 @@
 using MQContract.Interfaces.Service;
 using MQContract;
 
-namespace AutomatedTesting.ContractConnectionTests
+namespace AutomatedTesting.ConnectionTests.SingleService
 {
     [TestClass]
     public class CleanupTests
@@ -56,7 +56,7 @@ namespace AutomatedTesting.ContractConnectionTests
         {
             #region Arrange
             var serviceConnection = new Mock<IAsyncDisposable>();
-            serviceConnection.Setup(x=>x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+            serviceConnection.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.As<IMessageServiceConnection>().Object);
             #endregion
