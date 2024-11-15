@@ -411,7 +411,7 @@ MQContract
 
 ##### Summary
 
-The primary ContractConnection item which implements IContractConnection
+The primary class for producing an instance of either an IContractConnection or an IMultiServiceContractConnection
 
 <a name='M-MQContract-ContractConnection-Instance-MQContract-Interfaces-Service-IMessageServiceConnection,MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper-'></a>
 ### Instance(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper) `method`

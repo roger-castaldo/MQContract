@@ -25,7 +25,7 @@ namespace AutomatedTesting
         {
             var task = new Task(() =>
             {
-                while (values.Count()!=count)
+                while (values.Count()<count)
                     Task.Delay(Delay).Wait();
             });
             task.Start();

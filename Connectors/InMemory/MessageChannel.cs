@@ -13,10 +13,10 @@ namespace MQContract.InMemory
         private async ValueTask<bool> Publish(InternalServiceMessage message, CancellationToken cancellationToken)
         {
             locker.EnterReadLock();
-            var tasks = groups.Select(grp => grp.PublishMessage(message).AsTask()).ToArray();
+            var grps = groups.ToArray();
             locker.ExitReadLock();
-            await Task.WhenAll(tasks);
-            return Array.TrueForAll(tasks, t => t.Result);
+            var results = await grps.WhenAll(grp => grp.PublishMessage(message));
+            return Array.TrueForAll(results.ToArray(), t => t);
         }
 
         public void Close()
@@ -41,7 +41,10 @@ namespace MQContract.InMemory
             locker.EnterReadLock();
             foreach(var message in messages)
             {
-                var messageResults = await Task.WhenAll(groups.Select(grp => grp.PublishMessage(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data)).AsTask()).ToArray());
+                var messageResults = (
+                    await groups
+                        .WhenAll(grp => grp.PublishMessage(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data)))
+                    ).ToArray();
                 results=results.Append(new(message.ID, Array.TrueForAll(messageResults, mr => mr) ? null : TransmissionResultError));
             }
             locker.ExitReadLock();

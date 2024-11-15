@@ -1,8 +1,6 @@
-﻿using MQContract.Attributes;
-using MQContract.Interfaces;
+﻿using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 namespace MQContract.Subscriptions
 {
@@ -19,11 +17,8 @@ namespace MQContract.Subscriptions
 
         protected SubscriptionBase(Func<string, ValueTask<string>> mapChannel, string? channel=null,bool synchronous = false){
             ID = Guid.NewGuid();
-            var chan = channel??typeof(T).GetCustomAttribute<MessageChannelAttribute>(false)?.Name??throw new MessageChannelNullException();
             Synchronous = synchronous;
-            var tsk = mapChannel(chan).AsTask();
-            tsk.Wait();
-            MessageChannel=tsk.Result;
+            MessageChannel=Utility.GetChannel<T>(mapChannel, channel);
         }
 
         [ExcludeFromCodeCoverage(Justification = "Virtual function that is implemented elsewhere")]

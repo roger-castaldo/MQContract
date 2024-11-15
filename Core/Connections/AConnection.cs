@@ -6,23 +6,31 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Middleware;
+using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using MQContract.Middleware;
+using MQContract.Subscriptions;
 using System.Diagnostics.Metrics;
+using MQContract.Attributes;
+using System.Reflection;
 
 namespace MQContract.Connections
 {
-    internal abstract class AConnection(IMessageEncoder? defaultMessageEncoder = null,
+    internal abstract class AConnection<CC>(IMessageEncoder? defaultMessageEncoder = null,
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,
-        ChannelMapper? channelMapper = null) : 
-        IDisposable,IAsyncDisposable
+        ChannelMapper? channelMapper = null)
+        : IMetricContractConnection<CC>
+        where CC : IBaseContractConnection
     {
         private bool disposedValue;
         protected readonly Guid indentifier = Guid.NewGuid();
         protected readonly SemaphoreSlim dataLock = new(1, 1);
         private readonly List<object> middleware = [new ChannelMappingMiddleware(channelMapper)];
+        private readonly SemaphoreSlim inboxSemaphore = new(1, 1);
+        private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
+        private readonly Dictionary<string,IServiceSubscription> inboxSubscriptions = [];
         private IEnumerable<IMessageTypeFactory> typeFactories = [];
         protected ILogger? Logger => logger;
 
@@ -47,23 +55,27 @@ namespace MQContract.Connections
 
         #region Middleware
 
-        private AConnection RegisterMiddleware(object element)
+        private CC RegisterMiddleware(object element)
         {
             dataLock.Wait();
             middleware.Add(element);
             dataLock.Release();
-            return this;
+            return (CC)(IBaseContractConnection)this;
         }
 
-        protected AConnection RegisterMiddleware(Type type)
+        private CC RegisterMiddlewareType(Type type)
             => RegisterMiddleware((serviceProvider == null ? Activator.CreateInstance(type) : ActivatorUtilities.CreateInstance(serviceProvider, type))!);
-        protected AConnection RegisterMiddleware<T>()
-            => RegisterMiddleware(typeof(T));
-        protected AConnection RegisterMiddleware<T>(Func<T> constructInstance)
+
+        CC IMetricContractConnection<CC>.RegisterMiddleware<T>()
+            => RegisterMiddlewareType(typeof(T));
+
+        CC IMetricContractConnection<CC>.RegisterMiddleware<T>(Func<T> constructInstance)
             => RegisterMiddleware(constructInstance());
-        protected AConnection RegisterMiddleware<T, M>()
-            => RegisterMiddleware(typeof(T));
-        protected AConnection RegisterMiddleware<T, M>(Func<T> constructInstance)
+
+        CC IMetricContractConnection<CC>.RegisterMiddleware<T, M>()
+            => RegisterMiddlewareType(typeof(T));
+
+        CC IMetricContractConnection<CC>.RegisterMiddleware<T, M>(Func<T> constructInstance)
             => RegisterMiddleware(constructInstance());
 
         private async ValueTask<(T message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
@@ -145,12 +157,13 @@ namespace MQContract.Connections
         #endregion
 
         #region Metrics
-        protected AConnection AddMetrics(Meter? meter, bool useInternal)
+
+        CC IMetricContractConnection<CC>.AddMetrics(Meter? meter, bool useInternal)
         {
             dataLock.Wait();
             middleware.Insert(0, new MetricsMiddleware(meter, useInternal));
             dataLock.Release();
-            return this;
+            return (CC)(IBaseContractConnection)this;
         }
 
         private MetricsMiddleware? MetricsMiddleware
@@ -166,15 +179,275 @@ namespace MQContract.Connections
             }
         }
 
-        protected IContractMetric? GetSnapshot(bool sent)
+        IContractMetric? IMetricContractConnection<CC>.GetSnapshot(bool sent)
             => MetricsMiddleware?.GetSnapshot(sent);
-        protected IContractMetric? GetSnapshot(Type messageType, bool sent)
+        IContractMetric? IMetricContractConnection<CC>.GetSnapshot(Type messageType, bool sent)
             => MetricsMiddleware?.GetSnapshot(messageType, sent);
-        protected IContractMetric? GetSnapshot<T>(bool sent)
+        IContractMetric? IMetricContractConnection<CC>.GetSnapshot<T>(bool sent)
             => MetricsMiddleware?.GetSnapshot(typeof(T), sent);
-        protected IContractMetric? GetSnapshot(string channel, bool sent)
+        IContractMetric? IMetricContractConnection<CC>.GetSnapshot(string channel, bool sent)
             => MetricsMiddleware?.GetSnapshot(channel, sent);
         #endregion
+
+        #region Subscriptions
+        protected abstract ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
+            where T : class;
+
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken) where T : class
+            => CreateSubscriptionAsync<T>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, false, cancellationToken);
+
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<T>(Action<IReceivedMessage<T>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken) where T : class
+            => CreateSubscriptionAsync<T>((msg) =>
+            {
+                messageReceived(msg);
+                return ValueTask.CompletedTask;
+            },
+            errorReceived, channel, group, ignoreMessageHeader, true, cancellationToken);
+
+        protected abstract ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
+            where Q : class
+            where R : class;
+
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryAsyncResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+            => ProduceSubscribeQueryResponseAsync<Q, R>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, false, cancellationToken);
+
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, QueryResponseMessage<R>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+            => ProduceSubscribeQueryResponseAsync<Q, R>((msg) =>
+            {
+                var result = messageReceived(msg);
+                return ValueTask.FromResult(result);
+            }, errorReceived, channel, group, ignoreMessageHeader, true, cancellationToken);
+        #endregion
+
+        #region PubSub
+        protected static async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> serviceMessages,IMessageServiceConnection serviceConnection,CancellationToken cancellationToken)
+        {
+            if (serviceConnection is IBulkPublishableMessageServiceConnection bulkPublishableMessageServiceConnection)
+                return await bulkPublishableMessageServiceConnection.BulkPublishAsync(serviceMessages, cancellationToken);
+            else
+                return await serviceMessages
+                    .WhenAll(message => serviceConnection.PublishAsync(message, cancellationToken));
+        }
+
+        protected async ValueTask<ISubscription> CreateSubscriptionAsync<T>(IMessageFactory<T> messageFactory, IMessageServiceConnection serviceConnection, Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, CancellationToken cancellationToken)
+            where T : class
+        {
+            var subscription = new PubSubSubscription<T>(
+                async (serviceMessage) =>
+                {
+                    (var taskMessage, var messageHeader) = await DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes.PublishSubscription, messageFactory, serviceMessage);
+                    await messageReceived(new ReceivedMessage<T>(serviceMessage.ID, taskMessage!, messageHeader, serviceMessage.ReceivedTimestamp, DateTime.Now));
+                },
+                errorReceived,
+                (originalChannel) => MapChannel(ChannelMapper.MapTypes.PublishSubscription, originalChannel)!,
+                channel: channel,
+            group: group,
+            synchronous: synchronous,
+                logger: Logger);
+            if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
+                return subscription;
+            throw new SubscriptionFailedException();
+        }
+        #endregion
+
+        #region QueryResponse
+        private async ValueTask<ServiceQueryResult> ProcessInboxMessageAsync(string connectionName,IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            var messageID = Guid.NewGuid();
+            await inboxSemaphore.WaitAsync(cancellationToken);
+            if (!inboxSubscriptions.TryGetValue(connectionName, out var inboxSubscription))
+            {
+                inboxSubscription = await inboxMessageServiceConnection.EstablishInboxSubscriptionAsync(
+                    async (message) =>
+                    {
+                        await inboxSemaphore.WaitAsync();
+                        if (message.Acknowledge!=null)
+                            await message.Acknowledge();
+                        if (inboxResponses.TryGetValue(message.CorrelationID, out var taskCompletionSource))
+                        {
+                            taskCompletionSource.TrySetResult(new(
+                                message.ID,
+                                message.Header,
+                                message.MessageTypeID,
+                                message.Data
+                            ));
+                        }
+                        inboxSemaphore.Release();
+                    },
+                    cancellationToken
+                );
+                inboxSubscriptions.Add(connectionName, inboxSubscription);
+            }
+            var tcs = new TaskCompletionSource<ServiceQueryResult>();
+            inboxResponses.Add(messageID, tcs);
+            inboxSemaphore.Release();
+            using var token = new CancellationTokenSource();
+            var reg = cancellationToken.Register(() => token.Cancel());
+            token.Token.Register(async () => {
+                await reg.DisposeAsync();
+                if (!tcs.Task.IsCompleted)
+                    tcs.TrySetException(new QueryTimeoutException());
+            });
+            token.CancelAfter(timeout);
+            var result = await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, cancellationToken);
+            if (result.IsError)
+            {
+                await inboxSemaphore.WaitAsync();
+                inboxResponses.Remove(messageID);
+                inboxSemaphore.Release();
+                throw new QuerySubmissionFailedException(result.Error!);
+            }
+            try
+            {
+                await tcs.Task.WaitAsync(cancellationToken);
+            }
+            finally
+            {
+                if (!token.IsCancellationRequested)
+                    await token.CancelAsync();
+                await inboxSemaphore.WaitAsync();
+                inboxResponses.Remove(messageID);
+                inboxSemaphore.Release();
+            }
+            return tcs.Task.Result;
+        }
+        protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize,ServiceQueryResult queryResult) where R : class
+        {
+            QueryResult<R> result;
+            try
+            {
+                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(ChannelMapper.MapTypes.QueryResponse, GetMessageFactory<R>(maxMessageBodySize, true), new(queryResult.ID, queryResult.MessageTypeID, string.Empty, queryResult.Header, queryResult.Data));
+                result = new QueryResult<R>(
+                    queryResult.ID,
+                    messageHeader,
+                    Result: resultMessage
+                );
+            }
+            catch (QueryResponseException qre)
+            {
+                return new(
+                    queryResult.ID,
+                    queryResult.Header,
+                    Result: default,
+                    Error: qre.Message
+                );
+            }
+            catch (Exception ex)
+            {
+                return new(
+                    queryResult.ID,
+                    queryResult.Header,
+                    Result: default,
+                    Error: ex.Message
+                );
+            }
+            return result;
+        }
+
+        protected async ValueTask<QueryResult<R>> ExecuteQueryAsync<Q,R>(IMessageServiceConnection serviceConnection, ServiceMessage serviceMessage, TimeSpan? timeout = null, string? responseChannel = null,string connectionName = "DEFAULT", CancellationToken cancellationToken = new CancellationToken())
+                where Q : class
+                where R : class
+        {
+            var realTimeout = timeout??typeof(Q).GetCustomAttribute<MessageResponseTimeoutAttribute>()?.TimeSpanValue;
+            if (serviceConnection is IQueryResponseMessageServiceConnection queryableMessageServiceConnection)
+                return await ProduceResultAsync<R>(
+                    serviceConnection.MaxMessageBodySize,
+                    await queryableMessageServiceConnection.QueryAsync(
+                        serviceMessage,
+                        realTimeout??queryableMessageServiceConnection.DefaultTimeout,
+                        cancellationToken
+                    )
+                );
+            else if (serviceConnection is IInboxQueryableMessageServiceConnection inboxMessageServiceConnection)
+                return await ProduceResultAsync<R>(
+                    serviceConnection.MaxMessageBodySize,
+                    await ProcessInboxMessageAsync(connectionName,inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, cancellationToken)
+                );
+            return await ProcessPubSubQuery<Q, R>(serviceConnection, responseChannel, realTimeout, serviceMessage, cancellationToken);
+        }
+
+        protected async ValueTask<QueryResult<R>> ProcessPubSubQuery<Q, R>(IMessageServiceConnection serviceConnection, string? responseChannel, TimeSpan? realTimeout, ServiceMessage serviceMessage, CancellationToken cancellationToken)
+            where Q : class
+            where R : class
+        {
+            responseChannel ??=typeof(Q).GetCustomAttribute<QueryResponseChannelAttribute>()?.Name;
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(responseChannel);
+            var replyChannel = await MapChannel(ChannelMapper.MapTypes.QueryResponse, responseChannel!);
+            var callID = Guid.NewGuid();
+            var (tcs, token) = await QueryResponseHelper.StartResponseListenerAsync(
+                serviceConnection,
+                realTimeout??TimeSpan.FromMinutes(1),
+                indentifier,
+                callID,
+                replyChannel,
+                cancellationToken
+            );
+            var msg = QueryResponseHelper.EncodeMessage(
+                serviceMessage,
+                indentifier,
+                callID,
+                replyChannel,
+                null
+            );
+            await serviceConnection.PublishAsync(msg, cancellationToken: cancellationToken);
+            try
+            {
+                await tcs.Task.WaitAsync(cancellationToken);
+            }
+            finally
+            {
+                if (!token.IsCancellationRequested)
+                    await token.CancelAsync();
+            }
+            return await ProduceResultAsync<R>(serviceConnection.MaxMessageBodySize, tcs.Task.Result);
+        }
+        protected async ValueTask<ISubscription> CreateSubscriptionAsync<Q, R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, IMessageServiceConnection serviceConnection,
+            Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, CancellationToken cancellationToken)
+            where Q : class
+            where R : class
+        {
+            var subscription = new QueryResponseSubscription<Q>(
+                async (message, replyChannel) =>
+                {
+                    (var taskMessage, var messageHeader) = await DecodeServiceMessageAsync<Q>(
+                        ChannelMapper.MapTypes.QuerySubscription,
+                        queryMessageFactory,
+                        message
+                    );
+                    var result = await messageReceived(new ReceivedMessage<Q>(message.ID, taskMessage!, messageHeader, message.ReceivedTimestamp, DateTime.Now));
+                    return await ProduceServiceMessageAsync<R>(
+                        ChannelMapper.MapTypes.QueryResponse,
+                        responseMessageFactory,
+                        result.Message,
+                        true,
+                        replyChannel,
+                        new(result.Headers)
+                    );
+                },
+                errorReceived,
+                (originalChannel) => MapChannel(ChannelMapper.MapTypes.QuerySubscription, originalChannel),
+                channel: channel,
+            group: group,
+            synchronous: synchronous,
+                logger: Logger);
+            if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
+                return subscription;
+            throw new SubscriptionFailedException();
+        }
+        #endregion
+
+        protected abstract ValueTask CloseAsync();
+        async ValueTask IBaseContractConnection.CloseAsync()
+        {
+            await inboxSemaphore.WaitAsync();
+            foreach (var key in inboxSubscriptions.Keys)
+            {
+                var inboxSubscription = inboxSubscriptions[key];
+                await inboxSubscription.EndAsync();
+            }
+            inboxSemaphore.Release();
+            await CloseAsync();
+        }
 
         protected abstract void InternalDispose();
         protected abstract ValueTask InternalDisposeAsync();
@@ -184,7 +457,21 @@ namespace MQContract.Connections
             if (!disposedValue)
             {
                 if (disposing)
+                {
+                    inboxSemaphore.Wait();
+                    foreach (var key in inboxSubscriptions.Keys)
+                    {
+                        var inboxSubscription = inboxSubscriptions[key];
+                        if (inboxSubscription is IAsyncDisposable asyncSubDisposable)
+                            asyncSubDisposable.DisposeAsync().AsTask().Wait();
+                        else if (inboxSubscription is IDisposable subDisposable)
+                            subDisposable.Dispose();
+                    }
+                    inboxSubscriptions.Clear();
+                    inboxSemaphore.Release();
+                    inboxSemaphore.Dispose();
                     InternalDispose();
+                }
                 dataLock.Dispose();
                 disposedValue =true;
             }
@@ -199,6 +486,18 @@ namespace MQContract.Connections
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
+            await inboxSemaphore.WaitAsync();
+            foreach(var key in inboxSubscriptions.Keys)
+            {
+                var inboxSubscription = inboxSubscriptions[key];
+                if (inboxSubscription is IAsyncDisposable asyncSubDisposable)
+                    await asyncSubDisposable.DisposeAsync();
+                else if (inboxSubscription is IDisposable subDisposable)
+                    subDisposable.Dispose();
+            }
+            inboxSubscriptions.Clear();
+            inboxSemaphore.Release();
+            inboxSemaphore.Dispose();
             await InternalDisposeAsync();
             Dispose(false);
             GC.SuppressFinalize(this);

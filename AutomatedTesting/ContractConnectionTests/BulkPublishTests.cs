@@ -40,10 +40,10 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 2, TimeSpan.FromMinutes(1)));
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, testMessages.Count(), TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
-            Assert.AreEqual(2, messages.Count);
+            Assert.AreEqual(testMessages.Count(), messages.Count);
             Assert.IsTrue(messages.All(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
