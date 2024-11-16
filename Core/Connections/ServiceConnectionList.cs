@@ -63,8 +63,16 @@ namespace MQContract.Connections
                 if (disposing)
                 {
                     dataLock.Wait();
+                    foreach(var conn in connections.DistinctBy(ss => ss.ServiceConnectionName).ToArray())
+                    {
+                        if (conn.MessageServiceConnection is IDisposable disposable)
+                            disposable.Dispose();
+                        else if (conn.MessageServiceConnection is IAsyncDisposable asyncDisposable)
+                            asyncDisposable.DisposeAsync().AsTask().Wait();
+                    }
                     connections.Clear();
                     dataLock.Release();
+                    dataLock.Dispose();
                 }
                 disposedValue=true;
             }
