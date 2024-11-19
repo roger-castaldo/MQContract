@@ -19,7 +19,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PingAsync())
                 .ReturnsAsync(pingResult);
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
 
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
@@ -51,7 +51,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             var nonPingableServiceConnection = new Mock<IMessageServiceConnection>();
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
 
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);
             contractConnection.RegisterServiceConnection("otherTestConnection", nonPingableServiceConnection.Object);
@@ -78,7 +78,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Arrange
             var serviceConnection = new Mock<IMessageServiceConnection>();
             
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
 
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
@@ -110,7 +110,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             otherServiceConnection.Setup(x => x.PingAsync())
                 .ReturnsAsync(pingResult);
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
 
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);
             contractConnection.RegisterServiceConnection("otherTestConnection", otherServiceConnection.Object);

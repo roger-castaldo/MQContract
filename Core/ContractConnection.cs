@@ -23,7 +23,7 @@ namespace MQContract
         /// For example, it might be necessary for a Nats.IO instance when you are trying to read from a stored message stream that is comprised of another channel or set of channels
         /// </param>
         /// <returns>An instance of IContractConnection</returns>
-        public static IContractConnection Instance(IMessageServiceConnection serviceConnection,
+        public static IContractedConnection Instance(IMessageServiceConnection serviceConnection,
         IMessageEncoder? defaultMessageEncoder = null,
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
@@ -42,7 +42,7 @@ namespace MQContract
         /// For example, it might be necessary for a Nats.IO instance when you are trying to read from a stored message stream that is comprised of another channel or set of channels
         /// </param>
         /// <returns>An instance of IMultiServiceContractConnection</returns>
-        public static IMultiServiceContractConnection Instance(IMessageEncoder? defaultMessageEncoder = null,
+        public static IMultiServiceContractConnection MultiServiceInstance(IMessageEncoder? defaultMessageEncoder = null,
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,

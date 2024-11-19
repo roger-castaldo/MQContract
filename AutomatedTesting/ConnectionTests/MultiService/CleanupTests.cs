@@ -17,7 +17,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.CloseAsync())
                 .Returns(ValueTask.CompletedTask);
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -39,7 +39,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Arrange
             var serviceConnection = new Mock<IDisposable>();
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.As<IMessageServiceConnection>().Object);
             #endregion
 
@@ -62,7 +62,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var serviceConnection = new Mock<IAsyncDisposable>();
             serviceConnection.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.As<IMessageServiceConnection>().Object);
             #endregion
 
@@ -84,7 +84,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Arrange
             var serviceConnection = new Mock<IDisposable>();
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.As<IMessageServiceConnection>().Object);
             #endregion
 
@@ -106,7 +106,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Arrange
             var serviceConnection = new Mock<IAsyncDisposable>();
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.As<IMessageServiceConnection>().Object);
             #endregion
 

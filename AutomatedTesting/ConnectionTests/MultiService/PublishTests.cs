@@ -36,7 +36,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -81,7 +81,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -128,7 +128,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             var messageHeader = new MessageHeader([new("testing", "testing")]);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -177,7 +177,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(35);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -229,7 +229,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             globalEncoder.Setup(x => x.EncodeAsync(It.IsAny<BasicMessage>()))
                 .ReturnsAsync(encodedData);
 
-            var contractConnection = ContractConnection.Instance(defaultMessageEncoder: globalEncoder.Object)
+            var contractConnection = ContractConnection.MultiServiceInstance(defaultMessageEncoder: globalEncoder.Object)
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -283,7 +283,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             globalEncryptor.Setup(x => x.EncryptAsync(Capture.In(binaries), out headers))
                 .ReturnsAsync((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
 
-            var contractConnection = ContractConnection.Instance(defaultMessageEncryptor: globalEncryptor.Object)
+            var contractConnection = ContractConnection.MultiServiceInstance(defaultMessageEncryptor: globalEncryptor.Object)
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -331,7 +331,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object); 
             #endregion
 
@@ -376,7 +376,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -424,7 +424,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance(serviceProvider: services)
+            var contractConnection = ContractConnection.MultiServiceInstance(serviceProvider: services)
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -471,7 +471,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -518,7 +518,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance(serviceProvider: services)
+            var contractConnection = ContractConnection.MultiServiceInstance(serviceProvider: services)
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -563,7 +563,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -601,7 +601,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(1);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -638,7 +638,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 

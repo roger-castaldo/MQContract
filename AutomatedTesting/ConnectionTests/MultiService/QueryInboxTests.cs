@@ -61,7 +61,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -118,7 +118,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -163,7 +163,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 

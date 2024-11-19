@@ -42,7 +42,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return Helper.ProduceQueryResult(result);
                 });
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
 
             var message = new BasicQueryMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
@@ -113,7 +113,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -161,7 +161,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(),
                 Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -205,7 +205,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -240,7 +240,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((IServiceSubscription?)null);
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -277,7 +277,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -329,7 +329,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return Helper.ProduceQueryResult(result);
                 });
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
 
             var message1 = new BasicQueryMessage("TestSubscribeQueryResponseWithNoExtendedAspects1");
@@ -420,7 +420,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return Helper.ProduceQueryResult(result);
                 });
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
 
             var message = new BasicQueryMessage("TestSubscribeQueryResponseAsyncErrorTriggeringInOurAction");
@@ -477,7 +477,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -514,7 +514,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -548,7 +548,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -583,7 +583,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -640,7 +640,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return Helper.ProduceQueryResult(result);
                 });
 
-            var contractConnection = ContractConnection.Instance(defaultMessageEncoder: globalConverter.Object)
+            var contractConnection = ContractConnection.MultiServiceInstance(defaultMessageEncoder: globalConverter.Object)
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
 
 

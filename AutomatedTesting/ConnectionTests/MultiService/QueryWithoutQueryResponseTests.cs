@@ -50,7 +50,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -119,7 +119,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -195,7 +195,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -262,7 +262,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -310,7 +310,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult<IServiceSubscription?>(null));
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -340,7 +340,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult<IServiceSubscription?>(null));
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -385,7 +385,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 

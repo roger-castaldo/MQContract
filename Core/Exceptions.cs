@@ -81,4 +81,22 @@
         internal InvalidQueryResponseMessageReceivedException()
             : base("A service message was received on a query response channel without the proper data") { }
     }
+
+    /// <summary>
+    /// Thrown from the Mapped Connection when no connections match the search criteria making the requested action impossible to do
+    /// </summary>
+    public class NoConnectionMatchException : Exception
+    {
+        internal NoConnectionMatchException()
+            : base("No service connection matched the required criteria so unable to process") { }
+    }
+
+    /// <summary>
+    /// Thrown from the Mapped Connection when more than 1 connection matches the search criteria making the requested action impossible to do
+    /// </summary>
+    public class TooManyConnectionMatchesException : Exception
+    {
+        internal TooManyConnectionMatchesException()
+            : base("More than 1 underlying service connection matched the required criteria so unable to process") { }
+    }
 }

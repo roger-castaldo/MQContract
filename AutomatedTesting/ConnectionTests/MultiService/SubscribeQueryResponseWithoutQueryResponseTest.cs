@@ -39,7 +39,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
 
             var message = new BasicQueryMessage("TestSubscribeQueryResponseWithNoExtendedAspects");

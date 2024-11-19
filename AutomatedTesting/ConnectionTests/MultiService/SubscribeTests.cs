@@ -44,7 +44,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -105,7 +105,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -141,7 +141,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -174,7 +174,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -203,7 +203,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((IServiceSubscription?)null);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -235,7 +235,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -268,7 +268,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -298,7 +298,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -329,7 +329,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -379,7 +379,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var message2 = new BasicMessage("TestSubscribeAsyncWithSynchronousActions2");
             var exception = new NullReferenceException("TestSubscribeAsyncWithSynchronousActions");
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -461,7 +461,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -528,7 +528,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -594,7 +594,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -681,7 +681,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -758,7 +758,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var message = new NoChannelMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -835,7 +835,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var message = new BasicQueryMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.Instance()
+            var contractConnection = ContractConnection.MultiServiceInstance()
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 

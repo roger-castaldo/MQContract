@@ -26,15 +26,17 @@
   - [AddQuerySubscriptionMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
 - [ContractConnection](#T-MQContract-ContractConnection 'MQContract.ContractConnection')
   - [Instance(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-Instance-MQContract-Interfaces-Service-IMessageServiceConnection,MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.Instance(MQContract.Interfaces.Service.IMessageServiceConnection,MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
-  - [Instance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-Instance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.Instance(MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
+  - [MultiServiceInstance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-MultiServiceInstance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.MultiServiceInstance(MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
 - [InvalidQueryResponseMessageReceivedException](#T-MQContract-InvalidQueryResponseMessageReceivedException 'MQContract.InvalidQueryResponseMessageReceivedException')
 - [MessageChannelNullException](#T-MQContract-MessageChannelNullException 'MQContract.MessageChannelNullException')
 - [MessageConversionException](#T-MQContract-MessageConversionException 'MQContract.MessageConversionException')
+- [NoConnectionMatchException](#T-MQContract-NoConnectionMatchException 'MQContract.NoConnectionMatchException')
 - [QueryExecutionFailedException](#T-MQContract-QueryExecutionFailedException 'MQContract.QueryExecutionFailedException')
 - [QueryResponseException](#T-MQContract-QueryResponseException 'MQContract.QueryResponseException')
 - [QuerySubmissionFailedException](#T-MQContract-QuerySubmissionFailedException 'MQContract.QuerySubmissionFailedException')
 - [QueryTimeoutException](#T-MQContract-QueryTimeoutException 'MQContract.QueryTimeoutException')
 - [SubscriptionFailedException](#T-MQContract-SubscriptionFailedException 'MQContract.SubscriptionFailedException')
+- [TooManyConnectionMatchesException](#T-MQContract-TooManyConnectionMatchesException 'MQContract.TooManyConnectionMatchesException')
 - [UnknownResponseTypeException](#T-MQContract-UnknownResponseTypeException 'MQContract.UnknownResponseTypeException')
 
 <a name='T-MQContract-ChannelMapper'></a>
@@ -437,8 +439,8 @@ An instance of IContractConnection
 | channelMapper | [MQContract.ChannelMapper](#T-MQContract-ChannelMapper 'MQContract.ChannelMapper') | An instance of a ChannelMapper used to translate channels from one instance to another based on class channel attributes or supplied channels if necessary.
 For example, it might be necessary for a Nats.IO instance when you are trying to read from a stored message stream that is comprised of another channel or set of channels |
 
-<a name='M-MQContract-ContractConnection-Instance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper-'></a>
-### Instance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper) `method`
+<a name='M-MQContract-ContractConnection-MultiServiceInstance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper-'></a>
+### MultiServiceInstance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper) `method`
 
 ##### Summary
 
@@ -491,6 +493,17 @@ MQContract
 ##### Summary
 
 Thrown when an incoming data message causes a null object return from a converter
+
+<a name='T-MQContract-NoConnectionMatchException'></a>
+## NoConnectionMatchException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown from the Mapped Connection when no connections match the search criteria making the requested action impossible to do
 
 <a name='T-MQContract-QueryExecutionFailedException'></a>
 ## QueryExecutionFailedException `type`
@@ -546,6 +559,17 @@ MQContract
 ##### Summary
 
 Thrown when a Subscription has failed to be established/created
+
+<a name='T-MQContract-TooManyConnectionMatchesException'></a>
+## TooManyConnectionMatchesException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown from the Mapped Connection when more than 1 connection matches the search criteria making the requested action impossible to do
 
 <a name='T-MQContract-UnknownResponseTypeException'></a>
 ## UnknownResponseTypeException `type`

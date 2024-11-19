@@ -83,6 +83,7 @@
 - [IMiddleware](#T-MQContract-Interfaces-Middleware-IMiddleware 'MQContract.Interfaces.Middleware.IMiddleware')
 - [IMultiServiceContractConnection](#T-MQContract-Interfaces-IMultiServiceContractConnection 'MQContract.Interfaces.IMultiServiceContractConnection')
   - [BulkPublishAsync\`\`1(messages,channel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{System-ValueTuple{``0,MQContract-Messages-MessageHeader}},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.BulkPublishAsync``1(System.Collections.Generic.IEnumerable{System.ValueTuple{``0,MQContract.Messages.MessageHeader}},System.String,System.Threading.CancellationToken)')
+  - [PingAsync()](#M-MQContract-Interfaces-IMultiServiceContractConnection-PingAsync 'MQContract.Interfaces.IMultiServiceContractConnection.PingAsync')
   - [PublishAsync\`\`1(message,channel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-PublishAsync``1-``0,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.PublishAsync``1(``0,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
   - [QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``1(``0,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
   - [QueryAsync\`\`2(message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``2(``0,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
@@ -1446,7 +1447,7 @@ depending on the defined conditions
 
 ##### Summary
 
-Called to send a bulk set of messages into the underlying service Pub/Sub style
+Called to send a bulk set of messages into the underlying services Pub/Sub style
 
 ##### Returns
 
@@ -1466,12 +1467,27 @@ A result indicating the tranmission results
 | ---- | ----------- |
 | T | The type of message to send |
 
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-PingAsync'></a>
+### PingAsync() `method`
+
+##### Summary
+
+Called to Ping the underlying systems (assuming they implement the call) to obtain both information and ensure it is up.  Not all Services support this method.
+
+##### Returns
+
+
+
+##### Parameters
+
+This method has no parameters.
+
 <a name='M-MQContract-Interfaces-IMultiServiceContractConnection-PublishAsync``1-``0,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### PublishAsync\`\`1(message,channel,messageHeader,cancellationToken) `method`
 
 ##### Summary
 
-Called to send a message into the underlying service Pub/Sub style
+Called to send a message into the underlying services Pub/Sub style
 
 ##### Returns
 
@@ -1497,7 +1513,7 @@ A result indicating the tranmission results
 
 ##### Summary
 
-Called to send a message into the underlying service in the Query/Response style.  The return type is not specified here and is instead obtained from the QueryResponseTypeAttribute
+Called to send a message into the underlying services in the Query/Response style.  The return type is not specified here and is instead obtained from the QueryResponseTypeAttribute
 attached to the Query message type class.
 
 ##### Returns
@@ -1527,7 +1543,7 @@ only used when the underlying connection does not support a QueryResponse style 
 
 ##### Summary
 
-Called to send a message into the underlying service in the Query/Response style
+Called to send a message into the underlying services in the Query/Response style
 
 ##### Returns
 

@@ -31,7 +31,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
             contractConnection.RegisterServiceConnection(ServiceName,serviceConnection.Object);
             #endregion
 
@@ -83,7 +83,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -134,7 +134,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
@@ -187,7 +187,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.BulkPublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .Returns((IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken) => ValueTask.FromResult(messages.Select(m => transmissionResult)));
 
-            var contractConnection = ContractConnection.Instance();
+            var contractConnection = ContractConnection.MultiServiceInstance();
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 

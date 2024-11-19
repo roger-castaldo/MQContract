@@ -7,16 +7,17 @@ namespace MQContract.Interfaces
     /// This interface represents an extended Contract Connection that is built around the idea of having more than 1 underlying service connection that can be interacted with 
     /// depending on the defined conditions
     /// </summary>
-    public interface IMultiServiceContractConnection : IMetricContractConnection<IMultiServiceContractConnection>
+    public interface IMultiServiceContractConnection : 
+        IMappableContractConnection<IMultiServiceContractConnection>,IMetricContractConnection<IMultiServiceContractConnection>
     {
-        IMultiServiceContractConnection RegisterServiceConnection(string serviceConnectionName,IMessageServiceConnection messageServiceConnection);
-        IMultiServiceContractConnection RegisterServiceConnection(Func<(string channel,Type messageType,MessageHeader messageHeader),bool> checkCallback,string serviceConnectionName, IMessageServiceConnection messageServiceConnection);
-        IMultiServiceContractConnection RegisterServiceConnection(string channel, string serviceConnectionName, IMessageServiceConnection messageServiceConnection);
-        IMultiServiceContractConnection RegisterServiceConnection(Type messageType, string serviceConnectionName, IMessageServiceConnection messageServiceConnection);
-        IMultiServiceContractConnection RegisterServiceConnection(string messageHeaderKey, string messageHeaderValue, string serviceConnectionName, IMessageServiceConnection messageServiceConnection);
+        IMultiServiceContractConnection RegisterServiceConnection(string serviceConnectionName, IMessageServiceConnection messageServiceConnection);
+        /// <summary>
+        /// Called to Ping the underlying systems (assuming they implement the call) to obtain both information and ensure it is up.  Not all Services support this method.
+        /// </summary>
+        /// <returns></returns>
         ValueTask<IEnumerable<PingResult>> PingAsync();
         /// <summary>
-        /// Called to send a message into the underlying service Pub/Sub style
+        /// Called to send a message into the underlying services Pub/Sub style
         /// </summary>
         /// <typeparam name="T">The type of message to send</typeparam>
         /// <param name="message">The message to send</param>
@@ -28,7 +29,7 @@ namespace MQContract.Interfaces
         ValueTask<MultiTransmissionResult> PublishAsync<T>(T message, string? channel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken())
             where T : class;
         /// <summary>
-        /// Called to send a bulk set of messages into the underlying service Pub/Sub style
+        /// Called to send a bulk set of messages into the underlying services Pub/Sub style
         /// </summary>
         /// <typeparam name="T">The type of message to send</typeparam>
         /// <param name="messages">The set of messages to transmit, optionally with their given headers</param>
@@ -39,7 +40,7 @@ namespace MQContract.Interfaces
         ValueTask<IEnumerable<MultiTransmissionResult>> BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel = null, CancellationToken cancellationToken = new CancellationToken())
             where T : class;
         /// <summary>
-        /// Called to send a message into the underlying service in the Query/Response style
+        /// Called to send a message into the underlying services in the Query/Response style
         /// </summary>
         /// <typeparam name="Q">The type of message to send for the query</typeparam>
         /// <typeparam name="R">The type of message to expect back for the response</typeparam>
@@ -56,7 +57,7 @@ namespace MQContract.Interfaces
             where Q : class
             where R : class;
         /// <summary>
-        /// Called to send a message into the underlying service in the Query/Response style.  The return type is not specified here and is instead obtained from the QueryResponseTypeAttribute
+        /// Called to send a message into the underlying services in the Query/Response style.  The return type is not specified here and is instead obtained from the QueryResponseTypeAttribute
         /// attached to the Query message type class.
         /// </summary>
         /// <typeparam name="Q">The type of message to send for the query</typeparam>
