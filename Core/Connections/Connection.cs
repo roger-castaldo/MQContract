@@ -21,7 +21,7 @@ namespace MQContract.Connections
         private readonly SemaphoreSlim publishLock = new(1, 1);
 
         ValueTask<PingResult> IContractConnection.PingAsync()
-            => (serviceConnection is IPingableMessageServiceConnection pingableService ? pingableService.PingAsync() : throw new NotSupportedException("The underlying service does not support Ping"));
+            => (serviceConnection is IPingableMessageServiceConnection pingableService ? pingableService.PingAsync() : throw new PingNotSupportedException());
 
         protected override async ValueTask CloseAsync()
         {

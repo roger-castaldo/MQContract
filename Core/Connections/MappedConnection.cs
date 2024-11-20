@@ -20,10 +20,10 @@ namespace MQContract.Connections
         private readonly SemaphoreSlim publishLock = new(1, 1);
         ValueTask<PingResult> IContractConnection.PingAsync()
         {
-            var connections = FullList.OfType<IPingableMessageServiceConnection>();
+            var connections = FullList.Select(c=>c.MessageServiceConnection).OfType<IPingableMessageServiceConnection>();
             return connections.Count() switch
             {
-                0 => throw new NotSupportedException("The underlying service does not support Ping"),
+                0 => throw new PingNotSupportedException(),
                 1 => connections.First().PingAsync(),
                 _ => throw new TooManyConnectionMatchesException()
             };
@@ -42,25 +42,17 @@ namespace MQContract.Connections
 
         private new async ValueTask<ServiceConnectionList.ServiceConnection> GetConnectionsAsync(string channel, Type messageType, MessageHeader messageHeader)
         {
-            var results = await base.GetConnectionsAsync(channel, messageType, messageHeader);
-            return results.Count() switch
-            {
-                0 => throw new NoConnectionMatchException(),
-                1 => results.First(),
-                _ => throw new TooManyConnectionMatchesException()
-            };
+            var connections = await base.GetConnectionsAsync(channel, messageType, messageHeader);
+            if (connections.Count()>1) throw new TooManyConnectionMatchesException();
+            return connections.First();
         }
 
         private new async ValueTask<(ServiceConnectionList.ServiceConnection connections, string channel)> GetConnectionsAsync<T>(string? channel, ChannelMapper.MapTypes mapTypes)
             where T : class
         {
             (var connections,channel) = await base.GetConnectionsAsync<T>(channel, mapTypes);
-            return connections.Count() switch
-            {
-                0 => throw new NoConnectionMatchException(),
-                1 => (connections.First(),channel),
-                _ => throw new TooManyConnectionMatchesException()
-            };
+            if (connections.Count()>1) throw new TooManyConnectionMatchesException();
+            return (connections.First(),channel);
         }
 
         #region PubSub
@@ -127,7 +119,7 @@ namespace MQContract.Connections
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 #pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            var methodInfo = typeof(Connection).GetMethod(nameof(MappedConnection.ProcessQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
+            var methodInfo = typeof(MappedConnection).GetMethod(nameof(MappedConnection.ProcessQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             try
             {

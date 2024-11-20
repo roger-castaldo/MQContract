@@ -4,13 +4,6 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using static MQContract.Connections.ServiceConnectionList;
 
 namespace MQContract.Connections
 {
@@ -25,7 +18,7 @@ namespace MQContract.Connections
     {
         private readonly ServiceConnectionList connectionList = new();
 
-        protected IEnumerable<ServiceConnection> FullList => connectionList.FullList;
+        protected IEnumerable<ServiceConnectionList.ServiceConnection> FullList => connectionList.FullList;
         protected uint? MaxMessageBodySize => connectionList.MaxMessageBodySize;
 
         protected CC RegisterServiceConnection(Func<(string channel, Type messageType, MessageHeader messageHeader), bool> checkCallback, string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
@@ -50,7 +43,7 @@ namespace MQContract.Connections
         {
             var result = await connectionList.GetAsync(channel, messageType, messageHeader);
             if (!result.Any())
-                throw new KeyNotFoundException("Unable to locate an underlying service connection to use for the given conditions.");
+                throw new NoConnectionMatchException();
             return result;
         }
 

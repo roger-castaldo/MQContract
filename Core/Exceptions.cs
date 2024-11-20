@@ -99,4 +99,14 @@
         internal TooManyConnectionMatchesException()
             : base("More than 1 underlying service connection matched the required criteria so unable to process") { }
     }
+
+    /// <summary>
+    /// Thrown from a the ContractedConnection or the MappedConnection when there is no underlying service that supports the Ping call
+    /// </summary>
+    public class PingNotSupportedException : NotSupportedException
+    {
+        internal PingNotSupportedException()
+            : base("The underlying service does not support Ping")
+            {}
+    }
 }
