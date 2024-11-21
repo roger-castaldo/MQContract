@@ -1,6 +1,5 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
 using MQContract.Interfaces.Service;
 using MQContract;
 using System.Diagnostics;

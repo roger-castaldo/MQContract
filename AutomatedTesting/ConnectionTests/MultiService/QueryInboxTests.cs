@@ -185,5 +185,347 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
+
+        [TestMethod]
+        public async Task TestQueryAsyncWithDisposableSubscriptionFromDispose()
+        {
+            #region Arrange
+            var testMessage = new BasicQueryMessage("testMessage");
+            var responseMessage = new BasicResponseMessage("testResponse");
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
+
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
+
+            var mockSubscription = new Mock<IDisposable>().As<IServiceSubscription>();
+
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<Action<ReceivedInboxServiceMessage>> receivedActions = [];
+            List<ServiceMessage> messages = [];
+            List<Guid> messageIDs = [];
+            var acknowledgeCount = 0;
+
+
+            var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(Capture.In(receivedActions), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockSubscription.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), Capture.In(messageIDs), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, Guid messageID, CancellationToken cancellationToken) =>
+                {
+                    foreach (var action in receivedActions)
+                        action(new(
+                            queryResult.ID,
+                            queryResult.MessageTypeID,
+                            message.Channel,
+                            queryResult.Header,
+                            messageID,
+                            queryResult.Data,
+                            () =>
+                            {
+                                acknowledgeCount++;
+                                return ValueTask.CompletedTask;
+                            }
+                        ));
+                    return ValueTask.FromResult(new TransmissionResult(message.ID));
+                });
+            serviceConnection.Setup(x => x.DefaultTimeout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = ContractConnection.MultiServiceInstance()
+                .RegisterServiceConnection(ServiceName, serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            await contractConnection.CloseAsync();
+            contractConnection.Dispose();
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(messages.Count, result.Count());
+            Assert.AreEqual(queryResult.ID, result.First().ID);
+            Assert.IsNull(result.First().Error);
+            Assert.IsFalse(result.First().IsError);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, messageIDs.Count);
+            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.AreEqual("U-BasicQueryMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(responseMessage, result.First().Result);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockSubscription.Verify(x => x.EndAsync(), Times.Once);
+            mockSubscription.As<IDisposable>().Verify(x => x.Dispose(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestQueryAsyncWithAsyncDisposableSubscriptionFromDispose()
+        {
+            #region Arrange
+            var testMessage = new BasicQueryMessage("testMessage");
+            var responseMessage = new BasicResponseMessage("testResponse");
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
+
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
+
+            var mockSubscription = new Mock<IServiceSubscription>();
+            mockSubscription.As<IAsyncDisposable>()
+                .Setup(x => x.DisposeAsync())
+                .Returns(ValueTask.CompletedTask);
+
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<Action<ReceivedInboxServiceMessage>> receivedActions = [];
+            List<ServiceMessage> messages = [];
+            List<Guid> messageIDs = [];
+            var acknowledgeCount = 0;
+
+
+            var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(Capture.In(receivedActions), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockSubscription.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), Capture.In(messageIDs), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, Guid messageID, CancellationToken cancellationToken) =>
+                {
+                    foreach (var action in receivedActions)
+                        action(new(
+                            queryResult.ID,
+                            queryResult.MessageTypeID,
+                            message.Channel,
+                            queryResult.Header,
+                            messageID,
+                            queryResult.Data,
+                            () =>
+                            {
+                                acknowledgeCount++;
+                                return ValueTask.CompletedTask;
+                            }
+                        ));
+                    return ValueTask.FromResult(new TransmissionResult(message.ID));
+                });
+            serviceConnection.Setup(x => x.DefaultTimeout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = ContractConnection.MultiServiceInstance()
+                .RegisterServiceConnection(ServiceName, serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            await contractConnection.CloseAsync();
+            contractConnection.Dispose();
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(messages.Count, result.Count());
+            Assert.AreEqual(queryResult.ID, result.First().ID);
+            Assert.IsNull(result.First().Error);
+            Assert.IsFalse(result.First().IsError);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, messageIDs.Count);
+            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.AreEqual("U-BasicQueryMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(responseMessage, result.First().Result);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockSubscription.Verify(x => x.EndAsync(), Times.Once);
+            mockSubscription.As<IAsyncDisposable>().Verify(x => x.DisposeAsync(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestQueryAsyncWithDisposableSubscriptionFromAsyncDispose()
+        {
+            #region Arrange
+            var testMessage = new BasicQueryMessage("testMessage");
+            var responseMessage = new BasicResponseMessage("testResponse");
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
+
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
+
+            var mockSubscription = new Mock<IDisposable>().As<IServiceSubscription>();
+
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<Action<ReceivedInboxServiceMessage>> receivedActions = [];
+            List<ServiceMessage> messages = [];
+            List<Guid> messageIDs = [];
+            var acknowledgeCount = 0;
+
+
+            var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(Capture.In(receivedActions), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockSubscription.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), Capture.In(messageIDs), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, Guid messageID, CancellationToken cancellationToken) =>
+                {
+                    foreach (var action in receivedActions)
+                        action(new(
+                            queryResult.ID,
+                            queryResult.MessageTypeID,
+                            message.Channel,
+                            queryResult.Header,
+                            messageID,
+                            queryResult.Data,
+                            () =>
+                            {
+                                acknowledgeCount++;
+                                return ValueTask.CompletedTask;
+                            }
+                        ));
+                    return ValueTask.FromResult(new TransmissionResult(message.ID));
+                });
+            serviceConnection.Setup(x => x.DefaultTimeout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = ContractConnection.MultiServiceInstance()
+                .RegisterServiceConnection(ServiceName, serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            await contractConnection.CloseAsync();
+            await contractConnection.DisposeAsync();
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(messages.Count, result.Count());
+            Assert.AreEqual(queryResult.ID, result.First().ID);
+            Assert.IsNull(result.First().Error);
+            Assert.IsFalse(result.First().IsError);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, messageIDs.Count);
+            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.AreEqual("U-BasicQueryMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(responseMessage, result.First().Result);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockSubscription.Verify(x => x.EndAsync(), Times.Once);
+            mockSubscription.As<IDisposable>().Verify(x => x.Dispose(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestQueryAsyncWithAsyncDisposableSubscriptionFromDisposeAsync()
+        {
+            #region Arrange
+            var testMessage = new BasicQueryMessage("testMessage");
+            var responseMessage = new BasicResponseMessage("testResponse");
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
+
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
+
+            var mockSubscription = new Mock<IServiceSubscription>();
+            mockSubscription.As<IAsyncDisposable>()
+                .Setup(x => x.DisposeAsync())
+                .Returns(ValueTask.CompletedTask);
+
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<Action<ReceivedInboxServiceMessage>> receivedActions = [];
+            List<ServiceMessage> messages = [];
+            List<Guid> messageIDs = [];
+            var acknowledgeCount = 0;
+
+
+            var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(Capture.In(receivedActions), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockSubscription.Object);
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), Capture.In(messageIDs), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, Guid messageID, CancellationToken cancellationToken) =>
+                {
+                    foreach (var action in receivedActions)
+                        action(new(
+                            queryResult.ID,
+                            queryResult.MessageTypeID,
+                            message.Channel,
+                            queryResult.Header,
+                            messageID,
+                            queryResult.Data,
+                            () =>
+                            {
+                                acknowledgeCount++;
+                                return ValueTask.CompletedTask;
+                            }
+                        ));
+                    return ValueTask.FromResult(new TransmissionResult(message.ID));
+                });
+            serviceConnection.Setup(x => x.DefaultTimeout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = ContractConnection.MultiServiceInstance()
+                .RegisterServiceConnection(ServiceName, serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            await contractConnection.CloseAsync();
+            await contractConnection.DisposeAsync();
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(messages.Count, result.Count());
+            Assert.AreEqual(queryResult.ID, result.First().ID);
+            Assert.IsNull(result.First().Error);
+            Assert.IsFalse(result.First().IsError);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, messageIDs.Count);
+            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.AreEqual("U-BasicQueryMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(responseMessage, result.First().Result);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockSubscription.Verify(x => x.EndAsync(), Times.Once);
+            mockSubscription.As<IAsyncDisposable>().Verify(x => x.DisposeAsync(), Times.Once);
+            #endregion
+        }
     }
 }
