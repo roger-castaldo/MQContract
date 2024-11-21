@@ -18,6 +18,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
         public async Task TestSubscribeQueryResponseAsyncWithNoExtendedAspects()
         {
             #region Arrange
+            var acknowledged = false;
+
             var serviceSubscription = new Mock<IServiceSubscription>();
 
             var receivedActions = new List<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>();
@@ -36,7 +38,11 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
                 .Returns(async (ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken) =>
                 {
-                    var rmessage = Helper.ProduceReceivedServiceMessage(message);
+                    var rmessage = Helper.ProduceReceivedServiceMessage(message, acknowledge: () =>
+                    {
+                        acknowledged=true;
+                        return ValueTask.CompletedTask;
+                    });
                     serviceMessages.Add(rmessage);
                     var result = await receivedActions[0](rmessage);
                     return Helper.ProduceQueryResult(result);
@@ -86,6 +92,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsFalse(result.IsError);
             Assert.IsNull(result.Error);
             Assert.AreEqual(result.Result, responseMessage);
+            Assert.IsTrue(acknowledged);
             Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion
 
@@ -661,5 +668,93 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
         }
 
+        [TestMethod]
+        public async Task TestSubscribeQueryResponseAsyncWithToManyConnectionMatches()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IServiceSubscription>();
+
+            var receivedActions = new List<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string>();
+
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(
+                Capture.In(receivedActions),
+                Capture.In(errorActions),
+                Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.Object);
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
+                .RegisterServiceConnection((props) => Equals(props.messageType, typeof(BasicQueryMessage)), $"{ServiceName}2", serviceConnection.Object);
+
+            var responseMessage = new BasicResponseMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
+            #endregion
+
+            #region Act
+            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () => _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
+                {
+                    return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
+                }, 
+                (error) => { 
+                })
+            );
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeQueryResponseAsyncWithNoConnectionMatch()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IServiceSubscription>();
+
+            var receivedActions = new List<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string>();
+
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(
+                Capture.In(receivedActions),
+                Capture.In(errorActions),
+                Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.Object);
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => false, ServiceName, serviceConnection.Object);
+
+            var responseMessage = new BasicResponseMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
+            #endregion
+
+            #region Act
+            var error = await Assert.ThrowsExceptionAsync<NoConnectionMatchException>(async () => _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
+            {
+                return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
+            },
+                (error) => {
+                })
+            );
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            #endregion
+        }
     }
 }

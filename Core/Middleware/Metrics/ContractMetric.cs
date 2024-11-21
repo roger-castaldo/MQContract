@@ -2,7 +2,7 @@
 
 namespace MQContract.Middleware.Metrics
 {
-    internal record ContractMetric : IContractMetric
+    internal record ContractMetric() : IContractMetric
     {
         public ulong Messages { get; private set; } = 0;
 

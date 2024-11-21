@@ -36,6 +36,9 @@ namespace MQContract.Connections
         CC IMappableContractConnection<CC>.RegisterServiceConnection(Type messageType, string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
             => RegisterServiceConnection(pars => Equals(pars.messageType, messageType), serviceConnectionName, messageServiceConnection);
 
+        CC IMappableContractConnection<CC>.RegisterServiceConnection<T>(string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
+            => RegisterServiceConnection(pars => Equals(pars.messageType, typeof(T)), serviceConnectionName, messageServiceConnection);
+
         CC IMappableContractConnection<CC>.RegisterServiceConnection(string messageHeaderKey, string messageHeaderValue, string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
             => RegisterServiceConnection(pars => Equals(pars.messageHeader[messageHeaderKey], messageHeaderValue), serviceConnectionName, messageServiceConnection);
 
@@ -59,5 +62,11 @@ namespace MQContract.Connections
 
         protected override void InternalDispose()
             => connectionList.Dispose();
+
+        protected override ValueTask InternalDisposeAsync()
+        {
+            connectionList.Dispose();
+            return ValueTask.CompletedTask;
+        }
     }
 }

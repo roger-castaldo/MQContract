@@ -37,6 +37,7 @@ namespace MQContract.Connections
 
         protected override async ValueTask InternalDisposeAsync()
         {
+            await base.InternalDisposeAsync();
             publishLock.Dispose();
         }
 

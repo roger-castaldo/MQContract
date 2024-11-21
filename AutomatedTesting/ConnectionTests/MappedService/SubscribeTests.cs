@@ -17,6 +17,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
         public async Task TestSubscribeAsyncWithNoExtendedAspects()
         {
             #region Arrange
+            var acknowledged = false;
+
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
@@ -33,7 +35,11 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
-                    var rmessage = Helper.ProduceReceivedServiceMessage(message);
+                    var rmessage = Helper.ProduceReceivedServiceMessage(message, acknowledge:() =>
+                    {
+                        acknowledged=true;
+                        return ValueTask.CompletedTask;
+                    });
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
@@ -80,6 +86,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
+            Assert.IsTrue(acknowledged);
             Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion
 
@@ -857,6 +864,81 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeAsyncWithWithToManyConnectionMatches()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            var actions = new List<Action<ReceivedServiceMessage>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.Object);
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
+                .RegisterServiceConnection((props) => Equals(props.messageType, typeof(BasicMessage)), $"{ServiceName}2", serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () =>  _ = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
+            {
+                return ValueTask.CompletedTask;
+            }, (error) => { }
+            ));
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeAsyncWithWithNoConnectionMatch()
+        {
+            #region Arrange
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            var actions = new List<Action<ReceivedServiceMessage>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.Object);
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => false, ServiceName, serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var error = await Assert.ThrowsExceptionAsync<NoConnectionMatchException>(async () => _ = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
+            {
+                return ValueTask.CompletedTask;
+            }, (error) => { }
+            ));
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
             #endregion
         }
     }

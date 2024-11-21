@@ -19,22 +19,25 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Arrange
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceSubObject = serviceSubscription.Object;
+            var testError = new Exception("this is a test error");
 
             var channels = new List<string>();
             var groups = new List<string>();
             List<ServiceMessage> messages = [];
             List<Action<ReceivedServiceMessage>> messageActions = [];
+            List<Action<Exception>> errorHandlers = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(messageActions), It.IsAny<Action<Exception>>(),
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(messageActions), Capture.In<Action<Exception>>(errorHandlers),
                 Capture.In(channels), Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubObject);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
                     messages.Add(message);
-                    foreach (var action in messageActions)
-                        action(new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data));
+                    var idx = channels.IndexOf(message.Channel);
+                    if (idx != -1)
+                        messageActions[idx](new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data));
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
@@ -56,6 +59,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+
+            errorHandlers.ForEach(eh => eh(testError));
 
             await subscription.EndAsync();
             #endregion
@@ -79,6 +84,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsFalse(result.IsError);
             Assert.IsNull(result.Error);
             Assert.AreEqual(result.Result, responseMessage);
+            Assert.AreEqual(2, errorHandlers.Count);
+            Assert.AreEqual(testError, exceptions[0]);
             #endregion
 
             #region Verify

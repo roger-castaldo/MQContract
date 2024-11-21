@@ -27,6 +27,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             using var ms = new MemoryStream();
             await JsonSerializer.SerializeAsync(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
+            var acknowledged = false;
 
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -43,7 +44,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
                     messages.Add(message);
-                    var resp = new ReceivedServiceMessage(message.ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, message.Header, responseData);
+                    var resp = new ReceivedServiceMessage(message.ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, message.Header, responseData, () =>
+                    {
+                        acknowledged=true;
+                        return ValueTask.CompletedTask;
+                    });
                     foreach (var action in messageActions)
                         action(resp);
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
@@ -73,6 +78,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
+            Assert.IsTrue(acknowledged);
             #endregion
 
             #region Verify

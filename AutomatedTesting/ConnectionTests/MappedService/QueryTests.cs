@@ -1071,5 +1071,88 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
             #endregion
         }
+
+        [TestMethod]
+        public async Task TestQueryAsyncWithTooManyConnectionsError()
+        {
+            #region Arrange
+            var testMessage = new BasicQueryMessage("testMessage");
+            var responseMessage = new BasicResponseMessage("testResponse");
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
+
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
+
+
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<ServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), Capture.In(timeouts), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
+            serviceConnection.Setup(x => x.DefaultTimeout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
+                .RegisterServiceConnection((props) => Equals(props.messageType, typeof(BasicQueryMessage)), $"{ServiceName}2", serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage));
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestQueryAsyncWithNoConnectionMatch()
+        {
+            #region Arrange
+            var testMessage = new BasicQueryMessage("testMessage");
+            var responseMessage = new BasicResponseMessage("testResponse");
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
+
+            var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
+
+
+            var defaultTimeout = TimeSpan.FromMinutes(1);
+
+            List<ServiceMessage> messages = [];
+            List<TimeSpan> timeouts = [];
+
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
+            serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), Capture.In(timeouts), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
+            serviceConnection.Setup(x => x.DefaultTimeout)
+                .Returns(defaultTimeout);
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => false, ServiceName, serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var error = await Assert.ThrowsExceptionAsync<NoConnectionMatchException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage));
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+            #endregion
+        }
     }
 }

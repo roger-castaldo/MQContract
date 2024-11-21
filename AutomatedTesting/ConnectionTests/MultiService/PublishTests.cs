@@ -55,6 +55,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
             Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
@@ -100,6 +101,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
             Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
             Assert.AreEqual($"Not{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}", messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
@@ -147,6 +149,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
             Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
@@ -196,6 +199,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
             Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("C-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
@@ -248,6 +252,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
             Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
             Assert.AreEqual("BasicMessage", messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
@@ -302,6 +307,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
             Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
             Assert.AreEqual("BasicMessage", messages[0].Channel);
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
@@ -350,6 +356,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
             Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
             Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual($"U-{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageNameAttribute>(false)?.Value}-{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageVersionAttribute>(false)?.Version}", messages[0].MessageTypeID);
@@ -395,6 +402,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
             Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
             Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-CustomEncoderMessage-0.0.0.0", messages[0].MessageTypeID);
@@ -443,6 +451,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
             Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
             Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual("U-CustomEncoderWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);

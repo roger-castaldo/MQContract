@@ -18,6 +18,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
         public async Task TestSubscribeAsyncWithNoExtendedAspects()
         {
             #region Arrange
+            var acknowledged = false;
+
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
             var serviceConnection = new Mock<IMessageServiceConnection>();
@@ -34,7 +36,11 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
-                    var rmessage = Helper.ProduceReceivedServiceMessage(message);
+                    var rmessage = Helper.ProduceReceivedServiceMessage(message, acknowledge: () =>
+                    {
+                        acknowledged=true;
+                        return ValueTask.CompletedTask;
+                    });
                     serviceMessages.Add(rmessage);
                     foreach (var act in actions)
                         act(rmessage);
@@ -82,6 +88,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
+            Assert.IsTrue(acknowledged);
             Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion
 

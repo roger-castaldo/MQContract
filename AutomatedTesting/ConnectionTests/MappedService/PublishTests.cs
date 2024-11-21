@@ -617,5 +617,68 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithToManyConnectionMatches()
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("testMessage");
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
+                .RegisterServiceConnection((props)=>Equals(props.messageType,typeof(BasicMessage)),$"{ServiceName}2",serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async()=>await contractConnection.PublishAsync<BasicMessage>(testMessage));
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithNoConnectionMatch()
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("testMessage");
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => false, ServiceName, serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var error = await Assert.ThrowsExceptionAsync<NoConnectionMatchException>(async () => await contractConnection.PublishAsync<BasicMessage>(testMessage));
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+            #endregion
+        }
     }
 }
