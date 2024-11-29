@@ -80,7 +80,7 @@ namespace MQContract.InMemory
             return grp;
         }
 
-        private async ValueTask<IServiceSubscription> CreateSubscription(Func<InternalServiceMessage,ValueTask>  processMessage,Action<Exception> errorReceived,string? group,CancellationToken cancellationToken)
+        private ValueTask<IServiceSubscription> CreateSubscription(Func<InternalServiceMessage,ValueTask>  processMessage,Action<Exception> errorReceived,string? group,CancellationToken cancellationToken)
         {
             var sub = new Subscription(GetGroup(group), async (recievedMessage) =>
             {
@@ -94,7 +94,7 @@ namespace MQContract.InMemory
                 }
             });
             sub.Start();
-            return sub;
+            return ValueTask.FromResult<IServiceSubscription>(sub);
         }
 
         internal async ValueTask<IServiceSubscription?> RegisterQuerySubscriptionAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, Action<InternalServiceMessage> publishResponse, string? group, CancellationToken cancellationToken)

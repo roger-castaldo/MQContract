@@ -44,7 +44,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.AreEqual(testMessages.Count(), messages.Count);
-            Assert.IsTrue(messages.All(m =>
+            Assert.IsTrue(messages.TrueForAll(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
                 && Equals("U-BasicMessage-0.0.0.0", m.MessageTypeID)
@@ -92,7 +92,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.AreEqual(2, messages.Count);
-            Assert.IsTrue(messages.All(m =>
+            Assert.IsTrue(messages.TrueForAll(m =>
                 Equals(channelName, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
                 && Equals("U-BasicMessage-0.0.0.0", m.MessageTypeID)
@@ -139,13 +139,13 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.AreEqual(2, messages.Count);
-            Assert.IsTrue(messages.All(m =>
+            Assert.IsTrue(messages.TrueForAll(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals("U-BasicMessage-0.0.0.0", m.MessageTypeID)
                 && m.Data.Length > 0
             ));
-            Assert.IsTrue(testMessages.ElementAt(0).messageHeader.Keys.All(k => Equals(messages[0].Header[k], testMessages.ElementAt(0).messageHeader[k])));
-            Assert.IsTrue(testMessages.ElementAt(1).messageHeader.Keys.All(k => Equals(messages[1].Header[k], testMessages.ElementAt(1).messageHeader[k])));
+            Assert.IsTrue(testMessages.ElementAt(0).messageHeader?.Keys.All(k => Equals(messages[0].Header[k], testMessages.ElementAt(0).messageHeader?[k])));
+            Assert.IsTrue(testMessages.ElementAt(1).messageHeader?.Keys.All(k => Equals(messages[1].Header[k], testMessages.ElementAt(1).messageHeader?[k])));
             Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[1].Data.ToArray())));
             #endregion

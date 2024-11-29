@@ -8,7 +8,7 @@ namespace MQContract.ActiveMQ.Subscriptions
         private bool disposedValue;
         protected readonly CancellationTokenSource cancelToken = new();
         
-        internal async ValueTask StartAsync()
+        internal ValueTask StartAsync()
         {
             _=Task.Run(async () =>
             {
@@ -26,6 +26,7 @@ namespace MQContract.ActiveMQ.Subscriptions
                     }
                 }
             });
+            return ValueTask.CompletedTask;
         }
 
         public async ValueTask EndAsync()

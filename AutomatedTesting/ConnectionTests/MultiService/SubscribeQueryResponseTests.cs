@@ -672,7 +672,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.First().IsError);
             Assert.IsFalse(string.IsNullOrWhiteSpace(result.First().Error));
-            Assert.IsTrue(result.First().Error.Contains(typeof(BasicResponseMessage).FullName!));
+            Assert.IsTrue(result.First().Error?.Contains(typeof(BasicResponseMessage).FullName!));
             #endregion
 
             #region Verify

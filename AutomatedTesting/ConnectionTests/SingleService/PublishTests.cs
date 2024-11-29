@@ -253,8 +253,8 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 .ReturnsAsync(transmissionResult);
 
             var globalEncryptor = new Mock<IMessageEncryptor>();
-            globalEncryptor.Setup(x => x.EncryptAsync(Capture.In(binaries), out headers))
-                .ReturnsAsync((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
+            globalEncryptor.Setup(x => x.EncryptAsync(Capture.In(binaries)))
+                .ReturnsAsync((byte[] binary) => (binary.Reverse().ToArray(), headers));
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object, defaultMessageEncryptor: globalEncryptor.Object);
             #endregion
@@ -281,7 +281,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Verify
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
-            globalEncryptor.Verify(x => x.EncryptAsync(It.IsAny<byte[]>(), out headers), Times.Once);
+            globalEncryptor.Verify(x => x.EncryptAsync(It.IsAny<byte[]>()), Times.Once);
             #endregion
         }
 

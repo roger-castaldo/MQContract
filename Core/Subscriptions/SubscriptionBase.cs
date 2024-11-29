@@ -1,25 +1,22 @@
-﻿using MQContract.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
 using System.Diagnostics.CodeAnalysis;
 
 namespace MQContract.Subscriptions
 {
-    internal abstract class SubscriptionBase<T> : ISubscription
+    internal abstract class SubscriptionBase<T>(Func<string, ValueTask<string>> mapChannel, string? channel, bool synchronous,ILogger? logger) : ISubscription
         where T : class
     {
         protected IServiceSubscription? serviceSubscription;
         private bool disposedValue;
 
-        protected string MessageChannel { get; private init; }
-        protected bool Synchronous { get; private init; }
+        protected string MessageChannel { get; private init; } = Utility.GetChannel<T>(mapChannel, channel);
+        protected bool Synchronous { get; private init; } = synchronous;
+        protected ILogger? Logger => logger;
+        protected IDisposable? SetScope() => logger?.BeginScope<string>($"Subscription[{ID}]");
 
-        public Guid ID { get; private init; }
-
-        protected SubscriptionBase(Func<string, ValueTask<string>> mapChannel, string? channel=null,bool synchronous = false){
-            ID = Guid.NewGuid();
-            Synchronous = synchronous;
-            MessageChannel=Utility.GetChannel<T>(mapChannel, channel);
-        }
+        public Guid ID { get; private init; } = Guid.NewGuid();
 
         [ExcludeFromCodeCoverage(Justification = "Virtual function that is implemented elsewhere")]
         protected virtual void InternalDispose()
@@ -29,9 +26,8 @@ namespace MQContract.Subscriptions
         {
             if (serviceSubscription!=null)
             {
-                System.Diagnostics.Debug.WriteLine("Calling subscription end async...");
+                logger?.LogInformation("Calling subscription {ID} end async", ID);
                 await serviceSubscription.EndAsync();
-                System.Diagnostics.Debug.WriteLine("Subscription ended async");
                 serviceSubscription=null;
             }
         }

@@ -398,8 +398,8 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 .Returns(defaultTimeout);
 
             var globalEncryptor = new Mock<IMessageEncryptor>();
-            globalEncryptor.Setup(x => x.EncryptAsync(Capture.In(binaries), out headers))
-                .ReturnsAsync((byte[] binary, Dictionary<string, string?> h) => binary.Reverse().ToArray());
+            globalEncryptor.Setup(x => x.EncryptAsync(Capture.In(binaries)))
+                .ReturnsAsync((byte[] binary) => (binary.Reverse().ToArray(), headers));
             globalEncryptor.Setup(x => x.DecryptAsync(It.IsAny<Stream>(), It.IsAny<MessageHeader>()))
                 .ReturnsAsync((Stream source, MessageHeader headers) =>
                 {

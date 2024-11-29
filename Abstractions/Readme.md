@@ -60,7 +60,7 @@
   - [EncodeAsync\`\`1(message)](#M-MQContract-Interfaces-Encoding-IMessageEncoder-EncodeAsync``1-``0- 'MQContract.Interfaces.Encoding.IMessageEncoder.EncodeAsync``1(``0)')
 - [IMessageEncryptor](#T-MQContract-Interfaces-Encrypting-IMessageEncryptor 'MQContract.Interfaces.Encrypting.IMessageEncryptor')
   - [DecryptAsync(stream,headers)](#M-MQContract-Interfaces-Encrypting-IMessageEncryptor-DecryptAsync-System-IO-Stream,MQContract-Messages-MessageHeader- 'MQContract.Interfaces.Encrypting.IMessageEncryptor.DecryptAsync(System.IO.Stream,MQContract.Messages.MessageHeader)')
-  - [EncryptAsync(data,headers)](#M-MQContract-Interfaces-Encrypting-IMessageEncryptor-EncryptAsync-System-Byte[],System-Collections-Generic-Dictionary{System-String,System-String}@- 'MQContract.Interfaces.Encrypting.IMessageEncryptor.EncryptAsync(System.Byte[],System.Collections.Generic.Dictionary{System.String,System.String}@)')
+  - [EncryptAsync(data)](#M-MQContract-Interfaces-Encrypting-IMessageEncryptor-EncryptAsync-System-Byte[]- 'MQContract.Interfaces.Encrypting.IMessageEncryptor.EncryptAsync(System.Byte[])')
 - [IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection')
   - [MaxMessageBodySize](#P-MQContract-Interfaces-Service-IMessageServiceConnection-MaxMessageBodySize 'MQContract.Interfaces.Service.IMessageServiceConnection.MaxMessageBodySize')
   - [CloseAsync()](#M-MQContract-Interfaces-Service-IMessageServiceConnection-CloseAsync 'MQContract.Interfaces.Service.IMessageServiceConnection.CloseAsync')
@@ -1044,8 +1044,8 @@ A decrypted stream of the message body
 | stream | [System.IO.Stream](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.IO.Stream 'System.IO.Stream') | The stream representing the message body binary data |
 | headers | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message headers that were provided by the message |
 
-<a name='M-MQContract-Interfaces-Encrypting-IMessageEncryptor-EncryptAsync-System-Byte[],System-Collections-Generic-Dictionary{System-String,System-String}@-'></a>
-### EncryptAsync(data,headers) `method`
+<a name='M-MQContract-Interfaces-Encrypting-IMessageEncryptor-EncryptAsync-System-Byte[]-'></a>
+### EncryptAsync(data) `method`
 
 ##### Summary
 
@@ -1053,14 +1053,13 @@ Called to encrypt the message body prior to transmitting a message
 
 ##### Returns
 
-An encrypted byte array of the message body
+An encrypted byte array of the message body and any headers that might be needed
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | data | [System.Byte[]](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Byte[] 'System.Byte[]') | The original unencrypted body data |
-| headers | [System.Collections.Generic.Dictionary{System.String,System.String}@](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.Dictionary 'System.Collections.Generic.Dictionary{System.String,System.String}@') | The headers that are desired to attache to the message if needed |
 
 <a name='T-MQContract-Interfaces-Service-IMessageServiceConnection'></a>
 ## IMessageServiceConnection `type`

@@ -21,8 +21,7 @@ namespace MQContract.Interfaces.Encrypting
         /// Called to encrypt the message body prior to transmitting a message
         /// </summary>
         /// <param name="data">The original unencrypted body data</param>
-        /// <param name="headers">The headers that are desired to attache to the message if needed</param>
-        /// <returns>An encrypted byte array of the message body</returns>
-        ValueTask<byte[]> EncryptAsync(byte[] data, out Dictionary<string, string?> headers);
+        /// <returns>An encrypted byte array of the message body and any headers that might be needed</returns>
+        ValueTask<(byte[] data, Dictionary<string, string?> headers)> EncryptAsync(byte[] data);
     }
 }

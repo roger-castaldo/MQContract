@@ -2,7 +2,9 @@
 
 namespace MQContract.Subscriptions
 {
+#pragma warning disable S3881 // "IDisposable" should be implemented correctly
     internal class SubscriptionCollection(IEnumerable<ISubscription> subscriptions)
+#pragma warning restore S3881 // "IDisposable" should be implemented correctly
         : ISubscription
     {
         private bool disposedValue;
@@ -25,13 +27,6 @@ namespace MQContract.Subscriptions
                 disposedValue=true;
             }
         }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~SubscriptionCollection()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
 
         void IDisposable.Dispose()
         {
