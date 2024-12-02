@@ -50,6 +50,8 @@ namespace MQContract.Connections
 
         async ValueTask<MultiTransmissionResult> IMultiServiceContractConnection.PublishAsync<T>(T message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
             var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), message, false, channel, messageHeader);
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(T), serviceMessage.Header);
             await publishLock.WaitAsync(cancellationToken);
@@ -61,6 +63,8 @@ namespace MQContract.Connections
 
         async ValueTask<IEnumerable<MultiTransmissionResult>> IMultiServiceContractConnection.BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Bulk Publishing messages {T} on {Channel}", typeof(T), channel);
             var serviceMessages = await
             messages.WhenAll(m =>
                     ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), m.message, false, channel, m.messageHeader)
@@ -104,6 +108,8 @@ namespace MQContract.Connections
             where Q : class
             where R : class
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);
             var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(MaxMessageBodySize), message, false, channel: channel, messageHeader: messageHeader);
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(Q), serviceMessage.Header);
             return await connections
@@ -114,9 +120,12 @@ namespace MQContract.Connections
 
         async ValueTask<IEnumerable<QueryResult<object>>> IMultiServiceContractConnection.QueryAsync<Q>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Attempting to get response type for QueryResponse for {Q} on {Channel} with {ResponseChannel}", typeof(Q), channel, responseChannel);
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
+            Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {Q} on {Channel} with {ResponseChannel}", responseType, typeof(Q), channel, responseChannel);
 #pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             var methodInfo = typeof(MultiServiceConnection).GetMethod(nameof(MultiServiceConnection.ProcessQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
@@ -145,6 +154,8 @@ namespace MQContract.Connections
 
         protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Producing QueryResponse Subscription for {Q} responding with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
             var queryMessageFactory = GetMessageFactory<Q>(MaxMessageBodySize, ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<R>(MaxMessageBodySize);
             (var connections,channel) = await GetConnectionsAsync<Q>(channel, ChannelMapper.MapTypes.QuerySubscription);

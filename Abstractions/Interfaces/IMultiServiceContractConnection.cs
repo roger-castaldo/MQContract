@@ -10,6 +10,12 @@ namespace MQContract.Interfaces
     public interface IMultiServiceContractConnection : 
         IMappableContractConnection<IMultiServiceContractConnection>,IMetricContractConnection<IMultiServiceContractConnection>
     {
+        /// <summary>
+        /// Register a service connection that will map to all calls
+        /// </summary>
+        /// <param name="serviceConnectionName">The name of the service connection, not necessarily unique, but can be used for logging and other things</param>
+        /// <param name="messageServiceConnection">The service connection to use for all calls</param>
+        /// <returns></returns>
         IMultiServiceContractConnection RegisterServiceConnection(string serviceConnectionName, IMessageServiceConnection messageServiceConnection);
         /// <summary>
         /// Called to Ping the underlying systems (assuming they implement the call) to obtain both information and ensure it is up.  Not all Services support this method.

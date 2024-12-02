@@ -46,6 +46,7 @@
   - [MessageConversionMax](#P-MQContract-Interfaces-IContractMetric-MessageConversionMax 'MQContract.Interfaces.IContractMetric.MessageConversionMax')
   - [MessageConversionMin](#P-MQContract-Interfaces-IContractMetric-MessageConversionMin 'MQContract.Interfaces.IContractMetric.MessageConversionMin')
   - [Messages](#P-MQContract-Interfaces-IContractMetric-Messages 'MQContract.Interfaces.IContractMetric.Messages')
+- [IContractedConnection](#T-MQContract-Interfaces-IContractedConnection 'MQContract.Interfaces.IContractedConnection')
 - [IEncodedMessage](#T-MQContract-Interfaces-Messages-IEncodedMessage 'MQContract.Interfaces.Messages.IEncodedMessage')
   - [Data](#P-MQContract-Interfaces-Messages-IEncodedMessage-Data 'MQContract.Interfaces.Messages.IEncodedMessage.Data')
   - [Header](#P-MQContract-Interfaces-Messages-IEncodedMessage-Header 'MQContract.Interfaces.Messages.IEncodedMessage.Header')
@@ -53,6 +54,13 @@
 - [IInboxQueryableMessageServiceConnection](#T-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection')
   - [EstablishInboxSubscriptionAsync(messageReceived,cancellationToken)](#M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-EstablishInboxSubscriptionAsync-System-Action{MQContract-Messages-ReceivedInboxServiceMessage},System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(System.Action{MQContract.Messages.ReceivedInboxServiceMessage},System.Threading.CancellationToken)')
   - [QueryAsync(message,correlationID,cancellationToken)](#M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-QueryAsync-MQContract-Messages-ServiceMessage,System-Guid,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection.QueryAsync(MQContract.Messages.ServiceMessage,System.Guid,System.Threading.CancellationToken)')
+- [IMappableContractConnection\`1](#T-MQContract-Interfaces-IMappableContractConnection`1 'MQContract.Interfaces.IMappableContractConnection`1')
+  - [RegisterServiceConnection(checkCallback,serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-Func{System-ValueTuple{System-String,System-Type,MQContract-Messages-MessageHeader},System-Boolean},System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterServiceConnection(System.Func{System.ValueTuple{System.String,System.Type,MQContract.Messages.MessageHeader},System.Boolean},System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
+  - [RegisterServiceConnection(channel,serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-String,System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterServiceConnection(System.String,System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
+  - [RegisterServiceConnection(messageType,serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-Type,System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterServiceConnection(System.Type,System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
+  - [RegisterServiceConnection(messageHeaderKey,messageHeaderValue,serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-String,System-String,System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterServiceConnection(System.String,System.String,System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
+  - [RegisterServiceConnection\`\`1(serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection``1-System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterServiceConnection``1(System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
+- [IMappedContractConnection](#T-MQContract-Interfaces-IMappedContractConnection 'MQContract.Interfaces.IMappedContractConnection')
 - [IMessageConverter\`2](#T-MQContract-Interfaces-Conversion-IMessageConverter`2 'MQContract.Interfaces.Conversion.IMessageConverter`2')
   - [ConvertAsync(source)](#M-MQContract-Interfaces-Conversion-IMessageConverter`2-ConvertAsync-`0- 'MQContract.Interfaces.Conversion.IMessageConverter`2.ConvertAsync(`0)')
 - [IMessageEncoder](#T-MQContract-Interfaces-Encoding-IMessageEncoder 'MQContract.Interfaces.Encoding.IMessageEncoder')
@@ -87,6 +95,7 @@
   - [PublishAsync\`\`1(message,channel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-PublishAsync``1-``0,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.PublishAsync``1(``0,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
   - [QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``1(``0,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
   - [QueryAsync\`\`2(message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``2(``0,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [RegisterServiceConnection(serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMultiServiceContractConnection-RegisterServiceConnection-System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMultiServiceContractConnection.RegisterServiceConnection(System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
 - [IPingableMessageServiceConnection](#T-MQContract-Interfaces-Service-IPingableMessageServiceConnection 'MQContract.Interfaces.Service.IPingableMessageServiceConnection')
   - [PingAsync()](#M-MQContract-Interfaces-Service-IPingableMessageServiceConnection-PingAsync 'MQContract.Interfaces.Service.IPingableMessageServiceConnection.PingAsync')
 - [IQueryResponseMessageServiceConnection](#T-MQContract-Interfaces-Service-IQueryResponseMessageServiceConnection 'MQContract.Interfaces.Service.IQueryResponseMessageServiceConnection')
@@ -836,6 +845,17 @@ Minimum time to encode/decode a message
 
 Total number of messages
 
+<a name='T-MQContract-Interfaces-IContractedConnection'></a>
+## IContractedConnection `type`
+
+##### Namespace
+
+MQContract.Interfaces
+
+##### Summary
+
+The base representation of a Contract Connection, specifically a single service connection supporting contract connection
+
 <a name='T-MQContract-Interfaces-Messages-IEncodedMessage'></a>
 ## IEncodedMessage `type`
 
@@ -916,6 +936,135 @@ The transmission result of submitting the message
 | message | [MQContract.Messages.ServiceMessage](#T-MQContract-Messages-ServiceMessage 'MQContract.Messages.ServiceMessage') | The service message to submit |
 | correlationID | [System.Guid](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Guid 'System.Guid') | The unique ID of the message to use for handling when the response is proper and is expected in the inbox subscription |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+<a name='T-MQContract-Interfaces-IMappableContractConnection`1'></a>
+## IMappableContractConnection\`1 `type`
+
+##### Namespace
+
+MQContract.Interfaces
+
+##### Summary
+
+A Mappable Contract Connection which supports mapping one or more Service Connections to a given message type, channel and or headers
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| CC | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
+
+<a name='M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-Func{System-ValueTuple{System-String,System-Type,MQContract-Messages-MessageHeader},System-Boolean},System-String,MQContract-Interfaces-Service-IMessageServiceConnection-'></a>
+### RegisterServiceConnection(checkCallback,serviceConnectionName,messageServiceConnection) `method`
+
+##### Summary
+
+Register a service connection using a callback for mapping
+
+##### Returns
+
+
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| checkCallback | [System.Func{System.ValueTuple{System.String,System.Type,MQContract.Messages.MessageHeader},System.Boolean}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.ValueTuple{System.String,System.Type,MQContract.Messages.MessageHeader},System.Boolean}') | The callback to check if this connection can be used with the given parameters |
+| serviceConnectionName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the service connection, not necessarily unique, but can be used for logging and other things |
+| messageServiceConnection | [MQContract.Interfaces.Service.IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection') | The service connection to use when the checkCallback returns true |
+
+<a name='M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-String,System-String,MQContract-Interfaces-Service-IMessageServiceConnection-'></a>
+### RegisterServiceConnection(channel,serviceConnectionName,messageServiceConnection) `method`
+
+##### Summary
+
+Register a service connection for a given channel
+
+##### Returns
+
+
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel that the service connection should be used for |
+| serviceConnectionName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the service connection, not necessarily unique, but can be used for logging and other things |
+| messageServiceConnection | [MQContract.Interfaces.Service.IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection') | The service connection to use when the channel is used |
+
+<a name='M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-Type,System-String,MQContract-Interfaces-Service-IMessageServiceConnection-'></a>
+### RegisterServiceConnection(messageType,serviceConnectionName,messageServiceConnection) `method`
+
+##### Summary
+
+Register a service connection for a given message type
+
+##### Returns
+
+
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of message that the service connection should be used for |
+| serviceConnectionName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the service connection, not necessarily unique, but can be used for logging and other things |
+| messageServiceConnection | [MQContract.Interfaces.Service.IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection') | The service connection to use when the messageType is used |
+
+<a name='M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-String,System-String,System-String,MQContract-Interfaces-Service-IMessageServiceConnection-'></a>
+### RegisterServiceConnection(messageHeaderKey,messageHeaderValue,serviceConnectionName,messageServiceConnection) `method`
+
+##### Summary
+
+Register a service connection to be used when the messageHeader contains the messageHeaderKey and it's value is messageHeaderValue
+
+##### Returns
+
+
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageHeaderKey | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The key value for the message header |
+| messageHeaderValue | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The value for the message header |
+| serviceConnectionName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the service connection, not necessarily unique, but can be used for logging and other things |
+| messageServiceConnection | [MQContract.Interfaces.Service.IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection') | The service connection to use when the messageHeader has the key and the value matches |
+
+<a name='M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection``1-System-String,MQContract-Interfaces-Service-IMessageServiceConnection-'></a>
+### RegisterServiceConnection\`\`1(serviceConnectionName,messageServiceConnection) `method`
+
+##### Summary
+
+Register a service connection for a given message type
+
+##### Returns
+
+
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| serviceConnectionName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the service connection, not necessarily unique, but can be used for logging and other things |
+| messageServiceConnection | [MQContract.Interfaces.Service.IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection') | The service connection to use when the message is of type T |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The type of message that the service connection should be used for |
+
+<a name='T-MQContract-Interfaces-IMappedContractConnection'></a>
+## IMappedContractConnection `type`
+
+##### Namespace
+
+MQContract.Interfaces
+
+##### Summary
+
+The representation of a Mapped Contract Connection which is built to use 1 or more service connections for the calls
 
 <a name='T-MQContract-Interfaces-Conversion-IMessageConverter`2'></a>
 ## IMessageConverter\`2 `type`
@@ -1211,6 +1360,16 @@ as well as the default of not encrypting the message body
 ##### Namespace
 
 MQContract.Interfaces
+
+##### Summary
+
+Houses the metric pieces for a given contract connection
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| CC | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
 
 <a name='M-MQContract-Interfaces-IMetricContractConnection`1-AddMetrics-System-Diagnostics-Metrics-Meter,System-Boolean-'></a>
 ### AddMetrics(meter,useInternal) `method`
@@ -1566,6 +1725,24 @@ only used when the underlying connection does not support a QueryResponse style 
 | ---- | ----------- |
 | Q | The type of message to send for the query |
 | R | The type of message to expect back for the response |
+
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-RegisterServiceConnection-System-String,MQContract-Interfaces-Service-IMessageServiceConnection-'></a>
+### RegisterServiceConnection(serviceConnectionName,messageServiceConnection) `method`
+
+##### Summary
+
+Register a service connection that will map to all calls
+
+##### Returns
+
+
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| serviceConnectionName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the service connection, not necessarily unique, but can be used for logging and other things |
+| messageServiceConnection | [MQContract.Interfaces.Service.IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection') | The service connection to use for all calls |
 
 <a name='T-MQContract-Interfaces-Service-IPingableMessageServiceConnection'></a>
 ## IPingableMessageServiceConnection `type`

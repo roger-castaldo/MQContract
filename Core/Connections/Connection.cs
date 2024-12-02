@@ -24,9 +24,7 @@ namespace MQContract.Connections
             => (serviceConnection is IPingableMessageServiceConnection pingableService ? pingableService.PingAsync() : throw new PingNotSupportedException());
 
         protected override async ValueTask CloseAsync()
-        {
-            await (serviceConnection?.CloseAsync()??ValueTask.CompletedTask);
-        }
+            => await (serviceConnection?.CloseAsync()??ValueTask.CompletedTask);
 
         protected override void InternalDispose()
         {
@@ -62,6 +60,8 @@ namespace MQContract.Connections
 
         async ValueTask<TransmissionResult> IContractConnection.PublishAsync<T>(T message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
             await publishLock.WaitAsync(cancellationToken);
             var result = await serviceConnection.PublishAsync(
                 await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), message, false, channel, messageHeader),
@@ -73,6 +73,8 @@ namespace MQContract.Connections
 
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Bulk Publishing messages {T} on {Channel}", typeof(T), channel);
             var serviceMessages = await
                 messages.WhenAll(m =>
                     ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), m.message, false, channel, m.messageHeader)
@@ -89,6 +91,8 @@ namespace MQContract.Connections
             where Q : class
             where R : class
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q),typeof(R),channel,responseChannel);
             var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(serviceConnection.MaxMessageBodySize), message, false, channel: channel, messageHeader: messageHeader);
             return await ExecuteQueryAsync<Q, R>(serviceConnection, serviceMessage, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken);
         }
@@ -99,9 +103,12 @@ namespace MQContract.Connections
         async ValueTask<QueryResult<object>> IContractConnection.QueryAsync<Q>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader,
             CancellationToken cancellationToken)
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Attempting to get response type for QueryResponse for {Q} on {Channel} with {ResponseChannel}", typeof(Q), channel, responseChannel);
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
+            Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {Q} on {Channel} with {ResponseChannel}", responseType, typeof(Q), channel, responseChannel);
 #pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             var methodInfo = typeof(Connection).GetMethod(nameof(Connection.ProcessQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
@@ -130,6 +137,8 @@ namespace MQContract.Connections
             where Q : class
             where R : class
         {
+            using var scope = SetScope();
+            Logger?.LogDebug("Producing QueryResponse Subscription for {Q} responding with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
             var queryMessageFactory = GetMessageFactory<Q>(serviceConnection.MaxMessageBodySize, ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<R>(serviceConnection.MaxMessageBodySize);
             return await CreateSubscriptionAsync<Q, R>(queryMessageFactory, responseMessageFactory, serviceConnection, messageReceived, errorReceived, channel, group, synchronous, cancellationToken);
