@@ -2,6 +2,9 @@
 
 namespace MQContract.Interfaces
 {
+    /// <summary>
+    /// Represents the Base for all Contract Connections and contains the definition of all items defined by all Contract Connections
+    /// </summary>
     public interface IBaseContractConnection : IDisposable, IAsyncDisposable
     {
         /// <summary>

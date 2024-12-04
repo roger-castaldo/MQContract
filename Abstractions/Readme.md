@@ -344,6 +344,10 @@ The message to allow for changes if desired
 
 MQContract.Interfaces
 
+##### Summary
+
+Represents the Base for all Contract Connections and contains the definition of all items defined by all Contract Connections
+
 <a name='M-MQContract-Interfaces-IBaseContractConnection-CloseAsync'></a>
 ### CloseAsync() `method`
 
