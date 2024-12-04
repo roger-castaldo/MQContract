@@ -24,6 +24,11 @@ This is the MessageServiceConnection implemenation for using AzureServiceBus
 | ---- | ---- | ----------- |
 | client | [T:MQContract.AzureServiceBus.Connection](#T-T-MQContract-AzureServiceBus-Connection 'T:MQContract.AzureServiceBus.Connection') | The ServiceBusClient to use with this instance |
 
+##### Remarks
+
+In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
+with RequiresSession as true
+
 <a name='M-MQContract-AzureServiceBus-Connection-#ctor-Azure-Messaging-ServiceBus-ServiceBusClient-'></a>
 ### #ctor(client) `constructor`
 
@@ -36,6 +41,11 @@ This is the MessageServiceConnection implemenation for using AzureServiceBus
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | client | [Azure.Messaging.ServiceBus.ServiceBusClient](#T-Azure-Messaging-ServiceBus-ServiceBusClient 'Azure.Messaging.ServiceBus.ServiceBusClient') | The ServiceBusClient to use with this instance |
+
+##### Remarks
+
+In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
+with RequiresSession as true
 
 <a name='P-MQContract-AzureServiceBus-Connection-MaxMessageBodySize'></a>
 ### MaxMessageBodySize `property`

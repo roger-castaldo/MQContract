@@ -1,0 +1,54 @@
+﻿using Google.Cloud.PubSub.V1;
+using MQContract.Interfaces.Service;
+using MQContract.Messages;
+using static Google.Cloud.PubSub.V1.SubscriberClient;
+
+
+namespace MQContract.GooglePubSub
+{
+    internal class Subscription(SubscriberServiceApiClient subscriberClientApi, SubscriptionName subscriptionName, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel) : IServiceSubscription,IAsyncDisposable
+    {
+        protected readonly CancellationTokenSource cancelToken = new();
+        private bool disposedValue;
+
+        public void Start()
+        {
+            _ = Task.Run(async () =>
+            {
+                while (!cancelToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        var msg = await subscriberClientApi.PullAsync(subscriptionName, 1, cancelToken.Token);
+                        if (msg!=null)
+                            messageReceived(Connection.ConvertMessage(
+                                msg.ReceivedMessages[0],
+                                channel,
+                                async () => await subscriberClientApi.AcknowledgeAsync(subscriptionName, [msg.ReceivedMessages[0].AckId], cancelToken.Token)
+                            ));
+                    }
+                    catch (Exception ex)
+                    {
+                        errorReceived(ex);
+                    }
+                }
+            });
+        }
+
+        public async ValueTask EndAsync()
+        {
+            if (!cancelToken.IsCancellationRequested)
+                await cancelToken.CancelAsync();
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!disposedValue)
+            {
+                disposedValue=true;
+                await EndAsync();
+                cancelToken.Dispose();
+            }
+        }
+    }
+}

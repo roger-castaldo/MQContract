@@ -1,7 +1,6 @@
 ﻿using Azure.Messaging.ServiceBus;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using System.Threading.Channels;
 
 namespace MQContract.AzureServiceBus
 {
@@ -9,6 +8,10 @@ namespace MQContract.AzureServiceBus
     /// This is the MessageServiceConnection implemenation for using AzureServiceBus
     /// </summary>
     /// <param name="client">The ServiceBusClient to use with this instance</param>
+    /// <remarks>
+    /// In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
+    /// with RequiresSession as true
+    /// </remarks>
     public sealed class Connection(ServiceBusClient client) : IInboxQueryableMessageServiceConnection,IBulkPublishableMessageServiceConnection, IDisposable
     {
         private const string INBOX_CHANNEL_NAME = "QueryResponse.Inbox";

@@ -14,7 +14,8 @@ global level or on a per message type level through implementation of the approp
 * [Core](/Core/Readme.md)
 * Connectors
 	* [ActiveMQ](/Connectors/ActiveMQ/Readme.md)
-	* [AzureServiceBus](/Connectors/AzureServiceBus/Readme.md)	
+	* [AzureServiceBus](/Connectors/AzureServiceBus/Readme.md)
+	* [GooglePubSub](/Connectors/GooglePubSub/Readme.md)
 	* [HiveMQ](/Connectors/HiveMQ/Readme.md)
 	* [InMemory](/Connectors/InMemory/Readme.md)
 	* [Kafka](/Connectors/Kafka/Readme.md)
