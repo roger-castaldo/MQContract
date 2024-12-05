@@ -111,13 +111,14 @@ namespace MQContract.GooglePubSub
             return result;
         }
 
-        async ValueTask IAsyncDisposable.DisposeAsync()
+        ValueTask IAsyncDisposable.DisposeAsync()
         {
             if (!disposedValue)
             {
                 disposedValue=true;
                 builderLock.Dispose();
             }
+            return ValueTask.CompletedTask;
         }
     }
 }

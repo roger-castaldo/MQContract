@@ -51,9 +51,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureServiceBus", "Connecto
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureServiceBusSample", "Samples\AzureServiceBusSample\AzureServiceBusSample.csproj", "{253B079D-1B70-482E-BCB6-87E14BF46318}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GooglePubSub", "Connectors\GooglePubSub\GooglePubSub.csproj", "{A4A49F12-2BB4-4A21-ACDB-0EB3B025A037}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GooglePubSub", "Connectors\GooglePubSub\GooglePubSub.csproj", "{A4A49F12-2BB4-4A21-ACDB-0EB3B025A037}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GooglePubSubSample", "Samples\GooglePubSubSample\GooglePubSubSample.csproj", "{A801332E-41B5-4DD2-914A-FDCE6E667BAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GooglePubSubSample", "Samples\GooglePubSubSample\GooglePubSubSample.csproj", "{A801332E-41B5-4DD2-914A-FDCE6E667BAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApachePulsar", "Connectors\ApachePulsar\ApachePulsar.csproj", "{7A7963A1-7057-4D3B-9A31-51A83256C5EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApachePulsarSample", "Samples\ApachePulsarSample\ApachePulsarSample.csproj", "{2E961344-1735-476E-8656-48E034EAE91B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -157,6 +161,14 @@ Global
 		{A801332E-41B5-4DD2-914A-FDCE6E667BAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A801332E-41B5-4DD2-914A-FDCE6E667BAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A801332E-41B5-4DD2-914A-FDCE6E667BAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A7963A1-7057-4D3B-9A31-51A83256C5EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A7963A1-7057-4D3B-9A31-51A83256C5EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A7963A1-7057-4D3B-9A31-51A83256C5EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A7963A1-7057-4D3B-9A31-51A83256C5EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E961344-1735-476E-8656-48E034EAE91B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E961344-1735-476E-8656-48E034EAE91B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E961344-1735-476E-8656-48E034EAE91B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E961344-1735-476E-8656-48E034EAE91B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -183,6 +195,8 @@ Global
 		{253B079D-1B70-482E-BCB6-87E14BF46318} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
 		{A4A49F12-2BB4-4A21-ACDB-0EB3B025A037} = {FCAD12F9-6992-44D7-8E78-464181584E06}
 		{A801332E-41B5-4DD2-914A-FDCE6E667BAE} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
+		{7A7963A1-7057-4D3B-9A31-51A83256C5EE} = {FCAD12F9-6992-44D7-8E78-464181584E06}
+		{2E961344-1735-476E-8656-48E034EAE91B} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4431E3A-7CBE-469C-A7FE-0A48F6768E02}
