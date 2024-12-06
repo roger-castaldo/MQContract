@@ -25,7 +25,7 @@ jobs:
     - name: Build-8.0
       run: dotnet build --framework net8.0 --no-restore AutomatedTesting
     - name: Test-8.0
-      run: dotnet test --framework net8.0 --no-build --verbosity normal AutomatedTesting
+      run: dotnet test --framework net8.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" AutomatedTesting
     - name: report results
       uses: bibipkins/dotnet-test-reporter@v1.4.0
       with:
