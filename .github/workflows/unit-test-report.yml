@@ -25,12 +25,12 @@ jobs:
     - name: Build-8.0
       run: dotnet build --framework net8.0 --no-restore AutomatedTesting
     - name: Test-8.0
-      run: dotnet test --framework net8.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" AutomatedTesting
+      run: dotnet test --framework net8.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"Code Coverage" AutomatedTesting
     - name: report results
       uses: bibipkins/dotnet-test-reporter@v1.4.0
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         comment-title: 'Unit Test Results'
         results-path: ./**/*.trx
-        coverage-path: ./**/coverage.xml
+        coverage-path: ./**/*.coverage
         coverage-threshold: 90
