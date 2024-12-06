@@ -17,6 +17,8 @@ namespace MQContract.ActiveMQ
         private readonly IConnection connection;
         private readonly ISession session;
         private readonly IMessageProducer producer;
+        private readonly List<ConsumerInstance> consumerInstances = [];
+        private readonly SemaphoreSlim locker = new(1,1);
 
         /// <summary>
         /// Default constructor for creating instance
@@ -80,9 +82,32 @@ namespace MQContract.ActiveMQ
             }
         }
 
+        private async ValueTask<ConsumerInstance> CreateInstance(string channel,string group)
+        {
+            await locker.WaitAsync();
+            var result = consumerInstances.Find(x=>Equals(x.Channel,channel) && Equals(x.Group,group));
+            locker.Release();
+            if (result==null)
+            {
+                await locker.WaitAsync();
+                result = new(channel, group, await session.CreateSharedConsumerAsync(SessionUtil.GetTopic(session, channel), group), () =>
+                {
+                    locker.Wait();
+                    consumerInstances.RemoveAll(x => Equals(x.Channel, channel) && Equals(x.Group, group));
+                    locker.Release();
+                });
+                consumerInstances.Add(result);
+                locker.Release();
+            }
+            else
+                result.AddListener();
+            return result;
+        }
+
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
-            var result = new SubscriptionBase((msg)=>messageReceived(ProduceMessage(channel,msg)), errorReceived,session, channel, group??Guid.NewGuid().ToString());
+            group??=Guid.NewGuid().ToString(); 
+            var result = new SubscriptionBase((msg)=>messageReceived(ProduceMessage(channel,msg)), errorReceived,await CreateInstance(channel,group));
             await result.StartAsync();
             return result;
         }

@@ -18,12 +18,12 @@ namespace AutomatedTesting.Encryptors
             return ValueTask.FromResult<Stream>(new MemoryStream(data.Reverse().ToArray()));
         }
 
-        public ValueTask<byte[]> EncryptAsync(byte[] data, out Dictionary<string, string?> headers)
-        {
-            headers = new([
-                new(HeaderKey,injectableService.Name)
-                ]);
-            return ValueTask.FromResult<byte[]>(data.Reverse().ToArray());
-        }
+        public ValueTask<(byte[] data, Dictionary<string, string?> headers)> EncryptAsync(byte[] data)
+            => ValueTask.FromResult<(byte[] data, Dictionary<string, string?> headers)>((
+                data.Reverse().ToArray(),
+                new Dictionary<string, string?>([
+                    new(HeaderKey,injectableService.Name)
+                ])
+            ));
     }
 }

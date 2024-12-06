@@ -2,7 +2,7 @@
 
 namespace MQContract.Middleware.Metrics
 {
-    internal record ContractMetric : IContractMetric
+    internal record ContractMetric() : IContractMetric
     {
         public ulong Messages { get; private set; } = 0;
 
@@ -30,7 +30,7 @@ namespace MQContract.Middleware.Metrics
             MessageBytesMax = Math.Max(MessageBytesMax, (ulong)messageSize);
             MessageConversionDuration += encodingDuration;
             MessageConversionMin = TimeSpan.FromTicks(Math.Min(MessageConversionMin.Ticks, encodingDuration.Ticks));
-            MessageConversionMax = TimeSpan.FromTicks(Math.Max(MessageConversionMin.Ticks, encodingDuration.Ticks));
+            MessageConversionMax = TimeSpan.FromTicks(Math.Max(MessageConversionMax.Ticks, encodingDuration.Ticks));
         }
     }
 }

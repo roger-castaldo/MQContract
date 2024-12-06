@@ -14,13 +14,25 @@ namespace Messages
             var contractConnection = ContractConnection.Instance(serviceConnection,channelMapper:mapper);
             contractConnection.AddMetrics(null, true);
 
-            var announcementSubscription = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
+            var announcementSubscription1 = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
                 (announcement) =>
                 {
-                    Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.ReceivedTimestamp}]");
+                    Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName} in member 1 of the group.. [{announcement.ID},{announcement.ReceivedTimestamp}]");
                     return ValueTask.CompletedTask;
                 },
                 (error) => Console.WriteLine($"Announcement error: {error.Message}"),
+                group:"AnnouncementGroup",
+                cancellationToken: sourceCancel.Token
+            );
+
+            var announcementSubscription2 = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
+                (announcement) =>
+                {
+                    Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName} in member 2 of the group.. [{announcement.ID},{announcement.ReceivedTimestamp}]");
+                    return ValueTask.CompletedTask;
+                },
+                (error) => Console.WriteLine($"Announcement error: {error.Message}"),
+                group: "AnnouncementGroup",
                 cancellationToken: sourceCancel.Token
             );
 
@@ -50,7 +62,8 @@ namespace Messages
             sourceCancel.Token.Register(async () =>
             {
                 await Task.WhenAll(
-                    announcementSubscription.EndAsync().AsTask(),
+                    announcementSubscription1.EndAsync().AsTask(),
+                    announcementSubscription2.EndAsync().AsTask(),
                     greetingSubscription.EndAsync().AsTask(),
                     storedArrivalSubscription.EndAsync().AsTask()
                 ).ConfigureAwait(true);
@@ -65,6 +78,13 @@ namespace Messages
             Console.WriteLine($"Result 1 [Success:{!result.IsError}, ID:{result.ID}]");
             result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Result 2 [Success:{!result.IsError}, ID:{result.ID}]");
+
+            Console.WriteLine("Broadcasting multiple announcements to demonstrate grouping...");
+            for(var x = 0; x<20; x++)
+            {
+                result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new($"FirstName{x}",$"LastName{x}"),cancellationToken:sourceCancel.Token);
+                Console.WriteLine($"Broadcast Result {x} [Success:{!result.IsError}, ID:{result.ID}]");
+            }
 
             var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Response 1 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
@@ -88,10 +108,10 @@ namespace Messages
             };
             Console.WriteLine($"Greetings Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting), true), jsonOptions)}");
             Console.WriteLine($"Greetings Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting), false), jsonOptions)}");
-            Console.WriteLine($"StoredArrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), true), jsonOptions)}");
-            Console.WriteLine($"StoredArrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), false), jsonOptions)}");
-            Console.WriteLine($"Arrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), true), jsonOptions)}");
-            Console.WriteLine($"Arrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), false), jsonOptions)}");
+            Console.WriteLine($"StoredArrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), true), jsonOptions)}");
+            Console.WriteLine($"StoredArrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), false), jsonOptions)}");
+            Console.WriteLine($"Arrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), true), jsonOptions)}");
+            Console.WriteLine($"Arrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), false), jsonOptions)}");
         }
     }
 }

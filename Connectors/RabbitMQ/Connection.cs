@@ -166,6 +166,13 @@ namespace MQContract.RabbitMQ
             {
                 group = Guid.NewGuid().ToString();
                 this.channel.QueueDeclare(queue:group, durable:false, exclusive:false, autoDelete:true);
+            }else
+            {
+                try
+                {
+                    this.channel.QueueDeclare(queue: group);
+                }
+                catch (Exception) { }
             }
             return new Subscription(conn, channel, group,messageReceived,errorReceived);
         }

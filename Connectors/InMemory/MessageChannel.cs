@@ -5,32 +5,50 @@ namespace MQContract.InMemory
 {
     internal class MessageChannel
     {
-        private readonly SemaphoreSlim semLock = new(1, 1);
+        private const string TransmissionResultError = "Unable to transmit";
+
+        private readonly ReaderWriterLockSlim locker = new();
         private readonly List<MessageGroup> groups = [];
 
         private async ValueTask<bool> Publish(InternalServiceMessage message, CancellationToken cancellationToken)
         {
-            await semLock.WaitAsync(cancellationToken);
-            var tasks = groups.Select(grp => grp.PublishMessage(message).AsTask()).ToArray();
-            semLock.Release();
-            await Task.WhenAll(tasks);
-            return Array.TrueForAll(tasks, t => t.Result);
+            locker.EnterReadLock();
+            var grps = groups.ToArray();
+            locker.ExitReadLock();
+            var results = await grps.WhenAll(grp => grp.PublishMessage(message));
+            return Array.TrueForAll(results.ToArray(), t => t);
         }
 
         public void Close()
         {
-            semLock.Wait();
+            locker.EnterWriteLock();
             foreach (var group in groups.ToArray())
                 group.Close();
             groups.Clear();
-            semLock.Release();
+            locker.ExitWriteLock();
         }
 
         internal async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             if (!await Publish(new(message.ID,message.MessageTypeID,message.Channel,message.Header,message.Data), cancellationToken))
-                return new(message.ID, "Unable to trasmit");
+                return new(message.ID, TransmissionResultError);
             return new(message.ID);
+        }
+
+        internal async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> messages,CancellationToken cancellationToken)
+        {
+            IEnumerable<TransmissionResult> results = [];
+            locker.EnterReadLock();
+            foreach(var message in messages)
+            {
+                var messageResults = (
+                    await groups
+                        .WhenAll(grp => grp.PublishMessage(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data)))
+                    ).ToArray();
+                results=results.Append(new(message.ID, Array.TrueForAll(messageResults, mr => mr) ? null : TransmissionResultError));
+            }
+            locker.ExitReadLock();
+            return results;
         }
 
         internal async ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)
@@ -43,28 +61,28 @@ namespace MQContract.InMemory
             return new(message.ID);
         }
 
-        private async ValueTask<MessageGroup> GetGroupAsync(string? group)
+        private MessageGroup GetGroup(string? group)
         {
             group??=Guid.NewGuid().ToString();
-            await semLock.WaitAsync();
+            locker.EnterWriteLock();
             var grp = groups.Find(g => Equals(g.Group, group));
             if (grp==null)
             {
                 grp = new MessageGroup(group, g =>
                 {
-                    semLock.Wait();
+                    locker.EnterWriteLock();
                     groups.Remove(g);
-                    semLock.Release();
+                    locker.ExitWriteLock();
                 });
                 groups.Add(grp);
             }
-            semLock.Release();
+            locker.ExitWriteLock();
             return grp;
         }
 
-        private async ValueTask<IServiceSubscription> CreateSubscription(Func<InternalServiceMessage,ValueTask>  processMessage,Action<Exception> errorReceived,string? group,CancellationToken cancellationToken)
+        private ValueTask<IServiceSubscription> CreateSubscription(Func<InternalServiceMessage,ValueTask>  processMessage,Action<Exception> errorReceived,string? group,CancellationToken cancellationToken)
         {
-            var sub = new Subscription(await GetGroupAsync(group), async (recievedMessage) =>
+            var sub = new Subscription(GetGroup(group), async (recievedMessage) =>
             {
                 try
                 {
@@ -76,7 +94,7 @@ namespace MQContract.InMemory
                 }
             });
             sub.Start();
-            return sub;
+            return ValueTask.FromResult<IServiceSubscription>(sub);
         }
 
         internal async ValueTask<IServiceSubscription?> RegisterQuerySubscriptionAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, Action<InternalServiceMessage> publishResponse, string? group, CancellationToken cancellationToken)

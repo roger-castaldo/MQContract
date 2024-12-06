@@ -152,7 +152,7 @@ namespace MQContract.Factories
                 throw new MessageChannelNullException();
 
             var encodedData = await (messageEncoder?.EncodeAsync(message)??globalMessageEncoder!.EncodeAsync<T>(message));
-            var body = await (messageEncryptor?.EncryptAsync(encodedData, out var messageHeaders)??globalMessageEncryptor!.EncryptAsync(encodedData, out messageHeaders));
+            (var body,var messageHeaders) = await (messageEncryptor?.EncryptAsync(encodedData)??globalMessageEncryptor!.EncryptAsync(encodedData));
 
             var metaData = string.Empty;
             if (body.Length>maxMessageSize)

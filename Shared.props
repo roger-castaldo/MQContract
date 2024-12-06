@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<VersionPrefix>1.1</VersionPrefix>
+		<VersionPrefix>2.0</VersionPrefix>
 		<PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>

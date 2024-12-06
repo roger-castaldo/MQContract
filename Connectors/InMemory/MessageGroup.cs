@@ -4,7 +4,7 @@ namespace MQContract.InMemory
 {
     internal class MessageGroup(string group,Action<MessageGroup> removeMe) 
     {
-        private readonly SemaphoreSlim semLock = new(1, 1);
+        private readonly ReaderWriterLockSlim locker = new();
         private readonly List<Channel<InternalServiceMessage>> channels = [];
         private int index = 0;
         public string Group => group;
@@ -16,19 +16,20 @@ namespace MQContract.InMemory
             return result;
         }
 
-        public async ValueTask UnregisterAsync(Channel<InternalServiceMessage> channel)
+        public ValueTask UnregisterAsync(Channel<InternalServiceMessage> channel)
         {
-            await semLock.WaitAsync();
+            locker.EnterWriteLock();
             channels.Remove(channel);
             if (channels.Count == 0)
                 removeMe(this);
-            semLock.Release();
+            locker.ExitWriteLock();
+            return ValueTask.CompletedTask;
         }
 
         public async ValueTask<bool> PublishMessage(InternalServiceMessage message)
         {
             var success = false;
-            await semLock.WaitAsync();
+            locker.EnterReadLock();
             if (index>=channels.Count)
                 index=0;
             if (index<channels.Count)
@@ -37,17 +38,17 @@ namespace MQContract.InMemory
                 index++;
                 success=true;
             }
-            semLock.Release();
+            locker.ExitReadLock();
             return success;
         }
 
         internal void Close()
         {
-            semLock.Wait();
+            locker.EnterWriteLock();
             foreach (var channel in channels)
                 channel.Writer.TryComplete();
             channels.Clear();
-            semLock.Release();
+            locker.ExitWriteLock();
         }
     }
 }
