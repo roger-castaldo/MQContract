@@ -7,9 +7,9 @@
   - [#ctor(factory)](#M-MQContract-RabbitMQ-Connection-#ctor-RabbitMQ-Client-ConnectionFactory- 'MQContract.RabbitMQ.Connection.#ctor(RabbitMQ.Client.ConnectionFactory)')
   - [DefaultTimeout](#P-MQContract-RabbitMQ-Connection-DefaultTimeout 'MQContract.RabbitMQ.Connection.DefaultTimeout')
   - [MaxMessageBodySize](#P-MQContract-RabbitMQ-Connection-MaxMessageBodySize 'MQContract.RabbitMQ.Connection.MaxMessageBodySize')
-  - [ExchangeDeclare(exchange,type,durable,autoDelete,arguments)](#M-MQContract-RabbitMQ-Connection-ExchangeDeclare-System-String,System-String,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}- 'MQContract.RabbitMQ.Connection.ExchangeDeclare(System.String,System.String,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})')
-  - [QueueDeclare(queue,durable,exclusive,autoDelete,arguments)](#M-MQContract-RabbitMQ-Connection-QueueDeclare-System-String,System-Boolean,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}- 'MQContract.RabbitMQ.Connection.QueueDeclare(System.String,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})')
-  - [QueueDelete(queue,ifUnused,ifEmpty)](#M-MQContract-RabbitMQ-Connection-QueueDelete-System-String,System-Boolean,System-Boolean- 'MQContract.RabbitMQ.Connection.QueueDelete(System.String,System.Boolean,System.Boolean)')
+  - [ExchangeDeclareAsync(exchange,type,durable,autoDelete,arguments)](#M-MQContract-RabbitMQ-Connection-ExchangeDeclareAsync-System-String,System-String,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}- 'MQContract.RabbitMQ.Connection.ExchangeDeclareAsync(System.String,System.String,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})')
+  - [QueueDeclareAsync(queue,durable,exclusive,autoDelete,arguments)](#M-MQContract-RabbitMQ-Connection-QueueDeclareAsync-System-String,System-Boolean,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}- 'MQContract.RabbitMQ.Connection.QueueDeclareAsync(System.String,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})')
+  - [QueueDeleteAsync(queue,ifUnused,ifEmpty)](#M-MQContract-RabbitMQ-Connection-QueueDeleteAsync-System-String,System-Boolean,System-Boolean- 'MQContract.RabbitMQ.Connection.QueueDeleteAsync(System.String,System.Boolean,System.Boolean)')
 
 <a name='T-MQContract-RabbitMQ-Connection'></a>
 ## Connection `type`
@@ -50,8 +50,8 @@ DEFAULT: 1 minute
 
 The maximum message body size allowed
 
-<a name='M-MQContract-RabbitMQ-Connection-ExchangeDeclare-System-String,System-String,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}-'></a>
-### ExchangeDeclare(exchange,type,durable,autoDelete,arguments) `method`
+<a name='M-MQContract-RabbitMQ-Connection-ExchangeDeclareAsync-System-String,System-String,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}-'></a>
+### ExchangeDeclareAsync(exchange,type,durable,autoDelete,arguments) `method`
 
 ##### Summary
 
@@ -71,8 +71,8 @@ The connection to allow for chaining calls
 | autoDelete | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Auto Delete when connection closed |
 | arguments | [System.Collections.Generic.IDictionary{System.String,System.Object}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IDictionary 'System.Collections.Generic.IDictionary{System.String,System.Object}') | Additional arguements |
 
-<a name='M-MQContract-RabbitMQ-Connection-QueueDeclare-System-String,System-Boolean,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}-'></a>
-### QueueDeclare(queue,durable,exclusive,autoDelete,arguments) `method`
+<a name='M-MQContract-RabbitMQ-Connection-QueueDeclareAsync-System-String,System-Boolean,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}-'></a>
+### QueueDeclareAsync(queue,durable,exclusive,autoDelete,arguments) `method`
 
 ##### Summary
 
@@ -92,8 +92,8 @@ The connection to allow for chaining calls
 | autoDelete | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Auto Delete queue when connection closed |
 | arguments | [System.Collections.Generic.IDictionary{System.String,System.Object}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IDictionary 'System.Collections.Generic.IDictionary{System.String,System.Object}') | Additional arguements |
 
-<a name='M-MQContract-RabbitMQ-Connection-QueueDelete-System-String,System-Boolean,System-Boolean-'></a>
-### QueueDelete(queue,ifUnused,ifEmpty) `method`
+<a name='M-MQContract-RabbitMQ-Connection-QueueDeleteAsync-System-String,System-Boolean,System-Boolean-'></a>
+### QueueDeleteAsync(queue,ifUnused,ifEmpty) `method`
 
 ##### Summary
 
