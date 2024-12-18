@@ -6,37 +6,41 @@ namespace MQContract.RabbitMQ
 {
     internal class Subscription : IServiceSubscription
     {
-        private readonly IModel channel;
-        private readonly Guid subscriptionID = Guid.NewGuid();
+        private readonly IChannel channel;
         private readonly string consumerTag;
 
-        public Subscription(IConnection conn,string channel,string group, Action<BasicDeliverEventArgs,IModel,Func<ValueTask>> messageReceived, Action<Exception> errorReceived,string? routingKey=null)
+        public static async ValueTask<Subscription> ProduceInstanceAsync(IConnection conn, string channel, string group, Action<BasicDeliverEventArgs, IChannel, Func<ValueTask>> messageReceived, Action<Exception> errorReceived, string? routingKey = null)
         {
-            this.channel = conn.CreateModel();
-            this.channel.QueueBind(group, channel, routingKey??subscriptionID.ToString());
-            this.channel.BasicQos(0, 1, false);
-            var consumer = new EventingBasicConsumer(this.channel);
-            consumer.Received+=(sender, @event) =>
+            var connectionChannel = await conn.CreateChannelAsync();
+            await connectionChannel.QueueBindAsync(group, channel, routingKey??Guid.NewGuid().ToString());
+            await connectionChannel.BasicQosAsync(0, 1, false);
+            var consumer = new AsyncEventingBasicConsumer(connectionChannel);
+            consumer.ReceivedAsync+= (sender, @event) =>
             {
                 messageReceived(
                     @event,
-                    this.channel,
-                    () =>
+                    connectionChannel,
+                    async () =>
                     {
-                        this.channel.BasicAck(@event.DeliveryTag, false);
-                        return ValueTask.CompletedTask;
+                        await connectionChannel.BasicAckAsync(@event.DeliveryTag, false);
                     }
                 );
+                return Task.CompletedTask;
             };
 
-            consumerTag = this.channel.BasicConsume(group, false, consumer);
+            return new Subscription(connectionChannel, await connectionChannel.BasicConsumeAsync(group, false, consumer));
         }
 
-        public ValueTask EndAsync()
+        private Subscription(IChannel channel, string consumerTag)
         {
-            channel.BasicCancel(consumerTag);
-            channel.Close();
-            return ValueTask.CompletedTask;
+            this.channel=channel;
+            this.consumerTag=consumerTag;
+        }
+
+        public async ValueTask EndAsync()
+        {
+            await channel.BasicCancelAsync(consumerTag);
+            await channel.CloseAsync();
         }
     }
 }

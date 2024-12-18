@@ -8,12 +8,12 @@ var factory = new ConnectionFactory()
     Port = 5672,
     UserName="guest",
     Password="guest",
-    MaxMessageSize=1024*1024*4
+    MaxInboundMessageBodySize=1024*1024*4
 };
 
-var serviceConnection = new Connection(factory)
-    .ExchangeDeclare("Greeting", ExchangeType.Fanout)
-    .ExchangeDeclare("StoredArrivals", ExchangeType.Fanout,true)
-    .ExchangeDeclare("Arrivals", ExchangeType.Fanout);
+var serviceConnection = new Connection(factory);
+await serviceConnection.ExchangeDeclareAsync("Greeting", ExchangeType.Fanout);
+await serviceConnection.ExchangeDeclareAsync("StoredArrivals", ExchangeType.Fanout, true);
+await serviceConnection.ExchangeDeclareAsync("Arrivals", ExchangeType.Fanout);
 
 await SampleExecution.ExecuteSample(serviceConnection, "RabbitMQ");
