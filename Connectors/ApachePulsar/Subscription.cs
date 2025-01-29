@@ -1,6 +1,5 @@
 ﻿using DotPulsar;
 using DotPulsar.Abstractions;
-using DotPulsar.Extensions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 

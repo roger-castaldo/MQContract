@@ -1,6 +1,5 @@
 ﻿using DotPulsar;
 using Messages;
-using MQContract;
 using MQContract.ApachePulsar;
 
 var builder = PulsarClient.Builder()

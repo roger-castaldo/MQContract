@@ -7,7 +7,6 @@ namespace MQContract.Interfaces
     /// </summary>
     /// <typeparam name="T">The class type of the underlying message</typeparam>
     public interface IReceivedMessage<out T>
-        where T : class
     {
         /// <summary>
         /// The unique ID of the received message that was specified on the transmission side

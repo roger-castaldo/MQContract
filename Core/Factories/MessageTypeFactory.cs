@@ -16,7 +16,7 @@ using System.Text.RegularExpressions;
 namespace MQContract.Factories
 {
     internal class MessageTypeFactory<T>
-        : IMessageFactory<T> where T : class
+        : IMessageFactory<T>
     {
         private static Regex RegMetaData => new(@"^(U|C)-(.+)-((\d+\.)*(\d+))$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(200));
 
@@ -79,7 +79,6 @@ namespace MQContract.Factories
         }
 
         private static IEnumerable<IConversionPath<M>> ProduceConverters<M>(IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider)
-            where M : class
         {
             var paths = types
                 .Where(t => Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType &&

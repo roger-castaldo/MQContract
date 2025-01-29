@@ -2,7 +2,6 @@
 using Google.Protobuf;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using static Google.Cloud.PubSub.V1.PublisherClient;
 
 namespace MQContract.GooglePubSub
 {

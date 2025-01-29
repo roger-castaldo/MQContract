@@ -35,7 +35,7 @@ namespace MQContract.Connections
         protected ILogger? Logger => logger;
         protected IDisposable? SetScope(string? messageID=null) => logger?.BeginScope<string>($"Connection[{indentifier}]{(messageID==null ? "" : $"|Message[{messageID}]")}");
 
-        protected IMessageFactory<T> GetMessageFactory<T>(uint? maxMessageBodySize,bool ignoreMessageHeader = false) where T : class
+        protected IMessageFactory<T> GetMessageFactory<T>(uint? maxMessageBodySize,bool ignoreMessageHeader = false)
         {
             using var scope = SetScope();
             logger?.LogInformation("Obtaining message factory for {Type}", typeof(T));
@@ -85,7 +85,6 @@ namespace MQContract.Connections
             => RegisterMiddleware(constructInstance());
 
         private async ValueTask<(T message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
-            where T : class
         {
             using var scope = SetScope();
             logger?.LogInformation("Executing Before Message Encode middleware for message of type {Type}", typeof(T));
@@ -136,7 +135,6 @@ namespace MQContract.Connections
         }
 
         private async ValueTask<(T message, MessageHeader messageHeader)> AfterMessageDecodeAsync<T>(IContext context, T message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
-            where T : class
         {
             using var scope = SetScope(ID);
             logger?.LogInformation("Executing After Message Decode middleware for message of type {Type}", typeof(T));
@@ -157,7 +155,6 @@ namespace MQContract.Connections
         }
 
         protected async ValueTask<ServiceMessage> ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, T message, bool ignoreChannel, string? channel = null, MessageHeader? messageHeader = null)
-            where T : class
         {
             using var scope = SetScope();
             logger?.LogDebug("Producing Service Message for message of type {Type}", typeof(T));
@@ -168,7 +165,6 @@ namespace MQContract.Connections
             );
         }
         protected async ValueTask<(T message, MessageHeader header)> DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, ReceivedServiceMessage message)
-            where T : class
         {
             using var scope = SetScope(message.ID);
             logger?.LogDebug("Decoding Service Message message of type {Type}", typeof(T));
@@ -216,17 +212,16 @@ namespace MQContract.Connections
         #endregion
 
         #region Subscriptions
-        protected abstract ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
-            where T : class;
+        protected abstract ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken);
 
-        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken) where T : class
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             logger?.LogDebug("Creating PubSub subscription for message type {T} on channel {Channel} in group {Group}", typeof(T), channel, group);
             return CreateSubscriptionAsync<T>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, false, cancellationToken);
         }
 
-        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<T>(Action<IReceivedMessage<T>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken) where T : class
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<T>(Action<IReceivedMessage<T>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             logger?.LogDebug("Creating PubSub subscription for message type {T} on channel {Channel} in group {Group}", typeof(T), channel, group);
@@ -238,9 +233,7 @@ namespace MQContract.Connections
             errorReceived, channel, group, ignoreMessageHeader, true, cancellationToken);
         }
 
-        protected abstract ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
-            where Q : class
-            where R : class;
+        protected abstract ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken);
 
         ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryAsyncResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
@@ -282,7 +275,6 @@ namespace MQContract.Connections
 #pragma warning disable S4136 // Method overloads should be grouped together
         protected async ValueTask<ISubscription> CreateSubscriptionAsync<T>(IMessageFactory<T> messageFactory, IMessageServiceConnection serviceConnection, Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, CancellationToken cancellationToken)
 #pragma warning restore S4136 // Method overloads should be grouped together
-            where T : class
         {
             using var scope = SetScope();
             logger?.LogDebug("Creating PubSub Subscription for {T} on {Channel} in {Group}.", typeof(T), channel, group);
@@ -379,7 +371,7 @@ namespace MQContract.Connections
             }
             return tcs.Task.Result;
         }
-        protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize,ServiceQueryResult queryResult) where R : class
+        protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize,ServiceQueryResult queryResult)
         {
             using var scope = SetScope(queryResult.ID);
             logger?.LogDebug("Attempting to produce a Query Result of {R} from the Service Message of the type {MessageTypeID}", typeof(R), queryResult.MessageTypeID);
@@ -417,8 +409,6 @@ namespace MQContract.Connections
         }
 
         protected async ValueTask<QueryResult<R>> ExecuteQueryAsync<Q,R>(IMessageServiceConnection serviceConnection, ServiceMessage serviceMessage, TimeSpan? timeout = null, string? responseChannel = null,string connectionName = "DEFAULT", CancellationToken cancellationToken = new CancellationToken())
-                where Q : class
-                where R : class
         {
             using var scope = SetScope(serviceMessage.ID);
             logger?.LogDebug("Attempting to execute a Query of {Q} with a response {R}", typeof(Q), typeof(R));
@@ -448,8 +438,6 @@ namespace MQContract.Connections
         }
 
         protected async ValueTask<QueryResult<R>> ProcessPubSubQuery<Q, R>(IMessageServiceConnection serviceConnection, string? responseChannel, TimeSpan? realTimeout, ServiceMessage serviceMessage, CancellationToken cancellationToken)
-            where Q : class
-            where R : class
         {
             using var scope = SetScope();
             responseChannel ??=typeof(Q).GetCustomAttribute<QueryResponseChannelAttribute>()?.Name;
@@ -491,8 +479,6 @@ namespace MQContract.Connections
         }
         protected async ValueTask<ISubscription> CreateSubscriptionAsync<Q, R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, IMessageServiceConnection serviceConnection,
             Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, CancellationToken cancellationToken)
-            where Q : class
-            where R : class
         {
             using var scope = SetScope();
             logger?.LogDebug("Creating QueryResponse subscription for {Q} answering with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);

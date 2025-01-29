@@ -1,0 +1,18 @@
+﻿using MQContract.Interfaces.Encoding;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MQContract.Defaults
+{
+    internal class DoubleEncoder : IMessageTypeEncoder<double>
+    {
+        async ValueTask<double> IMessageTypeEncoder<double>.DecodeAsync(Stream stream)
+            => BitConverter.ToDouble(await BitConverterHelper.StreamToByteArray(stream));
+
+        ValueTask<byte[]> IMessageTypeEncoder<double>.EncodeAsync(double message)
+            => ValueTask.FromResult(BitConverter.GetBytes(message));
+    }
+}

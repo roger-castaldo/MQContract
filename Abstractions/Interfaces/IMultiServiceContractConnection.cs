@@ -32,8 +32,7 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
         /// <returns>A result indicating the tranmission results</returns>
-        ValueTask<MultiTransmissionResult> PublishAsync<T>(T message, string? channel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken())
-            where T : class;
+        ValueTask<MultiTransmissionResult> PublishAsync<T>(T message, string? channel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to send a bulk set of messages into the underlying services Pub/Sub style
         /// </summary>
@@ -43,8 +42,7 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
         /// <returns>A result indicating the tranmission results</returns>
-        ValueTask<IEnumerable<MultiTransmissionResult>> BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel = null, CancellationToken cancellationToken = new CancellationToken())
-            where T : class;
+        ValueTask<IEnumerable<MultiTransmissionResult>> BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel = null, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to send a message into the underlying services in the Query/Response style
         /// </summary>
@@ -59,9 +57,7 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
         /// <returns>A result indicating the success or failure as well as the returned message</returns>
-        ValueTask<IEnumerable<QueryResult<R>>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken())
-            where Q : class
-            where R : class;
+        ValueTask<IEnumerable<QueryResult<R>>> QueryAsync<Q, R>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to send a message into the underlying services in the Query/Response style.  The return type is not specified here and is instead obtained from the QueryResponseTypeAttribute
         /// attached to the Query message type class.
@@ -76,7 +72,6 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
         /// <returns>A result indicating the success or failure as well as the returned message</returns>
-        ValueTask<IEnumerable<QueryResult<object>>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken())
-            where Q : class;
+        ValueTask<IEnumerable<QueryResult<object>>> QueryAsync<Q>(Q message, TimeSpan? timeout = null, string? channel = null, string? responseChannel = null, MessageHeader? messageHeader = null, CancellationToken cancellationToken = new CancellationToken());
     }
 }

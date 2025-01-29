@@ -32,8 +32,7 @@ namespace MQContract.Interfaces
         /// <typeparam name="M">The message type that this middleware is specifically called for</typeparam>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         CC RegisterMiddleware<T, M>()
-            where T : ISpecificTypeMiddleware<M>
-            where M : class;
+            where T : ISpecificTypeMiddleware<M>;
         /// <summary>
         /// Register a middleware of a given type T to be used by the contract connection
         /// </summary>
@@ -42,8 +41,7 @@ namespace MQContract.Interfaces
         /// <typeparam name="M">The message type that this middleware is specifically called for</typeparam>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         CC RegisterMiddleware<T, M>(Func<T> constructInstance)
-            where T : ISpecificTypeMiddleware<M>
-            where M : class;
+            where T : ISpecificTypeMiddleware<M>;
         /// <summary>
         /// Called to activate the metrics tracking middleware for this connection instance
         /// </summary>

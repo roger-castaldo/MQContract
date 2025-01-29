@@ -56,7 +56,6 @@ namespace MQContract.Connections
         }
 
         protected async ValueTask<(IEnumerable<ServiceConnectionList.ServiceConnection> connections,string channel)> GetConnectionsAsync<T>(string? channel, ChannelMapper.MapTypes mapTypes)
-            where T : class
         {
             channel = await Utility.GetChannelAsync<T>((originalChannel) => MapChannel(mapTypes, originalChannel), channel);
             return (await GetConnectionsAsync(channel, typeof(T), new MessageHeader([])),channel);
