@@ -13,10 +13,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="DotPulsar" Version="4.0.0" />
-		<PackageReference Include="Vsxmd" Version="1.4.5">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
