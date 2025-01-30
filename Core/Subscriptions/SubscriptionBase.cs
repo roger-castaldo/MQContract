@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 namespace MQContract.Subscriptions
 {
     internal abstract class SubscriptionBase<T>(Func<string, ValueTask<string>> mapChannel, string? channel, bool synchronous,ILogger? logger) : ISubscription
-        where T : class
     {
         protected IServiceSubscription? serviceSubscription;
         private bool disposedValue;

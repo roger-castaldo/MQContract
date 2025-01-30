@@ -41,8 +41,7 @@ namespace MQContract.Interfaces
         /// <param name="serviceConnectionName">The name of the service connection, not necessarily unique, but can be used for logging and other things</param>
         /// <param name="messageServiceConnection">The service connection to use when the message is of type T</param>
         /// <returns></returns>
-        CC RegisterServiceConnection<T>(string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
-            where T : class;
+        CC RegisterServiceConnection<T>(string serviceConnectionName, IMessageServiceConnection messageServiceConnection);
         /// <summary>
         /// Register a service connection to be used when the messageHeader contains the messageHeaderKey and it's value is messageHeaderValue
         /// </summary>

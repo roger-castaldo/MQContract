@@ -37,11 +37,9 @@ namespace MQContract
         }
 
         internal async static ValueTask<string> GetChannelAsync<T>(Func<string, ValueTask<string>> mapChannel, string? channel = null)
-            where T : class
             => await mapChannel(channel??typeof(T).GetCustomAttribute<MessageChannelAttribute>(false)?.Name??throw new MessageChannelNullException());
 
         internal static string GetChannel<T>(Func<string, ValueTask<string>> mapChannel, string? channel = null)
-            where T : class
         {
             var chan = channel??typeof(T).GetCustomAttribute<MessageChannelAttribute>(false)?.Name??throw new MessageChannelNullException();
             var tsk = mapChannel(chan).AsTask();

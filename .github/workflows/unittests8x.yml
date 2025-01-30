@@ -12,15 +12,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup .NET
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
           8.0.x
     - name: Restore dependencies
-      run: dotnet restore  -p:TargetFramework=net8.0 AutomatedTesting
+      run: dotnet restore  -p:TargetFramework=net8.0 -p:BlockMD=true AutomatedTesting
     - name: Build-8.0
-      run: dotnet build --framework net8.0 --no-restore AutomatedTesting
+      run: dotnet build --framework net8.0 -p:BlockMD=true --no-restore AutomatedTesting
     - name: Test-8.0
-      run: dotnet test --framework net8.0 --no-build --verbosity normal AutomatedTesting
+      run: dotnet test --framework net8.0 -p:BlockMD=true --no-build --verbosity normal AutomatedTesting

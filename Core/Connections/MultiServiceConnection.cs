@@ -84,7 +84,6 @@ namespace MQContract.Connections
         }
 
         protected override async ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
-            where T : class
         {
             var messageFactory = GetMessageFactory<T>(MaxMessageBodySize, ignoreMessageHeader);
             (var connections,channel) = await GetConnectionsAsync<T>(channel, ChannelMapper.MapTypes.PublishSubscription);
@@ -105,8 +104,6 @@ namespace MQContract.Connections
 
         #region QueryResponse
         private async ValueTask<IEnumerable<QueryResult<R>>> ProcessQueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
-            where Q : class
-            where R : class
         {
             using var scope = SetScope();
             Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);

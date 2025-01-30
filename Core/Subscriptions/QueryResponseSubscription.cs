@@ -11,7 +11,6 @@ namespace MQContract.Subscriptions
         string? channel = null, string? group = null,
         bool synchronous = false, ILogger? logger = null)
         : SubscriptionBase<T>(mapChannel, channel, synchronous, logger)
-        where T : class
     {
         private ManualResetEventSlim? manualResetEvent = new(true);
         private CancellationTokenSource? token = new();

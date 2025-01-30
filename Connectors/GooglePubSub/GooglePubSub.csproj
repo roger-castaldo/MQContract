@@ -11,11 +11,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Google.Cloud.PubSub.V1" Version="3.19.0" />
-		<PackageReference Include="Vsxmd" Version="1.4.5">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="Google.Cloud.PubSub.V1" Version="3.20.0" />
 	</ItemGroup>
 
 	<ItemGroup>

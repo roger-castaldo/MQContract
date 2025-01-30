@@ -8,7 +8,6 @@ namespace MQContract.Subscriptions
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, bool synchronous=false,ILogger? logger=null)
         : SubscriptionBase<T>(mapChannel,channel,synchronous,logger)
-        where T : class
     {
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection,CancellationToken cancellationToken)
         {

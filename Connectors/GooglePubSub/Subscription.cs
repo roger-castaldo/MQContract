@@ -1,7 +1,6 @@
 ﻿using Google.Cloud.PubSub.V1;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using static Google.Cloud.PubSub.V1.SubscriberClient;
 
 
 namespace MQContract.GooglePubSub

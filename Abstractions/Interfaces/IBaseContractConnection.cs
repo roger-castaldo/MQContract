@@ -19,8 +19,7 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken())
-            where T : class;
+        ValueTask<ISubscription> SubscribeAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to create a subscription into the underlying service Pub/Sub style and have the messages processed syncrhonously
         /// </summary>
@@ -33,8 +32,7 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeAsync<T>(Action<IReceivedMessage<T>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken())
-            where T : class;
+        ValueTask<ISubscription> SubscribeAsync<T>(Action<IReceivedMessage<T>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to create a subscription into the underlying service Query/Reponse style and have the messages processed asynchronously
         /// </summary>
@@ -48,9 +46,7 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeQueryAsyncResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken())
-            where Q : class
-            where R : class;
+        ValueTask<ISubscription> SubscribeQueryAsyncResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to create a subscription into the underlying service Query/Reponse style and have the messages processed synchronously
         /// </summary>
@@ -64,9 +60,7 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, QueryResponseMessage<R>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken())
-            where Q : class
-            where R : class;
+        ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, QueryResponseMessage<R>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to close off the contract connection and close it's underlying service connection
         /// </summary>
