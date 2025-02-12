@@ -16,7 +16,7 @@ using System.Reflection;
 
 namespace MQContract.Connections
 {
-    internal abstract class AConnection<CC>(IMessageEncoder? defaultMessageEncoder = null,
+    internal abstract partial class AConnection<CC>(IMessageEncoder? defaultMessageEncoder = null,
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,
@@ -32,6 +32,7 @@ namespace MQContract.Connections
         private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
         private readonly Dictionary<string,IServiceSubscription> inboxSubscriptions = [];
         private IEnumerable<IMessageTypeFactory> typeFactories = [];
+        private readonly List<ISubscription> consumerSubscriptions = [];
         protected ILogger? Logger => logger;
         protected IDisposable? SetScope(string? messageID=null) => logger?.BeginScope<string>($"Connection[{indentifier}]{(messageID==null ? "" : $"|Message[{messageID}]")}");
 
@@ -232,7 +233,6 @@ namespace MQContract.Connections
             },
             errorReceived, channel, group, ignoreMessageHeader, true, cancellationToken);
         }
-
         protected abstract ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken);
 
         ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryAsyncResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
@@ -526,6 +526,9 @@ namespace MQContract.Connections
                 var inboxSubscription = inboxSubscriptions[key];
                 await inboxSubscription.EndAsync();
             }
+            foreach(var consumerSubscription in consumerSubscriptions)
+                await consumerSubscription.EndAsync();
+            consumerSubscriptions.Clear();
             inboxSemaphore.Release();
             await CloseAsync();
         }
@@ -576,6 +579,9 @@ namespace MQContract.Connections
                 else if (inboxSubscription is IDisposable subDisposable)
                     subDisposable.Dispose();
             }
+            foreach (var consumerSubscription in consumerSubscriptions)
+                await consumerSubscription.EndAsync();
+            consumerSubscriptions.Clear();
             inboxSubscriptions.Clear();
             inboxSemaphore.Release();
             inboxSemaphore.Dispose();

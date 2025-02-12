@@ -1,12 +1,8 @@
-﻿using AutomatedTesting.Messages;
-using Moq;
-using MQContract.Attributes;
+﻿using Moq;
 using MQContract.Interfaces.Service;
 using MQContract;
-using System.Diagnostics;
 using System.Security.Cryptography;
 using MQContract.Interfaces;
-using System.Runtime.InteropServices;
 
 namespace AutomatedTesting
 {
