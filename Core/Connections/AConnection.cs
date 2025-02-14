@@ -16,7 +16,9 @@ using System.Reflection;
 
 namespace MQContract.Connections
 {
+#pragma warning disable S3881 // "IDisposable" should be implemented correctly
     internal abstract partial class AConnection<CC>(IMessageEncoder? defaultMessageEncoder = null,
+#pragma warning restore S3881 // "IDisposable" should be implemented correctly
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,
@@ -352,7 +354,7 @@ namespace MQContract.Connections
             if (result.IsError)
             {
                 logger?.LogInformation("Inbox Query tranmission failed cleaning up resources");
-                await inboxSemaphore.WaitAsync();
+                await inboxSemaphore.WaitAsync(cancellationToken);
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
                 throw new QuerySubmissionFailedException(result.Error!);
@@ -365,7 +367,7 @@ namespace MQContract.Connections
             {
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
-                await inboxSemaphore.WaitAsync();
+                await inboxSemaphore.WaitAsync(cancellationToken);
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
             }

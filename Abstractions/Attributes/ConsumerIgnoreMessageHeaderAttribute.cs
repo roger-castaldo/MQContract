@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MQContract.Attributes
+﻿namespace MQContract.Attributes
 {
     /// <summary>
     /// Use this attribute to specify the if this consumer should ignore the message header as part of it's

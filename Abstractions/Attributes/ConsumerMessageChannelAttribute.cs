@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MQContract.Attributes
+﻿namespace MQContract.Attributes
 {
     /// <summary>
     /// Use this attribute to specify the Channel name used for receiving messages by this consumer class.

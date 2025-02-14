@@ -5,11 +5,12 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Threading.Channels;
 
 namespace MQContract.Connections
 {
+#pragma warning disable S3881 // "IDisposable" should be implemented correctly
     internal abstract partial class AConnection<CC> : IMetricContractConnection<CC>
+#pragma warning restore S3881 // "IDisposable" should be implemented correctly
         where CC : IBaseContractConnection
     {
         private async ValueTask<bool> RegisterSubscription(Func<string?, string?, bool, ValueTask<ISubscription>> createSubscription,
@@ -42,8 +43,8 @@ namespace MQContract.Connections
 
         private readonly List<Assembly> loadedAssemblies = [];
 
-        private static readonly Type[] LoadableTypes = [typeof(IPubSubConsumer<>), typeof(IPubSubAsyncConsumer<>),
-        typeof(IQueryResponseConsumer<,>),typeof(IQueryResponseAsyncConsumer<,>)];
+        private static Type[] LoadableTypes => [typeof(IPubSubConsumer<>), typeof(IPubSubAsyncConsumer<>),
+                    typeof(IQueryResponseConsumer<,>),typeof(IQueryResponseAsyncConsumer<,>)];
 
         private async Task<bool> LoadConsumersForAssemblyAsync(Assembly assembly,CancellationToken cancellationToken)
         {
