@@ -101,12 +101,22 @@
     }
 
     /// <summary>
-    /// Thrown from a the ContractedConnection or the MappedConnection when there is no underlying service that supports the Ping call
+    /// Thrown from the ContractedConnection or the MappedConnection when there is no underlying service that supports the Ping call
     /// </summary>
     public class PingNotSupportedException : NotSupportedException
     {
         internal PingNotSupportedException()
             : base("The underlying service does not support Ping")
             {}
+    }
+
+    /// <summary>
+    /// Thrown from a ContractConnection when an attempt to Register a given consumer through Type is not valid because the type does not implement the appropriate interface
+    /// </summary>
+    public class InvalidConsumerType : NotSupportedException
+    {
+        internal InvalidConsumerType(Type consumerType,Type interfaceType)
+            : base($"Unable to register consumer of Type {consumerType.FullName} because it does not implement the interface {interfaceType.Name}") 
+        {}
     }
 }

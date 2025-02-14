@@ -8,12 +8,23 @@
   - [Error](#P-MQContract-Messages-ChildTransmissionResult-Error 'MQContract.Messages.ChildTransmissionResult.Error')
   - [IsError](#P-MQContract-Messages-ChildTransmissionResult-IsError 'MQContract.Messages.ChildTransmissionResult.IsError')
   - [ServiceName](#P-MQContract-Messages-ChildTransmissionResult-ServiceName 'MQContract.Messages.ChildTransmissionResult.ServiceName')
+- [ConsumerGroupAttribute](#T-MQContract-Attributes-ConsumerGroupAttribute 'MQContract.Attributes.ConsumerGroupAttribute')
+  - [#ctor(name)](#M-MQContract-Attributes-ConsumerGroupAttribute-#ctor-System-String- 'MQContract.Attributes.ConsumerGroupAttribute.#ctor(System.String)')
+  - [Name](#P-MQContract-Attributes-ConsumerGroupAttribute-Name 'MQContract.Attributes.ConsumerGroupAttribute.Name')
+- [ConsumerIgnoreMessageHeaderAttribute](#T-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute 'MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute')
+  - [#ctor(ignoreHeader)](#M-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute-#ctor-System-Boolean- 'MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute.#ctor(System.Boolean)')
+  - [IgnoreHeader](#P-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute-IgnoreHeader 'MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute.IgnoreHeader')
+- [ConsumerMessageChannelAttribute](#T-MQContract-Attributes-ConsumerMessageChannelAttribute 'MQContract.Attributes.ConsumerMessageChannelAttribute')
+  - [#ctor(name)](#M-MQContract-Attributes-ConsumerMessageChannelAttribute-#ctor-System-String- 'MQContract.Attributes.ConsumerMessageChannelAttribute.#ctor(System.String)')
+  - [Name](#P-MQContract-Attributes-ConsumerMessageChannelAttribute-Name 'MQContract.Attributes.ConsumerMessageChannelAttribute.Name')
 - [IAfterDecodeMiddleware](#T-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware 'MQContract.Interfaces.Middleware.IAfterDecodeMiddleware')
   - [AfterMessageDecodeAsync\`\`1(context,message,ID,messageHeader,receivedTimestamp,processedTimeStamp)](#M-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware-AfterMessageDecodeAsync``1-MQContract-Interfaces-Middleware-IContext,``0,System-String,MQContract-Messages-MessageHeader,System-DateTime,System-DateTime- 'MQContract.Interfaces.Middleware.IAfterDecodeMiddleware.AfterMessageDecodeAsync``1(MQContract.Interfaces.Middleware.IContext,``0,System.String,MQContract.Messages.MessageHeader,System.DateTime,System.DateTime)')
 - [IAfterDecodeSpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-IAfterDecodeSpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.IAfterDecodeSpecificTypeMiddleware`1')
   - [AfterMessageDecodeAsync(context,message,ID,messageHeader,receivedTimestamp,processedTimeStamp)](#M-MQContract-Interfaces-Middleware-IAfterDecodeSpecificTypeMiddleware`1-AfterMessageDecodeAsync-MQContract-Interfaces-Middleware-IContext,`0,System-String,MQContract-Messages-MessageHeader,System-DateTime,System-DateTime- 'MQContract.Interfaces.Middleware.IAfterDecodeSpecificTypeMiddleware`1.AfterMessageDecodeAsync(MQContract.Interfaces.Middleware.IContext,`0,System.String,MQContract.Messages.MessageHeader,System.DateTime,System.DateTime)')
 - [IAfterEncodeMiddleware](#T-MQContract-Interfaces-Middleware-IAfterEncodeMiddleware 'MQContract.Interfaces.Middleware.IAfterEncodeMiddleware')
   - [AfterMessageEncodeAsync(messageType,context,message)](#M-MQContract-Interfaces-Middleware-IAfterEncodeMiddleware-AfterMessageEncodeAsync-System-Type,MQContract-Interfaces-Middleware-IContext,MQContract-Messages-ServiceMessage- 'MQContract.Interfaces.Middleware.IAfterEncodeMiddleware.AfterMessageEncodeAsync(System.Type,MQContract.Interfaces.Middleware.IContext,MQContract.Messages.ServiceMessage)')
+- [IBaseConsumer](#T-MQContract-Interfaces-Consumers-IBaseConsumer 'MQContract.Interfaces.Consumers.IBaseConsumer')
+  - [ErrorRecieved(error)](#M-MQContract-Interfaces-Consumers-IBaseConsumer-ErrorRecieved-System-Exception- 'MQContract.Interfaces.Consumers.IBaseConsumer.ErrorRecieved(System.Exception)')
 - [IBaseContractConnection](#T-MQContract-Interfaces-IBaseContractConnection 'MQContract.Interfaces.IBaseContractConnection')
   - [CloseAsync()](#M-MQContract-Interfaces-IBaseContractConnection-CloseAsync 'MQContract.Interfaces.IBaseContractConnection.CloseAsync')
   - [SubscribeAsync\`\`1(messageReceived,errorReceived,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IBaseContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IReceivedMessage{``0},System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IBaseContractConnection.SubscribeAsync``1(System.Func{MQContract.Interfaces.IReceivedMessage{``0},System.Threading.Tasks.ValueTask},System.Action{System.Exception},System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
@@ -28,6 +39,20 @@
   - [BeforeMessageEncodeAsync(context,message,channel,messageHeader)](#M-MQContract-Interfaces-Middleware-IBeforeEncodeSpecificTypeMiddleware`1-BeforeMessageEncodeAsync-MQContract-Interfaces-Middleware-IContext,`0,System-String,MQContract-Messages-MessageHeader- 'MQContract.Interfaces.Middleware.IBeforeEncodeSpecificTypeMiddleware`1.BeforeMessageEncodeAsync(MQContract.Interfaces.Middleware.IContext,`0,System.String,MQContract.Messages.MessageHeader)')
 - [IBulkPublishableMessageServiceConnection](#T-MQContract-Interfaces-Service-IBulkPublishableMessageServiceConnection 'MQContract.Interfaces.Service.IBulkPublishableMessageServiceConnection')
   - [BulkPublishAsync(messages,cancellationToken)](#M-MQContract-Interfaces-Service-IBulkPublishableMessageServiceConnection-BulkPublishAsync-System-Collections-Generic-IEnumerable{MQContract-Messages-ServiceMessage},System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IBulkPublishableMessageServiceConnection.BulkPublishAsync(System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage},System.Threading.CancellationToken)')
+- [IConsumerContractConnection](#T-MQContract-Interfaces-IConsumerContractConnection 'MQContract.Interfaces.IConsumerContractConnection')
+  - [AutoRegisterAllConsumersAsync(assembly,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-AutoRegisterAllConsumersAsync-System-Reflection-Assembly,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.AutoRegisterAllConsumersAsync(System.Reflection.Assembly,System.Threading.CancellationToken)')
+  - [RegisterPubSubAsyncConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubAsyncConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync(System.Type,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterPubSubAsyncConsumerAsync\`\`2(consumer,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubAsyncConsumerAsync``2-``1,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync``2(``1,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterPubSubAsyncConsumerAsync\`\`2(channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubAsyncConsumerAsync``2-System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync``2(System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterPubSubConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterPubSubConsumerAsync(System.Type,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterPubSubConsumerAsync\`\`2(consumer,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubConsumerAsync``2-``1,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterPubSubConsumerAsync``2(``1,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterPubSubConsumerAsync\`\`2(channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubConsumerAsync``2-System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterPubSubConsumerAsync``2(System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterQueryResponseAsyncConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseAsyncConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync(System.Type,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterQueryResponseAsyncConsumerAsync\`\`3(consumer,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseAsyncConsumerAsync``3-``2,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync``3(``2,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterQueryResponseAsyncConsumerAsync\`\`3(channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseAsyncConsumerAsync``3-System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync``3(System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterQueryResponseConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterQueryResponseConsumerAsync(System.Type,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterQueryResponseConsumerAsync\`\`3(consumer,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseConsumerAsync``3-``2,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterQueryResponseConsumerAsync``3(``2,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
+  - [RegisterQueryResponseConsumerAsync\`\`3(channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseConsumerAsync``3-System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterQueryResponseConsumerAsync``3(System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
 - [IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext')
   - [Item](#P-MQContract-Interfaces-Middleware-IContext-Item-System-String- 'MQContract.Interfaces.Middleware.IContext.Item(System.String)')
 - [IContractConnection](#T-MQContract-Interfaces-IContractConnection 'MQContract.Interfaces.IContractConnection')
@@ -98,6 +123,14 @@
   - [RegisterServiceConnection(serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMultiServiceContractConnection-RegisterServiceConnection-System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMultiServiceContractConnection.RegisterServiceConnection(System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
 - [IPingableMessageServiceConnection](#T-MQContract-Interfaces-Service-IPingableMessageServiceConnection 'MQContract.Interfaces.Service.IPingableMessageServiceConnection')
   - [PingAsync()](#M-MQContract-Interfaces-Service-IPingableMessageServiceConnection-PingAsync 'MQContract.Interfaces.Service.IPingableMessageServiceConnection.PingAsync')
+- [IPubSubAsyncConsumer\`1](#T-MQContract-Interfaces-Consumers-IPubSubAsyncConsumer`1 'MQContract.Interfaces.Consumers.IPubSubAsyncConsumer`1')
+  - [MessageReceivedAsync(message)](#M-MQContract-Interfaces-Consumers-IPubSubAsyncConsumer`1-MessageReceivedAsync-MQContract-Interfaces-IReceivedMessage{`0}- 'MQContract.Interfaces.Consumers.IPubSubAsyncConsumer`1.MessageReceivedAsync(MQContract.Interfaces.IReceivedMessage{`0})')
+- [IPubSubConsumer\`1](#T-MQContract-Interfaces-Consumers-IPubSubConsumer`1 'MQContract.Interfaces.Consumers.IPubSubConsumer`1')
+  - [MessageReceived(message)](#M-MQContract-Interfaces-Consumers-IPubSubConsumer`1-MessageReceived-MQContract-Interfaces-IReceivedMessage{`0}- 'MQContract.Interfaces.Consumers.IPubSubConsumer`1.MessageReceived(MQContract.Interfaces.IReceivedMessage{`0})')
+- [IQueryResponseAsyncConsumer\`2](#T-MQContract-Interfaces-Consumers-IQueryResponseAsyncConsumer`2 'MQContract.Interfaces.Consumers.IQueryResponseAsyncConsumer`2')
+  - [MessageReceivedAsync(message)](#M-MQContract-Interfaces-Consumers-IQueryResponseAsyncConsumer`2-MessageReceivedAsync-MQContract-Interfaces-IReceivedMessage{`0}- 'MQContract.Interfaces.Consumers.IQueryResponseAsyncConsumer`2.MessageReceivedAsync(MQContract.Interfaces.IReceivedMessage{`0})')
+- [IQueryResponseConsumer\`2](#T-MQContract-Interfaces-Consumers-IQueryResponseConsumer`2 'MQContract.Interfaces.Consumers.IQueryResponseConsumer`2')
+  - [MessageReceived(message)](#M-MQContract-Interfaces-Consumers-IQueryResponseConsumer`2-MessageReceived-MQContract-Interfaces-IReceivedMessage{`0}- 'MQContract.Interfaces.Consumers.IQueryResponseConsumer`2.MessageReceived(MQContract.Interfaces.IReceivedMessage{`0})')
 - [IQueryResponseMessageServiceConnection](#T-MQContract-Interfaces-Service-IQueryResponseMessageServiceConnection 'MQContract.Interfaces.Service.IQueryResponseMessageServiceConnection')
   - [QueryAsync(message,timeout,cancellationToken)](#M-MQContract-Interfaces-Service-IQueryResponseMessageServiceConnection-QueryAsync-MQContract-Messages-ServiceMessage,System-TimeSpan,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IQueryResponseMessageServiceConnection.QueryAsync(MQContract.Messages.ServiceMessage,System.TimeSpan,System.Threading.CancellationToken)')
 - [IQueryableMessageServiceConnection](#T-MQContract-Interfaces-Service-IQueryableMessageServiceConnection 'MQContract.Interfaces.Service.IQueryableMessageServiceConnection')
@@ -235,6 +268,127 @@ Flag to indicate if the result is an error
 
 The unique name of the underlying service that was used to transmit
 
+<a name='T-MQContract-Attributes-ConsumerGroupAttribute'></a>
+## ConsumerGroupAttribute `type`
+
+##### Namespace
+
+MQContract.Attributes
+
+##### Summary
+
+Use this attribute to specify the GroupName that this Consumer will use when registering 
+to supply to the underlying subscription.  This can be overriden in the registration call by passing 
+a value for the group input.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| name | [T:MQContract.Attributes.ConsumerGroupAttribute](#T-T-MQContract-Attributes-ConsumerGroupAttribute 'T:MQContract.Attributes.ConsumerGroupAttribute') | The name of the Group to identify this Consumer and it's underlying subscription |
+
+<a name='M-MQContract-Attributes-ConsumerGroupAttribute-#ctor-System-String-'></a>
+### #ctor(name) `constructor`
+
+##### Summary
+
+Use this attribute to specify the GroupName that this Consumer will use when registering 
+to supply to the underlying subscription.  This can be overriden in the registration call by passing 
+a value for the group input.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| name | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the Group to identify this Consumer and it's underlying subscription |
+
+<a name='P-MQContract-Attributes-ConsumerGroupAttribute-Name'></a>
+### Name `property`
+
+##### Summary
+
+The name of the Group specified for this Consumer toi be part of
+
+<a name='T-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute'></a>
+## ConsumerIgnoreMessageHeaderAttribute `type`
+
+##### Namespace
+
+MQContract.Attributes
+
+##### Summary
+
+Use this attribute to specify the if this consumer should ignore the message header as part of it's
+underlying subscription.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| ignoreHeader | [T:MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute](#T-T-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute 'T:MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+
+<a name='M-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute-#ctor-System-Boolean-'></a>
+### #ctor(ignoreHeader) `constructor`
+
+##### Summary
+
+Use this attribute to specify the if this consumer should ignore the message header as part of it's
+underlying subscription.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| ignoreHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+
+<a name='P-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute-IgnoreHeader'></a>
+### IgnoreHeader `property`
+
+##### Summary
+
+Indicates whether the underlying subscript should ignore the message header
+
+<a name='T-MQContract-Attributes-ConsumerMessageChannelAttribute'></a>
+## ConsumerMessageChannelAttribute `type`
+
+##### Namespace
+
+MQContract.Attributes
+
+##### Summary
+
+Use this attribute to specify the Channel name used for receiving messages by this consumer class.
+This would technically override the channel set by the Message class defined for the consumer,
+and can be overriden by passing a channel value when registering the consumer.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| name | [T:MQContract.Attributes.ConsumerMessageChannelAttribute](#T-T-MQContract-Attributes-ConsumerMessageChannelAttribute 'T:MQContract.Attributes.ConsumerMessageChannelAttribute') | The name of the Channel to be used for receving messages to this consumer |
+
+<a name='M-MQContract-Attributes-ConsumerMessageChannelAttribute-#ctor-System-String-'></a>
+### #ctor(name) `constructor`
+
+##### Summary
+
+Use this attribute to specify the Channel name used for receiving messages by this consumer class.
+This would technically override the channel set by the Message class defined for the consumer,
+and can be overriden by passing a channel value when registering the consumer.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| name | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the Channel to be used for receving messages to this consumer |
+
+<a name='P-MQContract-Attributes-ConsumerMessageChannelAttribute-Name'></a>
+### Name `property`
+
+##### Summary
+
+The name of the channel specified for this Consumer to listen to
+
 <a name='T-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware'></a>
 ## IAfterDecodeMiddleware `type`
 
@@ -336,6 +490,30 @@ The message to allow for changes if desired
 | messageType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The class of the message type that was encoded |
 | context | [MQContract.Interfaces.Middleware.IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext') | A shared context that exists from the start of this encode process instance |
 | message | [MQContract.Messages.ServiceMessage](#T-MQContract-Messages-ServiceMessage 'MQContract.Messages.ServiceMessage') | The resulting encoded message |
+
+<a name='T-MQContract-Interfaces-Consumers-IBaseConsumer'></a>
+## IBaseConsumer `type`
+
+##### Namespace
+
+MQContract.Interfaces.Consumers
+
+##### Summary
+
+Represents the Base for all Consumer interfaces and contains the common method definition
+
+<a name='M-MQContract-Interfaces-Consumers-IBaseConsumer-ErrorRecieved-System-Exception-'></a>
+### ErrorRecieved(error) `method`
+
+##### Summary
+
+Called when an error is received from within the underlying subscription that is using this Consumer
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| error | [System.Exception](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Exception 'System.Exception') | The error that occured |
 
 <a name='T-MQContract-Interfaces-IBaseContractConnection'></a>
 ## IBaseContractConnection `type`
@@ -606,6 +784,343 @@ A transmission result instance indicating the result for each message
 | ---- | ---- | ----------- |
 | messages | [System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage}') | The message to publish |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+<a name='T-MQContract-Interfaces-IConsumerContractConnection'></a>
+## IConsumerContractConnection `type`
+
+##### Namespace
+
+MQContract.Interfaces
+
+##### Summary
+
+This interface represents a portion of the Contract Connection, specifically the portion for registering all Consumer classes
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-AutoRegisterAllConsumersAsync-System-Reflection-Assembly,System-Threading-CancellationToken-'></a>
+### AutoRegisterAllConsumersAsync(assembly,cancellationToken) `method`
+
+##### Summary
+
+Called to load all defined consumers found within the application, either within the supplied assembly or if null within the default LoadContext
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assembly | [System.Reflection.Assembly](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Reflection.Assembly 'System.Reflection.Assembly') | Optional parameter to specify loading from a single assembly, if not supplied will load all from within the default LoadContext |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubAsyncConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterPubSubAsyncConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a PubSubAsyncConsumer into the contract connection.
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| consumerType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type instance to be constructed and registered into the system.  It must implement IPubSubAsyncConsumer<T>. |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubAsyncConsumerAsync``2-``1,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterPubSubAsyncConsumerAsync\`\`2(consumer,channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a PubSubAsyncConsumer into the contract connection
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| consumer | [\`\`1](#T-``1 '``1') | An instance of the consumer |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The Message type |
+| TConsumer | The type that implements PubSubAsyncConsumer<T> |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubAsyncConsumerAsync``2-System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterPubSubAsyncConsumerAsync\`\`2(channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a PubSubAsyncConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it.
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The Message type |
+| TConsumer | The type that implements PubSubAsyncConsumer<T> |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterPubSubConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a PubSubConsumer into the contract connection.
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| consumerType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type instance to be constructed and registered into the system.  It must implement IPubSubConsumer<T>. |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubConsumerAsync``2-``1,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterPubSubConsumerAsync\`\`2(consumer,channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a PubSubConsumer into the contract connection
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| consumer | [\`\`1](#T-``1 '``1') | An instance of the consumer |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The Message type |
+| TConsumer | The type that implements IPubSubConsumer<T> |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterPubSubConsumerAsync``2-System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterPubSubConsumerAsync\`\`2(channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a PubSubConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it.
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The Message type |
+| TConsumer | The type that implements IPubSubConsumer<T> |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseAsyncConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterQueryResponseAsyncConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a QueryResponseAsyncConsumer into the contract connection.
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| consumerType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type instance to be constructed and registered into the system.  It must implement IQueryResponseAsyncConsumer<Q,R>. |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseAsyncConsumerAsync``3-``2,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterQueryResponseAsyncConsumerAsync\`\`3(consumer,channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a QueryResponseAsyncConsumer into the contract connection
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| consumer | [\`\`2](#T-``2 '``2') | An instance of the consumer |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| Q | The type of message to listen for |
+| R | The type of message to respond with |
+| TConsumer | The type that implements IQueryResponseAsyncConsumer<Q,R> |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseAsyncConsumerAsync``3-System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterQueryResponseAsyncConsumerAsync\`\`3(channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a QueryResponseAsyncConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it.
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| Q | The type of message to listen for |
+| R | The type of message to respond with |
+| TConsumer | The type that implements IQueryResponseAsyncConsumer<Q,R> |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterQueryResponseConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a QueryResponseConsumer into the contract connection.
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| consumerType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type instance to be constructed and registered into the system.  It must implement IQueryResponseConsumer<Q,R>. |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseConsumerAsync``3-``2,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterQueryResponseConsumerAsync\`\`3(consumer,channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a QueryResponseConsumer into the contract connection
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| consumer | [\`\`2](#T-``2 '``2') | An instance of the consumer |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| Q | The type of message to listen for |
+| R | The type of message to respond with |
+| TConsumer | The type that implements IQueryResponseConsumer<Q,R> |
+
+<a name='M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseConsumerAsync``3-System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
+### RegisterQueryResponseConsumerAsync\`\`3(channel,group,ignoreMessageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to register a QueryResponseConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it.
+
+##### Returns
+
+A boolean indicating success or failure
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class. |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The subscription group if desired (typically used when multiple instances of the same system are running) |
+| ignoreMessageHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| Q | The type of message to listen for |
+| R | The type of message to respond with |
+| TConsumer | The type that implements IQueryResponseConsumer<Q,R> |
 
 <a name='T-MQContract-Interfaces-Middleware-IContext'></a>
 ## IContext `type`
@@ -1773,6 +2288,136 @@ A Ping Result
 ##### Parameters
 
 This method has no parameters.
+
+<a name='T-MQContract-Interfaces-Consumers-IPubSubAsyncConsumer`1'></a>
+## IPubSubAsyncConsumer\`1 `type`
+
+##### Namespace
+
+MQContract.Interfaces.Consumers
+
+##### Summary
+
+Represents an Asynchronous PubSub Message Consumer to be registered to the ContractConnection
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The type of Message that this Consumer will consume |
+
+<a name='M-MQContract-Interfaces-Consumers-IPubSubAsyncConsumer`1-MessageReceivedAsync-MQContract-Interfaces-IReceivedMessage{`0}-'></a>
+### MessageReceivedAsync(message) `method`
+
+##### Summary
+
+Called when a message is recieved from the underlying subscription that is using this Consumer
+
+##### Returns
+
+A ValueTask for asynchronous operations
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Interfaces.IReceivedMessage{\`0}](#T-MQContract-Interfaces-IReceivedMessage{`0} 'MQContract.Interfaces.IReceivedMessage{`0}') | The message that was received |
+
+<a name='T-MQContract-Interfaces-Consumers-IPubSubConsumer`1'></a>
+## IPubSubConsumer\`1 `type`
+
+##### Namespace
+
+MQContract.Interfaces.Consumers
+
+##### Summary
+
+Represents a PubSub Message Consumer to be registered to the ContractConnection
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The type of Message that this Consumer will consume |
+
+<a name='M-MQContract-Interfaces-Consumers-IPubSubConsumer`1-MessageReceived-MQContract-Interfaces-IReceivedMessage{`0}-'></a>
+### MessageReceived(message) `method`
+
+##### Summary
+
+Called when a message is recieved from the underlying subscription that is using this Consumer
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Interfaces.IReceivedMessage{\`0}](#T-MQContract-Interfaces-IReceivedMessage{`0} 'MQContract.Interfaces.IReceivedMessage{`0}') | The message that was received |
+
+<a name='T-MQContract-Interfaces-Consumers-IQueryResponseAsyncConsumer`2'></a>
+## IQueryResponseAsyncConsumer\`2 `type`
+
+##### Namespace
+
+MQContract.Interfaces.Consumers
+
+##### Summary
+
+Represents an Asynchronous QueryResponse Message Consumer to be registered to the ContractConnection
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| Q | The type of Message that is received and will be consumed |
+| R | The type of Message that is returned as a response |
+
+<a name='M-MQContract-Interfaces-Consumers-IQueryResponseAsyncConsumer`2-MessageReceivedAsync-MQContract-Interfaces-IReceivedMessage{`0}-'></a>
+### MessageReceivedAsync(message) `method`
+
+##### Summary
+
+Called when a message is received from the underlying subscript that is using this Consumer
+
+##### Returns
+
+The Response to the given Query Message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Interfaces.IReceivedMessage{\`0}](#T-MQContract-Interfaces-IReceivedMessage{`0} 'MQContract.Interfaces.IReceivedMessage{`0}') | The message that was received |
+
+<a name='T-MQContract-Interfaces-Consumers-IQueryResponseConsumer`2'></a>
+## IQueryResponseConsumer\`2 `type`
+
+##### Namespace
+
+MQContract.Interfaces.Consumers
+
+##### Summary
+
+Represents a QueryResponse Message Consumer to be registered to the ContractConnection
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| Q | The type of Message that is received and will be consumed |
+| R | The type of Message that is returned as a response |
+
+<a name='M-MQContract-Interfaces-Consumers-IQueryResponseConsumer`2-MessageReceived-MQContract-Interfaces-IReceivedMessage{`0}-'></a>
+### MessageReceived(message) `method`
+
+##### Summary
+
+Called when a message is received from the underlying subscript that is using this Consumer
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Interfaces.IReceivedMessage{\`0}](#T-MQContract-Interfaces-IReceivedMessage{`0} 'MQContract.Interfaces.IReceivedMessage{`0}') | The message that was received |
 
 <a name='T-MQContract-Interfaces-Service-IQueryResponseMessageServiceConnection'></a>
 ## IQueryResponseMessageServiceConnection `type`
