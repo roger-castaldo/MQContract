@@ -13,29 +13,29 @@ namespace MQContract.Connections
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
         where CC : IBaseContractConnection
     {
-        private async ValueTask<bool> RegisterSubscription(Func<string?, string?, bool, ValueTask<ISubscription>> createSubscription,
+        private async ValueTask<bool> RegisterSubscription(Func<string?, string?, bool, ValueTask<ISubscription?>> createSubscription,
             string? channel, string? group, bool ignoreMessageHeader, string consumerName, Type consumerType, CancellationToken cancellationToken)
         {
-            await inboxSemaphore.WaitAsync(cancellationToken);
+            ISubscription? subscription = null;
             try
             {
-                consumerSubscriptions.Add(await createSubscription(
+                subscription = await createSubscription(
                     channel??consumerType.GetCustomAttribute<ConsumerMessageChannelAttribute>()?.Name,
                     group??consumerType.GetCustomAttribute<ConsumerGroupAttribute>()?.Name,
                     ignoreMessageHeader||(consumerType.GetCustomAttribute<ConsumerIgnoreMessageHeaderAttribute>()?.IgnoreHeader??false)
-                ));
-                return true;
+                );
             }
             catch (Exception err)
             {
-                logger?.LogError(err, "An error occured attempting to register a {ConsumerName} of type {ConsumerType}", consumerName,consumerType);
+                logger?.LogError(err, "An error occured attempting to register a {ConsumerName} of type {ConsumerType}", consumerName, consumerType);
                 return false;
             }
-            finally
-            {
-                inboxSemaphore.Release();
-            }
+            await inboxSemaphore.WaitAsync(cancellationToken);
+            consumerSubscriptions.Add(subscription!);
+            inboxSemaphore.Release();
+            return true;
         }
+        
 
         private static Type GetConsumerInterfaceType(Type consumerType,Type interfaceType)
             => Array.Find(consumerType.GetInterfaces(),t=>t.IsGenericType && t.GetGenericTypeDefinition() == interfaceType)
@@ -58,25 +58,43 @@ namespace MQContract.Connections
             inboxSemaphore.Release();
             if (process)
             {
-                var loadablePairs = assembly.GetTypes()
-                    .Select(consumerType => new { ConsumerType=consumerType,InterfaceType=Array.Find(consumerType.GetInterfaces(), t => t.IsGenericType && LoadableTypes.Contains(t.GetGenericTypeDefinition()))})
+                Type[] types = [];
+                try
+                {
+                    types=assembly.GetTypes()
+                        .Where(t => !t.IsInterface && !t.IsAbstract && !(t.FullName?.StartsWith("Castle.Proxies")??false))
+                        .ToArray();
+                }
+                catch { 
+                    //Ignoring the exception as this is just to prevent a loading issue.
+                }
+                var loadablePairs = types
+                    .Select(consumerType => new { 
+                        ConsumerType=consumerType,
+                        InterfaceType=Array.Find(consumerType.GetInterfaces(),
+                            t => t.IsGenericType && LoadableTypes.Contains(t.GetGenericTypeDefinition()))
+                    })
                     .Where(pair=>pair.InterfaceType!=null)
                     .ToArray();
                 foreach(var consumerPair in loadablePairs)
                 {
-                    if (consumerPair.InterfaceType==typeof(IPubSubConsumer<>)
-                        && !(await ((IConsumerContractConnection)this).RegisterPubSubConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
-                        return false;
-                    else if (consumerPair.InterfaceType==typeof(IPubSubAsyncConsumer<>)
-                        && !(await ((IConsumerContractConnection)this).RegisterPubSubAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
-                        return false;
-                    else if (consumerPair.InterfaceType==typeof(IQueryResponseConsumer<,>)
-                        && !(await ((IConsumerContractConnection)this).RegisterQueryResponseConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
-                        return false;
-                    else if (consumerPair.InterfaceType==typeof(IQueryResponseAsyncConsumer<,>)
-                        && !(await ((IConsumerContractConnection)this).RegisterQueryResponseAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
-                        return false;
-                    else
+                    if (Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IPubSubConsumer<>)))
+                    {
+                        if (!(await ((IConsumerContractConnection)this).RegisterPubSubConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
+                            return false;
+                    }
+                    else if (Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IPubSubAsyncConsumer<>)))
+                    {
+                        if (!(await ((IConsumerContractConnection)this).RegisterPubSubAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
+                            return false;
+                    }
+                    else if (Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IQueryResponseConsumer<,>)))
+                    {
+                        if (!(await ((IConsumerContractConnection)this).RegisterQueryResponseConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
+                            return false;
+                    }
+                    else if (Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IQueryResponseAsyncConsumer<,>))
+                        &&!(await ((IConsumerContractConnection)this).RegisterQueryResponseAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
                         return false;
                 }
             }
@@ -114,8 +132,10 @@ namespace MQContract.Connections
         ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             var ifaceType = GetConsumerInterfaceType(consumerType,typeof(IPubSubConsumer<>));
-            var methodinfo = typeof(AConnection<CC>).GetMethod(nameof(AConnection<CC>.CreatePubSubConsumerSubscriptionAsync))?
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
+            var methodinfo = GetType().GetMethod(nameof(AConnection<CC>.CreatePubSubConsumerSubscriptionAsync), BindingFlags.Instance|BindingFlags.NonPublic)?
                 .MakeGenericMethod(ifaceType.GetGenericArguments()[0]);
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             return (ValueTask<bool>)methodinfo!.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
                 channel,
@@ -125,7 +145,7 @@ namespace MQContract.Connections
             ])!;
         }
 
-        private ValueTask<bool> CreatePubSubConsumerSubscriptionAsync<T>(IPubSubConsumer<T> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        protected ValueTask<bool> CreatePubSubConsumerSubscriptionAsync<T>(IPubSubConsumer<T> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
             => RegisterSubscription((channel, group, ignoreMessageHeader) => CreateSubscriptionAsync<T>(
                     (message) =>
                     {
@@ -165,8 +185,10 @@ namespace MQContract.Connections
         ValueTask<bool> IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IPubSubAsyncConsumer<>));
-            var methodinfo = typeof(AConnection<CC>).GetMethod(nameof(AConnection<CC>.CreatePubSubAsyncConsumerSubscriptionAsync))?
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
+            var methodinfo = GetType().GetMethod(nameof(AConnection<CC>.CreatePubSubAsyncConsumerSubscriptionAsync), BindingFlags.Instance|BindingFlags.NonPublic)?
                 .MakeGenericMethod(ifaceType.GetGenericArguments()[0]);
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             return (ValueTask<bool>)methodinfo!.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
                 channel,
@@ -176,7 +198,7 @@ namespace MQContract.Connections
             ])!;
         }
 
-        private ValueTask<bool> CreatePubSubAsyncConsumerSubscriptionAsync<T>(IPubSubAsyncConsumer<T> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        protected ValueTask<bool> CreatePubSubAsyncConsumerSubscriptionAsync<T>(IPubSubAsyncConsumer<T> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
             => RegisterSubscription((channel, group, ignoreMessageHeader) => CreateSubscriptionAsync<T>(
                     (message) => consumer.MessageReceivedAsync(message),
                     (error) => consumer.ErrorRecieved(error),
@@ -212,8 +234,10 @@ namespace MQContract.Connections
         ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IQueryResponseConsumer<,>));
-            var methodinfo = typeof(AConnection<CC>).GetMethod(nameof(AConnection<CC>.CreateQueryResponseConsumerSubscriptionAsync))?
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
+            var methodinfo = GetType().GetMethod(nameof(AConnection<CC>.CreateQueryResponseConsumerSubscriptionAsync), BindingFlags.Instance|BindingFlags.NonPublic)?
                 .MakeGenericMethod(ifaceType.GetGenericArguments()[0], ifaceType.GetGenericArguments()[1]);
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             return (ValueTask<bool>)methodinfo!.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
                 channel,
@@ -223,7 +247,7 @@ namespace MQContract.Connections
             ])!;
         }
 
-        private ValueTask<bool> CreateQueryResponseConsumerSubscriptionAsync<Q, R>(IQueryResponseConsumer<Q, R> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        protected ValueTask<bool> CreateQueryResponseConsumerSubscriptionAsync<Q, R>(IQueryResponseConsumer<Q, R> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
              => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<Q, R>(
                     (message) => ValueTask.FromResult(consumer.MessageReceived(message)),
                     (error) => consumer.ErrorRecieved(error),
@@ -259,8 +283,10 @@ namespace MQContract.Connections
         ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IQueryResponseAsyncConsumer<,>));
-            var methodinfo = typeof(AConnection<CC>).GetMethod(nameof(AConnection<CC>.CreateQueryResponseAsyncConsumerSubscriptionAsync))?
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
+            var methodinfo = GetType().GetMethod(nameof(AConnection<CC>.CreateQueryResponseAsyncConsumerSubscriptionAsync), BindingFlags.Instance|BindingFlags.NonPublic)?
                 .MakeGenericMethod(ifaceType.GetGenericArguments()[0], ifaceType.GetGenericArguments()[1]);
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
             return (ValueTask<bool>)methodinfo!.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
                 channel,
@@ -270,7 +296,7 @@ namespace MQContract.Connections
             ])!;
         }
 
-        private ValueTask<bool> CreateQueryResponseAsyncConsumerSubscriptionAsync<Q, R>(IQueryResponseAsyncConsumer<Q, R> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        protected ValueTask<bool> CreateQueryResponseAsyncConsumerSubscriptionAsync<Q, R>(IQueryResponseAsyncConsumer<Q, R> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
             => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<Q, R>(
                     (message) => consumer.MessageReceivedAsync(message),
                     (error) => consumer.ErrorRecieved(error),

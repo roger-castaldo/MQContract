@@ -14,7 +14,7 @@ namespace MQContract.Interfaces
         /// <param name="assembly">Optional parameter to specify loading from a single assembly, if not supplied will load all from within the default LoadContext</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A boolean indicating success or failure</returns>
-        ValueTask<bool> AutoRegisterAllConsumersAsync(Assembly? assembly, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<bool> AutoRegisterAllConsumersAsync(Assembly? assembly=null, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to register a PubSubConsumer into the contract connection 
         /// </summary>
