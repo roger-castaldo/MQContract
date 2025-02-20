@@ -209,8 +209,8 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
-                mappedChannel??typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
-                mappedGroup,
+                mappedChannel??typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name,
+                mappedGroup??typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name,
                 It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
@@ -287,8 +287,8 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
-                mappedChannel??typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
-                mappedGroup,
+                mappedChannel??typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name,
+                mappedGroup??typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name,
                 It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }

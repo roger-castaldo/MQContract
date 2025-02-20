@@ -29,7 +29,7 @@ namespace AutomatedTesting
                     Task.Delay(Delay).Wait();
             });
             task.Start();
-            return await Task.WhenAny(task, Task.Delay(maxTime)) == task;
+            return (await Task.WhenAny(task, Task.Delay(maxTime))) == task || values.Count()>=count;
         }
     }
 }

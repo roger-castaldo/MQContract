@@ -115,58 +115,6 @@ namespace AutomatedTesting
             #endregion
         }
 
-        [TestMethod]
-        public async Task TestByteEncoder()
-        {
-            #region Arrange
-            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
-            var serviceSubscription = new Mock<IServiceSubscription>();
-
-            var testMessage = RandomNumberGenerator.GetBytes(1)[0];
-
-            List<ServiceMessage> serviceMessages = [];
-            var actions = new List<Action<ReceivedServiceMessage>>();
-            var recievedMessages = new List<IReceivedMessage<byte>>();
-
-            var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
-                It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
-                {
-                    var rmessage = Helper.ProduceReceivedServiceMessage(message);
-                    serviceMessages.Add(rmessage);
-                    foreach (var act in actions)
-                        act(rmessage);
-                    return ValueTask.FromResult(transmissionResult);
-                });
-
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
-            #endregion
-
-            #region Act
-            var subscription = await contractConnection.SubscribeAsync<byte>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName);
-            var result = await contractConnection.PublishAsync<byte>(testMessage, ChannelName);
-            #endregion
-
-            #region Assert
-            Assert.IsTrue(await Helper.WaitForCount(recievedMessages, 1, TimeSpan.FromMinutes(1)));
-
-            await subscription.EndAsync();
-
-            Assert.IsNotNull(result);
-            Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(testMessage, recievedMessages[0].Message);
-            Assert.IsTrue(Enumerable.SequenceEqual<byte>([testMessage], serviceMessages[0].Data.ToArray()));
-            #endregion
-
-            #region Verify
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
-            #endregion
-        }
-
         private async Task BitConverterTypeTest<T>(T testMessage, byte[] convertedValue)
         {
             #region Arrange
@@ -214,6 +162,13 @@ namespace AutomatedTesting
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
+        }
+
+        [TestMethod]
+        public async Task TestByteEncoder()
+        {
+            var binaryData = RandomNumberGenerator.GetBytes(sizeof(byte));
+            await BitConverterTypeTest<byte>(binaryData[0], binaryData);
         }
 
         [TestMethod]
