@@ -5,7 +5,7 @@ namespace MQContract.Interfaces
     /// <summary>
     /// This interface represents the Core class for the MQContract system, IE the ContractConnection
     /// </summary>
-    public interface IContractConnection : IBaseContractConnection
+    public interface IContractConnection : IConsumerContractConnection
     {
         
         /// <summary>

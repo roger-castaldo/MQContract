@@ -25,16 +25,7 @@ namespace Messages
                 cancellationToken: sourceCancel.Token
             );
 
-            var announcementSubscription2 = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
-                (announcement) =>
-                {
-                    Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName} in member 2 of the group.. [{announcement.ID},{announcement.ReceivedTimestamp}]");
-                    return ValueTask.CompletedTask;
-                },
-                (error) => Console.WriteLine($"Announcement error: {error.Message}"),
-                group: "AnnouncementGroup",
-                cancellationToken: sourceCancel.Token
-            );
+            await contractConnection.RegisterPubSubConsumerAsync<ArrivalAnnouncement, AnnouncementConsumer>(group: "AnnouncementGroup", cancellationToken: sourceCancel.Token);
 
             var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
                 (greeting) =>
@@ -63,7 +54,6 @@ namespace Messages
             {
                 await Task.WhenAll(
                     announcementSubscription1.EndAsync().AsTask(),
-                    announcementSubscription2.EndAsync().AsTask(),
                     greetingSubscription.EndAsync().AsTask(),
                     storedArrivalSubscription.EndAsync().AsTask()
                 ).ConfigureAwait(true);
