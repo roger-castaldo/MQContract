@@ -29,7 +29,31 @@
                   .DistinctBy(k => k.Key)
             )
         { }
-        
+
+        /// <summary>
+        /// Constructor to create a merged message header with taking the original and appending the new values
+        /// </summary>
+        /// <param name="originalHeader">The base header to use</param>
+        /// <param name="appendedHeader">The additional properties to add</param>
+        public MessageHeader(MessageHeader? originalHeader, MessageHeader? appendedHeader)
+            : this(
+                  (originalHeader==null 
+                    ? [] 
+                    : originalHeader.Keys
+                        .Where(key => originalHeader[key]!=null)
+                        .Select(key => new KeyValuePair<string, string>(key, originalHeader[key]!))
+                  )
+                  .Concat(
+                      appendedHeader==null 
+                      ? []
+                      : appendedHeader.Keys
+                        .Where(key => appendedHeader[key]!=null && originalHeader?[key]==null)
+                        .Select(key=>new KeyValuePair<string,string>(key,appendedHeader[key]!))
+
+                  )
+            )
+        { }
+
         /// <summary>
         /// Called to obtain a header value for the given key if it exists
         /// </summary>

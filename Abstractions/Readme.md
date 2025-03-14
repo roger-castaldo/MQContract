@@ -54,6 +54,7 @@
   - [RegisterQueryResponseConsumerAsync\`\`3(consumer,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseConsumerAsync``3-``2,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterQueryResponseConsumerAsync``3(``2,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
   - [RegisterQueryResponseConsumerAsync\`\`3(channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection-RegisterQueryResponseConsumerAsync``3-System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection.RegisterQueryResponseConsumerAsync``3(System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
 - [IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext')
+  - [Activity](#P-MQContract-Interfaces-Middleware-IContext-Activity 'MQContract.Interfaces.Middleware.IContext.Activity')
   - [Item](#P-MQContract-Interfaces-Middleware-IContext-Item-System-String- 'MQContract.Interfaces.Middleware.IContext.Item(System.String)')
 - [IContractConnection](#T-MQContract-Interfaces-IContractConnection 'MQContract.Interfaces.IContractConnection')
   - [BulkPublishAsync\`\`1(messages,channel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{System-ValueTuple{``0,MQContract-Messages-MessageHeader}},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.BulkPublishAsync``1(System.Collections.Generic.IEnumerable{System.ValueTuple{``0,MQContract.Messages.MessageHeader}},System.String,System.Threading.CancellationToken)')
@@ -105,6 +106,7 @@
 - [IMessageTypeEncryptor\`1](#T-MQContract-Interfaces-Encrypting-IMessageTypeEncryptor`1 'MQContract.Interfaces.Encrypting.IMessageTypeEncryptor`1')
 - [IMetricContractConnection\`1](#T-MQContract-Interfaces-IMetricContractConnection`1 'MQContract.Interfaces.IMetricContractConnection`1')
   - [AddMetrics(meter,useInternal)](#M-MQContract-Interfaces-IMetricContractConnection`1-AddMetrics-System-Diagnostics-Metrics-Meter,System-Boolean- 'MQContract.Interfaces.IMetricContractConnection`1.AddMetrics(System.Diagnostics.Metrics.Meter,System.Boolean)')
+  - [EnableOpenTelemetry(activitySource,linkActivitiesAcrossSystems)](#M-MQContract-Interfaces-IMetricContractConnection`1-EnableOpenTelemetry-System-String,System-Boolean- 'MQContract.Interfaces.IMetricContractConnection`1.EnableOpenTelemetry(System.String,System.Boolean)')
   - [GetSnapshot(sent)](#M-MQContract-Interfaces-IMetricContractConnection`1-GetSnapshot-System-Boolean- 'MQContract.Interfaces.IMetricContractConnection`1.GetSnapshot(System.Boolean)')
   - [GetSnapshot(messageType,sent)](#M-MQContract-Interfaces-IMetricContractConnection`1-GetSnapshot-System-Type,System-Boolean- 'MQContract.Interfaces.IMetricContractConnection`1.GetSnapshot(System.Type,System.Boolean)')
   - [GetSnapshot(channel,sent)](#M-MQContract-Interfaces-IMetricContractConnection`1-GetSnapshot-System-String,System-Boolean- 'MQContract.Interfaces.IMetricContractConnection`1.GetSnapshot(System.String,System.Boolean)')
@@ -154,6 +156,7 @@
   - [#ctor(data)](#M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.MessageHeader.#ctor(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
   - [#ctor(headers)](#M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-Dictionary{System-String,System-String}- 'MQContract.Messages.MessageHeader.#ctor(System.Collections.Generic.Dictionary{System.String,System.String})')
   - [#ctor(originalHeader,appendedHeader)](#M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,System-Collections-Generic-Dictionary{System-String,System-String}- 'MQContract.Messages.MessageHeader.#ctor(MQContract.Messages.MessageHeader,System.Collections.Generic.Dictionary{System.String,System.String})')
+  - [#ctor(originalHeader,appendedHeader)](#M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,MQContract-Messages-MessageHeader- 'MQContract.Messages.MessageHeader.#ctor(MQContract.Messages.MessageHeader,MQContract.Messages.MessageHeader)')
   - [Item](#P-MQContract-Messages-MessageHeader-Item-System-String- 'MQContract.Messages.MessageHeader.Item(System.String)')
   - [Keys](#P-MQContract-Messages-MessageHeader-Keys 'MQContract.Messages.MessageHeader.Keys')
 - [MessageNameAttribute](#T-MQContract-Attributes-MessageNameAttribute 'MQContract.Attributes.MessageNameAttribute')
@@ -1133,6 +1136,13 @@ MQContract.Interfaces.Middleware
 
 This is used to represent a Context for the middleware calls to use that exists from the start to the end of the message conversion process
 
+<a name='P-MQContract-Interfaces-Middleware-IContext-Activity'></a>
+### Activity `property`
+
+##### Summary
+
+Houses the current activity (if set) for the given context for Open Telemetry usage
+
 <a name='P-MQContract-Interfaces-Middleware-IContext-Item-System-String-'></a>
 ### Item `property`
 
@@ -1930,6 +1940,24 @@ mqcontract.channels.{Channel}.received.bytes = count of bytes received (message 
 mqcontract.channels.{Channel}.encodingduration = milliseconds to encode messages for a given channel (Histogram<double>)
 mqcontract.channels.{Channel}.decodingduration = milliseconds to decode messages for a given channel (Histogram<double>)
 
+<a name='M-MQContract-Interfaces-IMetricContractConnection`1-EnableOpenTelemetry-System-String,System-Boolean-'></a>
+### EnableOpenTelemetry(activitySource,linkActivitiesAcrossSystems) `method`
+
+##### Summary
+
+Called to enable Open Telemetry capabilities within the Contract Connection which will include passing activity information across the messages
+
+##### Returns
+
+The Contract Connection instance to allow chaining calls
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| activitySource | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Used to override the Activity Source name if desired, otherwise it will default to MQContract |
+| linkActivitiesAcrossSystems | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Setting this to true will automatically include headers in the messages to allow for linking the calling activity on one service to the activity on the receiver |
+
 <a name='M-MQContract-Interfaces-IMetricContractConnection`1-GetSnapshot-System-Boolean-'></a>
 ### GetSnapshot(sent) `method`
 
@@ -2708,6 +2736,20 @@ Constructor to create a merged message header with taking the original and appen
 | ---- | ---- | ----------- |
 | originalHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The base header to use |
 | appendedHeader | [System.Collections.Generic.Dictionary{System.String,System.String}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.Dictionary 'System.Collections.Generic.Dictionary{System.String,System.String}') | The additional properties to add |
+
+<a name='M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,MQContract-Messages-MessageHeader-'></a>
+### #ctor(originalHeader,appendedHeader) `constructor`
+
+##### Summary
+
+Constructor to create a merged message header with taking the original and appending the new values
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| originalHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The base header to use |
+| appendedHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The additional properties to add |
 
 <a name='P-MQContract-Messages-MessageHeader-Item-System-String-'></a>
 ### Item `property`

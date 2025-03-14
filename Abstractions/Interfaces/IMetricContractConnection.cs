@@ -43,6 +43,13 @@ namespace MQContract.Interfaces
         CC RegisterMiddleware<T, M>(Func<T> constructInstance)
             where T : ISpecificTypeMiddleware<M>;
         /// <summary>
+        /// Called to enable Open Telemetry capabilities within the Contract Connection which will include passing activity information across the messages
+        /// </summary>
+        /// <param name="activitySource">Used to override the Activity Source name if desired, otherwise it will default to MQContract</param>
+        /// <param name="linkActivitiesAcrossSystems">Setting this to true will automatically include headers in the messages to allow for linking the calling activity on one service to the activity on the receiver</param>
+        /// <returns>The Contract Connection instance to allow chaining calls</returns>
+        CC EnableOpenTelemetry(string activitySource = "MQContract",bool linkActivitiesAcrossSystems = true);
+        /// <summary>
         /// Called to activate the metrics tracking middleware for this connection instance
         /// </summary>
         /// <param name="meter">The Meter item to create all system metrics against</param>

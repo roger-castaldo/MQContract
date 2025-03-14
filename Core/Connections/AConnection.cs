@@ -13,6 +13,8 @@ using MQContract.Subscriptions;
 using System.Diagnostics.Metrics;
 using MQContract.Attributes;
 using System.Reflection;
+using System.Diagnostics;
+using static MQContract.Connections.ServiceConnectionList;
 
 namespace MQContract.Connections
 {
@@ -157,26 +159,62 @@ namespace MQContract.Connections
             return (message, messageHeader);
         }
 
-        protected async ValueTask<ServiceMessage> ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, T message, bool ignoreChannel, string? channel = null, MessageHeader? messageHeader = null)
+        protected async ValueTask<ServiceMessage> ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, T message, bool ignoreChannel,Activity? activity, string? channel = null, MessageHeader? messageHeader = null)
         {
             using var scope = SetScope();
             logger?.LogDebug("Producing Service Message for message of type {Type}", typeof(T));
-            var context = new Context(mapType);
+            var context = new Context(mapType,activity);
             (message, channel, messageHeader) = await BeforeMessageEncodeAsync<T>(context, message, channel??messageFactory.MessageChannel, messageHeader??new([]));
             return await AfterMessageEncodeAsync<T>(context,
                 await messageFactory.ConvertMessageAsync(message, ignoreChannel, channel, messageHeader)
             );
         }
-        protected async ValueTask<(T message, MessageHeader header)> DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, ReceivedServiceMessage message)
+        
+        protected async ValueTask<(T message, MessageHeader header)> DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, ReceivedServiceMessage message,Activity? activity)
         {
             using var scope = SetScope(message.ID);
             logger?.LogDebug("Decoding Service Message message of type {Type}", typeof(T));
-            var context = new Context(mapType);
+            var context = new Context(mapType,activity);
             (var messageHeader, var data) = await BeforeMessageDecodeAsync(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
             var taskMessage = await messageFactory.ConvertMessageAsync(logger, new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, messageHeader, data, message.Acknowledge))
                                 ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
             return await AfterMessageDecodeAsync<T>(context, taskMessage!, message.ID, messageHeader, message.ReceivedTimestamp, DateTime.Now);
         }
+
+        private ActivitySource? ActivitySource = null;
+        private bool LinkActivitiesAcrossSystems = true;
+        private const string TraceParentHeaderKey = "_traceParentId";
+
+        CC IMetricContractConnection<CC>.EnableOpenTelemetry(string activitySource, bool linkActivitiesAcrossSystems)
+        {
+            ActivitySource = new(activitySource);
+            LinkActivitiesAcrossSystems=linkActivitiesAcrossSystems;
+            dataLock.Wait();
+            middleware.Insert(0,new OpenTelemetryMiddleware());
+            dataLock.Release();
+            return (CC)(IBaseContractConnection)this;
+        }
+
+        protected (Activity? activity,MessageHeader? messageHeader) StartActivity(string name, ActivityKind activityKind, MessageHeader? messageHeader,IMessageServiceConnection? serviceConnection)
+        {
+            using var activity = ActivitySource?.StartActivity(name, activityKind, !string.IsNullOrWhiteSpace(messageHeader?[TraceParentHeaderKey]) 
+                ? new ActivityContext(ActivityTraceId.CreateFromString(messageHeader![TraceParentHeaderKey]!), ActivitySpanId.CreateRandom(), ActivityTraceFlags.Recorded)
+                : default,
+                links: Activity.Current!=null
+                ? [new ActivityLink(ActivityContext.Parse(Activity.Current!.ParentId!, Activity.Current!.TraceStateString))]
+                : []);
+            if (serviceConnection!=null)
+                AssignConnectionType(activity, serviceConnection!);
+            if (LinkActivitiesAcrossSystems && activity!=null && string.IsNullOrWhiteSpace(messageHeader?[TraceParentHeaderKey]))
+                messageHeader = new(messageHeader, new Dictionary<string, string?>([new(TraceParentHeaderKey, activity.TraceId.ToString())]));
+            return (activity, messageHeader);
+        }
+
+        protected static void AssignConnectionType(Activity? activity,IMessageServiceConnection serviceConnection)
+            => activity?.SetTag("mqcontract.serviceconnectiontype", serviceConnection.GetType().FullName);
+
+        protected static KeyValuePair<string, object?> CreateConnectionTypeTag(IMessageServiceConnection serviceConnection)
+            => new("mqcontract.serviceconnectiontype", serviceConnection.GetType().FullName);
         #endregion
 
         #region Metrics
@@ -283,7 +321,8 @@ namespace MQContract.Connections
             var subscription = new PubSubSubscription<T>(
                 async (serviceMessage) =>
                 {
-                    (var taskMessage, var messageHeader) = await DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes.PublishSubscription, messageFactory, serviceMessage);
+                    (var activity,_) = StartActivity(Constants.ConsumeActivityName, ActivityKind.Consumer,serviceMessage.Header,serviceConnection);
+                    (var taskMessage, var messageHeader) = await DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes.PublishSubscription, messageFactory, serviceMessage,activity);
                     await messageReceived(new ReceivedMessage<T>(serviceMessage.ID, taskMessage!, messageHeader, serviceMessage.ReceivedTimestamp, DateTime.Now));
                 },
                 errorReceived,
@@ -373,14 +412,15 @@ namespace MQContract.Connections
             }
             return tcs.Task.Result;
         }
-        protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize,ServiceQueryResult queryResult)
+        protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize,ServiceQueryResult queryResult,IMessageServiceConnection serviceConnection)
         {
             using var scope = SetScope(queryResult.ID);
             logger?.LogDebug("Attempting to produce a Query Result of {R} from the Service Message of the type {MessageTypeID}", typeof(R), queryResult.MessageTypeID);
             QueryResult<R> result;
             try
             {
-                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(ChannelMapper.MapTypes.QueryResponse, GetMessageFactory<R>(maxMessageBodySize, true), new(queryResult.ID, queryResult.MessageTypeID, string.Empty, queryResult.Header, queryResult.Data));
+                (var activity, _) = StartActivity(Constants.ConsumeQueryResponseActivityName, ActivityKind.Consumer, queryResult.Header, serviceConnection);
+                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(ChannelMapper.MapTypes.QueryResponse, GetMessageFactory<R>(maxMessageBodySize, true), new(queryResult.ID, queryResult.MessageTypeID, string.Empty, queryResult.Header, queryResult.Data),activity);
                 result = new QueryResult<R>(
                     queryResult.ID,
                     messageHeader,
@@ -424,7 +464,8 @@ namespace MQContract.Connections
                         serviceMessage,
                         realTimeout??queryableMessageServiceConnection.DefaultTimeout,
                         cancellationToken
-                    )
+                    ),
+                    serviceConnection
                 );
             }
             else if (serviceConnection is IInboxQueryableMessageServiceConnection inboxMessageServiceConnection)
@@ -432,7 +473,8 @@ namespace MQContract.Connections
                 logger?.LogInformation("Executing a QueryResponse call on an InboxQuery service connection");
                 return await ProduceResultAsync<R>(
                     serviceConnection.MaxMessageBodySize,
-                    await ProcessInboxMessageAsync(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, cancellationToken)
+                    await ProcessInboxMessageAsync(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, cancellationToken),
+                    serviceConnection
                 );
             }
             logger?.LogInformation("Executing a QueryResponse call on a standard PubSub service connection using {ResponseChannel}", responseChannel);
@@ -477,7 +519,7 @@ namespace MQContract.Connections
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
             }
-            return await ProduceResultAsync<R>(serviceConnection.MaxMessageBodySize, tcs.Task.Result);
+            return await ProduceResultAsync<R>(serviceConnection.MaxMessageBodySize, tcs.Task.Result,serviceConnection);
         }
         protected async ValueTask<ISubscription> CreateSubscriptionAsync<Q, R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, IMessageServiceConnection serviceConnection,
             Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, CancellationToken cancellationToken)
@@ -487,19 +529,23 @@ namespace MQContract.Connections
             var subscription = new QueryResponseSubscription<Q>(
                 async (message, replyChannel) =>
                 {
+                    (var consumeActivity, _) = StartActivity(Constants.ConsumeQueryActivityName, ActivityKind.Consumer, message.Header,serviceConnection);
                     (var taskMessage, var messageHeader) = await DecodeServiceMessageAsync<Q>(
                         ChannelMapper.MapTypes.QuerySubscription,
                         queryMessageFactory,
-                        message
+                        message,
+                        consumeActivity
                     );
                     var result = await messageReceived(new ReceivedMessage<Q>(message.ID, taskMessage!, messageHeader, message.ReceivedTimestamp, DateTime.Now));
+                    (var responseActivity, var headers) = StartActivity(Constants.ProduceQueryResponseActivityName, ActivityKind.Producer, new(result.Headers),serviceConnection);
                     return await ProduceServiceMessageAsync<R>(
                         ChannelMapper.MapTypes.QueryResponse,
                         responseMessageFactory,
                         result.Message,
                         true,
+                        responseActivity,
                         replyChannel,
-                        new(result.Headers)
+                        headers
                     );
                 },
                 errorReceived,
