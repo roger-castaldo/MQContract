@@ -88,7 +88,7 @@
             #endregion
 
             #region Act
-            var header = new MessageHeader(originalHeader, null);
+            var header = new MessageHeader(originalHeader, (MessageHeader?)null);
             #endregion
 
             #region Assert

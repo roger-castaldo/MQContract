@@ -115,7 +115,7 @@ namespace MQContract.Connections
             var serviceConnection = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(T), serviceMessages.First().Header);
             AssignConnectionType(activity, serviceConnection.MessageServiceConnection);
             await publishLock.WaitAsync(cancellationToken);
-            var result = await BulkPublishAsync(serviceMessages, serviceConnection.MessageServiceConnection, cancellationToken);
+            var result = await BulkPublishAsync(serviceMessages, serviceConnection.MessageServiceConnection,activity, cancellationToken);
             publishLock.Release();
             return result;
         }

@@ -16,6 +16,7 @@ namespace MQContract
         public const string ConsumeQueryActivityName = $"{BaseActivityName}.ConsumeQueryMessage";
         public const string ProduceQueryResponseActivityName = $"{BaseActivityName}.ProduceQueryResponse";
         public const string ConsumeQueryResponseActivityName = $"{BaseActivityName}.ConsumeQueryResponse";
+        public const string PublishBulkMessagesMessageEvent = $"{BulkPublishActivityName}.MessagePublished";
 
         public const string BulkPublishCountTag = "mqcontract.bulkmessagecount";
 

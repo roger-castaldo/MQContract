@@ -78,8 +78,7 @@ namespace MQContract.Connections
             await publishLock.WaitAsync(cancellationToken);
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
-                activity?.AddEvent(new("BulkPublishToConnection", tags: new([CreateConnectionTypeTag(c.MessageServiceConnection)])));
-                var result = await BulkPublishAsync(serviceMessages, c.MessageServiceConnection, cancellationToken);
+                var result = await BulkPublishAsync(serviceMessages, c.MessageServiceConnection,activity, cancellationToken);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
             publishLock.Release();

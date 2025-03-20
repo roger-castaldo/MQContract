@@ -13,10 +13,10 @@ namespace MQContract.Connections
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
         where CC : IBaseContractConnection
     {
-        private async ValueTask<bool> RegisterSubscription(Func<string?, string?, bool, ValueTask<ISubscription?>> createSubscription,
+        private async ValueTask<bool> RegisterSubscription(Func<string?, string?, bool, ValueTask<ISubscription>> createSubscription,
             string? channel, string? group, bool ignoreMessageHeader, string consumerName, Type consumerType, CancellationToken cancellationToken)
         {
-            ISubscription? subscription = null;
+            ISubscription subscription;
             try
             {
                 subscription = await createSubscription(
@@ -31,7 +31,7 @@ namespace MQContract.Connections
                 return false;
             }
             await inboxSemaphore.WaitAsync(cancellationToken);
-            consumerSubscriptions.Add(subscription!);
+            consumerSubscriptions.Add(subscription);
             inboxSemaphore.Release();
             return true;
         }

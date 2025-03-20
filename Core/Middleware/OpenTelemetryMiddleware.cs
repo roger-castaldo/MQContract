@@ -31,7 +31,10 @@ namespace MQContract.Middleware
             context.Activity?.AddTag(TransmissionChannelKey, message.Channel);
             context.Activity?.AddTag(MessageIdKey, message.ID);
             if (context[StopwatchContextId]!=null)
-                context.Activity?.AddEvent(new("MessageEncoded", tags: new([new(EncodingDurationKey, $"{Stopwatch.GetElapsedTime((long)context[StopwatchContextId]!).TotalMilliseconds}ms")])));
+                context.Activity?.AddEvent(new("MessageEncoded", tags: new([
+                    new(EncodingDurationKey, $"{Stopwatch.GetElapsedTime((long)context[StopwatchContextId]!).TotalMilliseconds}ms"),
+                    new(MessageIdKey,message.ID)
+                ])));
             return ValueTask.FromResult(message);
         }
 

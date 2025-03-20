@@ -83,7 +83,7 @@ namespace MQContract.Connections
                     ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), m.message, false,activity, channel, new(m.messageHeader,headers))
                 );
             await publishLock.WaitAsync(cancellationToken);
-            var result = await BulkPublishAsync(serviceMessages, serviceConnection, cancellationToken);
+            var result = await BulkPublishAsync(serviceMessages, serviceConnection,activity, cancellationToken);
             publishLock.Release();
             return result;
         }

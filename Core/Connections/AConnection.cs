@@ -184,6 +184,7 @@ namespace MQContract.Connections
         private ActivitySource? ActivitySource = null;
         private bool LinkActivitiesAcrossSystems = true;
         private const string TraceParentHeaderKey = "_traceParentId";
+        private const string TraceParentSpanHeaderKey = "_traceParentSpanId";
 
         CC IMetricContractConnection<CC>.EnableOpenTelemetry(string activitySource, bool linkActivitiesAcrossSystems)
         {
@@ -195,18 +196,24 @@ namespace MQContract.Connections
             return (CC)(IBaseContractConnection)this;
         }
 
-        protected (Activity? activity,MessageHeader? messageHeader) StartActivity(string name, ActivityKind activityKind, MessageHeader? messageHeader,IMessageServiceConnection? serviceConnection)
+        protected (Activity? activity,MessageHeader? messageHeader) StartActivity(string name, ActivityKind activityKind, MessageHeader? messageHeader,IMessageServiceConnection? serviceConnection,Activity? current=null)
         {
-            using var activity = ActivitySource?.StartActivity(name, activityKind, !string.IsNullOrWhiteSpace(messageHeader?[TraceParentHeaderKey]) 
-                ? new ActivityContext(ActivityTraceId.CreateFromString(messageHeader![TraceParentHeaderKey]!), ActivitySpanId.CreateRandom(), ActivityTraceFlags.Recorded)
-                : default,
+            ActivityContext parent = default;
+            if (!string.IsNullOrWhiteSpace(messageHeader?[TraceParentHeaderKey]))
+                parent=new ActivityContext(ActivityTraceId.CreateFromString(messageHeader![TraceParentHeaderKey]!), ActivitySpanId.CreateFromString(messageHeader![TraceParentSpanHeaderKey]), ActivityTraceFlags.Recorded);
+            else if (current!=null)
+                parent = new ActivityContext(current.TraceId, current.SpanId, ActivityTraceFlags.Recorded);
+            using var activity = ActivitySource?.StartActivity(name, activityKind, parent,
                 links: Activity.Current!=null
                 ? [new ActivityLink(ActivityContext.Parse(Activity.Current!.ParentId!, Activity.Current!.TraceStateString))]
                 : []);
             if (serviceConnection!=null)
                 AssignConnectionType(activity, serviceConnection!);
             if (LinkActivitiesAcrossSystems && activity!=null && string.IsNullOrWhiteSpace(messageHeader?[TraceParentHeaderKey]))
-                messageHeader = new(messageHeader, new Dictionary<string, string?>([new(TraceParentHeaderKey, activity.TraceId.ToString())]));
+                messageHeader = new(messageHeader, new Dictionary<string, string?>([
+                    new(TraceParentHeaderKey, activity.TraceId.ToString()),
+                    new(TraceParentSpanHeaderKey, activity.SpanId.ToString())
+                ]));
             return (activity, messageHeader);
         }
 
@@ -295,21 +302,36 @@ namespace MQContract.Connections
         #endregion
 
         #region PubSub
-        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> serviceMessages,IMessageServiceConnection serviceConnection,CancellationToken cancellationToken)
+        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> serviceMessages,IMessageServiceConnection serviceConnection,Activity? activity,CancellationToken cancellationToken)
         {
+            IEnumerable<TransmissionResult> result;
             using var scope = SetScope();
             logger?.LogDebug("Executing bulk publish");
             if (serviceConnection is IBulkPublishableMessageServiceConnection bulkPublishableMessageServiceConnection)
             {
                 logger?.LogInformation("Executing bulk publish against a service connection that supports bulk publish");
-                return await bulkPublishableMessageServiceConnection.BulkPublishAsync(serviceMessages, cancellationToken);
+                result = await bulkPublishableMessageServiceConnection.BulkPublishAsync(serviceMessages, cancellationToken);
+                activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags : new([
+                    new("BulkSupported",true),
+                    CreateConnectionTypeTag(serviceConnection)
+                    ])));
             }
             else
             {
                 logger?.LogInformation("Executing bulk publish against a service connection that does not support bulk publish");
-                return await serviceMessages
-                    .WhenAll(message => serviceConnection.PublishAsync(message, cancellationToken));
+                result = await serviceMessages
+                    .WhenAll(async message => {
+                        var result = await serviceConnection.PublishAsync(message, cancellationToken);
+                        activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
+                            new("BulkSupported",false),
+                            new("MessageID",message.ID),
+                            new("IsError",result.IsError),
+                            CreateConnectionTypeTag(serviceConnection)
+                        ])));
+                        return result;
+                    });
             }
+            return result;
         }
 
 #pragma warning disable S4136 // Method overloads should be grouped together
@@ -537,7 +559,7 @@ namespace MQContract.Connections
                         consumeActivity
                     );
                     var result = await messageReceived(new ReceivedMessage<Q>(message.ID, taskMessage!, messageHeader, message.ReceivedTimestamp, DateTime.Now));
-                    (var responseActivity, var headers) = StartActivity(Constants.ProduceQueryResponseActivityName, ActivityKind.Producer, new(result.Headers),serviceConnection);
+                    (var responseActivity, var headers) = StartActivity(Constants.ProduceQueryResponseActivityName, ActivityKind.Producer, new(result.Headers),serviceConnection,consumeActivity);
                     return await ProduceServiceMessageAsync<R>(
                         ChannelMapper.MapTypes.QueryResponse,
                         responseMessageFactory,
