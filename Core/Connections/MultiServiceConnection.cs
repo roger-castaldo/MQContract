@@ -8,7 +8,6 @@ using MQContract.Messages;
 using MQContract.Subscriptions;
 using System.Diagnostics;
 using System.Reflection;
-using static MQContract.Connections.ServiceConnectionList;
 
 namespace MQContract.Connections
 {
@@ -61,6 +60,8 @@ namespace MQContract.Connections
             var results = await connections
                 .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, () => c.MessageServiceConnection.PublishAsync(serviceMessage, cancellationToken)));
             publishLock.Release();
+            activity?.SetStatus(results.Any(r=>r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
+            activity?.Stop();
             return new(serviceMessage.ID, results);
         }
 
@@ -82,6 +83,8 @@ namespace MQContract.Connections
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
             publishLock.Release();
+            activity?.SetStatus(Array.Exists(transmissionResults,mtr=>mtr.Any(r=>r.HasError)) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
+            activity?.Stop();
             return transmissionResults
                 .SelectMany(mtr => mtr)
                 .GroupBy(mtr => mtr.ID)
@@ -116,7 +119,7 @@ namespace MQContract.Connections
             var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(MaxMessageBodySize), message, false,activity, channel: channel, messageHeader: messageHeader);
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(Q), serviceMessage.Header);
             return await connections
-                .WhenAll(conn => ExecuteQueryAsync<Q, R>(conn.MessageServiceConnection, serviceMessage, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken));
+                .WhenAll(conn => ExecuteQueryAsync<Q, R>(conn.MessageServiceConnection, serviceMessage,activity, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken));
         }
         ValueTask<IEnumerable<QueryResult<R>>> IMultiServiceContractConnection.QueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
             => ProcessQueryAsync<Q, R>(message, timeout: timeout, channel: channel, responseChannel: responseChannel, messageHeader: messageHeader, cancellationToken: cancellationToken);

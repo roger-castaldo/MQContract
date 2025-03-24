@@ -37,19 +37,19 @@
         /// <param name="appendedHeader">The additional properties to add</param>
         public MessageHeader(MessageHeader? originalHeader, MessageHeader? appendedHeader)
             : this(
-                  (originalHeader==null 
-                    ? [] 
-                    : originalHeader.Keys
-                        .Where(key => originalHeader[key]!=null)
-                        .Select(key => new KeyValuePair<string, string>(key, originalHeader[key]!))
-                  )
-                  .Concat(
-                      appendedHeader==null 
+                  (
+                      appendedHeader==null
                       ? []
                       : appendedHeader.Keys
-                        .Where(key => appendedHeader[key]!=null && originalHeader?[key]==null)
-                        .Select(key=>new KeyValuePair<string,string>(key,appendedHeader[key]!))
-
+                        .Select(key => new KeyValuePair<string, string>(key, appendedHeader[key]??string.Empty))
+                  )
+                  .Concat(
+                      (originalHeader==null
+                        ? []
+                        : originalHeader.Keys
+                            .Where(key => appendedHeader?[key]==null)
+                            .Select(key => new KeyValuePair<string, string>(key, originalHeader[key]??string.Empty))
+                      )
                   )
             )
         { }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MQContract
+﻿namespace MQContract
 {
     internal static class Constants
     {
@@ -16,7 +10,7 @@ namespace MQContract
         public const string ConsumeQueryActivityName = $"{BaseActivityName}.ConsumeQueryMessage";
         public const string ProduceQueryResponseActivityName = $"{BaseActivityName}.ProduceQueryResponse";
         public const string ConsumeQueryResponseActivityName = $"{BaseActivityName}.ConsumeQueryResponse";
-        public const string PublishBulkMessagesMessageEvent = $"{BulkPublishActivityName}.MessagePublished";
+        public const string PublishBulkMessagesMessageEvent = "BulkMessagePublished";
 
         public const string BulkPublishCountTag = "mqcontract.bulkmessagecount";
 

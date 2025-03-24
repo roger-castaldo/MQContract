@@ -1,10 +1,16 @@
 ﻿using AutomatedTesting.ServiceInjection;
 using Microsoft.Extensions.DependencyInjection;
+using System.Security.Cryptography;
 
 namespace AutomatedTesting
 {
     internal static class Helper
     {
+        private const string ValidCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
+        public static string GenerateRandomString(int length)
+            => RandomNumberGenerator.GetString(ValidCharacters,length);
+
         public static IServiceProvider ProduceServiceProvider(string serviceName)
         {
             var services = new ServiceCollection();

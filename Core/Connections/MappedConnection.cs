@@ -93,14 +93,8 @@ namespace MQContract.Connections
             (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader,null);
             var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), message, false, activity, channel, messageHeader);
             var serviceConnection = await GetConnectionsAsync(serviceMessage.Channel, typeof(T), serviceMessage.Header);
-            AssignConnectionType(activity, serviceConnection.MessageServiceConnection);
-            await publishLock.WaitAsync(cancellationToken);
-            var result = await serviceConnection.MessageServiceConnection.PublishAsync(
-                serviceMessage,
-                cancellationToken
-            );
-            publishLock.Release();
-            return result;
+            OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection,serviceConnection.ServiceConnectionName);
+            return await PublishMessageAsync(publishLock, serviceMessage, serviceConnection.MessageServiceConnection, activity, cancellationToken);
         }
 
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
@@ -113,10 +107,12 @@ namespace MQContract.Connections
                     ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), m.message, false,activity, channel, new(m.messageHeader,headers))
                 );
             var serviceConnection = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(T), serviceMessages.First().Header);
-            AssignConnectionType(activity, serviceConnection.MessageServiceConnection);
+            OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection,serviceConnection.ServiceConnectionName);
             await publishLock.WaitAsync(cancellationToken);
             var result = await BulkPublishAsync(serviceMessages, serviceConnection.MessageServiceConnection,activity, cancellationToken);
             publishLock.Release();
+            activity?.SetStatus(result.Any(r=>r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
+            activity?.Stop();
             return result;
         }
         #endregion
@@ -129,8 +125,8 @@ namespace MQContract.Connections
             (var activity, messageHeader) = StartActivity(Constants.PublishQueryActivityName, ActivityKind.Producer, messageHeader, null);
             var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(MaxMessageBodySize), message, false,activity, channel: channel, messageHeader: messageHeader);
             var serviceConnection = await GetConnectionsAsync(serviceMessage.Channel, typeof(Q), serviceMessage.Header);
-            AssignConnectionType(activity, serviceConnection.MessageServiceConnection);
-            return await ExecuteQueryAsync<Q, R>(serviceConnection.MessageServiceConnection, serviceMessage, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken);
+            OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection,serviceConnection.ServiceConnectionName);
+            return await ExecuteQueryAsync<Q, R>(serviceConnection.MessageServiceConnection, serviceMessage,activity, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken);
         }
 
         ValueTask<QueryResult<R>> IContractConnection.QueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
