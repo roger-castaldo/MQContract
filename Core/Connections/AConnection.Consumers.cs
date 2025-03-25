@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using MQContract.Attributes;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
+using MQContract.Middleware;
 using System.Reflection;
 using System.Runtime.Loader;
 
@@ -13,6 +14,7 @@ namespace MQContract.Connections
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
         where CC : IBaseContractConnection
     {
+        private const string ConsumerClassNameKey = $"{OpenTelemetryMiddleware.KeyBase}.consumerclass";
         private async ValueTask<bool> RegisterSubscription(Func<string?, string?, bool, ValueTask<ISubscription>> createSubscription,
             string? channel, string? group, bool ignoreMessageHeader, string consumerName, Type consumerType, CancellationToken cancellationToken)
         {
@@ -118,37 +120,10 @@ namespace MQContract.Connections
 
         #region PubSubConsumer
         ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync<T, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => CreatePubSubConsumerSubscriptionAsync<T>(consumer, channel, group, ignoreMessageHeader, cancellationToken);
-
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync<T, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => CreatePubSubConsumerSubscriptionAsync<T>(
-                (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
-                channel,
-                group,
-                ignoreMessageHeader,
-                cancellationToken
-            );
-
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-        {
-            var ifaceType = GetConsumerInterfaceType(consumerType,typeof(IPubSubConsumer<>));
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            var methodinfo = GetType().GetMethod(nameof(AConnection<CC>.CreatePubSubConsumerSubscriptionAsync), BindingFlags.Instance|BindingFlags.NonPublic)?
-                .MakeGenericMethod(ifaceType.GetGenericArguments()[0]);
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            return (ValueTask<bool>)methodinfo!.Invoke(this, [
-                (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
-                channel,
-                group,
-                ignoreMessageHeader,
-                cancellationToken
-            ])!;
-        }
-
-        protected ValueTask<bool> CreatePubSubConsumerSubscriptionAsync<T>(IPubSubConsumer<T> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
             => RegisterSubscription((channel, group, ignoreMessageHeader) => CreateSubscriptionAsync<T>(
                     (message) =>
                     {
+                        message.Activity?.AddTag(ConsumerClassNameKey, consumer.GetType().Name);
                         consumer.MessageReceived(message);
                         return ValueTask.CompletedTask;
                     },
@@ -159,48 +134,48 @@ namespace MQContract.Connections
                     true,
                     cancellationToken
                 ),
-                channel, 
-                group, 
+                channel,
+                group,
                 ignoreMessageHeader,
-                "PubSubConsumer", 
+                "PubSubConsumer",
                 consumer.GetType(),
                 cancellationToken
             );
+
+        ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync<T, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+            => ((IConsumerContractConnection)this).RegisterPubSubConsumerAsync<T,TConsumer>(
+                (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
+                channel,
+                group,
+                ignoreMessageHeader,
+                cancellationToken
+            );
+
+        private static readonly MethodInfo RegisterPubSubConsumerMethod = typeof(IConsumerContractConnection).GetMethods()
+            .First(method => Equals(method.Name, "RegisterPubSubConsumerAsync") && method.GetGenericArguments().Length==2 && method.GetParameters().Length==5);
+        ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        {
+            var ifaceType = GetConsumerInterfaceType(consumerType,typeof(IPubSubConsumer<>));
+            var methodInfo = RegisterPubSubConsumerMethod.MakeGenericMethod(ifaceType.GetGenericArguments()[0], consumerType);
+            return (ValueTask<bool>)methodInfo!.Invoke(this, [
+                (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
+                channel,
+                group,
+                ignoreMessageHeader,
+                cancellationToken
+            ])!;
+        }
 
         #endregion
 
         #region PubSubAsyncConsumer
         ValueTask<bool> IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync<T, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => CreatePubSubAsyncConsumerSubscriptionAsync<T>(consumer, channel, group, ignoreMessageHeader, cancellationToken);
-
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync<T, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => CreatePubSubAsyncConsumerSubscriptionAsync<T>(
-                (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
-                channel,
-                group,
-                ignoreMessageHeader,
-                cancellationToken
-            );
-
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-        {
-            var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IPubSubAsyncConsumer<>));
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            var methodinfo = GetType().GetMethod(nameof(AConnection<CC>.CreatePubSubAsyncConsumerSubscriptionAsync), BindingFlags.Instance|BindingFlags.NonPublic)?
-                .MakeGenericMethod(ifaceType.GetGenericArguments()[0]);
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            return (ValueTask<bool>)methodinfo!.Invoke(this, [
-                (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
-                channel,
-                group,
-                ignoreMessageHeader,
-                cancellationToken
-            ])!;
-        }
-
-        protected ValueTask<bool> CreatePubSubAsyncConsumerSubscriptionAsync<T>(IPubSubAsyncConsumer<T> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
             => RegisterSubscription((channel, group, ignoreMessageHeader) => CreateSubscriptionAsync<T>(
-                    (message) => consumer.MessageReceivedAsync(message),
+                    (message) =>
+                    {
+                        message.Activity?.AddTag(ConsumerClassNameKey, consumer.GetType().Name);
+                        return consumer.MessageReceivedAsync(message);
+                    },
                     (error) => consumer.ErrorRecieved(error),
                     channel,
                     group,
@@ -208,48 +183,46 @@ namespace MQContract.Connections
                     true,
                     cancellationToken
                 ),
-                channel, 
-                group, 
+                channel,
+                group,
                 ignoreMessageHeader,
-                "PubSubAsyncConsumer", 
+                "PubSubAsyncConsumer",
                 consumer.GetType(),
                 cancellationToken
             );
 
+        ValueTask<bool> IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync<T, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+            => ((IConsumerContractConnection)this).RegisterPubSubAsyncConsumerAsync<T, TConsumer>(
+                (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
+                channel,
+                group,
+                ignoreMessageHeader,
+                cancellationToken
+            );
+
+        private static readonly MethodInfo RegisterPubSubAsyncConsumerMethod = typeof(IConsumerContractConnection).GetMethods()
+            .First(method => Equals(method.Name, "RegisterPubSubAsyncConsumerAsync") && method.GetGenericArguments().Length==2 && method.GetParameters().Length==5);
+        ValueTask<bool> IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        {
+            var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IPubSubAsyncConsumer<>));
+            var methodInfo = RegisterPubSubAsyncConsumerMethod.MakeGenericMethod(ifaceType.GetGenericArguments()[0], consumerType);
+            return (ValueTask<bool>)methodInfo.Invoke(this, [
+                (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
+                channel,
+                group,
+                ignoreMessageHeader,
+                cancellationToken
+            ])!;
+        }
         #endregion
 
         #region QueryResponseConsumer
         ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync<Q,R, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => CreateQueryResponseConsumerSubscriptionAsync<Q, R>(consumer, channel, group, ignoreMessageHeader, cancellationToken);
-
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync<Q, R, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => CreateQueryResponseConsumerSubscriptionAsync<Q, R>(
-                (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
-                channel,
-                group,
-                ignoreMessageHeader,
-                cancellationToken
-            );
-
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-        {
-            var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IQueryResponseConsumer<,>));
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            var methodinfo = GetType().GetMethod(nameof(AConnection<CC>.CreateQueryResponseConsumerSubscriptionAsync), BindingFlags.Instance|BindingFlags.NonPublic)?
-                .MakeGenericMethod(ifaceType.GetGenericArguments()[0], ifaceType.GetGenericArguments()[1]);
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            return (ValueTask<bool>)methodinfo!.Invoke(this, [
-                (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
-                channel,
-                group,
-                ignoreMessageHeader,
-                cancellationToken
-            ])!;
-        }
-
-        protected ValueTask<bool> CreateQueryResponseConsumerSubscriptionAsync<Q, R>(IQueryResponseConsumer<Q, R> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-             => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<Q, R>(
-                    (message) => ValueTask.FromResult(consumer.MessageReceived(message)),
+            => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<Q, R>(
+                    (message) => {
+                        message.Activity?.AddTag(ConsumerClassNameKey, consumer.GetType().Name);
+                        return ValueTask.FromResult(consumer.MessageReceived(message));
+                    },
                     (error) => consumer.ErrorRecieved(error),
                     channel,
                     group,
@@ -257,22 +230,16 @@ namespace MQContract.Connections
                     true,
                     cancellationToken
                 ),
-                channel, 
-                group, 
+                channel,
+                group,
                 ignoreMessageHeader,
-                "QueryResponseConsumer", 
+                "QueryResponseConsumer",
                 consumer.GetType(),
                 cancellationToken
              );
 
-        #endregion
-
-        #region QueryResponseAsyncConsumer
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync<Q, R, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => CreateQueryResponseAsyncConsumerSubscriptionAsync<Q, R>(consumer, channel, group, ignoreMessageHeader, cancellationToken);
-
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync<Q, R, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => CreateQueryResponseAsyncConsumerSubscriptionAsync<Q, R>(
+        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync<Q, R, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+            => ((IConsumerContractConnection)this).RegisterQueryResponseConsumerAsync<Q, R, TConsumer>(
                 (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
                 channel,
                 group,
@@ -280,14 +247,13 @@ namespace MQContract.Connections
                 cancellationToken
             );
 
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        private static readonly MethodInfo RegisterQueryResponseConsumerMethod = typeof(IConsumerContractConnection).GetMethods()
+            .First(method => Equals(method.Name, "RegisterQueryResponseConsumerAsync") && method.GetGenericArguments().Length==3 && method.GetParameters().Length==5);
+        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
-            var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IQueryResponseAsyncConsumer<,>));
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            var methodinfo = GetType().GetMethod(nameof(AConnection<CC>.CreateQueryResponseAsyncConsumerSubscriptionAsync), BindingFlags.Instance|BindingFlags.NonPublic)?
-                .MakeGenericMethod(ifaceType.GetGenericArguments()[0], ifaceType.GetGenericArguments()[1]);
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            return (ValueTask<bool>)methodinfo!.Invoke(this, [
+            var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IQueryResponseConsumer<,>));
+            var methodInfo = RegisterQueryResponseConsumerMethod.MakeGenericMethod(ifaceType.GetGenericArguments()[0], ifaceType.GetGenericArguments()[1], consumerType);
+            return (ValueTask<bool>)methodInfo.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
                 channel,
                 group,
@@ -295,10 +261,16 @@ namespace MQContract.Connections
                 cancellationToken
             ])!;
         }
+        #endregion
 
-        protected ValueTask<bool> CreateQueryResponseAsyncConsumerSubscriptionAsync<Q, R>(IQueryResponseAsyncConsumer<Q, R> consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        #region QueryResponseAsyncConsumer
+        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync<Q, R, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
             => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<Q, R>(
-                    (message) => consumer.MessageReceivedAsync(message),
+                    (message) =>
+                    {
+                        message.Activity?.AddTag(ConsumerClassNameKey, consumer.GetType().Name);
+                        return consumer.MessageReceivedAsync(message);
+                    },
                     (error) => consumer.ErrorRecieved(error),
                     channel,
                     group,
@@ -306,13 +278,37 @@ namespace MQContract.Connections
                     true,
                     cancellationToken
                 ),
-                channel, 
-                group, 
+                channel,
+                group,
                 ignoreMessageHeader,
-                "QueryResponseAsyncConsumer", 
+                "QueryResponseAsyncConsumer",
                 consumer.GetType(),
                 cancellationToken
             );
+
+        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync<Q, R, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+            => ((IConsumerContractConnection)this).RegisterQueryResponseAsyncConsumerAsync<Q, R, TConsumer>(
+                (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
+                channel,
+                group,
+                ignoreMessageHeader,
+                cancellationToken
+            );
+
+        private static readonly MethodInfo RegisterQueryResponseAsyncConsumerMethod = typeof(IConsumerContractConnection).GetMethods()
+            .First(method => Equals(method.Name, "RegisterQueryResponseAsyncConsumerAsync") && method.GetGenericArguments().Length==3 && method.GetParameters().Length==5);
+        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        {
+            var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IQueryResponseAsyncConsumer<,>));
+            var methodInfo = RegisterQueryResponseAsyncConsumerMethod.MakeGenericMethod(ifaceType.GetGenericArguments()[0], ifaceType.GetGenericArguments()[1], consumerType);
+            return (ValueTask<bool>)methodInfo.Invoke(this, [
+                (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
+                channel,
+                group,
+                ignoreMessageHeader,
+                cancellationToken
+            ])!;
+        }
         #endregion
     }
 }

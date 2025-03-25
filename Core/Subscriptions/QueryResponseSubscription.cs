@@ -17,7 +17,7 @@ namespace MQContract.Subscriptions
         private ManualResetEventSlim? manualResetEvent = new(true);
         private CancellationTokenSource? token = new();
 
-        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)
+        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, string? serviceConnectionName, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logger?.LogInformation("Establishing underlying service subscription for QueryResponse subscription.");
@@ -64,7 +64,7 @@ namespace MQContract.Subscriptions
                                     replyChannel!
                                 );
                                 var res = await connection.PublishAsync(QueryResponseHelper.EncodeMessage(resultMessage, queryClientID, replyID, null, replyChannel), cancellationToken);
-                                OtelHelper.AddMessagePublishedEvent(activity, resultMessage, res, connection);
+                                OtelHelper.AddMessagePublishedEvent(activity, resultMessage, res, connection, serviceConnectionName);
                             }
                         },
                         error => errorReceived(error),

@@ -8,6 +8,7 @@ using MQContract.Messages;
 using MQContract.Subscriptions;
 using System.Diagnostics;
 using System.Reflection;
+using static MQContract.Connections.ServiceConnectionList;
 
 namespace MQContract.Connections
 {
@@ -58,7 +59,11 @@ namespace MQContract.Connections
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(T), serviceMessage.Header);
             await publishLock.WaitAsync(cancellationToken);
             var results = await connections
-                .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, () => c.MessageServiceConnection.PublishAsync(serviceMessage, cancellationToken)));
+                .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () => {
+                    var result = await c.MessageServiceConnection.PublishAsync(serviceMessage, cancellationToken);
+                    OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, c.MessageServiceConnection, c.ServiceConnectionName);
+                    return result;
+                }));
             publishLock.Release();
             activity?.SetStatus(results.Any(r=>r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
@@ -104,6 +109,7 @@ namespace MQContract.Connections
                     channel,
                     group,
                     synchronous,
+                    conn.ServiceConnectionName,
                     cancellationToken
                 ))
             );
@@ -176,6 +182,7 @@ namespace MQContract.Connections
                        channel,
                        group,
                        synchronous,
+                       conn.ServiceConnectionName,
                        cancellationToken
                     )
                )

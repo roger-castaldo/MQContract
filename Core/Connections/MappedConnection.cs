@@ -82,6 +82,7 @@ namespace MQContract.Connections
                 channel,
                 group,
                 synchronous,
+                connection.ServiceConnectionName,
                 cancellationToken
             );
         }
@@ -94,7 +95,7 @@ namespace MQContract.Connections
             var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), message, false, activity, channel, messageHeader);
             var serviceConnection = await GetConnectionsAsync(serviceMessage.Channel, typeof(T), serviceMessage.Header);
             OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection,serviceConnection.ServiceConnectionName);
-            return await PublishMessageAsync(publishLock, serviceMessage, serviceConnection.MessageServiceConnection, activity, cancellationToken);
+            return await PublishMessageAsync(publishLock, serviceMessage, serviceConnection.MessageServiceConnection, activity, serviceConnection.ServiceConnectionName, cancellationToken);
         }
 
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
@@ -118,20 +119,19 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        private async ValueTask<QueryResult<R>> ProcessQueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        async ValueTask<QueryResult<R>> IContractConnection.QueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);
             (var activity, messageHeader) = StartActivity(Constants.PublishQueryActivityName, ActivityKind.Producer, messageHeader, null);
-            var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(MaxMessageBodySize), message, false,activity, channel: channel, messageHeader: messageHeader);
+            var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(MaxMessageBodySize), message, false, activity, channel: channel, messageHeader: messageHeader);
             var serviceConnection = await GetConnectionsAsync(serviceMessage.Channel, typeof(Q), serviceMessage.Header);
-            OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection,serviceConnection.ServiceConnectionName);
-            return await ExecuteQueryAsync<Q, R>(serviceConnection.MessageServiceConnection, serviceMessage,activity, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken);
+            OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
+            return await ExecuteQueryAsync<Q, R>(serviceConnection.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: serviceConnection.ServiceConnectionName, cancellationToken: cancellationToken);
         }
 
-        ValueTask<QueryResult<R>> IContractConnection.QueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
-            => ProcessQueryAsync<Q, R>(message, timeout: timeout, channel: channel, responseChannel: responseChannel, messageHeader: messageHeader, cancellationToken: cancellationToken);
-
+        private static readonly MethodInfo QueryMethod = typeof(IContractConnection).GetMethods()
+            .First(method => Equals(method.Name, nameof(IContractConnection.QueryAsync)) && method.GetGenericArguments().Length==2);
         async ValueTask<QueryResult<object>> IContractConnection.QueryAsync<Q>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader,
             CancellationToken cancellationToken)
         {
@@ -141,9 +141,7 @@ namespace MQContract.Connections
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
             Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {Q} on {Channel} with {ResponseChannel}", responseType, typeof(Q), channel, responseChannel);
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            var methodInfo = typeof(MappedConnection).GetMethod(nameof(MappedConnection.ProcessQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
+            var methodInfo = QueryMethod.MakeGenericMethod(typeof(Q),responseType!);
             try
             {
                 return Utility.ConvertResultFromObject(await Utility.InvokeMethodAsync(
@@ -172,7 +170,7 @@ namespace MQContract.Connections
             var queryMessageFactory = GetMessageFactory<Q>(MaxMessageBodySize, ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<R>(MaxMessageBodySize);
             (var serviceConnection, channel) = await GetConnectionsAsync<Q>(channel, ChannelMapper.MapTypes.QuerySubscription);
-            return await CreateSubscriptionAsync<Q, R>(queryMessageFactory, responseMessageFactory, serviceConnection.MessageServiceConnection, messageReceived, errorReceived, channel, group, synchronous, cancellationToken);
+            return await CreateSubscriptionAsync<Q, R>(queryMessageFactory, responseMessageFactory, serviceConnection.MessageServiceConnection, messageReceived, errorReceived, channel, group, synchronous, serviceConnection.ServiceConnectionName, cancellationToken);
         }
         #endregion
     }

@@ -399,5 +399,193 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
+
+        [TestMethod]
+        public async Task TestQueryAsyncWithTelemetryDataWithoutLinking()
+        {
+            #region Arrange
+            (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
+            var testMessage = new BasicQueryMessage("testMessage");
+            var responseMessage = new BasicResponseMessage("testResponse");
+            var responseChannel = "BasicQuery.Response";
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
+            var acknowledged = false;
+
+
+            var mockSubscription = new Mock<IServiceSubscription>();
+
+            List<ServiceMessage> messages = [];
+            List<Action<ReceivedServiceMessage>> messageActions = [];
+            List<string> channels = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(messageActions), It.IsAny<Action<Exception>>(),
+                Capture.In(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockSubscription.Object);
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
+                {
+                    messages.Add(message);
+                    var resp = new ReceivedServiceMessage(message.ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, message.Header, responseData, () =>
+                    {
+                        acknowledged=true;
+                        return ValueTask.CompletedTask;
+                    });
+                    foreach (var action in messageActions)
+                        action(resp);
+                    return ValueTask.FromResult(new TransmissionResult(message.ID));
+                });
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: false);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, channels.Count);
+            Assert.AreEqual(responseChannel, channels[0]);
+            Assert.AreEqual(1, messages.Count);
+            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.AreEqual(3, messages[0].Header.Keys.Count());
+            Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(responseMessage, result.Result);
+            Assert.IsTrue(acknowledged);
+            Assert.AreEqual(2, capturedActivities.Count);
+            ConnectionHelper.ValidatePublishActivity<BasicQueryMessage>(
+                 messages[0],
+                 capturedActivities[0],
+                 "MQContract.PublishQueryMessage",
+                 serviceConnection.Object.GetType(),
+                 true,
+                 false,
+                 connectionName:ServiceName
+             );
+            ConnectionHelper.ValidateConsumeActivity<BasicResponseMessage>(
+                new ReceivedServiceMessage(messages[0].ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, messages[0].Header, responseData),
+                capturedActivities[1],
+                "MQContract.ConsumeQueryResponse",
+                serviceConnection.Object.GetType(),
+                true,
+                false,
+                connectionName:ServiceName
+            );
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
+               It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockSubscription.Verify(x => x.EndAsync(), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestQueryAsyncWithTelemetryDataWithLinking()
+        {
+            #region Arrange
+            (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
+            var testMessage = new BasicQueryMessage("testMessage");
+            var responseMessage = new BasicResponseMessage("testResponse");
+            var responseChannel = "BasicQuery.Response";
+            using var ms = new MemoryStream();
+            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
+            var acknowledged = false;
+
+
+            var mockSubscription = new Mock<IServiceSubscription>();
+
+            List<ServiceMessage> messages = [];
+            List<Action<ReceivedServiceMessage>> messageActions = [];
+            List<string> channels = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(messageActions), It.IsAny<Action<Exception>>(),
+                Capture.In(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockSubscription.Object);
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
+                {
+                    messages.Add(message);
+                    var resp = new ReceivedServiceMessage(message.ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, message.Header, responseData, () =>
+                    {
+                        acknowledged=true;
+                        return ValueTask.CompletedTask;
+                    });
+                    foreach (var action in messageActions)
+                        action(resp);
+                    return ValueTask.FromResult(new TransmissionResult(message.ID));
+                });
+
+            var contractConnection = ContractConnection.MappedServiceInstance()
+                .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: true);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.IsNull(result.Error);
+            Assert.IsFalse(result.IsError);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(1, channels.Count);
+            Assert.AreEqual(responseChannel, channels[0]);
+            Assert.AreEqual(1, messages.Count);
+            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.AreEqual(5, messages[0].Header.Keys.Count());
+            Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(responseMessage, result.Result);
+            Assert.IsTrue(acknowledged);
+            Assert.AreEqual(2, capturedActivities.Count);
+            ConnectionHelper.ValidatePublishActivity<BasicQueryMessage>(
+                 messages[0],
+                 capturedActivities[0],
+                 "MQContract.PublishQueryMessage",
+                 serviceConnection.Object.GetType(),
+                 true,
+                 true,
+                 connectionName: ServiceName
+             );
+            ConnectionHelper.ValidateConsumeActivity<BasicResponseMessage>(
+                new ReceivedServiceMessage(messages[0].ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, messages[0].Header, responseData),
+                capturedActivities[1],
+                "MQContract.ConsumeQueryResponse",
+                serviceConnection.Object.GetType(),
+                true,
+                true,
+                connectionName: ServiceName
+            );
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
+               It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockSubscription.Verify(x => x.EndAsync(), Times.Once);
+            #endregion
+        }
     }
 }

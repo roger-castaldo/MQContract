@@ -139,6 +139,7 @@
   - [DefaultTimeout](#P-MQContract-Interfaces-Service-IQueryableMessageServiceConnection-DefaultTimeout 'MQContract.Interfaces.Service.IQueryableMessageServiceConnection.DefaultTimeout')
   - [SubscribeQueryAsync(messageReceived,errorReceived,channel,group,cancellationToken)](#M-MQContract-Interfaces-Service-IQueryableMessageServiceConnection-SubscribeQueryAsync-System-Func{MQContract-Messages-ReceivedServiceMessage,System-Threading-Tasks-ValueTask{MQContract-Messages-ServiceMessage}},System-Action{System-Exception},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IQueryableMessageServiceConnection.SubscribeQueryAsync(System.Func{MQContract.Messages.ReceivedServiceMessage,System.Threading.Tasks.ValueTask{MQContract.Messages.ServiceMessage}},System.Action{System.Exception},System.String,System.String,System.Threading.CancellationToken)')
 - [IReceivedMessage\`1](#T-MQContract-Interfaces-IReceivedMessage`1 'MQContract.Interfaces.IReceivedMessage`1')
+  - [Activity](#P-MQContract-Interfaces-IReceivedMessage`1-Activity 'MQContract.Interfaces.IReceivedMessage`1.Activity')
   - [Headers](#P-MQContract-Interfaces-IReceivedMessage`1-Headers 'MQContract.Interfaces.IReceivedMessage`1.Headers')
   - [ID](#P-MQContract-Interfaces-IReceivedMessage`1-ID 'MQContract.Interfaces.IReceivedMessage`1.ID')
   - [Message](#P-MQContract-Interfaces-IReceivedMessage`1-Message 'MQContract.Interfaces.IReceivedMessage`1.Message')
@@ -2532,6 +2533,13 @@ An interface for describing a Message received on a Subscription to be passed in
 | Name | Description |
 | ---- | ----------- |
 | T | The class type of the underlying message |
+
+<a name='P-MQContract-Interfaces-IReceivedMessage`1-Activity'></a>
+### Activity `property`
+
+##### Summary
+
+The Activity, used for OTel associated with this recieved message
 
 <a name='P-MQContract-Interfaces-IReceivedMessage`1-Headers'></a>
 ### Headers `property`

@@ -55,6 +55,7 @@ namespace MQContract.Connections
                 channel,
                 group,
                 synchronous,
+                null,
                 cancellationToken
             );
 
@@ -64,7 +65,7 @@ namespace MQContract.Connections
             Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
             (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader,serviceConnection);
             var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), message, false, activity, channel, messageHeader);
-            return await PublishMessageAsync(publishLock, serviceMessage, serviceConnection, activity, cancellationToken);
+            return await PublishMessageAsync(publishLock, serviceMessage, serviceConnection, activity, null, cancellationToken);
         }
 
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
@@ -135,7 +136,7 @@ namespace MQContract.Connections
             Logger?.LogDebug("Producing QueryResponse Subscription for {Q} responding with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
             var queryMessageFactory = GetMessageFactory<Q>(serviceConnection.MaxMessageBodySize, ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<R>(serviceConnection.MaxMessageBodySize);
-            return await CreateSubscriptionAsync<Q, R>(queryMessageFactory, responseMessageFactory, serviceConnection, messageReceived, errorReceived, channel, group, synchronous, cancellationToken);
+            return await CreateSubscriptionAsync<Q, R>(queryMessageFactory, responseMessageFactory, serviceConnection, messageReceived, errorReceived, channel, group, synchronous, null, cancellationToken);
         }
         #endregion
     }
