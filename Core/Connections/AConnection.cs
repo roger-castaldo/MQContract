@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MQContract.Attributes;
 using MQContract.Factories;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
@@ -10,10 +11,9 @@ using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using MQContract.Middleware;
 using MQContract.Subscriptions;
-using System.Diagnostics.Metrics;
-using MQContract.Attributes;
-using System.Reflection;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Reflection;
 
 namespace MQContract.Connections
 {
@@ -33,13 +33,13 @@ namespace MQContract.Connections
         private readonly List<object> middleware = [new ChannelMappingMiddleware(channelMapper)];
         private readonly SemaphoreSlim inboxSemaphore = new(1, 1);
         private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
-        private readonly Dictionary<string,IServiceSubscription> inboxSubscriptions = [];
+        private readonly Dictionary<string, IServiceSubscription> inboxSubscriptions = [];
         private IEnumerable<IMessageTypeFactory> typeFactories = [];
         private readonly List<ISubscription> consumerSubscriptions = [];
         protected ILogger? Logger => logger;
-        protected IDisposable? SetScope(string? messageID=null) => logger?.BeginScope<string>($"Connection[{indentifier}]{(messageID==null ? "" : $"|Message[{messageID}]")}");
+        protected IDisposable? SetScope(string? messageID = null) => logger?.BeginScope<string>($"Connection[{indentifier}]{(messageID==null ? "" : $"|Message[{messageID}]")}");
 
-        protected IMessageFactory<T> GetMessageFactory<T>(uint? maxMessageBodySize,bool ignoreMessageHeader = false)
+        protected IMessageFactory<T> GetMessageFactory<T>(uint? maxMessageBodySize, bool ignoreMessageHeader = false)
         {
             using var scope = SetScope();
             logger?.LogInformation("Obtaining message factory for {Type}", typeof(T));
@@ -158,22 +158,22 @@ namespace MQContract.Connections
             return (message, messageHeader);
         }
 
-        protected async ValueTask<ServiceMessage> ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, T message, bool ignoreChannel,Activity? activity, string? channel = null, MessageHeader? messageHeader = null)
+        protected async ValueTask<ServiceMessage> ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, T message, bool ignoreChannel, Activity? activity, string? channel = null, MessageHeader? messageHeader = null)
         {
             using var scope = SetScope();
             logger?.LogDebug("Producing Service Message for message of type {Type}", typeof(T));
-            var context = new Context(mapType,activity);
+            var context = new Context(mapType, activity);
             (message, channel, messageHeader) = await BeforeMessageEncodeAsync<T>(context, message, channel??messageFactory.MessageChannel, messageHeader??new([]));
             return await AfterMessageEncodeAsync<T>(context,
                 await messageFactory.ConvertMessageAsync(message, ignoreChannel, channel, messageHeader)
             );
         }
-        
-        protected async ValueTask<(T message, MessageHeader header)> DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, ReceivedServiceMessage message,Activity? activity)
+
+        protected async ValueTask<(T message, MessageHeader header)> DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, ReceivedServiceMessage message, Activity? activity)
         {
             using var scope = SetScope(message.ID);
             logger?.LogDebug("Decoding Service Message message of type {Type}", typeof(T));
-            var context = new Context(mapType,activity);
+            var context = new Context(mapType, activity);
             (var messageHeader, var data) = await BeforeMessageDecodeAsync(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
             var taskMessage = await messageFactory.ConvertMessageAsync(logger, new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, messageHeader, data, message.Acknowledge))
                                 ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
@@ -192,7 +192,7 @@ namespace MQContract.Connections
             ActivitySource = new(activitySource);
             LinkActivitiesAcrossSystems=linkActivitiesAcrossSystems;
             dataLock.Wait();
-            middleware.Insert(0,new OpenTelemetryMiddleware());
+            middleware.Insert(0, new OpenTelemetryMiddleware());
             dataLock.Release();
             return (CC)(IBaseContractConnection)this;
         }
@@ -282,7 +282,7 @@ namespace MQContract.Connections
         ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryAsyncResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            logger?.LogDebug("Creating QueryResponse subscription for message query {Q} and response {R} on channel {Channel} in group {Group}", typeof(Q),typeof(R), channel, group);
+            logger?.LogDebug("Creating QueryResponse subscription for message query {Q} and response {R} on channel {Channel} in group {Group}", typeof(Q), typeof(R), channel, group);
             return ProduceSubscribeQueryResponseAsync<Q, R>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, false, cancellationToken);
         }
 
@@ -299,7 +299,7 @@ namespace MQContract.Connections
         #endregion
 
         #region PubSub
-        protected async ValueTask<TransmissionResult> PublishMessageAsync(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection,Activity? activity,string? connectionName, CancellationToken cancellationToken)
+        protected async ValueTask<TransmissionResult> PublishMessageAsync(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
         {
             await publishLock.WaitAsync(cancellationToken);
             var result = await serviceConnection.PublishAsync(
@@ -312,7 +312,7 @@ namespace MQContract.Connections
             activity?.Stop();
             return result;
         }
-        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> serviceMessages,IMessageServiceConnection serviceConnection,Activity? activity,CancellationToken cancellationToken)
+        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken)
         {
             IEnumerable<TransmissionResult> result;
             using var scope = SetScope();
@@ -336,7 +336,8 @@ namespace MQContract.Connections
             {
                 logger?.LogInformation("Executing bulk publish against a service connection that does not support bulk publish");
                 result = await serviceMessages
-                    .WhenAll(async message => {
+                    .WhenAll(async message =>
+                    {
                         var result = await serviceConnection.PublishAsync(message, cancellationToken);
                         activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
                             new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",false),
@@ -359,7 +360,7 @@ namespace MQContract.Connections
             var subscription = new PubSubSubscription<T>(
                 async (serviceMessage) =>
                 {
-                    (var activity,_) = StartActivity(Constants.ConsumeActivityName, ActivityKind.Consumer,serviceMessage.Header,serviceConnection, serviceConnectionName);
+                    (var activity, _) = StartActivity(Constants.ConsumeActivityName, ActivityKind.Consumer, serviceMessage.Header, serviceConnection, serviceConnectionName);
                     try
                     {
                         (var taskMessage, var messageHeader) = await DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes.PublishSubscription, messageFactory, serviceMessage, activity);
@@ -387,10 +388,10 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        private async ValueTask<ServiceQueryResult> ProcessInboxMessageAsync(string? connectionName,IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
+        private async ValueTask<ServiceQueryResult> ProcessInboxMessageAsync(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
         {
             using var scope = SetScope(serviceMessage.ID);
-            logger?.LogDebug("Establishing an instance of Inbox Message style handling for a QueryResponse call on {ConnectionName}",connectionName);
+            logger?.LogDebug("Establishing an instance of Inbox Message style handling for a QueryResponse call on {ConnectionName}", connectionName);
             var messageID = Guid.NewGuid();
             logger?.LogInformation("Setting up Inbox Message listener with {CorrelationID}", messageID);
             await inboxSemaphore.WaitAsync(cancellationToken);
@@ -425,7 +426,8 @@ namespace MQContract.Connections
             inboxSemaphore.Release();
             using var token = new CancellationTokenSource();
             var reg = cancellationToken.Register(() => token.Cancel());
-            token.Token.Register(async () => {
+            token.Token.Register(async () =>
+            {
                 await reg.DisposeAsync();
                 if (!tcs.Task.IsCompleted)
                 {
@@ -460,7 +462,7 @@ namespace MQContract.Connections
             }
             return tcs.Task.Result;
         }
-        protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize,ServiceQueryResult queryResult,IMessageServiceConnection serviceConnection, string? serviceConnectionName,string responseChannel="")
+        protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize, ServiceQueryResult queryResult, IMessageServiceConnection serviceConnection, string? serviceConnectionName, string responseChannel = "")
         {
             using var scope = SetScope(queryResult.ID);
             logger?.LogDebug("Attempting to produce a Query Result of {R} from the Service Message of the type {MessageTypeID}", typeof(R), queryResult.MessageTypeID);
@@ -468,7 +470,7 @@ namespace MQContract.Connections
             (var activity, _) = StartActivity(Constants.ConsumeQueryResponseActivityName, ActivityKind.Consumer, queryResult.Header, serviceConnection, serviceConnectionName);
             try
             {
-                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(ChannelMapper.MapTypes.QueryResponse, GetMessageFactory<R>(maxMessageBodySize, true), new(queryResult.ID, queryResult.MessageTypeID, responseChannel, queryResult.Header, queryResult.Data),activity);
+                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(ChannelMapper.MapTypes.QueryResponse, GetMessageFactory<R>(maxMessageBodySize, true), new(queryResult.ID, queryResult.MessageTypeID, responseChannel, queryResult.Header, queryResult.Data), activity);
                 result = new QueryResult<R>(
                     queryResult.ID,
                     messageHeader,
@@ -500,7 +502,7 @@ namespace MQContract.Connections
             return result;
         }
 
-        protected async ValueTask<QueryResult<R>> ExecuteQueryAsync<Q,R>(IMessageServiceConnection serviceConnection, ServiceMessage serviceMessage, Activity? activity, TimeSpan? timeout = null, string? responseChannel = null,string? connectionName = null, CancellationToken cancellationToken = new CancellationToken())
+        protected async ValueTask<QueryResult<R>> ExecuteQueryAsync<Q, R>(IMessageServiceConnection serviceConnection, ServiceMessage serviceMessage, Activity? activity, TimeSpan? timeout = null, string? responseChannel = null, string? connectionName = null, CancellationToken cancellationToken = new CancellationToken())
         {
             using var scope = SetScope(serviceMessage.ID);
             logger?.LogDebug("Attempting to execute a Query of {Q} with a response {R}", typeof(Q), typeof(R));
@@ -527,7 +529,7 @@ namespace MQContract.Connections
                     logger?.LogInformation("Executing a QueryResponse call on an InboxQuery service connection");
                     return await ProduceResultAsync<R>(
                         serviceConnection.MaxMessageBodySize,
-                        await ProcessInboxMessageAsync(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout,activity, cancellationToken),
+                        await ProcessInboxMessageAsync(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, activity, cancellationToken),
                         serviceConnection,
                         connectionName
                     );
@@ -535,7 +537,7 @@ namespace MQContract.Connections
                 logger?.LogInformation("Executing a QueryResponse call on a standard PubSub service connection using {ResponseChannel}", responseChannel);
                 return await ProcessPubSubQuery<Q, R>(serviceConnection, connectionName, responseChannel, realTimeout, serviceMessage, activity, cancellationToken);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 if (ex is QuerySubmissionFailedException || ex is QueryTimeoutException || ex is QueryExecutionFailedException)
                     activity?.SetStatus(ActivityStatusCode.Error);
@@ -543,7 +545,7 @@ namespace MQContract.Connections
             }
         }
 
-        protected async ValueTask<QueryResult<R>> ProcessPubSubQuery<Q, R>(IMessageServiceConnection serviceConnection,string? connectionName, string? responseChannel, TimeSpan? realTimeout, ServiceMessage serviceMessage, Activity? activity, CancellationToken cancellationToken)
+        protected async ValueTask<QueryResult<R>> ProcessPubSubQuery<Q, R>(IMessageServiceConnection serviceConnection, string? connectionName, string? responseChannel, TimeSpan? realTimeout, ServiceMessage serviceMessage, Activity? activity, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             responseChannel ??=typeof(Q).GetCustomAttribute<QueryResponseChannelAttribute>()?.Name;
@@ -552,7 +554,7 @@ namespace MQContract.Connections
             var replyChannel = await MapChannel(ChannelMapper.MapTypes.QueryResponse, responseChannel!);
             logger?.LogInformation("QueryResponse reply channel mapped to {ReplyChannel}", replyChannel);
             var callID = Guid.NewGuid();
-            logger?.LogInformation("Starting Response listener for Query over PubSub waiting on a message with {CallID}",callID);
+            logger?.LogInformation("Starting Response listener for Query over PubSub waiting on a message with {CallID}", callID);
             var (tcs, token) = await QueryResponseHelper.StartResponseListenerAsync(
                 serviceConnection,
                 realTimeout??TimeSpan.FromMinutes(1),
@@ -582,9 +584,9 @@ namespace MQContract.Connections
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
             }
-            return await ProduceResultAsync<R>(serviceConnection.MaxMessageBodySize, tcs.Task.Result,serviceConnection,connectionName,responseChannel:responseChannel);
+            return await ProduceResultAsync<R>(serviceConnection.MaxMessageBodySize, tcs.Task.Result, serviceConnection, connectionName, responseChannel: responseChannel);
         }
-        protected async ValueTask<ISubscription> CreateSubscriptionAsync<Q, R>(IMessageFactory<Q> queryMessageFactory,IMessageFactory<R> responseMessageFactory, IMessageServiceConnection serviceConnection,
+        protected async ValueTask<ISubscription> CreateSubscriptionAsync<Q, R>(IMessageFactory<Q> queryMessageFactory, IMessageFactory<R> responseMessageFactory, IMessageServiceConnection serviceConnection,
             Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, string? serviceConnectionName, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
@@ -592,7 +594,7 @@ namespace MQContract.Connections
             var subscription = new QueryResponseSubscription<Q>(
                 async (message, replyChannel) =>
                 {
-                    (var consumeActivity, _) = StartActivity(Constants.ConsumeQueryActivityName, ActivityKind.Consumer, message.Header,serviceConnection,serviceConnectionName);
+                    (var consumeActivity, _) = StartActivity(Constants.ConsumeQueryActivityName, ActivityKind.Consumer, message.Header, serviceConnection, serviceConnectionName);
                     Q? taskMessage;
                     MessageHeader? messageHeader;
                     try
@@ -604,14 +606,14 @@ namespace MQContract.Connections
                             consumeActivity
                         );
                     }
-                    catch 
+                    catch
                     {
                         consumeActivity?.SetStatus(ActivityStatusCode.Error);
                         throw;
                     }
                     consumeActivity?.SetStatus(ActivityStatusCode.Ok);
                     var result = await messageReceived(new ReceivedMessage<Q>(message.ID, taskMessage!, messageHeader, message.ReceivedTimestamp, DateTime.Now, consumeActivity));
-                    (var responseActivity, var headers) = StartActivity(Constants.ProduceQueryResponseActivityName, ActivityKind.Producer, new(result.Headers),serviceConnection,serviceConnectionName,consumeActivity);
+                    (var responseActivity, var headers) = StartActivity(Constants.ProduceQueryResponseActivityName, ActivityKind.Producer, new(result.Headers), serviceConnection, serviceConnectionName, consumeActivity);
                     try
                     {
                         var response = await ProduceServiceMessageAsync<R>(
@@ -624,7 +626,7 @@ namespace MQContract.Connections
                             headers
                         );
                         responseActivity?.SetStatus(ActivityStatusCode.Ok);
-                        return (response,responseActivity);
+                        return (response, responseActivity);
                     }
                     catch
                     {
@@ -658,7 +660,7 @@ namespace MQContract.Connections
                 var inboxSubscription = inboxSubscriptions[key];
                 await inboxSubscription.EndAsync();
             }
-            foreach(var consumerSubscription in consumerSubscriptions)
+            foreach (var consumerSubscription in consumerSubscriptions)
                 await consumerSubscription.EndAsync();
             consumerSubscriptions.Clear();
             inboxSemaphore.Release();
@@ -703,7 +705,7 @@ namespace MQContract.Connections
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
             await inboxSemaphore.WaitAsync();
-            foreach(var key in inboxSubscriptions.Keys)
+            foreach (var key in inboxSubscriptions.Keys)
             {
                 var inboxSubscription = inboxSubscriptions[key];
                 if (inboxSubscription is IAsyncDisposable asyncSubDisposable)

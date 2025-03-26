@@ -695,7 +695,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .EnableOpenTelemetry(linkActivitiesAcrossSystems:false);
+                .EnableOpenTelemetry(linkActivitiesAcrossSystems: false);
             #endregion
 
             #region Act
@@ -714,7 +714,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
-            Assert.AreEqual(1,capturedActivities.Count);
+            Assert.AreEqual(1, capturedActivities.Count);
             ConnectionHelper.ValidatePublishActivity<BasicMessage>(
                 messages[0],
                 capturedActivities[0],
@@ -734,8 +734,8 @@ namespace AutomatedTesting.ConnectionTests.SingleService
         public async Task TestPublishAsyncWithTelemetryDataWithLinking()
         {
             #region Arrange
-            (var listener,var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
-            
+            (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
+
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new BasicMessage("testMessage");
@@ -747,7 +747,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource:sourceName, linkActivitiesAcrossSystems: true);
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: true);
             #endregion
 
             #region Act
@@ -768,7 +768,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(1, capturedActivities.Count);
             ConnectionHelper.ValidatePublishActivity<BasicMessage>(
-                messages[0], 
+                messages[0],
                 capturedActivities[0],
                 "MQContract.PublishMessage",
                 serviceConnection.Object.GetType(),
@@ -786,9 +786,9 @@ namespace AutomatedTesting.ConnectionTests.SingleService
         public async Task TestPublishAsyncWithTelemetryDataWithFailedPublish()
         {
             #region Arrange
-            (var listener,var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
+            (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
 
-            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(),Error:"Failed");
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: "Failed");
 
             var testMessage = new BasicMessage("testMessage");
 

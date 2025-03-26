@@ -12,7 +12,7 @@ namespace MQContract.AzureServiceBus
     /// In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
     /// with RequiresSession as true
     /// </remarks>
-    public sealed class Connection(ServiceBusClient client) : IInboxQueryableMessageServiceConnection,IBulkPublishableMessageServiceConnection, IDisposable
+    public sealed class Connection(ServiceBusClient client) : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection, IDisposable
     {
         private const string INBOX_CHANNEL_NAME = "QueryResponse.Inbox";
         private readonly SemaphoreSlim locker = new(1, 1);
@@ -38,10 +38,10 @@ namespace MQContract.AzureServiceBus
         private static ServiceBusMessage ConvertMessage(ServiceMessage message)
         {
             var result = new ServiceBusMessage(message.Data);
-            foreach(var k in message.Header.Keys)
+            foreach (var k in message.Header.Keys)
             {
                 if (message.Header[k]!=null)
-                    result.ApplicationProperties.Add(k,message.Header[k]);
+                    result.ApplicationProperties.Add(k, message.Header[k]);
             }
             result.MessageId = message.ID;
             result.Subject=message.MessageTypeID;
@@ -52,14 +52,14 @@ namespace MQContract.AzureServiceBus
         {
             var headers = new Dictionary<string, string?>();
             foreach (var key in message.ApplicationProperties.Keys)
-                headers.Add(key,(string?)message.ApplicationProperties[key]);
+                headers.Add(key, (string?)message.ApplicationProperties[key]);
             return new(
                 message.MessageId,
                 message.Subject,
                 channel,
                 new MessageHeader(headers),
                 message.Body.ToArray(),
-                async ()=>await acknowledge()
+                async () => await acknowledge()
             );
         }
 
@@ -69,7 +69,8 @@ namespace MQContract.AzureServiceBus
             try
             {
                 await sender.SendMessageAsync(ConvertMessage(message), cancellationToken);
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
                 return new(message.ID, e.Message);
             }
@@ -80,7 +81,7 @@ namespace MQContract.AzureServiceBus
         {
             await using var sender = client.CreateSender(messages.First().Channel);
             using var messageBatch = await sender.CreateMessageBatchAsync();
-            foreach(var message in messages)
+            foreach (var message in messages)
             {
                 if (!messageBatch.TryAddMessage(ConvertMessage(message)))
                     throw new Exception($"The bulk messages are too large for a batch.");
@@ -88,7 +89,8 @@ namespace MQContract.AzureServiceBus
             try
             {
                 await sender.SendMessagesAsync(messageBatch);
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
                 return messages.Select(m => new TransmissionResult(m.ID, e.Message));
             }
@@ -101,7 +103,8 @@ namespace MQContract.AzureServiceBus
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => await StartServiceSubscriptionAsync(new Subscription(
                 client,
-                (msg,acknowledge) => {
+                (msg, acknowledge) =>
+                {
                     messageReceived(ConvertMessage(msg, channel, acknowledge));
                     return ValueTask.CompletedTask;
                 },
@@ -113,8 +116,9 @@ namespace MQContract.AzureServiceBus
         async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
             => await StartServiceSubscriptionAsync(new Subscription(
                 client,
-                (msg, acknowledge) => {
-                    var result = ConvertMessage(msg,INBOX_CHANNEL_NAME,acknowledge);
+                (msg, acknowledge) =>
+                {
+                    var result = ConvertMessage(msg, INBOX_CHANNEL_NAME, acknowledge);
                     messageReceived(new ReceivedInboxServiceMessage(
                         result.ID,
                         result.MessageTypeID,
@@ -152,7 +156,8 @@ namespace MQContract.AzureServiceBus
         async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => await StartServiceSubscriptionAsync(new Subscription(
                 client,
-                async (msg, acknowledge) => {
+                async (msg, acknowledge) =>
+                {
                     var result = ConvertMessage(msg, INBOX_CHANNEL_NAME, acknowledge);
                     var response = await messageReceived(new ReceivedInboxServiceMessage(
                         result.ID,

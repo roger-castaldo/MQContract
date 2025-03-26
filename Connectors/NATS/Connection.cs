@@ -13,7 +13,7 @@ namespace MQContract.NATS
     /// <summary>
     /// This is the MessageServiceConnection implementation for using NATS.io
     /// </summary>
-    public sealed class Connection : IQueryResponseMessageServiceConnection,IPingableMessageServiceConnection, IAsyncDisposable,IDisposable
+    public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable, IDisposable
     {
         private const string MESSAGE_IDENTIFIER_HEADER = "_MessageID";
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
@@ -71,7 +71,7 @@ namespace MQContract.NATS
         /// <param name="streamConfig">The configuration settings for the stream</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The stream creation result</returns>
-        public ValueTask<INatsJSStream> CreateStreamAsync(StreamConfig streamConfig,CancellationToken cancellationToken = default)
+        public ValueTask<INatsJSStream> CreateStreamAsync(StreamConfig streamConfig, CancellationToken cancellationToken = default)
             => natsJSContext.CreateStreamAsync(streamConfig, cancellationToken);
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace MQContract.NATS
 
         internal static NatsHeaders ExtractHeader(ServiceMessage message)
             => new(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>(
-                message.Header.Keys.Select(k=>
+                message.Header.Keys.Select(k =>
                     new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
                         k,
                         new Microsoft.Extensions.Primitives.StringValues(message.Header[k]))
@@ -106,7 +106,7 @@ namespace MQContract.NATS
                 ])
             ));
 
-        internal static MessageHeader ExtractHeader(NatsHeaders? header,out string? messageID,out string? messageTypeID)
+        internal static MessageHeader ExtractHeader(NatsHeaders? header, out string? messageID, out string? messageTypeID)
         {
             if (header?.TryGetValue(MESSAGE_IDENTIFIER_HEADER, out var mid)??false)
                 messageID = mid.ToString();
@@ -117,15 +117,15 @@ namespace MQContract.NATS
             else
                 messageTypeID=null;
             return new MessageHeader(header?
-                .Where(pair=>!Equals(pair.Key,MESSAGE_IDENTIFIER_HEADER)&&!Equals(pair.Key,MESSAGE_TYPE_HEADER))
+                .Where(pair => !Equals(pair.Key, MESSAGE_IDENTIFIER_HEADER)&&!Equals(pair.Key, MESSAGE_TYPE_HEADER))
                 .Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value.ToString()))?? []
             );
         }
 
-        internal static NatsHeaders ProduceQueryError(Exception exception,string messageID,out byte[] data)
+        internal static NatsHeaders ProduceQueryError(Exception exception, string messageID, out byte[] data)
         {
             data = UTF8Encoding.UTF8.GetBytes(exception.Message);
-            return new(new Dictionary<string,Microsoft.Extensions.Primitives.StringValues>([
+            return new(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>([
                     new KeyValuePair<string,Microsoft.Extensions.Primitives.StringValues>(MESSAGE_IDENTIFIER_HEADER,messageID),
                     new KeyValuePair<string,Microsoft.Extensions.Primitives.StringValues>(MESSAGE_TYPE_HEADER,QUERY_RESPONSE_ERROR_TYPE)
             ]));
@@ -143,7 +143,7 @@ namespace MQContract.NATS
                     );
                 return new TransmissionResult(message.ID);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new TransmissionResult(message.ID, ex.Message);
             }
@@ -174,7 +174,7 @@ namespace MQContract.NATS
             SubscriptionBase subscription;
             var isStream = false;
 #pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
-            await foreach(var name in natsJSContext.ListStreamNamesAsync(cancellationToken: cancellationToken))
+            await foreach (var name in natsJSContext.ListStreamNamesAsync(cancellationToken: cancellationToken))
             {
                 if (Equals(channel, name))
                 {
@@ -222,7 +222,7 @@ namespace MQContract.NATS
             sub.Run();
             return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
-        
+
         ValueTask IMessageServiceConnection.CloseAsync()
             => natsConnection.DisposeAsync();
 
@@ -243,7 +243,7 @@ namespace MQContract.NATS
                 disposedValue=true;
             }
         }
-        
+
         void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method

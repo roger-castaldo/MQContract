@@ -5,11 +5,11 @@ using MQContract.Interfaces.Service;
 
 namespace MQContract.HiveMQ
 {
-    internal class Subscription(HiveMQClientOptions clientOptions, Action<MQTT5PublishMessage> messageReceived,string channel, string? group) : IServiceSubscription,IDisposable
+    internal class Subscription(HiveMQClientOptions clientOptions, Action<MQTT5PublishMessage> messageReceived, string channel, string? group) : IServiceSubscription, IDisposable
     {
-        private readonly HiveMQClient client = new(CloneOptions(clientOptions,channel));
+        private readonly HiveMQClient client = new(CloneOptions(clientOptions, channel));
 
-        private static HiveMQClientOptions CloneOptions(HiveMQClientOptions clientOptions,string channel)
+        private static HiveMQClientOptions CloneOptions(HiveMQClientOptions clientOptions, string channel)
         {
             var result = new HiveMQClientOptions();
             foreach (var prop in typeof(HiveMQClientOptions).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Where(p => !Equals(p.Name, nameof(clientOptions.ClientId))))

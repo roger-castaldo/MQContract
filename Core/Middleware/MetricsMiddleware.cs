@@ -8,7 +8,7 @@ using System.Threading.Channels;
 
 namespace MQContract.Middleware
 {
-    internal class MetricsMiddleware : IBeforeEncodeMiddleware, IAfterEncodeMiddleware,IBeforeDecodeMiddleware,IAfterDecodeMiddleware
+    internal class MetricsMiddleware : IBeforeEncodeMiddleware, IAfterEncodeMiddleware, IBeforeDecodeMiddleware, IAfterDecodeMiddleware
     {
         private const string StopWatchKey = "_MetricStopwatch";
         private const string MessageReceivedChannelKey = "_MetricMessageReceivedChannel";
@@ -18,7 +18,7 @@ namespace MQContract.Middleware
         private readonly InternalMetricTracker? internalTracker;
         private readonly Channel<MetricEntryValue> channel = Channel.CreateUnbounded<MetricEntryValue>();
 
-        public MetricsMiddleware(Meter? meter,bool useInternal)
+        public MetricsMiddleware(Meter? meter, bool useInternal)
         {
             if (meter!=null)
                 systemTracker=new(meter!);
@@ -48,11 +48,11 @@ namespace MQContract.Middleware
         public IContractMetric? GetSnapshot(Type messageType, bool sent)
             => internalTracker?.GetSnapshot(messageType, sent);
         public IContractMetric? GetSnapshot(string channel, bool sent)
-            => internalTracker?.GetSnapshot(channel,sent);
+            => internalTracker?.GetSnapshot(channel, sent);
 
         private async ValueTask AddStat(Type messageType, string? channel, bool sending, int messageSize, Stopwatch? stopWatch)
             => await this.channel.Writer.WriteAsync(new(messageType, channel, sending, messageSize, stopWatch?.Elapsed??TimeSpan.Zero));
-        
+
         public async ValueTask<(T message, MessageHeader messageHeader)> AfterMessageDecodeAsync<T>(IContext context, T message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
         {
             var stopWatch = (Stopwatch?)context[StopWatchKey];
@@ -61,19 +61,19 @@ namespace MQContract.Middleware
             context[StopWatchKey]=null;
             context[MessageReceivedChannelKey]=null;
             context[MessageReceivedSizeKey]=null;
-            return (message,messageHeader);
+            return (message, messageHeader);
         }
 
         public async ValueTask<ServiceMessage> AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
         {
             var stopWatch = (Stopwatch?)context[StopWatchKey];
             stopWatch?.Stop();
-            await AddStat(messageType, message.Channel,true,message.Data.Length,stopWatch);
+            await AddStat(messageType, message.Channel, true, message.Data.Length, stopWatch);
             context[StopWatchKey] = null;
             return message;
         }
 
-        public ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID,string messageChannel, ReadOnlyMemory<byte> data)
+        public ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
         {
             context[MessageReceivedChannelKey] = messageChannel;
             context[MessageReceivedSizeKey] = data.Length;

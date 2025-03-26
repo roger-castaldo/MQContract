@@ -5,7 +5,7 @@ using MQContract.Messages;
 
 namespace MQContract.GooglePubSub
 {
-    internal class Subscription(SubscriberServiceApiClient subscriberClientApi, SubscriptionName subscriptionName, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel) : IServiceSubscription,IAsyncDisposable
+    internal class Subscription(SubscriberServiceApiClient subscriberClientApi, SubscriptionName subscriptionName, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel) : IServiceSubscription, IAsyncDisposable
     {
         protected readonly CancellationTokenSource cancelToken = new();
         private bool disposedValue;

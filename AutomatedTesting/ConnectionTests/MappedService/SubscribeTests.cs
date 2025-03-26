@@ -1,10 +1,10 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
 using MQContract;
-using System.Diagnostics;
-using MQContract.Interfaces.Service;
+using MQContract.Attributes;
 using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace AutomatedTesting.ConnectionTests.MappedService
@@ -35,7 +35,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
-                    var rmessage = Helper.ProduceReceivedServiceMessage(message, acknowledge:() =>
+                    var rmessage = Helper.ProduceReceivedServiceMessage(message, acknowledge: () =>
                     {
                         acknowledged=true;
                         return ValueTask.CompletedTask;
@@ -49,7 +49,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -110,7 +110,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -145,7 +145,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -177,7 +177,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -205,7 +205,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((IServiceSubscription?)null);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -236,7 +236,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -268,7 +268,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -297,7 +297,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -327,7 +327,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.As<IServiceSubscription>().Object);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -376,7 +376,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var message2 = new BasicMessage("TestSubscribeAsyncWithSynchronousActions2");
             var exception = new NullReferenceException("TestSubscribeAsyncWithSynchronousActions");
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -457,7 +457,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -523,7 +523,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -588,7 +588,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -674,7 +674,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -750,7 +750,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var message = new NoChannelMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -826,7 +826,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var message = new BasicQueryMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -889,7 +889,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () =>  _ = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
+            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () => _ = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
             {
                 return ValueTask.CompletedTask;
             }, (error) => { }

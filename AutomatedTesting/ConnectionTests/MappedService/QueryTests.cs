@@ -45,7 +45,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -100,7 +100,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -157,7 +157,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             var messageHeader = new MessageHeader([new("testing", "testing")]);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -215,7 +215,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -272,7 +272,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(37);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -466,7 +466,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -521,7 +521,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -576,7 +576,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -690,7 +690,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -802,7 +802,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -849,7 +849,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.MaxMessageBodySize)
                 .Returns(1);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -895,7 +895,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -966,7 +966,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -1011,7 +1011,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -1051,7 +1051,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act

@@ -1,12 +1,11 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
 using MQContract;
-using System.Diagnostics;
-using MQContract.Interfaces.Service;
+using MQContract.Attributes;
 using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
+using System.Diagnostics;
 using System.Reflection;
-using MQContract.Messages;
 
 namespace AutomatedTesting.ConnectionTests.SingleService
 {
@@ -908,7 +907,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource:sourceName, linkActivitiesAcrossSystems: withLinking);
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
             #endregion
 
             #region Act

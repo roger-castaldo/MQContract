@@ -1,12 +1,12 @@
 ﻿using AutomatedTesting.Messages;
+using Castle.Core.Internal;
 using Moq;
+using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
-using MQContract;
 using System.Diagnostics;
-using System.Text.Json;
 using System.Reflection;
-using Castle.Core.Internal;
+using System.Text.Json;
 
 namespace AutomatedTesting.ConnectionTests.MappedService
 {
@@ -55,7 +55,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -123,7 +123,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -197,7 +197,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -262,7 +262,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -308,7 +308,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult<IServiceSubscription?>(null));
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -337,7 +337,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult<IServiceSubscription?>(null));
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -381,7 +381,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -475,7 +475,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                  serviceConnection.Object.GetType(),
                  true,
                  withLinking,
-                 connectionName:ServiceName
+                 connectionName: ServiceName
              );
             ConnectionHelper.ValidateConsumeActivity<BasicResponseMessage>(
                 new ReceivedServiceMessage(messages[0].ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, messages[0].Header, responseData),
@@ -484,7 +484,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 serviceConnection.Object.GetType(),
                 true,
                 withLinking,
-                connectionName:ServiceName
+                connectionName: ServiceName
             );
             #endregion
 

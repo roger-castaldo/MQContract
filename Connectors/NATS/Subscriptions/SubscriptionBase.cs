@@ -4,7 +4,7 @@ using NATS.Client.JetStream;
 
 namespace MQContract.NATS.Subscriptions
 {
-    internal abstract class SubscriptionBase() : IInternalServiceSubscription,IDisposable
+    internal abstract class SubscriptionBase() : IInternalServiceSubscription, IDisposable
     {
         private readonly CancellationTokenSource CancelTokenSource = new();
         private bool disposedValue;
@@ -49,7 +49,7 @@ namespace MQContract.NATS.Subscriptions
             {
                 if (disposing&&!CancelTokenSource.IsCancellationRequested)
                     CancelTokenSource.Cancel();
-                
+
                 CancelTokenSource.Dispose();
                 disposedValue=true;
             }

@@ -1,9 +1,9 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
-using MQContract.Interfaces.Service;
-using MQContract.Interfaces;
 using MQContract;
+using MQContract.Attributes;
+using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -136,7 +136,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
-            var error = await Assert.ThrowsExceptionAsync<QueryTimeoutException>(async()=> _ = await contractConnection.QueryAsync<BasicQueryMessage>(message,timeout:TimeSpan.FromSeconds(2)));
+            var error = await Assert.ThrowsExceptionAsync<QueryTimeoutException>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, timeout: TimeSpan.FromSeconds(2)));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 

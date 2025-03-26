@@ -2,10 +2,10 @@
 
 namespace MQContract.ActiveMQ
 {
-    internal class ConsumerInstance(string channel,string group, IMessageConsumer messageConsumer,Action cleanup)
+    internal class ConsumerInstance(string channel, string group, IMessageConsumer messageConsumer, Action cleanup)
     {
         public string Channel => channel;
-        public string Group =>group;
+        public string Group => group;
 
         private int listenerCount = 1;
 

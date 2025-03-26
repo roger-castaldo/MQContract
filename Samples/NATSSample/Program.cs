@@ -2,11 +2,11 @@
 using MQContract;
 using MQContract.NATS;
 using NATS.Client.JetStream.Models;
-using OpenTelemetry.Resources;
 using OpenTelemetry;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 
 var serviceName = "MQContract";

@@ -2,7 +2,7 @@
 
 namespace MQContract.InMemory
 {
-    internal class MessageGroup(string group,Action<MessageGroup> removeMe) 
+    internal class MessageGroup(string group, Action<MessageGroup> removeMe)
     {
         private readonly ReaderWriterLockSlim locker = new();
         private readonly List<Channel<InternalServiceMessage>> channels = [];
@@ -11,7 +11,7 @@ namespace MQContract.InMemory
 
         public Channel<InternalServiceMessage> Register()
         {
-            var result = Channel.CreateUnbounded<InternalServiceMessage>(new UnboundedChannelOptions() { SingleReader=true,SingleWriter=true});
+            var result = Channel.CreateUnbounded<InternalServiceMessage>(new UnboundedChannelOptions() { SingleReader=true, SingleWriter=true });
             channels.Add(result);
             return result;
         }

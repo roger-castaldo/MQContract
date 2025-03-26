@@ -37,10 +37,10 @@ namespace MQContract.Connections
             inboxSemaphore.Release();
             return true;
         }
-        
 
-        private static Type GetConsumerInterfaceType(Type consumerType,Type interfaceType)
-            => Array.Find(consumerType.GetInterfaces(),t=>t.IsGenericType && t.GetGenericTypeDefinition() == interfaceType)
+
+        private static Type GetConsumerInterfaceType(Type consumerType, Type interfaceType)
+            => Array.Find(consumerType.GetInterfaces(), t => t.IsGenericType && t.GetGenericTypeDefinition() == interfaceType)
                 ??throw new InvalidConsumerType(consumerType, interfaceType);
 
         private readonly List<Assembly> loadedAssemblies = [];
@@ -48,7 +48,7 @@ namespace MQContract.Connections
         private static Type[] LoadableTypes => [typeof(IPubSubConsumer<>), typeof(IPubSubAsyncConsumer<>),
                     typeof(IQueryResponseConsumer<,>),typeof(IQueryResponseAsyncConsumer<,>)];
 
-        private async Task<bool> LoadConsumersForAssemblyAsync(Assembly assembly,CancellationToken cancellationToken)
+        private async Task<bool> LoadConsumersForAssemblyAsync(Assembly assembly, CancellationToken cancellationToken)
         {
             var process = false;
             await inboxSemaphore.WaitAsync(cancellationToken);
@@ -67,18 +67,20 @@ namespace MQContract.Connections
                         .Where(t => !t.IsInterface && !t.IsAbstract && !(t.FullName?.StartsWith("Castle.Proxies")??false))
                         .ToArray();
                 }
-                catch { 
+                catch
+                {
                     //Ignoring the exception as this is just to prevent a loading issue.
                 }
                 var loadablePairs = types
-                    .Select(consumerType => new { 
-                        ConsumerType=consumerType,
-                        InterfaceType=Array.Find(consumerType.GetInterfaces(),
+                    .Select(consumerType => new
+                    {
+                        ConsumerType = consumerType,
+                        InterfaceType = Array.Find(consumerType.GetInterfaces(),
                             t => t.IsGenericType && LoadableTypes.Contains(t.GetGenericTypeDefinition()))
                     })
-                    .Where(pair=>pair.InterfaceType!=null)
+                    .Where(pair => pair.InterfaceType!=null)
                     .ToArray();
-                foreach(var consumerPair in loadablePairs)
+                foreach (var consumerPair in loadablePairs)
                 {
                     if (Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IPubSubConsumer<>)))
                     {
@@ -103,15 +105,15 @@ namespace MQContract.Connections
             return true;
         }
 
-        async ValueTask<bool> IConsumerContractConnection.AutoRegisterAllConsumersAsync(Assembly? assembly,CancellationToken cancellationToken)
+        async ValueTask<bool> IConsumerContractConnection.AutoRegisterAllConsumersAsync(Assembly? assembly, CancellationToken cancellationToken)
         {
             if (assembly!=null)
-                return await LoadConsumersForAssemblyAsync(assembly!,cancellationToken);
+                return await LoadConsumersForAssemblyAsync(assembly!, cancellationToken);
             else
             {
                 foreach (var asm in AssemblyLoadContext.Default.Assemblies)
                 {
-                    if (!(await LoadConsumersForAssemblyAsync(asm,cancellationToken)))
+                    if (!(await LoadConsumersForAssemblyAsync(asm, cancellationToken)))
                         return false;
                 }
                 return true;
@@ -143,7 +145,7 @@ namespace MQContract.Connections
             );
 
         ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync<T, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => ((IConsumerContractConnection)this).RegisterPubSubConsumerAsync<T,TConsumer>(
+            => ((IConsumerContractConnection)this).RegisterPubSubConsumerAsync<T, TConsumer>(
                 (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
                 channel,
                 group,
@@ -155,7 +157,7 @@ namespace MQContract.Connections
             .First(method => Equals(method.Name, "RegisterPubSubConsumerAsync") && method.GetGenericArguments().Length==2 && method.GetParameters().Length==5);
         ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
-            var ifaceType = GetConsumerInterfaceType(consumerType,typeof(IPubSubConsumer<>));
+            var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IPubSubConsumer<>));
             var methodInfo = RegisterPubSubConsumerMethod.MakeGenericMethod(ifaceType.GetGenericArguments()[0], consumerType);
             return (ValueTask<bool>)methodInfo!.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
@@ -217,9 +219,10 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponseConsumer
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync<Q,R, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync<Q, R, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
             => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<Q, R>(
-                    (message) => {
+                    (message) =>
+                    {
                         message.Activity?.AddTag(ConsumerClassNameKey, consumer.GetType().Name);
                         return ValueTask.FromResult(consumer.MessageReceived(message));
                     },

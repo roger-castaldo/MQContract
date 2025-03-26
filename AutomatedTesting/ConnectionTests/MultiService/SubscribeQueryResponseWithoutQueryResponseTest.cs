@@ -1,9 +1,9 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
-using MQContract.Interfaces.Service;
-using MQContract.Interfaces;
 using MQContract;
+using MQContract.Attributes;
+using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
 using System.Diagnostics;
 using System.Reflection;
 

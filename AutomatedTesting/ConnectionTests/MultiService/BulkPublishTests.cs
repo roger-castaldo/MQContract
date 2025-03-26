@@ -32,7 +32,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.MultiServiceInstance();
-            contractConnection.RegisterServiceConnection(ServiceName,serviceConnection.Object);
+            contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -149,8 +149,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(2, result.Count());
-            Assert.IsTrue(result.All(r=> r.Results.Count()==1));
-            Assert.IsTrue(result.SelectMany(r => r.Results).All(r => !r.IsError && Equals(ServiceName,r.ServiceName)));
+            Assert.IsTrue(result.All(r => r.Results.Count()==1));
+            Assert.IsTrue(result.SelectMany(r => r.Results).All(r => !r.IsError && Equals(ServiceName, r.ServiceName)));
             Assert.AreEqual(testMessages.Count(), messages.Count);
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[1].ID);
@@ -295,7 +295,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
         {
             #region Arrange
             (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
-            
+
             IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
                 (new("testMessage"),null),
                 (new("testMessage2"),null)

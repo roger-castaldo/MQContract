@@ -1,6 +1,6 @@
 ﻿using Moq;
-using MQContract.Interfaces.Service;
 using MQContract;
+using MQContract.Interfaces.Service;
 
 namespace AutomatedTesting.ConnectionTests.MappedService
 {
@@ -17,7 +17,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 .Returns(ValueTask.CompletedTask);
 
             var contractConnection = ContractConnection.MappedServiceInstance()
-                .RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+                .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act

@@ -1,11 +1,11 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
+using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
-using MQContract;
 using System.Diagnostics;
-using System.Text.Json;
 using System.Reflection;
+using System.Text.Json;
 
 namespace AutomatedTesting.ConnectionTests.MappedService
 {
@@ -60,7 +60,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -115,7 +115,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -159,7 +159,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -599,7 +599,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 serviceConnection.Object.GetType(),
                 true,
                 withLinking,
-                connectionName:ServiceName
+                connectionName: ServiceName
             );
             ConnectionHelper.ValidateConsumeActivity<BasicResponseMessage>(
                 queryResult,
@@ -607,7 +607,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 "MQContract.ConsumeQueryResponse",
                 serviceConnection.Object.GetType(),
                 true,
-                connectionName:ServiceName
+                connectionName: ServiceName
             );
             #endregion
 

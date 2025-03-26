@@ -23,7 +23,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Attempting to call Ping against an underlying service connection");
-            var connections = FullList.Select(c=>c.MessageServiceConnection).OfType<IPingableMessageServiceConnection>();
+            var connections = FullList.Select(c => c.MessageServiceConnection).OfType<IPingableMessageServiceConnection>();
             return connections.Count() switch
             {
                 0 => throw new PingNotSupportedException(),
@@ -61,13 +61,13 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Locating a connection for {Channel}, {T} and {MapType}", channel, typeof(T), mapTypes);
-            (var connections,channel) = await base.GetConnectionsAsync<T>(channel, mapTypes);
+            (var connections, channel) = await base.GetConnectionsAsync<T>(channel, mapTypes);
             if (connections.Count()>1)
             {
                 Logger?.LogError("Located more than 1 connection for {Channel}, {T} and {MapType}", channel, typeof(T), mapTypes);
                 throw new TooManyConnectionMatchesException();
             }
-            return (connections.First(),channel);
+            return (connections.First(), channel);
         }
 
         #region PubSub
@@ -91,10 +91,10 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
-            (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader,null);
+            (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader, null);
             var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), message, false, activity, channel, messageHeader);
             var serviceConnection = await GetConnectionsAsync(serviceMessage.Channel, typeof(T), serviceMessage.Header);
-            OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection,serviceConnection.ServiceConnectionName);
+            OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
             return await PublishMessageAsync(publishLock, serviceMessage, serviceConnection.MessageServiceConnection, activity, serviceConnection.ServiceConnectionName, cancellationToken);
         }
 
@@ -105,14 +105,14 @@ namespace MQContract.Connections
             (var activity, var headers) = StartActivity(Constants.BulkPublishActivityName, ActivityKind.Producer, null, null);
             var serviceMessages = await
             messages.WhenAll(m =>
-                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), m.message, false,activity, channel, new(m.messageHeader,headers))
+                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), m.message, false, activity, channel, new(m.messageHeader, headers))
                 );
             var serviceConnection = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(T), serviceMessages.First().Header);
-            OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection,serviceConnection.ServiceConnectionName);
+            OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
             await publishLock.WaitAsync(cancellationToken);
-            var result = await BulkPublishAsync(serviceMessages, serviceConnection.MessageServiceConnection,activity, cancellationToken);
+            var result = await BulkPublishAsync(serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken);
             publishLock.Release();
-            activity?.SetStatus(result.Any(r=>r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
+            activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;
         }
@@ -141,7 +141,7 @@ namespace MQContract.Connections
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
             Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {Q} on {Channel} with {ResponseChannel}", responseType, typeof(Q), channel, responseChannel);
-            var methodInfo = QueryMethod.MakeGenericMethod(typeof(Q),responseType!);
+            var methodInfo = QueryMethod.MakeGenericMethod(typeof(Q), responseType!);
             try
             {
                 return Utility.ConvertResultFromObject(await Utility.InvokeMethodAsync(

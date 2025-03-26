@@ -18,7 +18,7 @@
     /// </summary>
     /// <param name="ID">The unique ID of the message that was transmitted</param>
     /// <param name="Results">Houses all the results from each underlying system connection used</param>
-    public record MultiTransmissionResult(string ID,IEnumerable<ChildTransmissionResult> Results)
+    public record MultiTransmissionResult(string ID, IEnumerable<ChildTransmissionResult> Results)
     {
         /// <summary>
         /// Flag to indicate if there are any errors in the result

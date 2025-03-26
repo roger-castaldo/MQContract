@@ -17,6 +17,6 @@ namespace MQContract.Interfaces.Middleware
         /// <param name="messageChannel">The channel the message was recieved on</param>
         /// <param name="data">The data of the message</param>
         /// <returns>The message header and data to allow for changes if desired</returns>
-        ValueTask<(MessageHeader messageHeader,ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID,string messageChannel, ReadOnlyMemory<byte> data);
+        ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data);
     }
 }

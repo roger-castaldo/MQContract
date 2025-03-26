@@ -15,7 +15,7 @@ namespace MQContract.Connections
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,
-        ChannelMapper? channelMapper = null) : 
+        ChannelMapper? channelMapper = null) :
         AConnection<IContractedConnection>(defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, logger, channelMapper),
         IContractedConnection
     {
@@ -63,7 +63,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
-            (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader,serviceConnection);
+            (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader, serviceConnection);
             var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), message, false, activity, channel, messageHeader);
             return await PublishMessageAsync(publishLock, serviceMessage, serviceConnection, activity, null, cancellationToken);
         }
@@ -76,12 +76,12 @@ namespace MQContract.Connections
             activity?.SetTag(Constants.BulkPublishCountTag, messages.Count());
             var serviceMessages = await
                 messages.WhenAll(m =>
-                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), m.message, false,activity, channel, new(m.messageHeader,headers))
+                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), m.message, false, activity, channel, new(m.messageHeader, headers))
                 );
             await publishLock.WaitAsync(cancellationToken);
-            var result = await BulkPublishAsync(serviceMessages, serviceConnection,activity, cancellationToken);
+            var result = await BulkPublishAsync(serviceMessages, serviceConnection, activity, cancellationToken);
             publishLock.Release();
-            activity?.SetStatus(result.Any(r=>r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
+            activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;
         }

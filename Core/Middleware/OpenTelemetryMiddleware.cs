@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace MQContract.Middleware
 {
-    internal class OpenTelemetryMiddleware() 
+    internal class OpenTelemetryMiddleware()
         : IBeforeEncodeMiddleware, IAfterEncodeMiddleware, IBeforeDecodeMiddleware, IAfterDecodeMiddleware
     {
         public const string KeyBase = "mqcontract";
@@ -20,7 +20,7 @@ namespace MQContract.Middleware
 
         ValueTask<(T message, string? channel, MessageHeader messageHeader)> IBeforeEncodeMiddleware.BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
         {
-            context.Activity?.AddTag(InitialChannelKey,channel);
+            context.Activity?.AddTag(InitialChannelKey, channel);
             context.Activity?.AddTag(MessageTypeClassKey, typeof(T).Name);
             context[StopwatchContextId] = Stopwatch.GetTimestamp();
             return ValueTask.FromResult((message, channel, messageHeader));
@@ -32,7 +32,7 @@ namespace MQContract.Middleware
             context.Activity?.AddTag(TransmissionChannelKey, message.Channel);
             context.Activity?.AddTag(MessageIdKey, message.ID);
             context.Activity?.AddEvent(new("MessageEncoded", tags: new([
-                new(EncodingDurationKey, context[StopwatchContextId]!=null 
+                new(EncodingDurationKey, context[StopwatchContextId]!=null
                     ? $"{Stopwatch.GetElapsedTime((long)context[StopwatchContextId]!).TotalMilliseconds}ms"
                     : "Unknown"
                 ),

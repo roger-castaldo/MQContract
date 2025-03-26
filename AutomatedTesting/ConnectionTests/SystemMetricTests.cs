@@ -1,11 +1,11 @@
 ﻿using AutomatedTesting.Messages;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Moq;
-using MQContract.Interfaces.Service;
 using MQContract;
 using MQContract.Attributes;
-using System.Reflection;
-using Microsoft.Extensions.Diagnostics.Metrics.Testing;
+using MQContract.Interfaces.Service;
 using System.Diagnostics.Metrics;
+using System.Reflection;
 
 namespace AutomatedTesting.ContractConnectionTests
 {
@@ -13,8 +13,8 @@ namespace AutomatedTesting.ContractConnectionTests
     public class SystemMetricTests
     {
         private const string MeterName = "mqcontract";
-        private static (MetricCollector<long> sent,MetricCollector<long> sentBytes,MetricCollector<long> receivedCount,MetricCollector<long> receivedBytes,
-            MetricCollector<double> encodingDuration,MetricCollector<double> decodingDuration) ProduceCollectors(Meter owningMeter,Type? messageType=null,string? channel = null)
+        private static (MetricCollector<long> sent, MetricCollector<long> sentBytes, MetricCollector<long> receivedCount, MetricCollector<long> receivedBytes,
+            MetricCollector<double> encodingDuration, MetricCollector<double> decodingDuration) ProduceCollectors(Meter owningMeter, Type? messageType = null, string? channel = null)
         {
             var template = "messages";
             if (channel!=null)
@@ -22,15 +22,15 @@ namespace AutomatedTesting.ContractConnectionTests
             else if (messageType!=null)
                 template = $"types.{messageType.GetCustomAttributes<MessageNameAttribute>().Select(mn => mn.Value).FirstOrDefault(messageType.Name)}.{messageType.GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0").Replace('.', '_')}";
             return (
-                new MetricCollector<long>(owningMeter,$"{MeterName}.{template}.sent.count"),
+                new MetricCollector<long>(owningMeter, $"{MeterName}.{template}.sent.count"),
                 new MetricCollector<long>(owningMeter, $"{MeterName}.{template}.sent.bytes"),
-                new MetricCollector<long>(owningMeter,$"{MeterName}.{template}.received.count"),
+                new MetricCollector<long>(owningMeter, $"{MeterName}.{template}.received.count"),
                 new MetricCollector<long>(owningMeter, $"{MeterName}.{template}.received.bytes"),
                 new MetricCollector<double>(owningMeter, $"{MeterName}.{template}.encodingduration"),
                 new MetricCollector<double>(owningMeter, $"{MeterName}.{template}.decodingduration")
             );
         }
-        
+
         private static void CheckMeasurement(IReadOnlyList<CollectedMeasurement<long>> readOnlyList, int count, long value)
         {
             Assert.AreEqual(count, readOnlyList.Count);
@@ -58,7 +58,7 @@ namespace AutomatedTesting.ContractConnectionTests
         }
 
         private static void AreMeasurementsEquals(IReadOnlyList<CollectedMeasurement<long>> left, IReadOnlyList<CollectedMeasurement<long>> right)
-            =>Assert.IsTrue(left.Select(v=>v.Value).SequenceEqual(right.Select(v=>v.Value)));
+            => Assert.IsTrue(left.Select(v => v.Value).SequenceEqual(right.Select(v => v.Value)));
 
         private static void AreMeasurementsEquals(IReadOnlyList<CollectedMeasurement<double>> left, IReadOnlyList<CollectedMeasurement<double>> right)
             => Assert.IsTrue(left.Select(v => v.Value).SequenceEqual(right.Select(v => v.Value)));
@@ -119,21 +119,21 @@ namespace AutomatedTesting.ContractConnectionTests
                 });
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .AddMetrics(testMeter,false);
+                .AddMetrics(testMeter, false);
             #endregion
 
             #region Act
             (MetricCollector<long> sent, MetricCollector<long> sentBytes, MetricCollector<long> receivedCount, MetricCollector<long> receivedBytes,
             MetricCollector<double> encodingDuration, MetricCollector<double> decodingDuration) = ProduceCollectors(testMeter);
             (MetricCollector<long> sentType, MetricCollector<long> sentBytesType, MetricCollector<long> receivedCountType, MetricCollector<long> receivedBytesType,
-            MetricCollector<double> encodingDurationType, MetricCollector<double> decodingDurationType) = ProduceCollectors(testMeter,messageType: typeof(BasicMessage));
+            MetricCollector<double> encodingDurationType, MetricCollector<double> decodingDurationType) = ProduceCollectors(testMeter, messageType: typeof(BasicMessage));
             (MetricCollector<long> sentChannel, MetricCollector<long> sentBytesChannel, MetricCollector<long> receivedCountChannel, MetricCollector<long> receivedBytesChannel,
-            MetricCollector<double> encodingDurationChannel, MetricCollector<double> decodingDurationChannel) = ProduceCollectors(testMeter,channel: channel);
+            MetricCollector<double> encodingDurationChannel, MetricCollector<double> decodingDurationChannel) = ProduceCollectors(testMeter, channel: channel);
             _ = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => ValueTask.CompletedTask, 
+                (msg) => ValueTask.CompletedTask,
                 (error) => { },
-                channel:channel);
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage,channel:channel);
+                channel: channel);
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
             _ = await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1));
             await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
             #endregion
@@ -152,8 +152,8 @@ namespace AutomatedTesting.ContractConnectionTests
             AreMeasurementsEquals(sentBytes.GetMeasurementSnapshot(), sentBytesType.GetMeasurementSnapshot());
             AreMeasurementsEquals(receivedCount.GetMeasurementSnapshot(), receivedCountType.GetMeasurementSnapshot());
             AreMeasurementsEquals(receivedBytes.GetMeasurementSnapshot(), receivedBytesType.GetMeasurementSnapshot());
-            AreMeasurementsEquals(encodingDuration.GetMeasurementSnapshot(),encodingDurationType.GetMeasurementSnapshot());
-            AreMeasurementsEquals(decodingDuration.GetMeasurementSnapshot(),decodingDurationType.GetMeasurementSnapshot());
+            AreMeasurementsEquals(encodingDuration.GetMeasurementSnapshot(), encodingDurationType.GetMeasurementSnapshot());
+            AreMeasurementsEquals(decodingDuration.GetMeasurementSnapshot(), decodingDurationType.GetMeasurementSnapshot());
 
             AreMeasurementsEquals(sent.GetMeasurementSnapshot(), sentChannel.GetMeasurementSnapshot());
             AreMeasurementsEquals(sentBytes.GetMeasurementSnapshot(), sentBytesChannel.GetMeasurementSnapshot());
@@ -182,7 +182,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(receivedActions),
                 It.IsAny<Action<Exception>>(),
                 It.IsAny<string>(),
-                It.IsAny<string>(), 
+                It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
@@ -205,17 +205,17 @@ namespace AutomatedTesting.ContractConnectionTests
             (MetricCollector<long> sent, MetricCollector<long> sentBytes, MetricCollector<long> receivedCount, MetricCollector<long> receivedBytes,
             MetricCollector<double> encodingDuration, MetricCollector<double> decodingDuration) = ProduceCollectors(testMeter);
             (MetricCollector<long> sentRequestType, MetricCollector<long> sentBytesRequestType, MetricCollector<long> receivedCountRequestType, MetricCollector<long> receivedBytesRequestType,
-            MetricCollector<double> encodingDurationRequestType, MetricCollector<double> decodingDurationRequestType) = ProduceCollectors(testMeter,messageType: typeof(BasicQueryMessage));
+            MetricCollector<double> encodingDurationRequestType, MetricCollector<double> decodingDurationRequestType) = ProduceCollectors(testMeter, messageType: typeof(BasicQueryMessage));
             (MetricCollector<long> sentResponseType, MetricCollector<long> sentBytesResponseType, MetricCollector<long> receivedCountResponseType, MetricCollector<long> receivedBytesResponseType,
-            MetricCollector<double> encodingDurationResponseType, MetricCollector<double> decodingDurationResponseType) = ProduceCollectors(testMeter,messageType: typeof(BasicResponseMessage));
+            MetricCollector<double> encodingDurationResponseType, MetricCollector<double> decodingDurationResponseType) = ProduceCollectors(testMeter, messageType: typeof(BasicResponseMessage));
             (MetricCollector<long> sentChannel, MetricCollector<long> sentBytesChannel, MetricCollector<long> receivedCountChannel, MetricCollector<long> receivedBytesChannel,
-            MetricCollector<double> encodingDurationChannel, MetricCollector<double> decodingDurationChannel) = ProduceCollectors(testMeter,channel: channel);
+            MetricCollector<double> encodingDurationChannel, MetricCollector<double> decodingDurationChannel) = ProduceCollectors(testMeter, channel: channel);
             _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
             {
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => { },
-            channel:channel);
-            _ = await contractConnection.QueryAsync<BasicQueryMessage>(message,channel:channel);
+            channel: channel);
+            _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, channel: channel);
             await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
             #endregion
 

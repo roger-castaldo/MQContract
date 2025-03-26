@@ -1,10 +1,10 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
 using MQContract;
-using System.Diagnostics;
-using MQContract.Interfaces.Service;
+using MQContract.Attributes;
 using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace AutomatedTesting.ConnectionTests.MultiService

@@ -10,24 +10,24 @@ namespace MQContract.Subscriptions
         private const string REPLY_CHANNEL_HEADER = "_QueryReplyChannel";
         private static readonly string[] REQUIRED_HEADERS = [QUERY_IDENTIFIER_HEADER, REPLY_ID, REPLY_CHANNEL_HEADER];
 
-        public static MessageHeader StripHeaders(ServiceMessage originalMessage,out Guid queryClientID,out Guid replyID,out string? replyChannel)
+        public static MessageHeader StripHeaders(ServiceMessage originalMessage, out Guid queryClientID, out Guid replyID, out string? replyChannel)
         {
             queryClientID = new(originalMessage.Header[QUERY_IDENTIFIER_HEADER]!);
             replyID = new(originalMessage.Header[REPLY_ID]!);
             replyChannel = originalMessage.Header[REPLY_CHANNEL_HEADER];
             return new(originalMessage.Header.Keys
-                .Where(key=>!Equals(key,QUERY_IDENTIFIER_HEADER)
-                && !Equals(key,REPLY_ID)
-                && !Equals(key,REPLY_CHANNEL_HEADER)
-                ).Select(key =>new KeyValuePair<string,string>(key,originalMessage.Header[key]!)));
+                .Where(key => !Equals(key, QUERY_IDENTIFIER_HEADER)
+                && !Equals(key, REPLY_ID)
+                && !Equals(key, REPLY_CHANNEL_HEADER)
+                ).Select(key => new KeyValuePair<string, string>(key, originalMessage.Header[key]!)));
         }
 
-        public static ServiceMessage EncodeMessage(ServiceMessage originalMessage, Guid queryClientID, Guid replyID,string? replyChannel,string? channel)
+        public static ServiceMessage EncodeMessage(ServiceMessage originalMessage, Guid queryClientID, Guid replyID, string? replyChannel, string? channel)
             => new(
                 originalMessage.ID,
                 originalMessage.MessageTypeID,
                 channel??originalMessage.Channel,
-                new(originalMessage.Header,new Dictionary<string, string?>([
+                new(originalMessage.Header, new Dictionary<string, string?>([
                     new KeyValuePair<string,string?>(QUERY_IDENTIFIER_HEADER,queryClientID.ToString()),
                     new KeyValuePair<string,string?>(REPLY_ID,replyID.ToString()),
                     new KeyValuePair<string,string?>(REPLY_CHANNEL_HEADER,replyChannel)
@@ -36,9 +36,9 @@ namespace MQContract.Subscriptions
             );
 
         public static bool IsValidMessage(ReceivedServiceMessage serviceMessage)
-            => Array.TrueForAll(REQUIRED_HEADERS,key=>serviceMessage.Header.Keys.Contains(key));
+            => Array.TrueForAll(REQUIRED_HEADERS, key => serviceMessage.Header.Keys.Contains(key));
 
-        public static async Task<Tuple<TaskCompletionSource<ServiceQueryResult>, CancellationTokenSource>> StartResponseListenerAsync(IMessageServiceConnection connection,TimeSpan timeout,Guid identifier,Guid callID,string replyChannel,CancellationToken cancellationToken)
+        public static async Task<Tuple<TaskCompletionSource<ServiceQueryResult>, CancellationTokenSource>> StartResponseListenerAsync(IMessageServiceConnection connection, TimeSpan timeout, Guid identifier, Guid callID, string replyChannel, CancellationToken cancellationToken)
         {
             var token = new CancellationTokenSource();
             var reg = cancellationToken.Register(() => token.Cancel());
@@ -66,14 +66,15 @@ namespace MQContract.Subscriptions
                 replyChannel,
                 cancellationToken: token.Token
             )??throw new QueryExecutionFailedException();
-            token.Token.Register(async () => {
+            token.Token.Register(async () =>
+            {
                 await consumer.EndAsync();
                 await reg.DisposeAsync();
                 if (!result.Task.IsCompleted)
                     result.TrySetException(new QueryTimeoutException());
             });
             token.CancelAfter(timeout);
-            return new Tuple<TaskCompletionSource<ServiceQueryResult>, CancellationTokenSource>(result,token);
+            return new Tuple<TaskCompletionSource<ServiceQueryResult>, CancellationTokenSource>(result, token);
         }
     }
 }

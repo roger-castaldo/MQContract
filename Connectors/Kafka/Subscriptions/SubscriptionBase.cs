@@ -2,7 +2,7 @@
 
 namespace MQContract.Kafka.Subscriptions
 {
-    internal abstract class SubscriptionBase(Confluent.Kafka.IConsumer<string, byte[]> consumer,string channel) : IServiceSubscription
+    internal abstract class SubscriptionBase(Confluent.Kafka.IConsumer<string, byte[]> consumer, string channel) : IServiceSubscription
     {
         protected readonly Confluent.Kafka.IConsumer<string, byte[]> Consumer = consumer;
         protected readonly string Channel = channel;

@@ -8,7 +8,7 @@
                 await t;
         }
 
-        public static async ValueTask<IEnumerable<R>> WhenAll<T,R>(this IEnumerable<T> items,Func<T,ValueTask<R>> callback)
+        public static async ValueTask<IEnumerable<R>> WhenAll<T, R>(this IEnumerable<T> items, Func<T, ValueTask<R>> callback)
         {
             IEnumerable<R> result = [];
             foreach (var t in items)

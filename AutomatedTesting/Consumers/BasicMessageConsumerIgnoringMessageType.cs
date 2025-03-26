@@ -2,12 +2,11 @@
 using MQContract.Attributes;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
-using System.ComponentModel;
 
 namespace AutomatedTesting.Consumers
 {
     [ConsumerIgnoreMessageHeader(true)]
-    internal class BasicMessageConsumerIgnoringMessageType(List<IReceivedMessage<BasicMessage>> messages,List<Exception> errors) : IPubSubConsumer<BasicMessage>
+    internal class BasicMessageConsumerIgnoringMessageType(List<IReceivedMessage<BasicMessage>> messages, List<Exception> errors) : IPubSubConsumer<BasicMessage>
     {
         public BasicMessageConsumerIgnoringMessageType()
             : this([], []) { }

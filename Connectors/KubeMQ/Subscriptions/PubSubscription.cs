@@ -11,7 +11,7 @@ namespace MQContract.KubeMQ.Subscriptions
     internal class PubSubscription(ConnectionOptions options, KubeClient client,
         Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string group,
         StoredChannelOptions? storageOptions, CancellationToken cancellationToken) :
-        SubscriptionBase<EventReceive>(options.Logger,options.ReconnectInterval,client,errorReceived,cancellationToken)
+        SubscriptionBase<EventReceive>(options.Logger, options.ReconnectInterval, client, errorReceived, cancellationToken)
     {
         private readonly KubeClient Client = client;
 
@@ -33,7 +33,7 @@ namespace MQContract.KubeMQ.Subscriptions
 
         protected override ValueTask MessageReceived(EventReceive message)
         {
-            messageReceived(new(message.EventID,message.Metadata,message.Channel,Connection.ConvertMessageHeader(message.Tags),message.Body.ToArray()));
+            messageReceived(new(message.EventID, message.Metadata, message.Channel, Connection.ConvertMessageHeader(message.Tags), message.Body.ToArray()));
             return ValueTask.CompletedTask;
         }
     }

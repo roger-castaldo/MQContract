@@ -48,7 +48,7 @@ namespace MQContract.Interfaces
         /// <param name="activitySource">Used to override the Activity Source name if desired, otherwise it will default to MQContract</param>
         /// <param name="linkActivitiesAcrossSystems">Setting this to true will automatically include headers in the messages to allow for linking the calling activity on one service to the activity on the receiver</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        CC EnableOpenTelemetry(string activitySource = "MQContract",bool linkActivitiesAcrossSystems = true);
+        CC EnableOpenTelemetry(string activitySource = "MQContract", bool linkActivitiesAcrossSystems = true);
         /// <summary>
         /// Called to activate the metrics tracking middleware for this connection instance
         /// </summary>

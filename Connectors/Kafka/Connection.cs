@@ -41,7 +41,7 @@ namespace MQContract.Kafka
                 .Select(h => new KeyValuePair<string, string>(h.Key, DecodeHeaderValue(h.GetValueBytes())))
             );
 
-        internal static MessageHeader ExtractHeaders(Headers header,out string? messageTypeID)
+        internal static MessageHeader ExtractHeaders(Headers header, out string? messageTypeID)
         {
             messageTypeID = DecodeHeaderValue(header.FirstOrDefault(pair => Equals(pair.Key, MESSAGE_TYPE_HEADER))?.GetValueBytes()?? []);
             return ExtractHeaders(header);
@@ -56,7 +56,7 @@ namespace MQContract.Kafka
                     Key=message.ID,
                     Headers=ExtractHeaders(message),
                     Value=message.Data.ToArray()
-                },cancellationToken);
+                }, cancellationToken);
                 return new TransmissionResult(result.Key);
             }
             catch (Exception ex)
@@ -68,7 +68,7 @@ namespace MQContract.Kafka
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var subscription = new PublishSubscription(
-                new ConsumerBuilder<string,byte[]>(new ConsumerConfig(clientConfig)
+                new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
                 {
                     GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString())
                 }).Build(),

@@ -3,8 +3,8 @@ using NATS.Client.JetStream;
 
 namespace MQContract.NATS.Subscriptions
 {
-    internal class StreamSubscription(INatsJSConsumer consumer, Action<ReceivedServiceMessage> messageReceived, 
-        Action<Exception> errorReceived) 
+    internal class StreamSubscription(INatsJSConsumer consumer, Action<ReceivedServiceMessage> messageReceived,
+        Action<Exception> errorReceived)
         : SubscriptionBase()
     {
         protected override async Task RunAction()

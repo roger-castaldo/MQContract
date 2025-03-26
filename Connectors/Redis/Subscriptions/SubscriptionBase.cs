@@ -3,15 +3,15 @@ using StackExchange.Redis;
 
 namespace MQContract.Redis.Subscriptions
 {
-    internal abstract class SubscriptionBase(Action<Exception> errorReceived, IDatabase database, Guid connectionID, string channel, string? group) : IServiceSubscription,IDisposable
+    internal abstract class SubscriptionBase(Action<Exception> errorReceived, IDatabase database, Guid connectionID, string channel, string? group) : IServiceSubscription, IDisposable
     {
         private readonly CancellationTokenSource tokenSource = new();
         private bool disposedValue;
 
-        protected CancellationToken Token=>tokenSource.Token;
+        protected CancellationToken Token => tokenSource.Token;
         protected IDatabase Database => database;
         protected string Channel => channel;
-        protected string? Group=> group;
+        protected string? Group => group;
 
         public Task StartAsync()
         {
@@ -48,10 +48,10 @@ namespace MQContract.Redis.Subscriptions
                 await Database.StreamAcknowledgeAsync(channel, group, Id);
         }
 
-        protected abstract ValueTask ProcessMessage(StreamEntry streamEntry,string channel,string? group);
+        protected abstract ValueTask ProcessMessage(StreamEntry streamEntry, string channel, string? group);
 
         public async ValueTask EndAsync()
-            =>await tokenSource.CancelAsync();
+            => await tokenSource.CancelAsync();
 
         protected virtual void Dispose(bool disposing)
         {

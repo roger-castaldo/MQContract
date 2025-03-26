@@ -14,7 +14,7 @@
             QueryResponse
         }
 
-        private sealed record ChannelMap(MapTypes Type,Func<string,bool> IsMatch,Func<string,ValueTask<string>> Change);
+        private sealed record ChannelMap(MapTypes Type, Func<string, bool> IsMatch, Func<string, ValueTask<string>> Change);
 
         private readonly List<ChannelMap> channelMaps = [];
 
@@ -27,7 +27,7 @@
         private ChannelMapper Append(MapTypes type, Func<string, ValueTask<string>> change)
             => Append(type, (key) => true, change);
 
-        private ChannelMapper Append(MapTypes type,Func<string,bool> isMatch,Func<string, ValueTask<string>> change)
+        private ChannelMapper Append(MapTypes type, Func<string, bool> isMatch, Func<string, ValueTask<string>> change)
         {
             channelMaps.Add(new(type, isMatch, change));
             return this;
@@ -39,8 +39,8 @@
         /// <param name="originalChannel">The original channel that is being used in the connection</param>
         /// <param name="newChannel">The channel to map it to</param>
         /// <returns>The current instance of the Channel Mapper</returns>
-        public ChannelMapper AddPublishMap(string originalChannel,string newChannel)
-            => Append(MapTypes.Publish,originalChannel,newChannel);
+        public ChannelMapper AddPublishMap(string originalChannel, string newChannel)
+            => Append(MapTypes.Publish, originalChannel, newChannel);
 
         /// <summary>
         /// Add a map function for publish calls for a given channel
@@ -57,7 +57,7 @@
         /// <param name="isMatch">A callback that will return true if the supplied function will mape that channel</param>
         /// <param name="mapFunction">A function to be called with the channel supplied expecting a mapped channel name</param>
         /// <returns>The current instance of the Channel Mapper</returns>
-        public ChannelMapper AddPublishMap(Func<string,bool> isMatch, Func<string, ValueTask<string>> mapFunction)
+        public ChannelMapper AddPublishMap(Func<string, bool> isMatch, Func<string, ValueTask<string>> mapFunction)
             => Append(MapTypes.Publish, isMatch, mapFunction);
         /// <summary>
         /// Add a default map function to call for publish calls
@@ -191,9 +191,9 @@
         public ChannelMapper AddDefaultQueryResponseMap(Func<string, ValueTask<string>> mapFunction)
             => Append(MapTypes.QueryResponse, mapFunction);
 
-        internal async ValueTask<string> MapChannel(MapTypes mapType,string originalChannel)
+        internal async ValueTask<string> MapChannel(MapTypes mapType, string originalChannel)
         {
-            var map = channelMaps.Find(m=>Equals(m.Type,mapType) && m.IsMatch(originalChannel));
+            var map = channelMaps.Find(m => Equals(m.Type, mapType) && m.IsMatch(originalChannel));
             if (map == null) return originalChannel;
             return await map.Change(originalChannel);
         }

@@ -1,9 +1,9 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
-using MQContract.Interfaces.Service;
-using MQContract.Interfaces;
 using MQContract;
+using MQContract.Attributes;
+using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -41,7 +41,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
 
             var message = new BasicQueryMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
             var responseMessage = new BasicResponseMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
@@ -155,7 +155,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.IsNull(groups[1]);
-            Assert.AreEqual(0,receivedMessages.Count);
+            Assert.AreEqual(0, receivedMessages.Count);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.IsInstanceOfType<InvalidQueryResponseMessageReceivedException>(exceptions[0]);
             #endregion
@@ -258,7 +258,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 serviceConnection.Object.GetType(),
                 true,
                 withLinking,
-                connectionName:ServiceName
+                connectionName: ServiceName
             );
             ConnectionHelper.ValidatePublishActivity<BasicResponseMessage>(
                 messages[1],
@@ -267,7 +267,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 serviceConnection.Object.GetType(),
                 true,
                 withLinking,
-                connectionName:ServiceName
+                connectionName: ServiceName
             );
             #endregion
 

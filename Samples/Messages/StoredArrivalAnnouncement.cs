@@ -3,5 +3,5 @@
 namespace Messages
 {
     [MessageChannel("StoredArrivals")]
-    public record StoredArrivalAnnouncement(string FirstName,string LastName){}
+    public record StoredArrivalAnnouncement(string FirstName, string LastName) { }
 }

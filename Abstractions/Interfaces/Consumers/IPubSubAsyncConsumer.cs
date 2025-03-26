@@ -12,6 +12,6 @@
         /// <param name="message">The message that was received</param>
         /// <returns>A ValueTask for asynchronous operations</returns>
         ValueTask MessageReceivedAsync(IReceivedMessage<T> message);
-        
+
     }
 }

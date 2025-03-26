@@ -17,7 +17,7 @@ namespace MQContract.KubeMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using KubeMQ
     /// </summary>
-    public sealed class Connection : IQueryResponseMessageServiceConnection,IPingableMessageServiceConnection, IDisposable,IAsyncDisposable
+    public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IDisposable, IAsyncDisposable
     {
         /// <summary>
         /// These are the different read styles to use when subscribing to a stored Event PubSub
@@ -78,7 +78,7 @@ namespace MQContract.KubeMQ
             watch.Start();
             var rec = client.Ping()??throw new UnableToConnectException();
             watch.Stop();
-            var pingResult = new PingResponse(rec,watch.Elapsed);
+            var pingResult = new PingResponse(rec, watch.Elapsed);
             options.Logger?.LogInformation("Established connection to [Host:{Address}, Version:{Version}, StartTime:{ServerStartTime}, UpTime:{ServerUpTime}]",
                 pingResult.Host,
                 pingResult.Version,
@@ -128,27 +128,27 @@ namespace MQContract.KubeMQ
         TimeSpan IQueryableMessageServiceConnection.DefaultTimeout => TimeSpan.FromMilliseconds(connectionOptions.DefaultRPCTimeout??30000);
 
         private KubeClient EstablishConnection()
-        { 
-            var result =  new KubeClient(client.Address, connectionOptions.SSLCredentials??ChannelCredentials.Insecure, connectionOptions.MaxBodySize+4096, connectionOptions.Logger);
+        {
+            var result = new KubeClient(client.Address, connectionOptions.SSLCredentials??ChannelCredentials.Insecure, connectionOptions.MaxBodySize+4096, connectionOptions.Logger);
             if (result.Ping()==null)
                 throw new UnableToConnectException();
             return result;
         }
-        
+
         ValueTask<MQContract.Messages.PingResult> IPingableMessageServiceConnection.PingAsync()
         {
             var watch = new Stopwatch();
             watch.Start();
             var res = client.Ping()??throw new UnableToConnectException();
             watch.Stop();
-            return ValueTask.FromResult<MQContract.Messages.PingResult>(new PingResponse(res,watch.Elapsed));
+            return ValueTask.FromResult<MQContract.Messages.PingResult>(new PingResponse(res, watch.Elapsed));
         }
 
         internal static MapField<string, string> ConvertMessageHeader(MessageHeader header)
         {
             var result = new MapField<string, string>();
-            foreach(var key in header.Keys)
-                result.Add(key,header[key]!);
+            foreach (var key in header.Keys)
+                result.Add(key, header[key]!);
             return result;
         }
 
@@ -157,7 +157,8 @@ namespace MQContract.KubeMQ
 
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
-            try { 
+            try
+            {
                 var res = await client.SendEventAsync(new Event()
                 {
                     Body=ByteString.CopyFrom(message.Data.ToArray()),
@@ -165,20 +166,20 @@ namespace MQContract.KubeMQ
                     Channel=message.Channel,
                     ClientID=connectionOptions.ClientId,
                     EventID=message.ID,
-                    Store=storedChannelOptions.Exists(sco=>Equals(message.Channel,sco.ChannelName)),
+                    Store=storedChannelOptions.Exists(sco => Equals(message.Channel, sco.ChannelName)),
                     Tags={ ConvertMessageHeader(message.Header) }
                 }, connectionOptions.GrpcMetadata, cancellationToken);
                 return new TransmissionResult(res.EventID, res.Error);
             }
             catch (RpcException ex)
             {
-                connectionOptions.Logger?.LogError(ex,"RPC error occured on Send in send Message:{ErrorMessage}, Status: {StatusCode}", ex.Message, ex.Status);
-                return new TransmissionResult(message.ID,$"Status: {ex.Status}, Message: {ex.Message}");
+                connectionOptions.Logger?.LogError(ex, "RPC error occured on Send in send Message:{ErrorMessage}, Status: {StatusCode}", ex.Message, ex.Status);
+                return new TransmissionResult(message.ID, $"Status: {ex.Status}, Message: {ex.Message}");
             }
             catch (Exception ex)
             {
                 connectionOptions.Logger?.LogError(ex, "Exception occured in Send Message:{ErrorMessage}", ex.Message);
-                return new TransmissionResult(message.ID,ex.Message);
+                return new TransmissionResult(message.ID, ex.Message);
             }
         }
 
@@ -204,7 +205,7 @@ namespace MQContract.KubeMQ
                     throw new NullResponseException();
                 }
                 connectionOptions.Logger?.LogDebug("Transmission Result for RPC {MessageID} (IsError:{IsError},Error:{ErrorMessage})", message.ID, !string.IsNullOrEmpty(res.Error), res.Error);
-                return new ServiceQueryResult(message.ID, ConvertMessageHeader(res.Tags),res.Metadata,res.Body.ToArray());
+                return new ServiceQueryResult(message.ID, ConvertMessageHeader(res.Tags), res.Metadata, res.Body.ToArray());
             }
             catch (RpcException ex)
             {
@@ -228,7 +229,7 @@ namespace MQContract.KubeMQ
                 errorReceived,
                 channel,
                 group??Guid.NewGuid().ToString(),
-                storedChannelOptions.Find(sco=>Equals(sco.ChannelName,channel)),
+                storedChannelOptions.Find(sco => Equals(sco.ChannelName, channel)),
                 cancellationToken
             );
             sub.Run();
@@ -249,7 +250,7 @@ namespace MQContract.KubeMQ
             sub.Run();
             return ValueTask.FromResult<IServiceSubscription?>(sub);
         }
-        
+
         ValueTask IMessageServiceConnection.CloseAsync()
             => client.DisposeAsync();
 
@@ -270,7 +271,7 @@ namespace MQContract.KubeMQ
                 disposedValue=true;
             }
         }
-        
+
         void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method

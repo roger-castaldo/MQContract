@@ -1,11 +1,11 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
+using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
-using MQContract;
 using System.Diagnostics;
-using System.Text.Json;
 using System.Reflection;
+using System.Text.Json;
 
 namespace AutomatedTesting.ConnectionTests.SingleService
 {
@@ -565,7 +565,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 .Returns(defaultTimeout);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource:sourceName,linkActivitiesAcrossSystems:withLinking);
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
             #endregion
 
             #region Act

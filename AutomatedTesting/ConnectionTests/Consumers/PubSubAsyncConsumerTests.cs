@@ -1,13 +1,13 @@
-﻿using AutomatedTesting.Messages;
+﻿using AutomatedTesting.Consumers;
+using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
-using MQContract.Interfaces.Service;
-using MQContract.Interfaces;
 using MQContract;
-using System.Diagnostics;
+using MQContract.Attributes;
+using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
+using MQContract.Interfaces.Service;
+using System.Diagnostics;
 using System.Reflection;
-using AutomatedTesting.Consumers;
 
 namespace AutomatedTesting.ConnectionTests.Consumers
 {
@@ -96,14 +96,14 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceSubscription.Verify(x=>x.EndAsync(), Times.Once);    
+            serviceSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
 
         [TestMethod()]
-        [DataRow("TestChannel",null)]
+        [DataRow("TestChannel", null)]
         [DataRow(null, "TestGroup")]
-        public async ValueTask CheckRegistrationUsingGenericsAndSuppliedInstanceWithParameters(string? channel,string? group)
+        public async ValueTask CheckRegistrationUsingGenericsAndSuppliedInstanceWithParameters(string? channel, string? group)
         {
             #region Arrange
             var serviceSubscription = new Mock<IServiceSubscription>();
@@ -114,7 +114,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                 .ReturnsAsync(serviceSubscription.Object);
 
             var mockConsumer = new Mock<IPubSubAsyncConsumer<BasicMessage>>();
-            
+
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
 
             var mappedChannel = string.IsNullOrWhiteSpace(channel) ? null : channel;
@@ -122,7 +122,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object,channel:mappedChannel,group:mappedGroup);
+            var registrationResult = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object, channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
@@ -132,7 +132,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
                 mappedChannel??typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
-                mappedGroup, 
+                mappedGroup,
                 It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
@@ -148,14 +148,14 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string?>();
-            
+
             serviceSubscription.Setup(x => x.EndAsync())
                 .Returns(ValueTask.CompletedTask);
 
             serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
                 Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            
+
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
@@ -171,7 +171,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(1, errorActions.Count);
             Assert.AreEqual(typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name, channels[0]);
-            Assert.AreEqual(typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name,groups[0]);
+            Assert.AreEqual(typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name, groups[0]);
             #endregion
 
             #region Verify
@@ -278,7 +278,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(BasicMessageAsyncConsumer),channel: mappedChannel, group: mappedGroup);
+            var registrationResult = await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(BasicMessageAsyncConsumer), channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
@@ -308,7 +308,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<InvalidConsumerType>(async()=>await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(PubSubAsyncConsumerTests)));
+            var error = await Assert.ThrowsAsync<InvalidConsumerType>(async () => await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(PubSubAsyncConsumerTests)));
             #endregion
 
             #region Assert

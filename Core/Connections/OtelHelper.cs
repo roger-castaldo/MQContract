@@ -14,7 +14,7 @@ namespace MQContract.Connections
         public static void AssignConnectionType(Activity? activity, IMessageServiceConnection serviceConnection, string? connectionName = null)
         {
             activity?.SetTag(ConnectionTypeKey, serviceConnection.GetType().FullName);
-            if (connectionName != null) 
+            if (connectionName != null)
                 activity?.SetTag(ConnectionNameKey, connectionName);
         }
 

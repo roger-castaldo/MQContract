@@ -26,7 +26,7 @@ namespace MQContract.KubeMQ
     /// </summary>
     public class MessageResponseTransmissionException : Exception
     {
-        internal MessageResponseTransmissionException(Guid subscriptionID,string messageID, Exception error)
+        internal MessageResponseTransmissionException(Guid subscriptionID, string messageID, Exception error)
             : base($"An error occured attempting to transmit the message response on subscription {subscriptionID} to message id {messageID}", error) { }
     }
 

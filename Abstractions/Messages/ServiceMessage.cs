@@ -10,7 +10,7 @@ namespace MQContract.Messages
     /// <param name="Channel">The channel to transmit the message on</param>
     /// <param name="Header">The headers to transmit with the message</param>
     /// <param name="Data">The content of the message</param>
-    public record ServiceMessage(string ID,string MessageTypeID,string Channel,MessageHeader Header,ReadOnlyMemory<byte> Data)
+    public record ServiceMessage(string ID, string MessageTypeID, string Channel, MessageHeader Header, ReadOnlyMemory<byte> Data)
         : IEncodedMessage
     { }
 }

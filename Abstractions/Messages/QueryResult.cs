@@ -8,7 +8,7 @@
     /// <param name="Header">The response headers</param>
     /// <param name="Result">The resulting response if there was one</param>
     /// <param name="Error">The error message for the response if it failed and an error was returned</param>
-    public record QueryResult<T>(string ID,MessageHeader Header,T? Result=default,string? Error=null)
-        : TransmissionResult(ID,Error)
-    {}
+    public record QueryResult<T>(string ID, MessageHeader Header, T? Result = default, string? Error = null)
+        : TransmissionResult(ID, Error)
+    { }
 }

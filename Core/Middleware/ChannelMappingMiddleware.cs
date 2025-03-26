@@ -3,10 +3,10 @@ using MQContract.Messages;
 
 namespace MQContract.Middleware
 {
-    internal class ChannelMappingMiddleware(ChannelMapper? channelMapper) 
+    internal class ChannelMappingMiddleware(ChannelMapper? channelMapper)
         : IBeforeEncodeMiddleware
     {
-        private async ValueTask<string?> MapChannel(Context context,string? channel)
+        private async ValueTask<string?> MapChannel(Context context, string? channel)
         {
             if (channelMapper==null || channel==null)
                 return channel;

@@ -3,7 +3,7 @@ using System.Threading.Channels;
 
 namespace MQContract.InMemory
 {
-    internal class Subscription(MessageGroup group, Func<InternalServiceMessage,ValueTask> messageRecieved) : IServiceSubscription
+    internal class Subscription(MessageGroup group, Func<InternalServiceMessage, ValueTask> messageRecieved) : IServiceSubscription
     {
         private readonly Channel<InternalServiceMessage> channel = group.Register();
 
@@ -14,7 +14,7 @@ namespace MQContract.InMemory
                 while (await channel.Reader.WaitToReadAsync())
                 {
                     var message = await channel.Reader.ReadAsync();
-                    await messageRecieved(message); 
+                    await messageRecieved(message);
                 }
             });
         }

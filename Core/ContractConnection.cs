@@ -29,7 +29,7 @@ namespace MQContract
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,
         ChannelMapper? channelMapper = null)
-            => new MQContract.Connections.Connection(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger, channelMapper);
+            => new MQContract.Connections.Connection(serviceConnection, defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, logger, channelMapper);
 
         /// <summary>
         /// This is the call used to create an instance of a Multi Service Contract Connection which will return the Interface

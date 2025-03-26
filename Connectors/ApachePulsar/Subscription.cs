@@ -5,7 +5,7 @@ using MQContract.Messages;
 
 namespace MQContract.ApachePulsar
 {
-    internal class Subscription(IPulsarClient pulsarClient,Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived,string channel,string? group) : IServiceSubscription,IAsyncDisposable
+    internal class Subscription(IPulsarClient pulsarClient, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group) : IServiceSubscription, IAsyncDisposable
     {
         private readonly IConsumer<byte[]> consumer = pulsarClient.CreateConsumer<byte[]>(new(group??Guid.NewGuid().ToString(), channel, Schema.ByteArray)
         {
@@ -28,7 +28,7 @@ namespace MQContract.ApachePulsar
                             messageReceived(Connection.ConvertMessage(
                                 msg,
                                 consumer.Topic,
-                                async () => await consumer.Acknowledge(msg.MessageId,cancelToken.Token)
+                                async () => await consumer.Acknowledge(msg.MessageId, cancelToken.Token)
                             ));
                     }
                     catch (Exception ex)

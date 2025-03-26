@@ -338,7 +338,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.MultiServiceInstance()
-                .RegisterServiceConnection(ServiceName, serviceConnection.Object); 
+                .RegisterServiceConnection(ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act

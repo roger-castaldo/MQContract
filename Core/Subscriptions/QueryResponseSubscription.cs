@@ -7,7 +7,7 @@ using System.Diagnostics;
 namespace MQContract.Subscriptions
 {
     internal sealed class QueryResponseSubscription<T>(
-        Func<ReceivedServiceMessage, string, ValueTask<(ServiceMessage serviceMessage,Activity? activity)>> processMessage,
+        Func<ReceivedServiceMessage, string, ValueTask<(ServiceMessage serviceMessage, Activity? activity)>> processMessage,
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null,
@@ -28,7 +28,8 @@ namespace MQContract.Subscriptions
                 {
                     Logger?.LogDebug("Establishing underlying QueryResponse service subscription.");
                     serviceSubscription = await queryableMessageServiceConnection.SubscribeQueryAsync(
-                        async serviceMessage => {
+                        async serviceMessage =>
+                        {
                             (var responseMessage, _) = await ProcessServiceMessageAsync(serviceMessage, string.Empty);
                             return responseMessage;
                         },
@@ -53,7 +54,7 @@ namespace MQContract.Subscriptions
                             else
                             {
                                 Logger?.LogDebug("Processing received service message.");
-                                (var resultMessage,var activity) = await ProcessServiceMessageAsync(
+                                (var resultMessage, var activity) = await ProcessServiceMessageAsync(
                                     new(
                                         serviceMessage.ID,
                                         serviceMessage.MessageTypeID,
@@ -83,7 +84,7 @@ namespace MQContract.Subscriptions
             }
         }
 
-        private async ValueTask<(ServiceMessage response,Activity? activity)> ProcessServiceMessageAsync(ReceivedServiceMessage message, string replyChannel)
+        private async ValueTask<(ServiceMessage response, Activity? activity)> ProcessServiceMessageAsync(ReceivedServiceMessage message, string replyChannel)
         {
             using var scope = SetScope();
             if (Synchronous && !(token?.IsCancellationRequested ?? false))
@@ -99,7 +100,7 @@ namespace MQContract.Subscriptions
             try
             {
                 Logger?.LogDebug("Processing service message with ID: {MessageID}", message.ID);
-                (response,activity) = await processMessage(message, replyChannel);
+                (response, activity) = await processMessage(message, replyChannel);
                 if (message.Acknowledge != null)
                 {
                     Logger?.LogDebug("Acknowledging service message with ID: {MessageID}", message.ID);
@@ -122,11 +123,11 @@ namespace MQContract.Subscriptions
             if (error != null)
             {
                 Logger?.LogWarning("Returning error response for message with ID: {MessageID}", message.ID);
-                return (ErrorServiceMessage.Produce(replyChannel, error),activity);
+                return (ErrorServiceMessage.Produce(replyChannel, error), activity);
             }
 
             Logger?.LogInformation("Returning valid service response for message with ID: {MessageID}", message.ID);
-            return (response ?? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()),activity);
+            return (response ?? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()), activity);
         }
 
         protected override void InternalDispose()

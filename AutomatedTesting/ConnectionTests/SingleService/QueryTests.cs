@@ -1099,7 +1099,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 .Returns(defaultTimeout);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource:sourceName,linkActivitiesAcrossSystems:withLinking);
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
             #endregion
 
             #region Act
@@ -1118,7 +1118,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(1, timeouts.Count);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual((withLinking ? 2 :0), messages[0].Header.Keys.Count());
+            Assert.AreEqual((withLinking ? 2 : 0), messages[0].Header.Keys.Count());
             Assert.AreEqual("U-BasicQueryMessage-0.0.0.0", messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -1131,7 +1131,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 serviceConnection.Object.GetType(),
                 true,
                 withLinking,
-                includePublish:false
+                includePublish: false
             );
             ConnectionHelper.ValidateConsumeActivity<BasicResponseMessage>(
                 queryResult,

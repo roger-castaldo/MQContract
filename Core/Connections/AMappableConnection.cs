@@ -55,10 +55,10 @@ namespace MQContract.Connections
             return result;
         }
 
-        protected async ValueTask<(IEnumerable<ServiceConnectionList.ServiceConnection> connections,string channel)> GetConnectionsAsync<T>(string? channel, ChannelMapper.MapTypes mapTypes)
+        protected async ValueTask<(IEnumerable<ServiceConnectionList.ServiceConnection> connections, string channel)> GetConnectionsAsync<T>(string? channel, ChannelMapper.MapTypes mapTypes)
         {
             channel = await Utility.GetChannelAsync<T>((originalChannel) => MapChannel(mapTypes, originalChannel), channel);
-            return (await GetConnectionsAsync(channel, typeof(T), new MessageHeader([])),channel);
+            return (await GetConnectionsAsync(channel, typeof(T), new MessageHeader([])), channel);
         }
 
         protected sealed override async ValueTask CloseAsync()

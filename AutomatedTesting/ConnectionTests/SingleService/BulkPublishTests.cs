@@ -224,7 +224,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource:sourceName, linkActivitiesAcrossSystems: withLinking);
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
             #endregion
 
             #region Act
@@ -297,7 +297,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.All(r => messages.Any(m=>m.Any(m=>Equals(r.ID,m.ID)))));
+            Assert.IsTrue(result.All(r => messages.Any(m => m.Any(m => Equals(r.ID, m.ID)))));
             Assert.AreEqual(1, messages.Count);
             Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
@@ -308,7 +308,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(0).Data.ToArray())));
             Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(1).Data.ToArray())));
             ConnectionHelper.ValidateBulkPublishActivity<BasicMessage>(
-                messages.SelectMany(m=>m),
+                messages.SelectMany(m => m),
                 capturedActivities[0],
                 "MQContract.BulkPublishMessages",
                 serviceConnection.Object.GetType(),

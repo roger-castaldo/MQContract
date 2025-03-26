@@ -7,7 +7,7 @@ namespace MQContract.Interfaces
     /// </summary>
     public interface IContractConnection : IConsumerContractConnection
     {
-        
+
         /// <summary>
         /// Called to Ping the underlying system to obtain both information and ensure it is up.  Not all Services support this method.
         /// </summary>
@@ -33,8 +33,8 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
         /// <returns>A result indicating the tranmission results</returns>
-        ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<(T message,MessageHeader? messageHeader)> messages, string? channel = null, CancellationToken cancellationToken = new CancellationToken());
-        
+        ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel = null, CancellationToken cancellationToken = new CancellationToken());
+
         /// <summary>
         /// Called to send a message into the underlying service in the Query/Response style
         /// </summary>

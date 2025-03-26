@@ -9,7 +9,7 @@ namespace AutomatedTesting
         private const string ValidCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
 
         public static string GenerateRandomString(int length)
-            => RandomNumberGenerator.GetString(ValidCharacters,length);
+            => RandomNumberGenerator.GetString(ValidCharacters, length);
 
         public static IServiceProvider ProduceServiceProvider(string serviceName)
         {
@@ -26,7 +26,7 @@ namespace AutomatedTesting
 
         private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(5);
 
-        public static async Task<bool> WaitForCount<T>(IEnumerable<T> values,int count,TimeSpan maxTime)
+        public static async Task<bool> WaitForCount<T>(IEnumerable<T> values, int count, TimeSpan maxTime)
             where T : class
         {
             var task = new Task(() =>

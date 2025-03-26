@@ -1,14 +1,13 @@
-﻿using AutomatedTesting.Messages;
+﻿using AutomatedTesting.Consumers;
+using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
-using MQContract.Interfaces.Service;
-using MQContract.Interfaces;
 using MQContract;
-using System.Diagnostics;
+using MQContract.Attributes;
+using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
+using MQContract.Interfaces.Service;
+using System.Diagnostics;
 using System.Reflection;
-using AutomatedTesting.Consumers;
-using MQContract.Messages;
 
 namespace AutomatedTesting.ConnectionTests.Consumers
 {
@@ -177,7 +176,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.AreEqual(1, groups.Count);
             Assert.AreEqual(1, errorActions.Count);
             Assert.AreEqual(typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name, channels[0]);
-            Assert.AreEqual(typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name,groups[0]);
+            Assert.AreEqual(typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name, groups[0]);
             #endregion
 
             #region Verify

@@ -39,7 +39,7 @@
         public void TestDictionaryConstructor()
         {
             #region Arrange
-            var header = new MessageHeader(new Dictionary<string,string?>([
+            var header = new MessageHeader(new Dictionary<string, string?>([
                 new(key1,value1),
                 new(key2,value2),
                 new(key3,value3)
@@ -56,7 +56,7 @@
             Assert.IsTrue(header.Keys.Contains(key3));
             Assert.AreEqual(value1, header[key1]);
             Assert.AreEqual(value2, header[key2]);
-            Assert.AreEqual(string.Empty , header[key3]);
+            Assert.AreEqual(string.Empty, header[key3]);
             #endregion
 
             #region Verify
@@ -71,7 +71,7 @@
                 new(key1,value1),
                 new(key3,value3)
             ]));
-            var header = new MessageHeader(originalHeader,new Dictionary<string, string?>([
+            var header = new MessageHeader(originalHeader, new Dictionary<string, string?>([
                 new(key2,value2)
             ]));
             #endregion

@@ -8,7 +8,6 @@ using MQContract.Messages;
 using MQContract.Subscriptions;
 using System.Diagnostics;
 using System.Reflection;
-using static MQContract.Connections.ServiceConnectionList;
 
 namespace MQContract.Connections
 {
@@ -55,18 +54,19 @@ namespace MQContract.Connections
             using var scope = SetScope();
             Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
             (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader, null);
-            var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), message, false,activity, channel, messageHeader);
+            var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), message, false, activity, channel, messageHeader);
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(T), serviceMessage.Header);
             await publishLock.WaitAsync(cancellationToken);
             var results = await connections
-                .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () => {
+                .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () =>
+                {
                     OtelHelper.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
                     var result = await c.MessageServiceConnection.PublishAsync(serviceMessage, cancellationToken);
                     OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, c.MessageServiceConnection, c.ServiceConnectionName);
                     return result;
                 }));
             publishLock.Release();
-            activity?.SetStatus(results.Any(r=>r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
+            activity?.SetStatus(results.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return new(serviceMessage.ID, results);
         }
@@ -79,18 +79,18 @@ namespace MQContract.Connections
             activity?.SetTag(Constants.BulkPublishCountTag, messages.Count());
             var serviceMessages = await
             messages.WhenAll(m =>
-                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), m.message, false, activity, channel, new(m.messageHeader,headers))
+                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), m.message, false, activity, channel, new(m.messageHeader, headers))
             );
             var connections = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(T), serviceMessages.First().Header);
             await publishLock.WaitAsync(cancellationToken);
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
                 OtelHelper.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                var result = await BulkPublishAsync(serviceMessages, c.MessageServiceConnection,activity, cancellationToken);
+                var result = await BulkPublishAsync(serviceMessages, c.MessageServiceConnection, activity, cancellationToken);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
             publishLock.Release();
-            activity?.SetStatus(Array.Exists(transmissionResults,mtr=>mtr.Any(r=>r.HasError)) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
+            activity?.SetStatus(Array.Exists(transmissionResults, mtr => mtr.Any(r => r.HasError)) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return transmissionResults
                 .SelectMany(mtr => mtr)
@@ -101,7 +101,7 @@ namespace MQContract.Connections
         protected override async ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
         {
             var messageFactory = GetMessageFactory<T>(MaxMessageBodySize, ignoreMessageHeader);
-            (var connections,channel) = await GetConnectionsAsync<T>(channel, ChannelMapper.MapTypes.PublishSubscription);
+            (var connections, channel) = await GetConnectionsAsync<T>(channel, ChannelMapper.MapTypes.PublishSubscription);
             return new SubscriptionCollection(await connections.WhenAll(conn =>
                 CreateSubscriptionAsync<T>(
                     messageFactory,
@@ -127,7 +127,8 @@ namespace MQContract.Connections
             var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(MaxMessageBodySize), message, false, activity, channel: channel, messageHeader: messageHeader);
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(Q), serviceMessage.Header);
             return await connections
-                .WhenAll(conn => {
+                .WhenAll(conn =>
+                {
                     OtelHelper.AssignConnectionType(activity, conn.MessageServiceConnection, conn.ServiceConnectionName);
                     return ExecuteQueryAsync<Q, R>(conn.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: conn.ServiceConnectionName, cancellationToken: cancellationToken);
                 });
@@ -173,7 +174,7 @@ namespace MQContract.Connections
             Logger?.LogDebug("Producing QueryResponse Subscription for {Q} responding with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
             var queryMessageFactory = GetMessageFactory<Q>(MaxMessageBodySize, ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<R>(MaxMessageBodySize);
-            (var connections,channel) = await GetConnectionsAsync<Q>(channel, ChannelMapper.MapTypes.QuerySubscription);
+            (var connections, channel) = await GetConnectionsAsync<Q>(channel, ChannelMapper.MapTypes.QuerySubscription);
             return new SubscriptionCollection(await connections
                 .WhenAll(conn =>
                     CreateSubscriptionAsync<Q, R>(

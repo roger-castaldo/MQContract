@@ -9,16 +9,16 @@ namespace MQContract.ActiveMQ
     /// <summary>
     /// This is the MessageServiceConnection implemenation for using ActiveMQ
     /// </summary>
-    public sealed class Connection : IMessageServiceConnection,IAsyncDisposable,IDisposable
+    public sealed class Connection : IMessageServiceConnection, IAsyncDisposable, IDisposable
     {
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private bool disposedValue;
-        
+
         private readonly IConnection connection;
         private readonly ISession session;
         private readonly IMessageProducer producer;
         private readonly List<ConsumerInstance> consumerInstances = [];
-        private readonly SemaphoreSlim locker = new(1,1);
+        private readonly SemaphoreSlim locker = new(1, 1);
 
         /// <summary>
         /// Default constructor for creating instance
@@ -26,9 +26,10 @@ namespace MQContract.ActiveMQ
         /// <param name="ConnectUri">The connection url to use</param>
         /// <param name="username">The username to use</param>
         /// <param name="password">The password to use</param>
-        public Connection(Uri ConnectUri,string username,string password){
+        public Connection(Uri ConnectUri, string username, string password)
+        {
             var connectionFactory = new NMSConnectionFactory(ConnectUri);
-            connection = connectionFactory.CreateConnection(username,password);
+            connection = connectionFactory.CreateConnection(username, password);
             connection.Start();
             session = connection.CreateSession();
             producer = session.CreateProducer();
@@ -51,7 +52,7 @@ namespace MQContract.ActiveMQ
             var result = new Dictionary<string, string?>();
             messageTypeID = (string?)(properties.Contains(MESSAGE_TYPE_HEADER) ? properties[MESSAGE_TYPE_HEADER] : null);
             foreach (var key in properties.Keys.OfType<string>()
-                .Where(h =>!Equals(h, MESSAGE_TYPE_HEADER)))
+                .Where(h => !Equals(h, MESSAGE_TYPE_HEADER)))
                 result.Add(key, (string)properties[key]);
             return new(result);
         }
@@ -65,7 +66,7 @@ namespace MQContract.ActiveMQ
                 channel,
                 headers,
                 message.Body<byte[]>(),
-                async ()=>await message.AcknowledgeAsync()
+                async () => await message.AcknowledgeAsync()
             );
         }
 
@@ -82,10 +83,10 @@ namespace MQContract.ActiveMQ
             }
         }
 
-        private async ValueTask<ConsumerInstance> CreateInstance(string channel,string group)
+        private async ValueTask<ConsumerInstance> CreateInstance(string channel, string group)
         {
             await locker.WaitAsync();
-            var result = consumerInstances.Find(x=>Equals(x.Channel,channel) && Equals(x.Group,group));
+            var result = consumerInstances.Find(x => Equals(x.Channel, channel) && Equals(x.Group, group));
             locker.Release();
             if (result==null)
             {
@@ -106,8 +107,8 @@ namespace MQContract.ActiveMQ
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
-            group??=Guid.NewGuid().ToString(); 
-            var result = new SubscriptionBase((msg)=>messageReceived(ProduceMessage(channel,msg)), errorReceived,await CreateInstance(channel,group));
+            group??=Guid.NewGuid().ToString();
+            var result = new SubscriptionBase((msg) => messageReceived(ProduceMessage(channel, msg)), errorReceived, await CreateInstance(channel, group));
             await result.StartAsync();
             return result;
         }

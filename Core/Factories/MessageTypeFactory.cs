@@ -75,7 +75,7 @@ namespace MQContract.Factories
             });
             converters = IgnoreMessageHeader
                 ? []
-                : ProduceConverters<T>(types,globalMessageEncoder, globalMessageEncryptor, serviceProvider);
+                : ProduceConverters<T>(types, globalMessageEncoder, globalMessageEncryptor, serviceProvider);
         }
 
         private static IEnumerable<IConversionPath<M>> ProduceConverters<M>(IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider)
@@ -102,7 +102,7 @@ namespace MQContract.Factories
                     .Where(t => Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType &&
                         iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)
                         && iface.GetGenericArguments()[1] == destType
-                        && !paths.Exists(path => Equals(ExtractGenericArguements(path.First().GetType())[0],iface.GetGenericArguments()[0]))
+                        && !paths.Exists(path => Equals(ExtractGenericArguements(path.First().GetType())[0], iface.GetGenericArguments()[0]))
                     ))
                     .Select(t => conv.Prepend((serviceProvider == null ?
                         Activator.CreateInstance(t)! :
@@ -145,13 +145,13 @@ namespace MQContract.Factories
             return false;
         }
 
-        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message,bool ignoreChannel, string? channel, MessageHeader messageHeader)
+        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message, bool ignoreChannel, string? channel, MessageHeader messageHeader)
         {
             if (string.IsNullOrWhiteSpace(channel)&&!ignoreChannel)
                 throw new MessageChannelNullException();
 
             var encodedData = await (messageEncoder?.EncodeAsync(message)??globalMessageEncoder!.EncodeAsync<T>(message));
-            (var body,var messageHeaders) = await (messageEncryptor?.EncryptAsync(encodedData)??globalMessageEncryptor!.EncryptAsync(encodedData));
+            (var body, var messageHeaders) = await (messageEncryptor?.EncryptAsync(encodedData)??globalMessageEncryptor!.EncryptAsync(encodedData));
 
             var metaData = string.Empty;
             if (body.Length>maxMessageSize)

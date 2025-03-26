@@ -27,9 +27,9 @@ namespace MQContract
             => MessageVersionString(typeof(T));
 
         internal static string MessageVersionString(Type messageType)
-            =>messageType.GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0");
+            => messageType.GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0");
 
-        internal static async ValueTask<object?> InvokeMethodAsync(MethodInfo method,object container, object?[]? parameters)
+        internal static async ValueTask<object?> InvokeMethodAsync(MethodInfo method, object container, object?[]? parameters)
         {
             var valueTask = method.Invoke(container, parameters)!;
             await (Task)valueTask.GetType().GetMethod(nameof(ValueTask.AsTask))!.Invoke(valueTask, null)!;
