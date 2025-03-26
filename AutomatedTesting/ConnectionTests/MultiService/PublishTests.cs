@@ -691,5 +691,65 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public async Task TestPublishAsyncWithTelemetryData(bool withLinking)
+        {
+            #region Arrange
+            (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("testMessage");
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.MultiServiceInstance()
+                .RegisterServiceConnection(ServiceName, serviceConnection.Object)
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, messages.Count);
+            Assert.AreEqual(result.ID, messages[0].ID);
+            Assert.AreEqual(1, result.Results.Count());
+            Assert.AreEqual(ServiceName, result.Results.First().ServiceName);
+            Assert.IsFalse(result.Results.First().IsError);
+            Assert.IsFalse(result.HasError);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual((withLinking ? 2 : 0), messages[0].Header.Keys.Count());
+            Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(1, capturedActivities.Count);
+            ConnectionHelper.ValidatePublishActivity<BasicMessage>(
+                messages[0],
+                capturedActivities[0],
+                "MQContract.PublishMessage",
+                serviceConnection.Object.GetType(),
+                true,
+                withLinking,
+                connectionName: ServiceName
+            );
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
     }
 }

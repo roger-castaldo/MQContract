@@ -8,8 +8,8 @@ namespace AutomatedTesting.ConnectionTests
 
         private static void ValidateCommonActivityTags<T>(Activity activity, Type connectionType,string messageTypeID,string messageID,string? connectionName)
         {
-            Assert.AreEqual(connectionType.FullName, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.serviceconnectiontype")).Value);
-            Assert.AreEqual(connectionName, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.serviceconnectionname")).Value);
+            Assert.IsTrue(activity.Tags.Any(t=> Equals(t.Key, "mqcontract.serviceconnectiontype") && Equals(t.Value,connectionType.FullName)));
+            Assert.IsTrue(connectionName==null || activity.Tags.Any(t => Equals(t.Key, "mqcontract.serviceconnectionname") && Equals(t.Value, connectionName)));
             Assert.AreEqual(typeof(T).Name, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.messagetypeclass")).Value);
             Assert.AreEqual(messageTypeID, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.messagetypetag")).Value);
             Assert.IsTrue(activity.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, messageID)));

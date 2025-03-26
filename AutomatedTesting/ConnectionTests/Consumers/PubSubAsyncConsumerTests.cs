@@ -323,7 +323,9 @@ namespace AutomatedTesting.ConnectionTests.Consumers
         }
 
         [TestMethod()]
-        public async ValueTask CheckDefaultRegistrationUsingGenericsAndSuppliedInstanceWithTelemetryDataWithoutLinking()
+        [DataRow(false)]
+        [DataRow(true)]
+        public async ValueTask CheckDefaultRegistrationUsingGenericsAndSuppliedInstanceWithTelemetryData(bool withLinking)
         {
             #region Arrange
             (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
@@ -372,7 +374,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: false);
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
             #endregion
 
             #region Act
@@ -408,7 +410,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                 "MQContract.PublishMessage",
                 serviceConnection.Object.GetType(),
                 true,
-                false
+                withLinking
             );
             ConnectionHelper.ValidateConsumeActivity<BasicMessage>(
                 serviceMessages[0],
@@ -417,7 +419,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                 serviceConnection.Object.GetType(),
                 mockConsumer.Object.GetType(),
                 true,
-                false
+                withLinking
             );
             Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion

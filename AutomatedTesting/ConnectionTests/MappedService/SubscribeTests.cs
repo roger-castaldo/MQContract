@@ -943,7 +943,9 @@ namespace AutomatedTesting.ConnectionTests.MappedService
         }
 
         [TestMethod]
-        public async Task TestSubscribeAsyncWithTelemetryDataWithoutLinking()
+        [DataRow(false)]
+        [DataRow(true)]
+        public async Task TestSubscribeAsyncWithTelemetryData(bool withLinking)
         {
             #region Arrange
             (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
@@ -982,7 +984,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             var contractConnection = ContractConnection.MappedServiceInstance()
                 .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: false);
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
             #endregion
 
             #region Act
@@ -1028,7 +1030,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 "MQContract.PublishMessage",
                 serviceConnection.Object.GetType(),
                 true,
-                false,
+                withLinking,
                 connectionName: ServiceName
             );
             ConnectionHelper.ValidateConsumeActivity<BasicMessage>(
@@ -1037,113 +1039,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 "MQContract.ConsumeMessage",
                 serviceConnection.Object.GetType(),
                 true,
-                false,
-                connectionName: ServiceName
-            );
-            #endregion
-
-            #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
-            #endregion
-        }
-
-        [TestMethod]
-        public async Task TestSubscribeAsyncWithTelemetryDataWithLinking()
-        {
-            #region Arrange
-            (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
-            var acknowledged = false;
-
-            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
-            var serviceSubscription = new Mock<IServiceSubscription>();
-            var serviceConnection = new Mock<IMessageServiceConnection>();
-
-            var actions = new List<Action<ReceivedServiceMessage>>();
-            var errorActions = new List<Action<Exception>>();
-            var channels = new List<string>();
-            var groups = new List<string>();
-            var serviceMessages = new List<ReceivedServiceMessage>();
-            var publishedMessages = new List<ServiceMessage>();
-
-            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
-                Capture.In(groups), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(publishedMessages), It.IsAny<CancellationToken>()))
-                .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
-                {
-                    var rmessage = Helper.ProduceReceivedServiceMessage(message, acknowledge: () =>
-                    {
-                        acknowledged=true;
-                        return ValueTask.CompletedTask;
-                    });
-                    serviceMessages.Add(rmessage);
-                    foreach (var act in actions)
-                        act(rmessage);
-                    return ValueTask.FromResult(transmissionResult);
-                });
-
-            var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
-            var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
-
-            var contractConnection = ContractConnection.MappedServiceInstance()
-                .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: true);
-            #endregion
-
-            #region Act
-            var messages = new List<IReceivedMessage<BasicMessage>>();
-            var exceptions = new List<Exception>();
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
-            {
-                messages.Add(msg);
-                return ValueTask.CompletedTask;
-            }, (error) => exceptions.Add(error));
-            var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
-            stopwatch.Stop();
-            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-
-            foreach (var act in errorActions)
-                act(exception);
-            #endregion
-
-            #region Assert
-            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
-            Assert.IsNotNull(subscription);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(1, actions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
-            Assert.IsNull(groups[0]);
-            Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
-            Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
-            Assert.AreEqual(message, messages[0].Message);
-            Assert.AreEqual(exception, exceptions[0]);
-            Assert.IsTrue(acknowledged);
-            Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
-            Assert.AreEqual(2, capturedActivities.Count);
-            ConnectionHelper.ValidatePublishActivity<BasicMessage>(
-                publishedMessages[0],
-                capturedActivities[0],
-                "MQContract.PublishMessage",
-                serviceConnection.Object.GetType(),
-                true,
-                true,
-                connectionName: ServiceName
-            );
-            ConnectionHelper.ValidateConsumeActivity<BasicMessage>(
-                serviceMessages[0],
-                capturedActivities[1],
-                "MQContract.ConsumeMessage",
-                serviceConnection.Object.GetType(),
-                true,
-                true,
+                withLinking,
                 connectionName: ServiceName
             );
             #endregion

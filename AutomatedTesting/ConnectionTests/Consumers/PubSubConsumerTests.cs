@@ -322,10 +322,9 @@ namespace AutomatedTesting.ConnectionTests.Consumers
         }
 
         [TestMethod()]
-        public async ValueTask CheckDefaultRegistrationUsingGenericsAndSuppliedInstanceWithTelemetryDataWithoutLinking()
+        public async ValueTask CheckDefaultRegistrationUsingConsumerWithIgnoreMessageHeader()
         {
             #region Arrange
-            (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
             var acknowledged = false;
 
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
@@ -337,7 +336,6 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             var channels = new List<string>();
             var groups = new List<string?>();
             var serviceMessages = new List<ReceivedServiceMessage>();
-            var publishedMessages = new List<ServiceMessage>();
 
             serviceSubscription.Setup(x => x.EndAsync())
                 .Returns(ValueTask.CompletedTask);
@@ -345,10 +343,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
                 Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(publishedMessages), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
-                    var rmessage = Helper.ProduceReceivedServiceMessage(message, acknowledge: () =>
+                    var rmessage = Helper.ProduceReceivedServiceMessage(message, messageTypeID:"U-DefinitelyNotRight-0.0.0", acknowledge: () =>
                     {
                         acknowledged=true;
                         return ValueTask.CompletedTask;
@@ -362,19 +360,14 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             var messages = new List<IReceivedMessage<BasicMessage>>();
             var exceptions = new List<Exception>();
 
-            var mockConsumer = new Mock<IPubSubConsumer<BasicMessage>>();
-            mockConsumer.Setup(x => x.ErrorRecieved(Capture.In(exceptions)));
-            mockConsumer.Setup(x => x.MessageReceived(Capture.In(messages)));
-
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: false);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, IPubSubConsumer<BasicMessage>>(mockConsumer.Object);
+            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumerIgnoringMessageType>(new BasicMessageConsumerIgnoringMessageType(messages,exceptions));
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             foreach (var act in errorActions)
                 act(exception);
@@ -399,23 +392,6 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
             Assert.IsTrue(acknowledged);
-            ConnectionHelper.ValidatePublishActivity<BasicMessage>(
-                publishedMessages[0],
-                capturedActivities[0],
-                "MQContract.PublishMessage",
-                serviceConnection.Object.GetType(),
-                true,
-                false
-            );
-            ConnectionHelper.ValidateConsumeActivity<BasicMessage>(
-                serviceMessages[0],
-                capturedActivities[1],
-                "MQContract.ConsumeMessage",
-                serviceConnection.Object.GetType(),
-                mockConsumer.Object.GetType(),
-                true,
-                false
-            );
             Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion
 
@@ -427,7 +403,9 @@ namespace AutomatedTesting.ConnectionTests.Consumers
         }
 
         [TestMethod()]
-        public async ValueTask CheckDefaultRegistrationUsingGenericsAndSuppliedInstanceWithTelemetryDataWithLinking()
+        [DataRow(false)]
+        [DataRow(true)]
+        public async ValueTask CheckDefaultRegistrationUsingGenericsAndSuppliedInstanceWithTelemetryData(bool withLinking)
         {
             #region Arrange
             (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
@@ -475,7 +453,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: true);
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
             #endregion
 
             #region Act
@@ -510,7 +488,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                 "MQContract.PublishMessage",
                 serviceConnection.Object.GetType(),
                 true,
-                true
+                withLinking
             );
             ConnectionHelper.ValidateConsumeActivity<BasicMessage>(
                 serviceMessages[0],
@@ -519,7 +497,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                 serviceConnection.Object.GetType(),
                 mockConsumer.Object.GetType(),
                 true,
-                true
+                withLinking
             );
             Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
             #endregion

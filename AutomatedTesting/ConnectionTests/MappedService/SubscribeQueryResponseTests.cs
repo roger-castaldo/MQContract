@@ -759,7 +759,9 @@ namespace AutomatedTesting.ConnectionTests.MappedService
         }
 
         [TestMethod]
-        public async Task TestSubscribeQueryResponseAsyncWithTelemetryDataWithoutLinking()
+        [DataRow(false)]
+        [DataRow(true)]
+        public async Task TestSubscribeQueryResponseAsyncWithTelemetryData(bool withLinking)
         {
             #region Arrange
             (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
@@ -797,7 +799,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             var contractConnection = ContractConnection.MappedServiceInstance()
                 .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
-                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: false);
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
 
             var message = new BasicQueryMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
             var responseMessage = new BasicResponseMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
@@ -849,7 +851,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 "MQContract.ConsumeQueryMessage",
                 serviceConnection.Object.GetType(),
                 true,
-                false,
+                withLinking,
                 connectionName:ServiceName
             );
             ConnectionHelper.ValidatePublishActivity<BasicResponseMessage>(
@@ -858,7 +860,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 "MQContract.ProduceQueryResponse",
                 serviceConnection.Object.GetType(),
                 true,
-                false,
+                withLinking,
                 connectionName:ServiceName
             );
             Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");

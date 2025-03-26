@@ -60,6 +60,7 @@ namespace MQContract.Connections
             await publishLock.WaitAsync(cancellationToken);
             var results = await connections
                 .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () => {
+                    OtelHelper.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
                     var result = await c.MessageServiceConnection.PublishAsync(serviceMessage, cancellationToken);
                     OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, c.MessageServiceConnection, c.ServiceConnectionName);
                     return result;
@@ -84,6 +85,7 @@ namespace MQContract.Connections
             await publishLock.WaitAsync(cancellationToken);
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
+                OtelHelper.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
                 var result = await BulkPublishAsync(serviceMessages, c.MessageServiceConnection,activity, cancellationToken);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
@@ -117,19 +119,22 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        private async ValueTask<IEnumerable<QueryResult<R>>> ProcessQueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        async ValueTask<IEnumerable<QueryResult<R>>> IMultiServiceContractConnection.QueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);
             (var activity, messageHeader) = StartActivity(Constants.PublishQueryActivityName, ActivityKind.Producer, messageHeader, null);
-            var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(MaxMessageBodySize), message, false,activity, channel: channel, messageHeader: messageHeader);
+            var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(MaxMessageBodySize), message, false, activity, channel: channel, messageHeader: messageHeader);
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(Q), serviceMessage.Header);
             return await connections
-                .WhenAll(conn => ExecuteQueryAsync<Q, R>(conn.MessageServiceConnection, serviceMessage,activity, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken));
+                .WhenAll(conn => {
+                    OtelHelper.AssignConnectionType(activity, conn.MessageServiceConnection, conn.ServiceConnectionName);
+                    return ExecuteQueryAsync<Q, R>(conn.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: conn.ServiceConnectionName, cancellationToken: cancellationToken);
+                });
         }
-        ValueTask<IEnumerable<QueryResult<R>>> IMultiServiceContractConnection.QueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
-            => ProcessQueryAsync<Q, R>(message, timeout: timeout, channel: channel, responseChannel: responseChannel, messageHeader: messageHeader, cancellationToken: cancellationToken);
 
+        private static readonly MethodInfo QueryMethod = typeof(IMultiServiceContractConnection).GetMethods()
+            .First(method => Equals(method.Name, nameof(IMultiServiceContractConnection.QueryAsync)) && method.GetGenericArguments().Length==2);
         async ValueTask<IEnumerable<QueryResult<object>>> IMultiServiceContractConnection.QueryAsync<Q>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
@@ -138,9 +143,7 @@ namespace MQContract.Connections
             var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
             Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {Q} on {Channel} with {ResponseChannel}", responseType, typeof(Q), channel, responseChannel);
-#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
-            var methodInfo = typeof(MultiServiceConnection).GetMethod(nameof(MultiServiceConnection.ProcessQueryAsync), BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(Q), responseType!);
-#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
+            var methodInfo = QueryMethod.MakeGenericMethod(typeof(Q), responseType!);
             IEnumerable<object> results;
             try
             {
