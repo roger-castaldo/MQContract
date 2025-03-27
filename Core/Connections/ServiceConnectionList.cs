@@ -7,7 +7,7 @@ namespace MQContract.Connections
     {
         public record ServiceConnection(string ServiceConnectionName, IMessageServiceConnection MessageServiceConnection);
         private sealed record ServiceConnectionEntry(Func<(string channel, Type messageType, MessageHeader messageHeader), bool> CheckCallback, string ServiceConnectionName, IMessageServiceConnection MessageServiceConnection)
-            : ServiceConnection(ServiceConnectionName,MessageServiceConnection);
+            : ServiceConnection(ServiceConnectionName, MessageServiceConnection);
 
         private readonly SemaphoreSlim dataLock = new(1, 1);
         private readonly List<ServiceConnectionEntry> connections = [];
@@ -20,11 +20,11 @@ namespace MQContract.Connections
             dataLock.Wait();
             if (messageServiceConnection.MaxMessageBodySize!=null)
                 MaxMessageBodySize = (MaxMessageBodySize==null ? messageServiceConnection.MaxMessageBodySize : Math.Min((uint)MaxMessageBodySize!, (uint)messageServiceConnection.MaxMessageBodySize!));
-            connections.Add(new(checkCallback,serviceConnectionName, messageServiceConnection));
+            connections.Add(new(checkCallback, serviceConnectionName, messageServiceConnection));
             dataLock.Release();
         }
 
-        public async ValueTask<IEnumerable<ServiceConnection>> GetAsync(string channel,Type messageType,MessageHeader messageHeader)
+        public async ValueTask<IEnumerable<ServiceConnection>> GetAsync(string channel, Type messageType, MessageHeader messageHeader)
         {
             await dataLock.WaitAsync();
             var results = connections.Where(conn => conn.CheckCallback((channel, messageType, messageHeader)))
@@ -63,7 +63,7 @@ namespace MQContract.Connections
                 if (disposing)
                 {
                     dataLock.Wait();
-                    foreach(var conn in connections.DistinctBy(ss => ss.ServiceConnectionName).ToArray())
+                    foreach (var conn in connections.DistinctBy(ss => ss.ServiceConnectionName).ToArray())
                     {
                         if (conn.MessageServiceConnection is IDisposable disposable)
                             disposable.Dispose();

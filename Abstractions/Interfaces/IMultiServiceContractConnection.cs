@@ -7,8 +7,8 @@ namespace MQContract.Interfaces
     /// This interface represents an extended Contract Connection that is built around the idea of having more than 1 underlying service connection that can be interacted with 
     /// depending on the defined conditions
     /// </summary>
-    public interface IMultiServiceContractConnection : 
-        IMappableContractConnection<IMultiServiceContractConnection>,IMetricContractConnection<IMultiServiceContractConnection>
+    public interface IMultiServiceContractConnection :
+        IMappableContractConnection<IMultiServiceContractConnection>, IMetricContractConnection<IMultiServiceContractConnection>
     {
         /// <summary>
         /// Register a service connection that will map to all calls

@@ -19,7 +19,7 @@
 
             #region Assert
             Assert.AreEqual(2, header.Keys.Count());
-            Assert.IsTrue(data.All(pair=>header.Keys.Contains(pair.Key) && Equals(header[pair.Key],pair.Value)));
+            Assert.IsTrue(data.All(pair => header.Keys.Contains(pair.Key) && Equals(header[pair.Key], pair.Value)));
             #endregion
 
             #region Verify
@@ -30,7 +30,7 @@
         public void TestMessageHeaderDictionaryConstructor()
         {
             #region Arrange
-            var data = new Dictionary<string,string?>([
+            var data = new Dictionary<string, string?>([
                 new KeyValuePair<string,string?>("key1","value1"),
                 new KeyValuePair<string,string?>("key2","value2")
             ]);
@@ -57,14 +57,14 @@
                 new KeyValuePair<string,string>("key1","value1"),
                 new KeyValuePair<string,string>("key2","value2")
             ]);
-            var data = new Dictionary<string,string?>([
+            var data = new Dictionary<string, string?>([
                 new KeyValuePair<string,string?>("key3","value3"),
                 new KeyValuePair<string,string?>("key4","value4")
             ]);
             #endregion
 
             #region Act
-            var header = new MessageHeader(originalHeader,data);
+            var header = new MessageHeader(originalHeader, data);
             #endregion
 
             #region Assert
@@ -88,7 +88,7 @@
             #endregion
 
             #region Act
-            var header = new MessageHeader(originalHeader, null);
+            var header = new MessageHeader(originalHeader, (MessageHeader?)null);
             #endregion
 
             #region Assert

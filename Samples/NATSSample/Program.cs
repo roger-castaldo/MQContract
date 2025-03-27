@@ -2,6 +2,24 @@
 using MQContract;
 using MQContract.NATS;
 using NATS.Client.JetStream.Models;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+
+var serviceName = "MQContract";
+
+using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+    .AddSource(serviceName)  // Tracks activities from this source
+    .SetResourceBuilder(OpenTelemetry.Resources.ResourceBuilder.CreateDefault().AddService(serviceName))
+    .AddOtlpExporter(options =>
+    {
+        options.Endpoint = new("http://localhost:4317");
+    })     // Optional: Export to OTLP endpoint
+    .Build();
+
 
 var serviceConnection = new Connection(new NATS.Client.Core.NatsOpts()
 {

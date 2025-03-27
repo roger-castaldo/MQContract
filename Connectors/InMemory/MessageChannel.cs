@@ -30,16 +30,16 @@ namespace MQContract.InMemory
 
         internal async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
-            if (!await Publish(new(message.ID,message.MessageTypeID,message.Channel,message.Header,message.Data), cancellationToken))
+            if (!await Publish(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data), cancellationToken))
                 return new(message.ID, TransmissionResultError);
             return new(message.ID);
         }
 
-        internal async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> messages,CancellationToken cancellationToken)
+        internal async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
         {
             IEnumerable<TransmissionResult> results = [];
             locker.EnterReadLock();
-            foreach(var message in messages)
+            foreach (var message in messages)
             {
                 var messageResults = (
                     await groups
@@ -54,9 +54,9 @@ namespace MQContract.InMemory
         internal async ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)
         => await Publish(message, cancellationToken);
 
-        internal async ValueTask<TransmissionResult> QueryAsync(ServiceMessage message,string inbox, Guid correlationID, CancellationToken cancellationToken)
+        internal async ValueTask<TransmissionResult> QueryAsync(ServiceMessage message, string inbox, Guid correlationID, CancellationToken cancellationToken)
         {
-            if (!await Publish(new(message.ID,message.MessageTypeID,message.Channel,message.Header,message.Data,correlationID,inbox), cancellationToken))
+            if (!await Publish(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data, correlationID, inbox), cancellationToken))
                 return new(message.ID, "Unable to trasmit");
             return new(message.ID);
         }
@@ -80,7 +80,7 @@ namespace MQContract.InMemory
             return grp;
         }
 
-        private ValueTask<IServiceSubscription> CreateSubscription(Func<InternalServiceMessage,ValueTask>  processMessage,Action<Exception> errorReceived,string? group,CancellationToken cancellationToken)
+        private ValueTask<IServiceSubscription> CreateSubscription(Func<InternalServiceMessage, ValueTask> processMessage, Action<Exception> errorReceived, string? group, CancellationToken cancellationToken)
         {
             var sub = new Subscription(GetGroup(group), async (recievedMessage) =>
             {

@@ -44,7 +44,7 @@ namespace MQContract.HiveMQ
         private const string MessageTypeID = "_MessageTypeID";
         private const string ResponseID = "_MessageResponseID";
 
-        private static MQTT5PublishMessage ConvertMessage(ServiceMessage message,string? responseTopic=null,Guid? responseID=null,string? respondToTopic=null)
+        private static MQTT5PublishMessage ConvertMessage(ServiceMessage message, string? responseTopic = null, Guid? responseID = null, string? respondToTopic = null)
             => new()
             {
                 Topic=respondToTopic??message.Channel,
@@ -53,23 +53,23 @@ namespace MQContract.HiveMQ
                 ResponseTopic=responseTopic,
                 UserProperties=new Dictionary<string, string>(
                     message.Header.Keys
-                    .Select(k=>new KeyValuePair<string, string>(k,message.Header[k]!))
+                    .Select(k => new KeyValuePair<string, string>(k, message.Header[k]!))
                     .Concat([
                         new(MessageID,message.ID),
                         new(MessageTypeID,message.MessageTypeID)
                     ])
-                    .Concat(responseID!=null ?[new(ResponseID,responseID.Value.ToString())] : [])
+                    .Concat(responseID!=null ? [new(ResponseID, responseID.Value.ToString())] : [])
                 )
             };
 
         private static ReceivedServiceMessage ConvertMessage(MQTT5PublishMessage message, out string? responseID)
-        { 
+        {
             message.UserProperties.TryGetValue(ResponseID, out responseID);
             return new(
                 message.UserProperties[MessageID],
                 message.UserProperties[MessageTypeID],
                 message.Topic!,
-                new(message.UserProperties.AsEnumerable().Where(pair => !Equals(pair.Key, MessageID)&&!Equals(pair.Key, MessageTypeID)&&!Equals(pair.Key,ResponseID))),
+                new(message.UserProperties.AsEnumerable().Where(pair => !Equals(pair.Key, MessageID)&&!Equals(pair.Key, MessageTypeID)&&!Equals(pair.Key, ResponseID))),
                 message.Payload
             );
         }
@@ -79,7 +79,8 @@ namespace MQContract.HiveMQ
             try
             {
                 _ = await client.PublishAsync(ConvertMessage(message), cancellationToken);
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
                 return new(message.ID, e.Message);
             }
@@ -94,13 +95,14 @@ namespace MQContract.HiveMQ
                 {
                     try
                     {
-                        messageReceived(ConvertMessage(msg,out _));
-                    }catch(Exception e)
+                        messageReceived(ConvertMessage(msg, out _));
+                    }
+                    catch (Exception e)
                     {
                         errorReceived(e);
                     }
                 }
-                ,channel,group);
+                , channel, group);
             await result.EstablishAsync();
             return result;
         }
@@ -138,7 +140,7 @@ namespace MQContract.HiveMQ
         {
             try
             {
-                _ = await client.PublishAsync(ConvertMessage(message,responseTopic:InboxChannel,responseID:correlationID), cancellationToken);
+                _ = await client.PublishAsync(ConvertMessage(message, responseTopic: InboxChannel, responseID: correlationID), cancellationToken);
             }
             catch (Exception e)
             {
@@ -162,8 +164,8 @@ namespace MQContract.HiveMQ
                     {
                         errorReceived(e);
                     }
-                }, 
-                channel, 
+                },
+                channel,
                 group
             );
             await result.EstablishAsync();

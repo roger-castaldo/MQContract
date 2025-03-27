@@ -107,7 +107,7 @@
     {
         internal PingNotSupportedException()
             : base("The underlying service does not support Ping")
-            {}
+        { }
     }
 
     /// <summary>
@@ -115,8 +115,8 @@
     /// </summary>
     public class InvalidConsumerType : NotSupportedException
     {
-        internal InvalidConsumerType(Type consumerType,Type interfaceType)
-            : base($"Unable to register consumer of Type {consumerType.FullName} because it does not implement the interface {interfaceType.Name}") 
-        {}
+        internal InvalidConsumerType(Type consumerType, Type interfaceType)
+            : base($"Unable to register consumer of Type {consumerType.FullName} because it does not implement the interface {interfaceType.Name}")
+        { }
     }
 }

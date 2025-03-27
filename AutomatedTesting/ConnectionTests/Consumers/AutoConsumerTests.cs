@@ -1,10 +1,10 @@
-﻿using AutomatedTesting.Messages;
+﻿using AutomatedTesting.Consumers;
+using AutomatedTesting.Messages;
 using Moq;
+using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
-using MQContract;
 using System.Reflection;
-using AutomatedTesting.Consumers;
 
 namespace AutomatedTesting.ConnectionTests.Consumers
 {
@@ -23,8 +23,8 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x=>x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(serviceSubscription.Object);  
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.Object);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
@@ -39,9 +39,9 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), 
-                    typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name, 
-                    null, It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
+                    typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
+                    null, It.IsAny<CancellationToken>()), Times.Exactly(2));
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name,
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name,
@@ -53,7 +53,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name,
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name,
                     It.IsAny<CancellationToken>()), Times.Once);
-            serviceSubscription.Verify(x => x.EndAsync(), Times.Exactly(4));
+            serviceSubscription.Verify(x => x.EndAsync(), Times.Exactly(5));
             #endregion
         }
 
@@ -87,7 +87,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
-                    null, It.IsAny<CancellationToken>()), Times.Once);
+                    null, It.IsAny<CancellationToken>()), Times.Exactly(2));
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name,
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name,
@@ -99,7 +99,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name,
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name,
                     It.IsAny<CancellationToken>()), Times.Once);
-            serviceSubscription.Verify(x => x.EndAsync(), Times.Exactly(4));
+            serviceSubscription.Verify(x => x.EndAsync(), Times.Exactly(5));
             #endregion
         }
 

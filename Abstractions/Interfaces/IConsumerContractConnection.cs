@@ -14,7 +14,7 @@ namespace MQContract.Interfaces
         /// <param name="assembly">Optional parameter to specify loading from a single assembly, if not supplied will load all from within the default LoadContext</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A boolean indicating success or failure</returns>
-        ValueTask<bool> AutoRegisterAllConsumersAsync(Assembly? assembly=null, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<bool> AutoRegisterAllConsumersAsync(Assembly? assembly = null, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to register a PubSubConsumer into the contract connection 
         /// </summary>
@@ -98,7 +98,7 @@ namespace MQContract.Interfaces
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A boolean indicating success or failure</returns>
         ValueTask<bool> RegisterQueryResponseConsumerAsync<Q, R, TConsumer>(TConsumer consumer, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken())
-            where TConsumer : IQueryResponseConsumer<Q,R>;
+            where TConsumer : IQueryResponseConsumer<Q, R>;
         /// <summary>
         /// Called to register a QueryResponseConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it. 
         /// </summary>

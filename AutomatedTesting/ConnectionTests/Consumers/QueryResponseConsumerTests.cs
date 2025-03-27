@@ -1,13 +1,13 @@
-﻿using AutomatedTesting.Messages;
+﻿using AutomatedTesting.Consumers;
+using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Attributes;
-using MQContract.Interfaces.Service;
-using MQContract.Interfaces;
 using MQContract;
-using System.Diagnostics;
+using MQContract.Attributes;
+using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
+using MQContract.Interfaces.Service;
+using System.Diagnostics;
 using System.Reflection;
-using AutomatedTesting.Consumers;
 
 namespace AutomatedTesting.ConnectionTests.Consumers
 {
@@ -58,7 +58,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             var responseMessage = new BasicResponseMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeQueryResponseWithNoExtendedAspects");
 
-            var mockConsumer = new Mock<IQueryResponseConsumer<BasicQueryMessage,BasicResponseMessage>>();
+            var mockConsumer = new Mock<IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>();
             mockConsumer.Setup(x => x.ErrorRecieved(Capture.In(exceptions)));
             mockConsumer.Setup(x => x.MessageReceived(Capture.In(messages)))
                 .Returns(new QueryResponseMessage<BasicResponseMessage>(responseMessage));
@@ -67,7 +67,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseConsumerAsync<BasicQueryMessage,BasicResponseMessage, IQueryResponseConsumer<BasicQueryMessage,BasicResponseMessage>>(mockConsumer.Object);
+            var registrationResult = await contractConnection.RegisterQueryResponseConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>(mockConsumer.Object);
             var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
             foreach (var act in errorActions)
                 act(exception);
@@ -101,14 +101,14 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Verify
             serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceSubscription.Verify(x=>x.EndAsync(), Times.Once);    
+            serviceSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
 
         [TestMethod()]
-        [DataRow("TestChannel",null)]
+        [DataRow("TestChannel", null)]
         [DataRow(null, "TestGroup")]
-        public async ValueTask CheckRegistrationUsingGenericsAndSuppliedInstanceWithParameters(string? channel,string? group)
+        public async ValueTask CheckRegistrationUsingGenericsAndSuppliedInstanceWithParameters(string? channel, string? group)
         {
             #region Arrange
             var serviceSubscription = new Mock<IServiceSubscription>();
@@ -119,7 +119,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                 .ReturnsAsync(serviceSubscription.Object);
 
             var mockConsumer = new Mock<IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>();
-            
+
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
 
             var mappedChannel = string.IsNullOrWhiteSpace(channel) ? null : channel;
@@ -127,7 +127,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseConsumerAsync<BasicQueryMessage,BasicResponseMessage, IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>(mockConsumer.Object,channel:mappedChannel,group:mappedGroup);
+            var registrationResult = await contractConnection.RegisterQueryResponseConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>(mockConsumer.Object, channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
@@ -137,7 +137,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Verify
             serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
                 mappedChannel??typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
-                mappedGroup, 
+                mappedGroup,
                 It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
@@ -153,14 +153,14 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             var errorActions = new List<Action<Exception>>();
             var channels = new List<string>();
             var groups = new List<string?>();
-            
+
             serviceSubscription.Setup(x => x.EndAsync())
                 .Returns(ValueTask.CompletedTask);
 
             serviceConnection.Setup(x => x.SubscribeQueryAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
                 Capture.In(groups), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            
+
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
@@ -283,7 +283,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseConsumerAsync(typeof(BasicQueryConsumer),channel: mappedChannel, group: mappedGroup);
+            var registrationResult = await contractConnection.RegisterQueryResponseConsumerAsync(typeof(BasicQueryConsumer), channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
@@ -313,7 +313,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<InvalidConsumerType>(async()=>await contractConnection.RegisterQueryResponseConsumerAsync(typeof(QueryResponseConsumerTests)));
+            var error = await Assert.ThrowsAsync<InvalidConsumerType>(async () => await contractConnection.RegisterQueryResponseConsumerAsync(typeof(QueryResponseConsumerTests)));
             #endregion
 
             #region Assert
@@ -324,6 +324,121 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             #region Verify
             serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            #endregion
+        }
+
+        [TestMethod()]
+        [DataRow(false)]
+        [DataRow(true)]
+        public async ValueTask CheckDefaultRegistrationUsingGenericsAndSuppliedInstanceWithTelemetryData(bool withLinking)
+        {
+            #region Arrange
+            (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
+            var acknowledged = false;
+
+            var serviceSubscription = new Mock<IServiceSubscription>();
+
+            var receivedActions = new List<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string?>();
+            var serviceMessages = new List<ReceivedServiceMessage>();
+            ServiceQueryResult? queryResult = null;
+
+            serviceSubscription.Setup(x => x.EndAsync())
+                .Returns(ValueTask.CompletedTask);
+
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(
+                Capture.In(receivedActions),
+                Capture.In(errorActions),
+                Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.Object);
+            serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
+                .Returns(async (ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken) =>
+                {
+                    var rmessage = Helper.ProduceReceivedServiceMessage(message, acknowledge: () =>
+                    {
+                        acknowledged=true;
+                        return ValueTask.CompletedTask;
+                    });
+                    serviceMessages.Add(rmessage);
+                    var result = await receivedActions[0](rmessage);
+                    queryResult = Helper.ProduceQueryResult(result);
+                    return queryResult!;
+                });
+
+            var messages = new List<IReceivedMessage<BasicQueryMessage>>();
+            var exceptions = new List<Exception>();
+
+            var message = new BasicQueryMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
+            var responseMessage = new BasicResponseMessage("TestSubscribeQueryResponseWithNoExtendedAspects");
+            var exception = new NullReferenceException("TestSubscribeQueryResponseWithNoExtendedAspects");
+
+            var mockConsumer = new Mock<IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>();
+            mockConsumer.Setup(x => x.ErrorRecieved(Capture.In(exceptions)));
+            mockConsumer.Setup(x => x.MessageReceived(Capture.In(messages)))
+                .Returns(new QueryResponseMessage<BasicResponseMessage>(responseMessage));
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
+                .EnableOpenTelemetry(activitySource: sourceName, linkActivitiesAcrossSystems: withLinking);
+            #endregion
+
+            #region Act
+            var registrationResult = await contractConnection.RegisterQueryResponseConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>(mockConsumer.Object);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
+            foreach (var act in errorActions)
+                act(exception);
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(registrationResult);
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+            await contractConnection.CloseAsync();
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, receivedActions.Count);
+            Assert.AreEqual(1, channels.Count);
+            Assert.AreEqual(1, groups.Count);
+            Assert.AreEqual(1, serviceMessages.Count);
+            Assert.AreEqual(1, errorActions.Count);
+            Assert.AreEqual(1, exceptions.Count);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.IsNull(groups[0]);
+            Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
+            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
+            Assert.AreEqual(message, messages[0].Message);
+            Assert.AreEqual(exception, exceptions[0]);
+            Assert.IsFalse(result.IsError);
+            Assert.IsNull(result.Error);
+            Assert.AreEqual(result.Result, responseMessage);
+            Assert.IsTrue(acknowledged);
+            Assert.AreEqual(4, capturedActivities.Count);
+            ConnectionHelper.ValidateConsumeActivity<BasicQueryMessage>(
+                serviceMessages[0],
+                capturedActivities[1],
+                "MQContract.ConsumeQueryMessage",
+                serviceConnection.Object.GetType(),
+                mockConsumer.Object.GetType(),
+                true,
+                withLinking
+            );
+            ConnectionHelper.ValidatePublishActivity<BasicResponseMessage>(
+                queryResult!,
+                capturedActivities[2],
+                "MQContract.ProduceQueryResponse",
+                serviceConnection.Object.GetType(),
+                true,
+                withLinking
+            );
+            Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
     }

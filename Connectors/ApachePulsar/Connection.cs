@@ -35,7 +35,7 @@ namespace MQContract.ApachePulsar
                 Key = message.ID
             };
             messageMetadata[MessageTypeID] = message.MessageTypeID;
-            foreach(var key in message.Header.Keys)
+            foreach (var key in message.Header.Keys)
                 messageMetadata[key] = message.Header[key];
             return (messageMetadata, message.Data.ToArray());
         }
@@ -53,17 +53,18 @@ namespace MQContract.ApachePulsar
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             await producerLock.WaitAsync();
-            if (!producers.TryGetValue(message.Channel,out var producer))
+            if (!producers.TryGetValue(message.Channel, out var producer))
             {
                 producer = pulsarClient.CreateProducer<byte[]>(new(message.Channel, Schema.ByteArray));
                 producers.Add(message.Channel, producer);
             }
-            (var messageMetaData,var data) = Convert(message);
+            (var messageMetaData, var data) = Convert(message);
             try
             {
                 _ = await producer.Send(messageMetaData, data, cancellationToken);
                 return new(message.ID);
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return new(message.ID, ex.Message);
             }

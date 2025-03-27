@@ -12,8 +12,8 @@ namespace MQContract.Messages
     /// <param name="CorrelationID">The query message correlation id supplied by the query call to tie to the response</param>
     /// <param name="Data">The binary content of the message that should be the encoded class</param>
     /// <param name="Acknowledge">The acknowledgement callback to be called when the message is received if the underlying service requires it</param>
-    [ExcludeFromCodeCoverage(Justification ="This is a record class and has nothing to test")]
-    public record ReceivedInboxServiceMessage(string ID, string MessageTypeID, string Channel, MessageHeader Header,Guid CorrelationID, ReadOnlyMemory<byte> Data,Func<ValueTask>? Acknowledge=null)
-        : ReceivedServiceMessage(ID,MessageTypeID,Channel,Header,Data,Acknowledge)
-    {}
+    [ExcludeFromCodeCoverage(Justification = "This is a record class and has nothing to test")]
+    public record ReceivedInboxServiceMessage(string ID, string MessageTypeID, string Channel, MessageHeader Header, Guid CorrelationID, ReadOnlyMemory<byte> Data, Func<ValueTask>? Acknowledge = null)
+        : ReceivedServiceMessage(ID, MessageTypeID, Channel, Header, Data, Acknowledge)
+    { }
 }

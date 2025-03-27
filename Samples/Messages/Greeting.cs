@@ -7,5 +7,5 @@ namespace Messages
     [MessageVersion("1.0.0.0")]
     [QueryResponseType(typeof(string))]
     [QueryResponseChannel("Greeting.Response")]
-    public record Greeting(string FirstName,string LastName){}
+    public record Greeting(string FirstName, string LastName) { }
 }

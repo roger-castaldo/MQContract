@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MQContract.Subscriptions
 {
-    internal abstract class SubscriptionBase<T>(Func<string, ValueTask<string>> mapChannel, string? channel, bool synchronous,ILogger? logger) : ISubscription
+    internal abstract class SubscriptionBase<T>(Func<string, ValueTask<string>> mapChannel, string? channel, bool synchronous, ILogger? logger) : ISubscription
     {
         protected IServiceSubscription? serviceSubscription;
         private bool disposedValue;
@@ -19,7 +19,7 @@ namespace MQContract.Subscriptions
 
         [ExcludeFromCodeCoverage(Justification = "Virtual function that is implemented elsewhere")]
         protected virtual void InternalDispose()
-        {  }
+        { }
 
         public async ValueTask EndAsync()
         {

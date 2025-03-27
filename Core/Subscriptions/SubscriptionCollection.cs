@@ -21,7 +21,7 @@ namespace MQContract.Subscriptions
             {
                 if (disposing)
                 {
-                    foreach(var subscription in subscriptions)
+                    foreach (var subscription in subscriptions)
                         subscription.Dispose();
                 }
                 disposedValue=true;

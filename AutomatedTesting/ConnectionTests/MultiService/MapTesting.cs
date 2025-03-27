@@ -1,7 +1,7 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Interfaces.Service;
 using MQContract;
+using MQContract.Interfaces.Service;
 using System.Diagnostics;
 
 namespace AutomatedTesting.ConnectionTests.MultiService
@@ -30,13 +30,13 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.MultiServiceInstance()
-                .RegisterServiceConnection(channelName,serviceName, serviceConnection.Object)
-                .RegisterServiceConnection($"Not{channelName}",otherServiceName,otherServiceConnection.Object);
+                .RegisterServiceConnection(channelName, serviceName, serviceConnection.Object)
+                .RegisterServiceConnection($"Not{channelName}", otherServiceName, otherServiceConnection.Object);
             #endregion
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage,channel:channelName);
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channelName);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -170,13 +170,13 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.MultiServiceInstance()
-                .RegisterServiceConnection(headerKey,headerValue, serviceName, serviceConnection.Object)
-                .RegisterServiceConnection(headerKey,$"Not{headerValue}", otherServiceName, otherServiceConnection.Object);
+                .RegisterServiceConnection(headerKey, headerValue, serviceName, serviceConnection.Object)
+                .RegisterServiceConnection(headerKey, $"Not{headerValue}", otherServiceName, otherServiceConnection.Object);
             #endregion
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, messageHeader: new([new(headerKey,headerValue)]));
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, messageHeader: new([new(headerKey, headerValue)]));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion

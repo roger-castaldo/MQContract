@@ -1,8 +1,8 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
+using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
-using MQContract;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -30,7 +30,7 @@ namespace AutomatedTesting
             var mapper = new ChannelMapper()
                 .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel);
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object,channelMapper:mapper);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, channelMapper: mapper);
             #endregion
 
             #region Act
@@ -94,7 +94,7 @@ namespace AutomatedTesting
             Assert.IsNotNull(result2);
             Assert.AreEqual(transmissionResult, result2);
             Assert.AreEqual(newChannel, messages[0].Channel);
-            Assert.AreEqual(otherChannel, messages[1].Channel); 
+            Assert.AreEqual(otherChannel, messages[1].Channel);
             #endregion
 
             #region Verify
@@ -109,19 +109,19 @@ namespace AutomatedTesting
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new BasicMessage("testMessage");
-            
+
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            
+
             var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddPublishMap(
-                (channelName)=>Equals(channelName, otherChannel)
-                ,(originalChannel) =>
+                (channelName) => Equals(channelName, otherChannel)
+                , (originalChannel) =>
                 {
                     return ValueTask.FromResult(newChannel);
                 });
@@ -159,13 +159,13 @@ namespace AutomatedTesting
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new BasicMessage("testMessage");
-            
+
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            
+
             var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
             var mapper = new ChannelMapper()
@@ -209,17 +209,17 @@ namespace AutomatedTesting
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new BasicMessage("testMessage");
-            
+
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
-            
+
             var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
             var mapper = new ChannelMapper()
-                .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!,newChannel)
+                .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel)
                 .AddDefaultPublishMap((originalChannel) =>
                 {
                     return ValueTask.FromResult(originalChannel);
@@ -259,7 +259,7 @@ namespace AutomatedTesting
             var serviceConnection = new Mock<IMessageServiceConnection>();
 
             var channels = new List<string>();
-            
+
             serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(),
                 It.IsAny<Action<Exception>>(),
                 Capture.In<string>(channels),
@@ -579,7 +579,7 @@ namespace AutomatedTesting
             var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
             var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
             var mapper = new ChannelMapper()
-                .AddQueryMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, 
+                .AddQueryMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!,
                 (originalChannel) =>
                 {
                     if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
@@ -787,7 +787,7 @@ namespace AutomatedTesting
             var serviceSubscription = new Mock<IServiceSubscription>();
 
             var channels = new List<string>();
-            
+
             var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeQueryAsync(
                 It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
@@ -819,7 +819,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 
@@ -877,7 +877,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -933,7 +933,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -990,7 +990,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -1046,7 +1046,7 @@ namespace AutomatedTesting
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(),It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 
@@ -1065,7 +1065,7 @@ namespace AutomatedTesting
             var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
             var mockSubscription = new Mock<IServiceSubscription>();
 
-            
+
             List<Action<ReceivedServiceMessage>> messageActions = [];
             List<string> channels = [];
 
@@ -1084,7 +1084,7 @@ namespace AutomatedTesting
                         action(resp);
                     return ValueTask.FromResult(new TransmissionResult(message.ID));
                 });
-            
+
             var responseChannel = "Gretting.Response";
 
             var newChannel = $"{responseChannel}-Modded";
@@ -1130,7 +1130,7 @@ namespace AutomatedTesting
             var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
             var mockSubscription = new Mock<IServiceSubscription>();
 
-            
+
             List<Action<ReceivedServiceMessage>> messageActions = [];
             List<string> channels = [];
 
@@ -1203,7 +1203,7 @@ namespace AutomatedTesting
             var queryResult = new ServiceQueryResult(Guid.NewGuid().ToString(), new MessageHeader([]), "U-BasicResponseMessage-0.0.0.0", responseData);
             var mockSubscription = new Mock<IServiceSubscription>();
 
-            
+
             List<Action<ReceivedServiceMessage>> messageActions = [];
             List<string> channels = [];
 

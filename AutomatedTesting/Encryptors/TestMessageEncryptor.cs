@@ -19,7 +19,7 @@ namespace AutomatedTesting.Encryptors
 
         public ValueTask<(byte[] data, Dictionary<string, string?> headers)> EncryptAsync(byte[] data)
             => ValueTask.FromResult<(byte[] data, Dictionary<string, string?> headers)>((
-                data.Reverse().ToArray(), 
+                data.Reverse().ToArray(),
                 new([new(HeaderKey, HeaderValue)])
             ));
     }

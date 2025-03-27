@@ -1,8 +1,8 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
 using Grpc.Net.Client.Configuration;
-using MQContract.KubeMQ.SDK.Grpc;
 using Microsoft.Extensions.Logging;
+using MQContract.KubeMQ.SDK.Grpc;
 
 namespace MQContract.KubeMQ.SDK.Connection
 {
@@ -73,12 +73,12 @@ namespace MQContract.KubeMQ.SDK.Connection
             catch (RpcException ex)
             {
                 err=ex;
-                logger?.LogError(ex,"KubeClient RPC Error[Message:{Message},Status:{StatusCode}]", ex.Message, ex.StatusCode);
+                logger?.LogError(ex, "KubeClient RPC Error[Message:{Message},Status:{StatusCode}]", ex.Message, ex.StatusCode);
             }
             catch (Exception ex)
             {
                 err=ex;
-                logger?.LogError(ex,"KubeClient Error[Message:{Message}]", ex.Message);
+                logger?.LogError(ex, "KubeClient Error[Message:{Message}]", ex.Message);
             }
             if (err!=null)
                 throw err;

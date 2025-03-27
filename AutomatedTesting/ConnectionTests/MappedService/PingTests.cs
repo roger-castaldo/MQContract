@@ -8,7 +8,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
     public class PingTests
     {
         private const string ServiceName = "testService";
-        
+
         [TestMethod]
         public async Task TestPingAsync()
         {
@@ -19,7 +19,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection.Setup(x => x.PingAsync())
                 .ReturnsAsync(pingResult);
 
-            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props)=>true,ServiceName, serviceConnection.Object);
+            var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
@@ -46,7 +46,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<PingNotSupportedException>(async() => await contractConnection.PingAsync());
+            var error = await Assert.ThrowsExceptionAsync<PingNotSupportedException>(async () => await contractConnection.PingAsync());
             #endregion
 
             #region Assert
@@ -69,11 +69,11 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             var contractConnection = ContractConnection.MappedServiceInstance()
                 .RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object)
-                .RegisterServiceConnection((props)=>true,$"{ServiceName}2",serviceConnection.Object);
+                .RegisterServiceConnection((props) => true, $"{ServiceName}2", serviceConnection.Object);
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async()=>await contractConnection.PingAsync());
+            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () => await contractConnection.PingAsync());
             #endregion
 
             #region Assert

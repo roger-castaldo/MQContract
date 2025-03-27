@@ -3,8 +3,8 @@ using NATS.Client.Core;
 
 namespace MQContract.NATS.Subscriptions
 {
-    internal class QuerySubscription(IAsyncEnumerable<NatsMsg<byte[]>> asyncEnumerable, 
-        Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived) 
+    internal class QuerySubscription(IAsyncEnumerable<NatsMsg<byte[]>> asyncEnumerable,
+        Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived)
         : SubscriptionBase()
     {
         protected override async Task RunAction()
@@ -29,7 +29,7 @@ namespace MQContract.NATS.Subscriptions
                     await msg.ReplyAsync<byte[]>(
                         responseData,
                         replyTo: msg.ReplyTo,
-                        headers:headers,
+                        headers: headers,
                         cancellationToken: CancelToken
                     );
                 }

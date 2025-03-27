@@ -2,8 +2,8 @@
 
 namespace MQContract.Middleware.Metrics
 {
-    internal record ReadonlyContractMetric(ulong Messages,ulong MessageBytes,ulong MessageBytesAverage, ulong MessageBytesMin, ulong MessageBytesMax,
-        TimeSpan MessageConversionDuration,TimeSpan MessageConversionAverage,TimeSpan MessageConversionMin, TimeSpan MessageConversionMax
+    internal record ReadonlyContractMetric(ulong Messages, ulong MessageBytes, ulong MessageBytesAverage, ulong MessageBytesMin, ulong MessageBytesMax,
+        TimeSpan MessageConversionDuration, TimeSpan MessageConversionAverage, TimeSpan MessageConversionMin, TimeSpan MessageConversionMax
         )
         : IContractMetric
     {

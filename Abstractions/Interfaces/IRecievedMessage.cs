@@ -1,4 +1,5 @@
 ﻿using MQContract.Messages;
+using System.Diagnostics;
 
 namespace MQContract.Interfaces
 {
@@ -28,5 +29,9 @@ namespace MQContract.Interfaces
         /// The timestamp of when the received message was converted into the actual class prior to calling the callback
         /// </summary>
         DateTime ProcessedTimestamp { get; }
+        /// <summary>
+        /// The Activity, used for OTel associated with this recieved message
+        /// </summary>
+        Activity? Activity { get; }
     }
 }

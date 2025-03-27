@@ -1,8 +1,8 @@
 ﻿using Moq;
-using MQContract.Interfaces.Service;
 using MQContract;
-using System.Security.Cryptography;
 using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
+using System.Security.Cryptography;
 
 namespace AutomatedTesting
 {
@@ -43,7 +43,7 @@ namespace AutomatedTesting
 
             #region Act
             var subscription = await contractConnection.SubscribeAsync<byte[]>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName);
-            var result = await contractConnection.PublishAsync<byte[]>(testMessage,ChannelName);
+            var result = await contractConnection.PublishAsync<byte[]>(testMessage, ChannelName);
             #endregion
 
             #region Assert
@@ -253,7 +253,7 @@ namespace AutomatedTesting
             );
             var bits = decimal.GetBits(value);
             var binaryData = new byte[sizeof(int)*bits.Length];
-            for(var i=0;i<bits.Length; i++)
+            for (var i = 0; i<bits.Length; i++)
                 Buffer.BlockCopy(BitConverter.GetBytes(bits[i]), 0, binaryData, i*sizeof(int), sizeof(int));
 
             await BitConverterTypeTest<decimal>(value, binaryData);

@@ -49,7 +49,7 @@ namespace MQContract.RabbitMQ
         public async Task<Connection> QueueDeclareAsync(string queue, bool durable = false, bool exclusive = false,
             bool autoDelete = true, IDictionary<string, object?>? arguments = null)
         {
-            await channel.QueueDeclareAsync(queue, durable, exclusive, autoDelete, arguments:arguments);
+            await channel.QueueDeclareAsync(queue, durable, exclusive, autoDelete, arguments: arguments);
             return this;
         }
 
@@ -65,7 +65,7 @@ namespace MQContract.RabbitMQ
         public async Task<Connection> ExchangeDeclareAsync(string exchange, string type, bool durable = false, bool autoDelete = false,
             IDictionary<string, object?>? arguments = null)
         {
-            await channel.ExchangeDeclareAsync(exchange,type,durable,autoDelete,arguments);
+            await channel.ExchangeDeclareAsync(exchange, type, durable, autoDelete, arguments);
             return this;
         }
 
@@ -120,7 +120,7 @@ namespace MQContract.RabbitMQ
             return (props, ms.ToArray());
         }
 
-        internal static ReceivedServiceMessage ConvertMessage(BasicDeliverEventArgs eventArgs,string channel, Func<ValueTask> acknowledge,out Guid? messageId)
+        internal static ReceivedServiceMessage ConvertMessage(BasicDeliverEventArgs eventArgs, string channel, Func<ValueTask> acknowledge, out Guid? messageId)
         {
             using var ms = new MemoryStream(eventArgs.Body.ToArray());
             using var br = new BinaryReader(ms);
@@ -146,7 +146,7 @@ namespace MQContract.RabbitMQ
                 acknowledge
             );
         }
-       
+
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             await semaphore.WaitAsync(cancellationToken);
@@ -154,9 +154,10 @@ namespace MQContract.RabbitMQ
             try
             {
                 (var props, var data) = ConvertMessage(message);
-                await channel.BasicPublishAsync<BasicProperties>(message.Channel,string.Empty,true,props,data,cancellationToken);
+                await channel.BasicPublishAsync<BasicProperties>(message.Channel, string.Empty, true, props, data, cancellationToken);
                 result = new TransmissionResult(message.ID);
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
                 result = new TransmissionResult(message.ID, e.Message);
             }
@@ -164,37 +165,39 @@ namespace MQContract.RabbitMQ
             return result;
         }
 
-        private async Task<Subscription> ProduceSubscriptionAsync(IConnection conn, string channel, string? group, Action<BasicDeliverEventArgs,IChannel, Func<ValueTask>> messageReceived, Action<Exception> errorReceived)
+        private async Task<Subscription> ProduceSubscriptionAsync(IConnection conn, string channel, string? group, Action<BasicDeliverEventArgs, IChannel, Func<ValueTask>> messageReceived, Action<Exception> errorReceived)
         {
             if (group==null)
             {
                 group = Guid.NewGuid().ToString();
-                await this.channel.QueueDeclareAsync(queue:group, durable:false, exclusive:false, autoDelete:true);
-            }else
+                await this.channel.QueueDeclareAsync(queue: group, durable: false, exclusive: false, autoDelete: true);
+            }
+            else
             {
                 try
                 {
                     await this.channel.QueueDeclareAsync(queue: group);
                 }
-                catch (Exception) { 
+                catch (Exception)
+                {
                     //this may throw an error is the queue already exists but checking for it fails
                 }
             }
-            return await Subscription.ProduceInstanceAsync(conn, channel, group,messageReceived,errorReceived);
+            return await Subscription.ProduceInstanceAsync(conn, channel, group, messageReceived, errorReceived);
         }
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => await ProduceSubscriptionAsync(conn, channel, group,
-                (@event,modelChannel, acknowledge) =>
+                (@event, modelChannel, acknowledge) =>
                 {
-                    messageReceived(ConvertMessage(@event, channel, acknowledge,out _));
+                    messageReceived(ConvertMessage(@event, channel, acknowledge, out _));
                 },
                 errorReceived
             );
 
         async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
         {
-            await channel.ExchangeDeclareAsync(InboxExchange, ExchangeType.Direct, durable: false, autoDelete: true, cancellationToken:cancellationToken);
+            await channel.ExchangeDeclareAsync(InboxExchange, ExchangeType.Direct, durable: false, autoDelete: true, cancellationToken: cancellationToken);
             await channel.QueueDeclareAsync(inboxChannel, durable: false, exclusive: false, autoDelete: true, cancellationToken: cancellationToken);
             return await Subscription.ProduceInstanceAsync(
                 conn,
@@ -215,7 +218,7 @@ namespace MQContract.RabbitMQ
                         ));
                 },
                 (error) => { },
-                routingKey:inboxChannel
+                routingKey: inboxChannel
             );
         }
 
@@ -227,7 +230,7 @@ namespace MQContract.RabbitMQ
             TransmissionResult result;
             try
             {
-                await channel.BasicPublishAsync<BasicProperties>(message.Channel, string.Empty, true, props, data,cancellationToken:cancellationToken);
+                await channel.BasicPublishAsync<BasicProperties>(message.Channel, string.Empty, true, props, data, cancellationToken: cancellationToken);
                 result = new TransmissionResult(message.ID);
             }
             catch (Exception e)
@@ -247,7 +250,7 @@ namespace MQContract.RabbitMQ
                     await semaphore.WaitAsync(cancellationToken);
                     try
                     {
-                        await this.channel.BasicPublishAsync<BasicProperties>(InboxExchange, @event.BasicProperties.ReplyTo!, true , props, data);
+                        await this.channel.BasicPublishAsync<BasicProperties>(InboxExchange, @event.BasicProperties.ReplyTo!, true, props, data);
                     }
                     catch (Exception e)
                     {

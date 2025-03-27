@@ -29,6 +29,6 @@ foreach (var name in new string[] { "Arrivals", "Greeting", "Greeting.Response",
 }
 
 
-var serviceConnection = new Connection(projectId,publisherService,subscriberService);
+var serviceConnection = new Connection(projectId, publisherService, subscriberService);
 
 await SampleExecution.ExecuteSample(serviceConnection, "GooglePubSub");

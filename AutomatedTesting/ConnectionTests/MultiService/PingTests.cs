@@ -77,7 +77,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
         {
             #region Arrange
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            
+
             var contractConnection = ContractConnection.MultiServiceInstance();
 
             contractConnection.RegisterServiceConnection(ServiceName, serviceConnection.Object);

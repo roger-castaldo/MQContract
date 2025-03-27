@@ -14,7 +14,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="HiveMQtt" Version="0.24.2" />
+		<PackageReference Include="HiveMQtt" Version="0.26.0" />
 	</ItemGroup>
 
 	<ItemGroup>

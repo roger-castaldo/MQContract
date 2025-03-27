@@ -2,7 +2,7 @@
 
 namespace MQContract.NATS.Options
 {
-    internal record SubscriptionConsumerConfig(string Channel,ConsumerConfig Configuration)
+    internal record SubscriptionConsumerConfig(string Channel, ConsumerConfig Configuration)
     {
     }
 }

@@ -3,13 +3,13 @@ using MQContract.Interfaces.Service;
 
 namespace MQContract.AzureServiceBus
 {
-    internal class Subscription(ServiceBusClient client, Func<ServiceBusReceivedMessage, Func<Task>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string channel, string? group, string? sessionId = null) 
-        : IServiceSubscription,IAsyncDisposable
+    internal class Subscription(ServiceBusClient client, Func<ServiceBusReceivedMessage, Func<Task>, ValueTask> messageRecieved, Action<Exception> errorRecieved, string channel, string? group, string? sessionId = null)
+        : IServiceSubscription, IAsyncDisposable
     {
         protected readonly CancellationTokenSource cancelToken = new();
         private ServiceBusReceiver? receiver;
         private bool disposedValue;
-        
+
         internal async Task<IServiceSubscription> StartAsync()
         {
             receiver = (sessionId==null ? client.CreateReceiver(channel, group??channel) : await client.AcceptSessionAsync(channel, group??channel, sessionId));
@@ -27,7 +27,7 @@ namespace MQContract.AzureServiceBus
                     {
                         errorRecieved(ex);
                     }
-                }            
+                }
             });
             return this;
         }

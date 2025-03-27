@@ -12,7 +12,7 @@
         /// <summary>
         /// The current version of KubeMQ running on it
         /// </summary>
-        string Version { get; } 
+        string Version { get; }
         /// <summary>
         /// How long it took the server to respond to the request
         /// </summary>

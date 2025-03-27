@@ -6,10 +6,10 @@ namespace MQContract.Subscriptions
 {
     internal sealed class PubSubSubscription<T>(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
-        string? channel = null, string? group = null, bool synchronous=false,ILogger? logger=null)
-        : SubscriptionBase<T>(mapChannel,channel,synchronous,logger)
+        string? channel = null, string? group = null, bool synchronous = false, ILogger? logger = null)
+        : SubscriptionBase<T>(mapChannel, channel, synchronous, logger)
     {
-        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection,CancellationToken cancellationToken)
+        public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logger?.LogInformation("Establishing underlying service subscription for PubSub subscription.");
@@ -17,7 +17,7 @@ namespace MQContract.Subscriptions
                 async serviceMessage => await ProcessMessage(serviceMessage),
                 error => errorReceived(error),
                 MessageChannel,
-                group:group,
+                group: group,
                 cancellationToken: cancellationToken
             );
             if (serviceSubscription==null)

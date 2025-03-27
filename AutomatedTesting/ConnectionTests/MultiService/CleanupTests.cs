@@ -1,6 +1,6 @@
 ﻿using Moq;
-using MQContract.Interfaces.Service;
 using MQContract;
+using MQContract.Interfaces.Service;
 
 namespace AutomatedTesting.ConnectionTests.MultiService
 {

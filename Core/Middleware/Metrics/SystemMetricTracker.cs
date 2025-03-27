@@ -34,7 +34,7 @@ namespace MQContract.Middleware.Metrics
             if (!typeMetrics.TryGetValue(entry.Type, out MessageMetric? typeMetric))
             {
                 typeMetric = new(
-                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{Utility.MessageTypeName(entry.Type)}.{Utility.MessageVersionString(entry.Type).Replace('.','_')}.sent.count"),
+                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{Utility.MessageTypeName(entry.Type)}.{Utility.MessageVersionString(entry.Type).Replace('.', '_')}.sent.count"),
                     meter.CreateUpDownCounter<long>($"{MeterName}.types.{Utility.MessageTypeName(entry.Type)}.{Utility.MessageVersionString(entry.Type).Replace('.', '_')}.sent.bytes"),
                     meter.CreateUpDownCounter<long>($"{MeterName}.types.{Utility.MessageTypeName(entry.Type)}.{Utility.MessageVersionString(entry.Type).Replace('.', '_')}.received.count"),
                     meter.CreateUpDownCounter<long>($"{MeterName}.types.{Utility.MessageTypeName(entry.Type)}.{Utility.MessageVersionString(entry.Type).Replace('.', '_')}.received.bytes"),
@@ -56,7 +56,7 @@ namespace MQContract.Middleware.Metrics
                 channelMetrics.Add(entry.Channel!, channelMetric!);
             }
             typeMetric?.AddEntry(entry);
-            channelMetric?.AddEntry(entry);   
+            channelMetric?.AddEntry(entry);
             semDataLock.Release();
         }
     }

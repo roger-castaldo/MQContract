@@ -7,7 +7,7 @@ namespace MQContract.InMemory
     /// <summary>
     /// Used as an in memory connection messaging system where all transmission are done through Channels within the connection.  You must use the same underlying connection.
     /// </summary>
-    public class Connection : IInboxQueryableMessageServiceConnection,IBulkPublishableMessageServiceConnection
+    public class Connection : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection
     {
         private readonly ConcurrentDictionary<string, MessageChannel> channels = [];
         private readonly string inboxChannel = $"_inbox/{Guid.NewGuid()}";
@@ -36,7 +36,7 @@ namespace MQContract.InMemory
         ValueTask IMessageServiceConnection.CloseAsync()
         {
             var keys = channels.Keys.ToArray();
-            foreach(var key in keys)
+            foreach (var key in keys)
             {
                 if (channels.TryRemove(key, out var channel))
                     channel.Close();
@@ -55,11 +55,11 @@ namespace MQContract.InMemory
 
         ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => GetChannel(channel).RegisterQuerySubscriptionAsync(messageReceived, errorReceived,
-                async (response) =>await GetChannel(inboxChannel).PublishAsync(response,cancellationToken), group, cancellationToken);
+                async (response) => await GetChannel(inboxChannel).PublishAsync(response, cancellationToken), group, cancellationToken);
 
         ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
             => GetChannel(inboxChannel).EstablishInboxSubscriptionAsync(messageReceived, cancellationToken);
         ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
-            => GetChannel(message.Channel).QueryAsync(message,inboxChannel, correlationID, cancellationToken);
+            => GetChannel(message.Channel).QueryAsync(message, inboxChannel, correlationID, cancellationToken);
     }
 }

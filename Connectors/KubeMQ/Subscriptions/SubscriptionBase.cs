@@ -5,7 +5,7 @@ using MQContract.KubeMQ.SDK.Connection;
 
 namespace MQContract.KubeMQ.Subscriptions
 {
-    internal abstract class SubscriptionBase<T>(ILogger? logger,int reconnectInterval, KubeClient client,
+    internal abstract class SubscriptionBase<T>(ILogger? logger, int reconnectInterval, KubeClient client,
         Action<Exception> errorReceived, CancellationToken cancellationToken) : IServiceSubscription
         where T : class
     {
@@ -91,7 +91,7 @@ namespace MQContract.KubeMQ.Subscriptions
                     await client.DisposeAsync();
                     cancelToken.Dispose();
                 }
-                catch{ }
+                catch { }
             }
         }
 

@@ -52,7 +52,7 @@ namespace MQContract.Factories
             return await Utility.InvokeMethodAsync(
                 typeof(IMessageConverter<,>).MakeGenericType(source.GetType(), destination)
                 .GetMethod("ConvertAsync")!,
-                converter, 
+                converter,
                 [source]
             );
         }

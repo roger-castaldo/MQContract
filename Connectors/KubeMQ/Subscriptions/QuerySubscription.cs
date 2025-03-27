@@ -6,10 +6,10 @@ using MQContract.Messages;
 
 namespace MQContract.KubeMQ.Subscriptions
 {
-    internal class QuerySubscription(ConnectionOptions options, KubeClient client, 
-        Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, 
+    internal class QuerySubscription(ConnectionOptions options, KubeClient client,
+        Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived,
         string channel, string group, CancellationToken cancellationToken)
-        : SubscriptionBase<Request>(options.Logger,options.ReconnectInterval,client,errorReceived,cancellationToken)
+        : SubscriptionBase<Request>(options.Logger, options.ReconnectInterval, client, errorReceived, cancellationToken)
     {
         private readonly KubeClient Client = client;
         protected override AsyncServerStreamingCall<Request> EstablishCall()
@@ -31,7 +31,7 @@ namespace MQContract.KubeMQ.Subscriptions
             ServiceMessage? result;
             try
             {
-                result = await messageReceived(new(message.RequestID,message.Metadata,message.Channel,Connection.ConvertMessageHeader(message.Tags),message.Body.ToArray()));
+                result = await messageReceived(new(message.RequestID, message.Metadata, message.Channel, Connection.ConvertMessageHeader(message.Tags), message.Body.ToArray()));
             }
             catch (Exception ex)
             {

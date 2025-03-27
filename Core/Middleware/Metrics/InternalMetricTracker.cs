@@ -6,11 +6,12 @@
         private readonly ContractMetric sentGlobalMetric = new();
         private readonly ContractMetric receivedGlobalMetric = new();
         private readonly Dictionary<Type, ContractMetric> sentTypeMetrics = [];
-        private readonly Dictionary<Type,ContractMetric> receivedTypeMetrics = [];
+        private readonly Dictionary<Type, ContractMetric> receivedTypeMetrics = [];
         private readonly Dictionary<string, ContractMetric> sentChannelMetrics = [];
         private readonly Dictionary<string, ContractMetric> receivedChannelMetrics = [];
-        
-        public void AppendEntry(MetricEntryValue entry) {
+
+        public void AppendEntry(MetricEntryValue entry)
+        {
             semDataLock.Wait();
             ContractMetric? channelMetric = null;
             ContractMetric? typeMetric = null;
@@ -42,7 +43,7 @@
                     receivedChannelMetrics.Add(entry.Channel, channelMetric);
                 }
             }
-            typeMetric?.AddMessageRecord(entry.MessageSize,entry.Duration);
+            typeMetric?.AddMessageRecord(entry.MessageSize, entry.Duration);
             channelMetric?.AddMessageRecord(entry.MessageSize, entry.Duration);
             semDataLock.Release();
         }
@@ -55,7 +56,7 @@
             return result;
         }
 
-        public ReadonlyContractMetric? GetSnapshot(Type messageType,bool sent)
+        public ReadonlyContractMetric? GetSnapshot(Type messageType, bool sent)
         {
             ReadonlyContractMetric? result = null;
             semDataLock.Wait();

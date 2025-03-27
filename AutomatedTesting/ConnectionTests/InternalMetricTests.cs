@@ -1,8 +1,8 @@
 ﻿using AutomatedTesting.Messages;
 using Moq;
-using MQContract.Interfaces.Service;
 using MQContract;
 using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
 
 namespace AutomatedTesting.ContractConnectionTests
 {
@@ -92,8 +92,8 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Assert
-            Assert.IsTrue(Array.TrueForAll(sentMetrics,m => m==null));
-            Assert.IsTrue(Array.TrueForAll(receivedMetrics,m => m==null));
+            Assert.IsTrue(Array.TrueForAll(sentMetrics, m => m==null));
+            Assert.IsTrue(Array.TrueForAll(receivedMetrics, m => m==null));
             #endregion
 
             #region Verify
@@ -127,15 +127,15 @@ namespace AutomatedTesting.ContractConnectionTests
                 });
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .AddMetrics(null,true);
+                .AddMetrics(null, true);
             #endregion
 
             #region Act
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>(
-                (msg) => ValueTask.CompletedTask, 
+                (msg) => ValueTask.CompletedTask,
                 (error) => { },
-                channel:channel);
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage,channel:channel);
+                channel: channel);
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
             _ = await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1));
             await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
             IContractMetric?[] sentMetrics = [
@@ -155,10 +155,10 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.IsFalse(Array.Exists(sentMetrics,(m => m==null)));
+            Assert.IsFalse(Array.Exists(sentMetrics, (m => m==null)));
             Assert.AreEqual<ulong?>(1, sentMetrics[0]?.Messages);
-            Assert.IsTrue(Array.TrueForAll(sentMetrics,(m =>
-                Equals(sentMetrics[0]?.MessageBytesMin,m?.MessageBytesMin) &&
+            Assert.IsTrue(Array.TrueForAll(sentMetrics, (m =>
+                Equals(sentMetrics[0]?.MessageBytesMin, m?.MessageBytesMin) &&
                 Equals(sentMetrics[0]?.MessageBytes, m?.MessageBytes) &&
                 Equals(sentMetrics[0]?.MessageBytesMax, m?.MessageBytesMax) &&
                 Equals(sentMetrics[0]?.MessageBytesAverage, m?.MessageBytesAverage) &&
@@ -171,7 +171,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             Assert.IsFalse(Array.Exists(receivedMetrics, (m => m==null)));
             Assert.AreEqual<ulong?>(1, receivedMetrics[0]?.Messages);
-            Assert.IsTrue(Array.TrueForAll(receivedMetrics,(m =>
+            Assert.IsTrue(Array.TrueForAll(receivedMetrics, (m =>
                 Equals(receivedMetrics[0]?.MessageBytesMin, m?.MessageBytesMin) &&
                 Equals(receivedMetrics[0]?.MessageBytes, m?.MessageBytes) &&
                 Equals(receivedMetrics[0]?.MessageBytesMax, m?.MessageBytesMax) &&
@@ -202,7 +202,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 Capture.In<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(receivedActions),
                 It.IsAny<Action<Exception>>(),
                 It.IsAny<string>(),
-                It.IsAny<string>(), 
+                It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
@@ -226,8 +226,8 @@ namespace AutomatedTesting.ContractConnectionTests
             {
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => { },
-            channel:channel);
-            _ = await contractConnection.QueryAsync<BasicQueryMessage>(message,channel:channel);
+            channel: channel);
+            _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, channel: channel);
             await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
             IContractMetric?[] querySentMetrics = [
                 contractConnection.GetSnapshot(typeof(BasicQueryMessage),true),

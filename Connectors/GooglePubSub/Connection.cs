@@ -11,8 +11,8 @@ namespace MQContract.GooglePubSub
     /// <param name="projectId">The project id to connect to through the PubSub Connections</param>
     /// <param name="publisherClientApi">Used for building publishers</param>
     /// <param name="subscriberClientApi">Used for building subscribers</param>
-    public sealed class Connection(string projectId, PublisherServiceApiClient publisherClientApi, SubscriberServiceApiClient subscriberClientApi) : 
-        IMessageServiceConnection,IAsyncDisposable
+    public sealed class Connection(string projectId, PublisherServiceApiClient publisherClientApi, SubscriberServiceApiClient subscriberClientApi) :
+        IMessageServiceConnection, IAsyncDisposable
     {
         private const string MessageTypeID = "_MessageTypeID";
         private bool disposedValue;
@@ -36,19 +36,19 @@ namespace MQContract.GooglePubSub
             return result;
         }
 
-        internal static ReceivedServiceMessage ConvertMessage(ReceivedMessage message, string channel,Func<ValueTask> acknowledge)
+        internal static ReceivedServiceMessage ConvertMessage(ReceivedMessage message, string channel, Func<ValueTask> acknowledge)
             => new(
-                message.Message.MessageId, 
-                message.Message.Attributes[MessageTypeID], 
-                channel, 
+                message.Message.MessageId,
+                message.Message.Attributes[MessageTypeID],
+                channel,
                 new(message.Message.Attributes.Where(pair => !Equals(pair.Key, MessageTypeID))
-                    .Select(pair=>new KeyValuePair<string,string>(pair.Key,pair.Value))
+                    .Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value))
                 ),
                 message.Message.Data.ToArray(),
                 acknowledge
             );
 
-        private PublishRequest ProduceRequest(IEnumerable<PubsubMessage> message,string channel)
+        private PublishRequest ProduceRequest(IEnumerable<PubsubMessage> message, string channel)
         {
             var result = new PublishRequest()
             {
@@ -63,7 +63,7 @@ namespace MQContract.GooglePubSub
             await builderLock.WaitAsync(cancellationToken);
             try
             {
-                _ = await publisherClientApi.PublishAsync(ProduceRequest([ConvertMessage(message)],message.Channel), cancellationToken);
+                _ = await publisherClientApi.PublishAsync(ProduceRequest([ConvertMessage(message)], message.Channel), cancellationToken);
             }
             catch (Exception ex)
             {
@@ -89,7 +89,8 @@ namespace MQContract.GooglePubSub
                 {
                     createSubscription = (await subscriberClientApi.GetSubscriptionAsync(subscriptionName))==null;
                 }
-                catch{
+                catch
+                {
                     createSubscription=true;
                 }
                 if (createSubscription)

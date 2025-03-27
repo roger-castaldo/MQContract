@@ -7,7 +7,7 @@ namespace MQContract.Interfaces.Consumers
     /// </summary>
     /// <typeparam name="Q">The type of Message that is received and will be consumed</typeparam>
     /// <typeparam name="R">The type of Message that is returned as a response</typeparam>
-    public interface IQueryResponseConsumer<Q,R> : IBaseConsumer
+    public interface IQueryResponseConsumer<Q, R> : IBaseConsumer
     {
         /// <summary>
         /// Called when a message is received from the underlying subscript that is using this Consumer
