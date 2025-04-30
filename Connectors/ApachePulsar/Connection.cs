@@ -1,5 +1,7 @@
 ﻿using DotPulsar;
 using DotPulsar.Abstractions;
+using DotPulsar.Exceptions;
+using DotPulsar.Internal.Events;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Buffers;
@@ -66,7 +68,14 @@ namespace MQContract.ApachePulsar
             }
             catch (Exception ex)
             {
-                return new(message.ID, ex.Message);
+                return new(message.ID, Error: new(ex,ex switch
+                {
+                    ProducerFaultedException => true,
+                    ProducerClosedException => true,
+                    ProducerDisposedException => true,
+                    ProducerFencedException => false,
+                    _ => false
+                }));
             }
             finally
             {

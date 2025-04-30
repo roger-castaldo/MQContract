@@ -72,7 +72,7 @@ namespace MQContract.AzureServiceBus
             }
             catch (Exception e)
             {
-                return new(message.ID, e.Message);
+                return new(message.ID, Error: new(e));
             }
             return new(message.ID);
         }
@@ -92,7 +92,7 @@ namespace MQContract.AzureServiceBus
             }
             catch (Exception e)
             {
-                return messages.Select(m => new TransmissionResult(m.ID, e.Message));
+                return messages.Select(m => new TransmissionResult(m.ID, Error: new(e)));
             }
             return messages.Select(m => new TransmissionResult(m.ID));
         }
@@ -148,7 +148,12 @@ namespace MQContract.AzureServiceBus
             }
             catch (Exception e)
             {
-                return new(message.ID, e.Message);
+                return new(message.ID, Error: new(e, e switch
+                {
+                    ObjectDisposedException => true,
+                    OperationCanceledException => true,
+                    _ => false
+                }));
             }
             return new(message.ID);
         }

@@ -145,28 +145,46 @@ namespace MQContract.NATS
             }
             catch (Exception ex)
             {
-                return new TransmissionResult(message.ID, ex.Message);
+                return new TransmissionResult(message.ID, Error: new(ex,ex switch
+                {
+                    NatsPayloadTooLargeException => true,
+                    _ => false
+                }));
             }
         }
 
         async ValueTask<ServiceQueryResult> IQueryResponseMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            var result = await natsConnection.RequestAsync<byte[], byte[]>(
-                message.Channel,
-                message.Data.ToArray(),
-                headers: ExtractHeader(message),
-                replyOpts: new() { Timeout = timeout },
-                cancellationToken: cancellationToken
-            );
-            if (Equals(result.Headers?[MESSAGE_TYPE_HEADER], QUERY_RESPONSE_ERROR_TYPE))
-                throw new QueryAsyncReponseException(UTF8Encoding.UTF8.GetString(result.Data!));
-            var headers = ExtractHeader(result.Headers, out var messageID, out var messageTypeID);
-            return new ServiceQueryResult(
-                messageID??string.Empty,
-                headers,
-                messageTypeID??string.Empty,
-                result.Data??new ReadOnlyMemory<byte>()
-            );
+            try
+            {
+                var result = await natsConnection.RequestAsync<byte[], byte[]>(
+                    message.Channel,
+                    message.Data.ToArray(),
+                    headers: ExtractHeader(message),
+                    replyOpts: new() { Timeout = timeout },
+                    cancellationToken: cancellationToken
+                );
+                if (Equals(result.Headers?[MESSAGE_TYPE_HEADER], QUERY_RESPONSE_ERROR_TYPE))
+                    throw new TransmissionException(new QueryAsyncReponseException(UTF8Encoding.UTF8.GetString(result.Data!)), true);
+                var headers = ExtractHeader(result.Headers, out var messageID, out var messageTypeID);
+                return new ServiceQueryResult(
+                    messageID??string.Empty,
+                    headers,
+                    messageTypeID??string.Empty,
+                    result.Data??new ReadOnlyMemory<byte>()
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new TransmissionException(ex, ex switch
+                {
+                    NatsPayloadTooLargeException => true,
+                    ObjectDisposedException => true,
+                    ArgumentNullException => true,
+                    ArgumentOutOfRangeException => true,
+                    _ => false
+                });
+            }
         }
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)

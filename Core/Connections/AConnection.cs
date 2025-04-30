@@ -11,6 +11,7 @@ using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using MQContract.Middleware;
 using MQContract.Subscriptions;
+using Polly;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Reflection;
@@ -162,7 +163,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             logger?.LogDebug("Producing Service Message for message of type {Type}", typeof(T));
-            var context = new Context(mapType, activity);
+            var context = new Middleware.Context(mapType, activity);
             (message, channel, messageHeader) = await BeforeMessageEncodeAsync<T>(context, message, channel??messageFactory.MessageChannel, messageHeader??new([]));
             return await AfterMessageEncodeAsync<T>(context,
                 await messageFactory.ConvertMessageAsync(message, ignoreChannel, channel, messageHeader)
@@ -173,7 +174,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope(message.ID);
             logger?.LogDebug("Decoding Service Message message of type {Type}", typeof(T));
-            var context = new Context(mapType, activity);
+            var context = new Middleware.Context(mapType, activity);
             (var messageHeader, var data) = await BeforeMessageDecodeAsync(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
             var taskMessage = await messageFactory.ConvertMessageAsync(logger, new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, messageHeader, data, message.Acknowledge))
                                 ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
@@ -301,6 +302,10 @@ namespace MQContract.Connections
         #region PubSub
         protected async ValueTask<TransmissionResult> PublishMessageAsync(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
         {
+            /*var policyBuilder = Policy<TransmissionResult>
+                .HandleResult(result => result.IsError)
+                .CircuitBreakerAsync()*/
+
             await publishLock.WaitAsync(cancellationToken);
             var result = await serviceConnection.PublishAsync(
                 serviceMessage,
@@ -446,7 +451,7 @@ namespace MQContract.Connections
                 await inboxSemaphore.WaitAsync(cancellationToken);
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
-                throw new QuerySubmissionFailedException(result.Error!);
+                throw new QuerySubmissionFailedException(result.Error!.Message);
             }
             try
             {
@@ -484,7 +489,7 @@ namespace MQContract.Connections
                     queryResult.ID,
                     queryResult.Header,
                     Result: default,
-                    Error: qre.Message
+                    Error: new(qre)
                 );
             }
             catch (Exception ex)
@@ -494,7 +499,7 @@ namespace MQContract.Connections
                     queryResult.ID,
                     queryResult.Header,
                     Result: default,
-                    Error: ex.Message
+                    Error: new(ex)
                 );
             }
             activity?.SetStatus(result.IsError ? ActivityStatusCode.Error : ActivityStatusCode.Ok);

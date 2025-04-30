@@ -109,7 +109,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, Guid messageID, CancellationToken cancellationToken) =>
                 {
-                    return ValueTask.FromResult(new TransmissionResult(message.ID, errorMessage));
+                    return ValueTask.FromResult(new TransmissionResult(message.ID, new(new Exception(errorMessage), true)));
                 });
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
@@ -643,7 +643,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             serviceConnection.Setup(x => x.QueryAsync(Capture.In<ServiceMessage>(messages), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, Guid messageID, CancellationToken cancellationToken) =>
                 {
-                    return ValueTask.FromResult(new TransmissionResult(message.ID, errorMessage));
+                    return ValueTask.FromResult(new TransmissionResult(message.ID, new(new Exception(errorMessage), true)));
                 });
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);

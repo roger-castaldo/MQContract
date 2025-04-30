@@ -113,7 +113,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, Guid messageID, CancellationToken cancellationToken) =>
                 {
-                    return ValueTask.FromResult(new TransmissionResult(message.ID, errorMessage));
+                    return ValueTask.FromResult(new TransmissionResult(message.ID, Error: new(new Exception(errorMessage),true)));
                 });
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);

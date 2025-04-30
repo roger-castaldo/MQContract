@@ -453,7 +453,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNull(groups[0]);
             Assert.AreEqual(exception, exceptions[0]);
             Assert.IsTrue(result.IsError);
-            Assert.AreEqual(exception.Message, result.Error);
+            Assert.AreEqual(exception.Message, result.Error?.Message);
             #endregion
 
             #region Verify
@@ -658,8 +658,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Assert
             Assert.IsNotNull(result);
             Assert.IsTrue(result.IsError);
-            Assert.IsFalse(string.IsNullOrWhiteSpace(result.Error));
-            Assert.IsTrue(result.Error.Contains(typeof(BasicResponseMessage).FullName!));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(result.Error?.Message));
+            Assert.IsTrue(result.Error!.Message.Contains(typeof(BasicResponseMessage).FullName!));
             #endregion
 
             #region Verify

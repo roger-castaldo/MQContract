@@ -5,12 +5,12 @@
     /// </summary>
     /// <param name="ServiceName">The unique name of the underlying service that was used to transmit</param>
     /// <param name="Error">An error message if an error occured</param>
-    public record ChildTransmissionResult(string ServiceName, string? Error = null)
+    public record ChildTransmissionResult(string ServiceName, ErrorMessage? Error = null)
     {
         /// <summary>
         /// Flag to indicate if the result is an error
         /// </summary>
-        public bool IsError => !string.IsNullOrWhiteSpace(Error);
+        public bool IsError => !string.IsNullOrWhiteSpace(Error?.Message);
     }
 
     /// <summary>

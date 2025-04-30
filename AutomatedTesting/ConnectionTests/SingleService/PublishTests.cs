@@ -788,7 +788,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #region Arrange
             (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
 
-            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: "Failed");
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(new Exception("Failed"),true));
 
             var testMessage = new BasicMessage("testMessage");
 

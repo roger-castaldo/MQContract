@@ -2,6 +2,7 @@
 using MQContract.Messages;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 using System.Text;
 
 namespace MQContract.RabbitMQ
@@ -159,7 +160,11 @@ namespace MQContract.RabbitMQ
             }
             catch (Exception e)
             {
-                result = new TransmissionResult(message.ID, e.Message);
+                result = new TransmissionResult(message.ID, Error: new(e,e switch
+                {
+                    PublishException => true,
+                    _ => false
+                }));
             }
             semaphore.Release();
             return result;
@@ -235,7 +240,11 @@ namespace MQContract.RabbitMQ
             }
             catch (Exception e)
             {
-                result = new TransmissionResult(message.ID, e.Message);
+                result = new TransmissionResult(message.ID, Error: new(e, e switch
+                {
+                    PublishException => true,
+                    _ => false
+                }));
             }
             semaphore.Release();
             return result;

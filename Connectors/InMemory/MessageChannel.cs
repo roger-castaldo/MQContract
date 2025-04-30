@@ -5,8 +5,6 @@ namespace MQContract.InMemory
 {
     internal class MessageChannel
     {
-        private const string TransmissionResultError = "Unable to transmit";
-
         private readonly ReaderWriterLockSlim locker = new();
         private readonly List<MessageGroup> groups = [];
 
@@ -16,7 +14,7 @@ namespace MQContract.InMemory
             var grps = groups.ToArray();
             locker.ExitReadLock();
             var results = await grps.WhenAll(grp => grp.PublishMessage(message));
-            return Array.TrueForAll(results.ToArray(), t => t);
+            return Array.TrueForAll(results.ToArray(), t => t) && results.Any();
         }
 
         public void Close()
@@ -31,7 +29,7 @@ namespace MQContract.InMemory
         internal async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             if (!await Publish(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data), cancellationToken))
-                return new(message.ID, TransmissionResultError);
+                return new(message.ID, Error:new(new TransmissionResultException(),true));
             return new(message.ID);
         }
 
@@ -45,7 +43,7 @@ namespace MQContract.InMemory
                     await groups
                         .WhenAll(grp => grp.PublishMessage(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data)))
                     ).ToArray();
-                results=results.Append(new(message.ID, Array.TrueForAll(messageResults, mr => mr) ? null : TransmissionResultError));
+                results=results.Append(new(message.ID, Error:Array.TrueForAll(messageResults, mr => mr) ? null : new(new TransmissionResultException(), true)));
             }
             locker.ExitReadLock();
             return results;
@@ -57,7 +55,7 @@ namespace MQContract.InMemory
         internal async ValueTask<TransmissionResult> QueryAsync(ServiceMessage message, string inbox, Guid correlationID, CancellationToken cancellationToken)
         {
             if (!await Publish(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data, correlationID, inbox), cancellationToken))
-                return new(message.ID, "Unable to trasmit");
+                return new(message.ID, new(new TransmissionResultException(), true));
             return new(message.ID);
         }
 

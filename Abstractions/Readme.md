@@ -4,7 +4,7 @@
 ## Contents
 
 - [ChildTransmissionResult](#T-MQContract-Messages-ChildTransmissionResult 'MQContract.Messages.ChildTransmissionResult')
-  - [#ctor(ServiceName,Error)](#M-MQContract-Messages-ChildTransmissionResult-#ctor-System-String,System-String- 'MQContract.Messages.ChildTransmissionResult.#ctor(System.String,System.String)')
+  - [#ctor(ServiceName,Error)](#M-MQContract-Messages-ChildTransmissionResult-#ctor-System-String,MQContract-Messages-ErrorMessage- 'MQContract.Messages.ChildTransmissionResult.#ctor(System.String,MQContract.Messages.ErrorMessage)')
   - [Error](#P-MQContract-Messages-ChildTransmissionResult-Error 'MQContract.Messages.ChildTransmissionResult.Error')
   - [IsError](#P-MQContract-Messages-ChildTransmissionResult-IsError 'MQContract.Messages.ChildTransmissionResult.IsError')
   - [ServiceName](#P-MQContract-Messages-ChildTransmissionResult-ServiceName 'MQContract.Messages.ChildTransmissionResult.ServiceName')
@@ -191,7 +191,7 @@
   - [#ctor(responseType)](#M-MQContract-Attributes-QueryResponseTypeAttribute-#ctor-System-Type- 'MQContract.Attributes.QueryResponseTypeAttribute.#ctor(System.Type)')
   - [ResponseType](#P-MQContract-Attributes-QueryResponseTypeAttribute-ResponseType 'MQContract.Attributes.QueryResponseTypeAttribute.ResponseType')
 - [QueryResult\`1](#T-MQContract-Messages-QueryResult`1 'MQContract.Messages.QueryResult`1')
-  - [#ctor(ID,Header,Result,Error)](#M-MQContract-Messages-QueryResult`1-#ctor-System-String,MQContract-Messages-MessageHeader,`0,System-String- 'MQContract.Messages.QueryResult`1.#ctor(System.String,MQContract.Messages.MessageHeader,`0,System.String)')
+  - [#ctor(ID,Header,Result,Error)](#M-MQContract-Messages-QueryResult`1-#ctor-System-String,MQContract-Messages-MessageHeader,`0,MQContract-Messages-ErrorMessage- 'MQContract.Messages.QueryResult`1.#ctor(System.String,MQContract.Messages.MessageHeader,`0,MQContract.Messages.ErrorMessage)')
   - [Header](#P-MQContract-Messages-QueryResult`1-Header 'MQContract.Messages.QueryResult`1.Header')
   - [Result](#P-MQContract-Messages-QueryResult`1-Result 'MQContract.Messages.QueryResult`1.Result')
 - [ReceivedInboxServiceMessage](#T-MQContract-Messages-ReceivedInboxServiceMessage 'MQContract.Messages.ReceivedInboxServiceMessage')
@@ -215,7 +215,7 @@
   - [ID](#P-MQContract-Messages-ServiceQueryResult-ID 'MQContract.Messages.ServiceQueryResult.ID')
   - [MessageTypeID](#P-MQContract-Messages-ServiceQueryResult-MessageTypeID 'MQContract.Messages.ServiceQueryResult.MessageTypeID')
 - [TransmissionResult](#T-MQContract-Messages-TransmissionResult 'MQContract.Messages.TransmissionResult')
-  - [#ctor(ID,Error)](#M-MQContract-Messages-TransmissionResult-#ctor-System-String,System-String- 'MQContract.Messages.TransmissionResult.#ctor(System.String,System.String)')
+  - [#ctor(ID,Error)](#M-MQContract-Messages-TransmissionResult-#ctor-System-String,MQContract-Messages-ErrorMessage- 'MQContract.Messages.TransmissionResult.#ctor(System.String,MQContract.Messages.ErrorMessage)')
   - [Error](#P-MQContract-Messages-TransmissionResult-Error 'MQContract.Messages.TransmissionResult.Error')
   - [ID](#P-MQContract-Messages-TransmissionResult-ID 'MQContract.Messages.TransmissionResult.ID')
   - [IsError](#P-MQContract-Messages-TransmissionResult-IsError 'MQContract.Messages.TransmissionResult.IsError')
@@ -237,7 +237,7 @@ Houses the result of a transmission into an underlying service with the correspo
 | ---- | ---- | ----------- |
 | ServiceName | [T:MQContract.Messages.ChildTransmissionResult](#T-T-MQContract-Messages-ChildTransmissionResult 'T:MQContract.Messages.ChildTransmissionResult') | The unique name of the underlying service that was used to transmit |
 
-<a name='M-MQContract-Messages-ChildTransmissionResult-#ctor-System-String,System-String-'></a>
+<a name='M-MQContract-Messages-ChildTransmissionResult-#ctor-System-String,MQContract-Messages-ErrorMessage-'></a>
 ### #ctor(ServiceName,Error) `constructor`
 
 ##### Summary
@@ -249,7 +249,7 @@ Houses the result of a transmission into an underlying service with the correspo
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | ServiceName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique name of the underlying service that was used to transmit |
-| Error | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | An error message if an error occured |
+| Error | [MQContract.Messages.ErrorMessage](#T-MQContract-Messages-ErrorMessage 'MQContract.Messages.ErrorMessage') | An error message if an error occured |
 
 <a name='P-MQContract-Messages-ChildTransmissionResult-Error'></a>
 ### Error `property`
@@ -3212,7 +3212,7 @@ Houses the result from a Query call into the system
 | ---- | ----------- |
 | T | The type of message in the response |
 
-<a name='M-MQContract-Messages-QueryResult`1-#ctor-System-String,MQContract-Messages-MessageHeader,`0,System-String-'></a>
+<a name='M-MQContract-Messages-QueryResult`1-#ctor-System-String,MQContract-Messages-MessageHeader,`0,MQContract-Messages-ErrorMessage-'></a>
 ### #ctor(ID,Header,Result,Error) `constructor`
 
 ##### Summary
@@ -3226,7 +3226,7 @@ Houses the result from a Query call into the system
 | ID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique ID of the message |
 | Header | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The response headers |
 | Result | [\`0](#T-`0 '`0') | The resulting response if there was one |
-| Error | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The error message for the response if it failed and an error was returned |
+| Error | [MQContract.Messages.ErrorMessage](#T-MQContract-Messages-ErrorMessage 'MQContract.Messages.ErrorMessage') | The error message for the response if it failed and an error was returned |
 
 ##### Generic Types
 
@@ -3487,7 +3487,7 @@ Houses the result of a transmission into the system
 | ---- | ---- | ----------- |
 | ID | [T:MQContract.Messages.TransmissionResult](#T-T-MQContract-Messages-TransmissionResult 'T:MQContract.Messages.TransmissionResult') | The unique ID of the message that was transmitted |
 
-<a name='M-MQContract-Messages-TransmissionResult-#ctor-System-String,System-String-'></a>
+<a name='M-MQContract-Messages-TransmissionResult-#ctor-System-String,MQContract-Messages-ErrorMessage-'></a>
 ### #ctor(ID,Error) `constructor`
 
 ##### Summary
@@ -3499,7 +3499,7 @@ Houses the result of a transmission into the system
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | ID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique ID of the message that was transmitted |
-| Error | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | An error message if an error occured |
+| Error | [MQContract.Messages.ErrorMessage](#T-MQContract-Messages-ErrorMessage 'MQContract.Messages.ErrorMessage') | An error message if an error occured |
 
 <a name='P-MQContract-Messages-TransmissionResult-Error'></a>
 ### Error `property`
