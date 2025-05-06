@@ -1,0 +1,14 @@
+﻿using Moq.Language.Flow;
+
+namespace AutomatedTesting
+{
+    public static class MoqExtensions
+    {
+        public static IReturnsResult<T> ReturnsInOrder<T, TResult>(
+            this ISetup<T, TResult> setup, params TResult[] results) where T : class
+        {
+            var queue = new Queue<TResult>(results);
+            return setup.Returns(() => queue.Count > 0 ? queue.Dequeue() : default);
+        }
+    }
+}

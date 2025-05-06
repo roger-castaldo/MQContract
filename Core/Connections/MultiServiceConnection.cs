@@ -86,7 +86,7 @@ namespace MQContract.Connections
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
                 OtelHelper.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                var result = await BulkPublishAsync(serviceMessages, c.MessageServiceConnection, activity, cancellationToken);
+                var result = await BulkPublishAsync<T>(serviceMessages, c.MessageServiceConnection, activity, cancellationToken);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
             publishLock.Release();

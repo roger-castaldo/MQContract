@@ -84,11 +84,11 @@ namespace MQContract.AzureServiceBus
             foreach (var message in messages)
             {
                 if (!messageBatch.TryAddMessage(ConvertMessage(message)))
-                    throw new Exception($"The bulk messages are too large for a batch.");
+                    throw new Exception("The bulk messages are too large for a batch.");
             }
             try
             {
-                await sender.SendMessagesAsync(messageBatch);
+                await sender.SendMessagesAsync(messageBatch,cancellationToken);
             }
             catch (Exception e)
             {

@@ -1,6 +1,4 @@
-﻿using Grpc.Core;
-
-namespace MQContract.KubeMQ
+﻿namespace MQContract.KubeMQ
 {
     /// <summary>
     /// Thrown when an error occurs attempting to connect to the KubeMQ server.  

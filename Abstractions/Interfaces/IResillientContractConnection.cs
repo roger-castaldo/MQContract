@@ -2,20 +2,20 @@
 {
     public interface IResillientContractConnection : IBaseContractConnection
     {
-        void RegisterTransientPublishPolicy(
+        void RegisterResiliencePolicy(
             (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy = null,
             (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy = null
         );
-        void RegisterTransientPublishPolicy<T>(
+        void RegisterResiliencePolicy<T>(
             (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy = null,
             (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy = null
         );
-        void RegisterTransientPublishPolicy(
+        void RegisterResiliencePolicy(
             Type messageType,
             (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy = null,
             (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy = null
         );
-        void RegisterTransientPublishPolicy(
+        void RegisterResiliencePolicy(
             string messageChannel,
             (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy = null,
             (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy = null

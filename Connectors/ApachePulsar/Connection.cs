@@ -1,7 +1,6 @@
 ﻿using DotPulsar;
 using DotPulsar.Abstractions;
 using DotPulsar.Exceptions;
-using DotPulsar.Internal.Events;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Buffers;

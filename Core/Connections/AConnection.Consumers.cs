@@ -41,7 +41,7 @@ namespace MQContract.Connections
 
         private static Type GetConsumerInterfaceType(Type consumerType, Type interfaceType)
             => Array.Find(consumerType.GetInterfaces(), t => t.IsGenericType && t.GetGenericTypeDefinition() == interfaceType)
-                ??throw new InvalidConsumerType(consumerType, interfaceType);
+                ??throw new InvalidConsumerTypeException(consumerType, interfaceType);
 
         private readonly List<Assembly> loadedAssemblies = [];
 

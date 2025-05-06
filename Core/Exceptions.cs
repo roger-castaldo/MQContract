@@ -113,10 +113,25 @@
     /// <summary>
     /// Thrown from a ContractConnection when an attempt to Register a given consumer through Type is not valid because the type does not implement the appropriate interface
     /// </summary>
-    public class InvalidConsumerType : NotSupportedException
+    public class InvalidConsumerTypeException : NotSupportedException
     {
-        internal InvalidConsumerType(Type consumerType, Type interfaceType)
+        internal InvalidConsumerTypeException(Type consumerType, Type interfaceType)
             : base($"Unable to register consumer of Type {consumerType.FullName} because it does not implement the interface {interfaceType.Name}")
         { }
+    }
+
+    /// <summary>
+    /// Thrown from a Resiliant Contract Connection when at attempt to create a policy is made but there is not any valid arguments
+    /// </summary>
+    public class InvalidPolicyArgumentsException : ArgumentException
+    {
+        internal InvalidPolicyArgumentsException(string[] argumentNames)
+            : base($"You must supply at least a {string.Join(" or a ", argumentNames)}") { }
+    }
+
+    public class InvalidRetryCircuitBreakTriggersException : ArgumentException
+    {
+            internal InvalidRetryCircuitBreakTriggersException(string retryArgumentName, string circuitBreakArumentName)
+                : base($"The value for {retryArgumentName} should be less than {circuitBreakArumentName}") { }
     }
 }

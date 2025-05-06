@@ -11,7 +11,6 @@ using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using MQContract.Middleware;
 using MQContract.Subscriptions;
-using Polly;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Reflection;
@@ -300,24 +299,20 @@ namespace MQContract.Connections
         #endregion
 
         #region PubSub
-        protected async ValueTask<TransmissionResult> PublishMessageAsync(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
+        protected async ValueTask<TransmissionResult> PublishMessageAsync<T>(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
         {
-            /*var policyBuilder = Policy<TransmissionResult>
-                .HandleResult(result => result.IsError)
-                .CircuitBreakerAsync()*/
-
             await publishLock.WaitAsync(cancellationToken);
-            var result = await serviceConnection.PublishAsync(
+            var result = await ExecuteResilliantTransmissionAsync<T>((ct) => serviceConnection.PublishAsync(
                 serviceMessage,
-                cancellationToken
-            );
+                ct
+            ), serviceMessage.Channel, cancellationToken);
             OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
             publishLock.Release();
             activity?.SetStatus(result.IsError ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;
         }
-        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken)
+        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken)
         {
             IEnumerable<TransmissionResult> result;
             using var scope = SetScope();
@@ -325,7 +320,7 @@ namespace MQContract.Connections
             if (serviceConnection is IBulkPublishableMessageServiceConnection bulkPublishableMessageServiceConnection)
             {
                 logger?.LogInformation("Executing bulk publish against a service connection that supports bulk publish");
-                result = await bulkPublishableMessageServiceConnection.BulkPublishAsync(serviceMessages, cancellationToken);
+                result = await ExecuteResilliantTransmissionAsync<T>(bulkPublishableMessageServiceConnection.BulkPublishAsync, serviceMessages, cancellationToken);
                 if (activity!=null)
                 {
                     foreach (var res in result)
@@ -343,7 +338,10 @@ namespace MQContract.Connections
                 result = await serviceMessages
                     .WhenAll(async message =>
                     {
-                        var result = await serviceConnection.PublishAsync(message, cancellationToken);
+                        var result = await ExecuteResilliantTransmissionAsync<T>((ct) => serviceConnection.PublishAsync(
+                            message,
+                            ct
+                        ), message.Channel, cancellationToken);
                         activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
                             new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",false),
                             new(OpenTelemetryMiddleware.MessageIdKey,message.ID),
@@ -393,7 +391,7 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        private async ValueTask<ServiceQueryResult> ProcessInboxMessageAsync(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
+        private async ValueTask<ServiceQueryResult> ProcessInboxMessageAsync<T>(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
         {
             using var scope = SetScope(serviceMessage.ID);
             logger?.LogDebug("Establishing an instance of Inbox Message style handling for a QueryResponse call on {ConnectionName}", connectionName);
@@ -443,7 +441,11 @@ namespace MQContract.Connections
             });
             token.CancelAfter(timeout);
             logger?.LogInformation("Transmitting Inbox Query request to underlying system with {CorrelationID} and being waiting on response", messageID);
-            var result = await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, cancellationToken);
+            var result = await ExecuteResilliantTransmissionAsync<T>(
+                async (ct) => await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, ct), 
+                serviceMessage.Channel, 
+                cancellationToken
+            );
             OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, inboxMessageServiceConnection, connectionName);
             if (result.IsError)
             {
@@ -518,29 +520,41 @@ namespace MQContract.Connections
                 if (serviceConnection is IQueryResponseMessageServiceConnection queryableMessageServiceConnection)
                 {
                     logger?.LogInformation("Executing a QueryResponse call on a QueryResponse service connection");
-                    return await ProduceResultAsync<R>(
-                        serviceConnection.MaxMessageBodySize,
-                        await queryableMessageServiceConnection.QueryAsync(
-                            serviceMessage,
-                            realTimeout??queryableMessageServiceConnection.DefaultTimeout,
-                            cancellationToken
+                    return await ExecuteResilliantTransmissionAsync<R>(
+                        async (ct) => await ProduceResultAsync<R>(
+                            serviceConnection.MaxMessageBodySize,
+                            await queryableMessageServiceConnection.QueryAsync(
+                                serviceMessage,
+                                realTimeout??queryableMessageServiceConnection.DefaultTimeout,
+                                ct
+                            ),
+                            serviceConnection,
+                            connectionName
                         ),
-                        serviceConnection,
-                        connectionName
+                        serviceMessage.Channel,
+                        cancellationToken
                     );
                 }
                 else if (serviceConnection is IInboxQueryableMessageServiceConnection inboxMessageServiceConnection)
                 {
                     logger?.LogInformation("Executing a QueryResponse call on an InboxQuery service connection");
-                    return await ProduceResultAsync<R>(
-                        serviceConnection.MaxMessageBodySize,
-                        await ProcessInboxMessageAsync(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, activity, cancellationToken),
-                        serviceConnection,
-                        connectionName
+                    return await ExecuteResilliantTransmissionAsync<R>(
+                        async (ct) => await ProduceResultAsync<R>(
+                            serviceConnection.MaxMessageBodySize,
+                            await ProcessInboxMessageAsync<Q>(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, activity, ct),
+                            serviceConnection,
+                            connectionName
+                        ),
+                        serviceMessage.Channel,
+                        cancellationToken
                     );
                 }
                 logger?.LogInformation("Executing a QueryResponse call on a standard PubSub service connection using {ResponseChannel}", responseChannel);
-                return await ProcessPubSubQuery<Q, R>(serviceConnection, connectionName, responseChannel, realTimeout, serviceMessage, activity, cancellationToken);
+                return await ExecuteResilliantTransmissionAsync<R>(
+                            async (ct) => await ProcessPubSubQuery<Q, R>(serviceConnection, connectionName, responseChannel, realTimeout, serviceMessage, activity, ct),
+                            serviceMessage.Channel,
+                            cancellationToken
+                        );
             }
             catch (Exception ex)
             {
@@ -576,7 +590,11 @@ namespace MQContract.Connections
                 null
             );
             logger?.LogInformation("Transmitting Query request over PubSub");
-            var result = await serviceConnection.PublishAsync(msg, cancellationToken: cancellationToken);
+            var result = await ExecuteResilliantTransmissionAsync<Q>(
+                async (ct) => await serviceConnection.PublishAsync(msg, cancellationToken: ct),
+                serviceMessage.Channel,
+                cancellationToken
+            );
             OtelHelper.AddMessagePublishedEvent(activity, msg, result, serviceConnection, connectionName);
             try
             {

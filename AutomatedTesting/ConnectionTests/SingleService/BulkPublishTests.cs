@@ -1,8 +1,10 @@
 ﻿using AutomatedTesting.Messages;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
+using Polly.CircuitBreaker;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -324,5 +326,411 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #endregion
         }
 
+        [TestMethod]
+        [DataRow(null,null,false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel",null, false)]
+        [DataRow(null,typeof(BasicMessage), false)]
+        public async Task TestBulkPublishAsyncWithNoBulkSupportAndRetryFailure(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+            var error = new Exception("Failed");
+            var retryCount = 2;
+
+            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
+                (new("testMessage"),null),
+                (new("testMessage2"),null)
+            ];
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsInOrder(
+                    ValueTask.FromResult(transmissionResult),
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(),new(error,false))),
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false))),
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false)))
+                );
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            if (channel!=null)
+                contractConnection.RegisterResiliencePolicy(channel, retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(5)));
+            else if (messageType!=null)
+                contractConnection.RegisterResiliencePolicy(messageType, retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(5)));
+            else if (useGenerics)
+                contractConnection.RegisterResiliencePolicy<BasicMessage>(retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(5)));
+            else
+                contractConnection.RegisterResiliencePolicy(retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(5)));
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages,channel:channel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, retryCount+1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(testMessages.Count(), result.Count());
+            var failed = result.Last();
+            Assert.IsTrue(failed.IsError);
+            Assert.IsNotNull(failed.Error);
+            Assert.IsInstanceOfType<ResillianceException>(failed.Error.Exception);
+            Assert.AreEqual(ResillianceTypes.Retry, ((ResillianceException)failed.Error.Exception).Type);
+            Assert.IsNotNull(failed.Error.Exception.InnerException);
+            Assert.AreEqual(error.Message, failed.Error.Exception.InnerException.Message);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(retryCount+2));
+            #endregion
+        }
+
+        [TestMethod]
+        [DataRow(null, null, false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
+        public async Task TestBulkPublishAsyncWithNoBulkSupportAndCircuitBreakFailure(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+            var error = new Exception("Failed");
+            var failureCount = 1;
+
+            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
+                (new("testMessage"),null),
+                (new("testMessage2"),null)
+            ];
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsInOrder(
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false))),
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false))),
+                    ValueTask.FromResult(transmissionResult)
+                );
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            if (channel!=null)
+                contractConnection.RegisterResiliencePolicy(channel, circuitBreakPolicy: (failureCount, TimeSpan.FromMinutes(1)));
+            else if (messageType!=null)
+                contractConnection.RegisterResiliencePolicy(messageType, circuitBreakPolicy: (failureCount, TimeSpan.FromMinutes(1)));
+            else if (useGenerics)
+                contractConnection.RegisterResiliencePolicy<BasicMessage>(circuitBreakPolicy: (failureCount, TimeSpan.FromMinutes(1)));
+            else
+                contractConnection.RegisterResiliencePolicy(circuitBreakPolicy: (failureCount, TimeSpan.FromMinutes(1)));
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages,channel:channel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, failureCount, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(testMessages.Count(), result.Count());
+            var failed = result.Last();
+            Assert.IsTrue(failed.IsError);
+            Assert.IsNotNull(failed.Error);
+            Assert.IsInstanceOfType<ResillianceException>(failed.Error.Exception);
+            Assert.AreEqual(ResillianceTypes.CircuitBreak, ((ResillianceException)failed.Error.Exception).Type);
+            Assert.IsNotNull(failed.Error.Exception.InnerException);
+            Assert.IsInstanceOfType<BrokenCircuitException>(failed.Error.Exception.InnerException);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(failureCount));
+            #endregion
+        }
+
+        [TestMethod]
+        [DataRow(null, null, false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
+        public async Task TestBulkPublishAsyncWithNoBulkWithRetryAndCircuitBreakFailure(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var error = new Exception("Failed");
+            var circuitBreakCount = 3;
+            var retryCount = 2;
+
+            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
+                (new("testMessage"),null),
+                (new("testMessage2"),null)
+            ];
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsInOrder(
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false))),
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false))),
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false))),
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false)))
+                );
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            if (channel!=null)
+                contractConnection.RegisterResiliencePolicy(channel, retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(100)),
+                circuitBreakPolicy: (circuitBreakCount, TimeSpan.FromMinutes(1)));
+            else if (messageType!=null)
+                contractConnection.RegisterResiliencePolicy(messageType, retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(100)),
+                circuitBreakPolicy: (circuitBreakCount, TimeSpan.FromMinutes(1)));
+            else if (useGenerics)
+                contractConnection.RegisterResiliencePolicy<BasicMessage>(retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(100)),
+                circuitBreakPolicy: (circuitBreakCount, TimeSpan.FromMinutes(1)));
+            else
+                contractConnection.RegisterResiliencePolicy(retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(100)),
+                circuitBreakPolicy: (circuitBreakCount, TimeSpan.FromMinutes(1)));
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel:channel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, circuitBreakCount, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(testMessages.Count(), result.Count());
+            var retryFailure = result.First();
+            Assert.IsTrue(retryFailure.IsError);
+            Assert.IsNotNull(retryFailure.Error);
+            Assert.IsInstanceOfType<ResillianceException>(retryFailure.Error.Exception);
+            Assert.AreEqual(ResillianceTypes.Retry, ((ResillianceException)retryFailure.Error.Exception).Type);
+            Assert.AreEqual(error, retryFailure.Error.Exception.InnerException);
+            var circuitFailure = result.Last();
+            Assert.IsTrue(circuitFailure.IsError);
+            Assert.IsNotNull(circuitFailure.Error);
+            Assert.IsInstanceOfType<ResillianceException>(circuitFailure.Error.Exception);
+            Assert.AreEqual(ResillianceTypes.CircuitBreak, ((ResillianceException)circuitFailure.Error.Exception).Type);
+            Assert.IsNotNull(circuitFailure.Error.Exception.InnerException);
+            Assert.IsInstanceOfType<BrokenCircuitException>(circuitFailure.Error.Exception.InnerException);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(retryCount+1));
+            #endregion
+        }
+
+        [TestMethod]
+        [DataRow(null, null, false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
+        public async Task TestBulkPublishAsyncWithBulkSupportAndRetryFailure(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var error = new Exception("Failed");
+            var retryCount = 2;
+
+            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
+                (new("testMessage"),null),
+                (new("testMessage2"),null)
+            ];
+
+            List<IEnumerable<ServiceMessage>> messages = [];
+
+            var serviceConnection = new Mock<IBulkPublishableMessageServiceConnection>();
+            serviceConnection.Setup(x => x.BulkPublishAsync(It.IsAny<IEnumerable<ServiceMessage>>(), It.IsAny<CancellationToken>()))
+                .Returns((IEnumerable<ServiceMessage> serviceMessages, CancellationToken cancellationToken) =>
+                {
+                    messages.Add(serviceMessages);
+                    if (serviceMessages.Count()==2)
+                        return ValueTask.FromResult<IEnumerable<TransmissionResult>>([new(serviceMessages.First().ID), new(serviceMessages.Last().ID, new(error, false))]);
+                    return ValueTask.FromResult(serviceMessages.Select(m => new TransmissionResult(m.ID, new(error, false))));
+                });
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            if (channel!=null)
+                contractConnection.RegisterResiliencePolicy(channel, retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(5)));
+            else if (messageType!=null)
+                contractConnection.RegisterResiliencePolicy(messageType, retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(5)));
+            else if (useGenerics)
+                contractConnection.RegisterResiliencePolicy<BasicMessage>(retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(5)));
+            else
+                contractConnection.RegisterResiliencePolicy(retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(5)));
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, retryCount+1, TimeSpan.FromMinutes(1)));
+            Assert.AreEqual(2, messages[0].Count());
+            Assert.IsTrue(Array.TrueForAll(messages.Skip(1).ToArray(), (msgs) => msgs.Count()==1));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(testMessages.Count(), result.Count());
+            var failed = result.Last();
+            Assert.IsTrue(failed.IsError);
+            Assert.IsNotNull(failed.Error);
+            Assert.IsInstanceOfType<ResillianceException>(failed.Error.Exception);
+            Assert.AreEqual(ResillianceTypes.Retry, ((ResillianceException)failed.Error.Exception).Type);
+            Assert.IsNotNull(failed.Error.Exception.InnerException);
+            Assert.AreEqual(error.Message, failed.Error.Exception.InnerException.Message);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.BulkPublishAsync(It.IsAny<IEnumerable<ServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Exactly(retryCount+1));
+            #endregion
+        }
+
+        [TestMethod]
+        [DataRow(null, null, false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
+        public async Task TestBulkPublishAsyncWithBulkSupportAndCircuitBreakFailure(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var error = new Exception("Failed");
+            var failureCount = 1;
+
+            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
+                (new("testMessage"),null),
+                (new("testMessage2"),null)
+            ];
+
+            List<IEnumerable<ServiceMessage>> messages = [];
+
+            var serviceConnection = new Mock<IBulkPublishableMessageServiceConnection>();
+            serviceConnection.Setup(x => x.BulkPublishAsync(It.IsAny<IEnumerable<ServiceMessage>>(), It.IsAny<CancellationToken>()))
+                .Returns((IEnumerable<ServiceMessage> serviceMessages, CancellationToken cancellationToken) =>
+                {
+                    messages.Add(serviceMessages);
+                    if (serviceMessages.Count()==2)
+                        return ValueTask.FromResult<IEnumerable<TransmissionResult>>([new(serviceMessages.First().ID), new(serviceMessages.Last().ID, new(error, false))]);
+                    return ValueTask.FromResult(serviceMessages.Select(m => new TransmissionResult(m.ID, new(error, false))));
+                });
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            if (channel!=null)
+                contractConnection.RegisterResiliencePolicy(channel, circuitBreakPolicy: (failureCount, TimeSpan.FromMinutes(1)));
+            else if (messageType!=null)
+                contractConnection.RegisterResiliencePolicy(messageType, circuitBreakPolicy: (failureCount, TimeSpan.FromMinutes(1)));
+            else if (useGenerics)
+                contractConnection.RegisterResiliencePolicy<BasicMessage>(circuitBreakPolicy: (failureCount, TimeSpan.FromMinutes(1)));
+            else
+                contractConnection.RegisterResiliencePolicy(circuitBreakPolicy: (failureCount, TimeSpan.FromMinutes(1)));
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            _ = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel);
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, failureCount, TimeSpan.FromMinutes(1)));
+            Assert.AreEqual(2, messages[0].Count());
+            var failed = result.Last();
+            Assert.IsTrue(failed.IsError);
+            Assert.IsNotNull(failed.Error);
+            Assert.IsInstanceOfType<ResillianceException>(failed.Error.Exception);
+            Assert.AreEqual(ResillianceTypes.CircuitBreak, ((ResillianceException)failed.Error.Exception).Type);
+            Assert.IsNotNull(failed.Error.Exception.InnerException);
+            Assert.IsInstanceOfType<BrokenCircuitException>(failed.Error.Exception.InnerException);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.BulkPublishAsync(It.IsAny<IEnumerable<ServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Exactly(failureCount));
+            #endregion
+        }
+
+        [TestMethod]
+        [DataRow(null, null, false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
+        public async Task TestBulkPublishAsyncWithBulkSupportWithRetryAndCircuitBreakFailure(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var error = new Exception("Failed");
+            var circuitBreakCount = 3;
+            var retryCount = 2;
+
+            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
+                (new("testMessage"),null),
+                (new("testMessage2"),null)
+            ];
+
+            List<IEnumerable<ServiceMessage>> messages = [];
+
+            var serviceConnection = new Mock<IBulkPublishableMessageServiceConnection>();
+            serviceConnection.Setup(x => x.BulkPublishAsync(It.IsAny<IEnumerable<ServiceMessage>>(), It.IsAny<CancellationToken>()))
+                .Returns((IEnumerable<ServiceMessage> serviceMessages, CancellationToken cancellationToken) =>
+                {
+                    messages.Add(serviceMessages);
+                    if (serviceMessages.Count()==2)
+                        return ValueTask.FromResult<IEnumerable<TransmissionResult>>([new(serviceMessages.First().ID), new(serviceMessages.Last().ID, new(error, false))]);
+                    return ValueTask.FromResult(serviceMessages.Select(m => new TransmissionResult(m.ID, new(error, false))));
+                });
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            if (channel!=null)
+                contractConnection.RegisterResiliencePolicy(channel, retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(100)),
+                circuitBreakPolicy: (circuitBreakCount, TimeSpan.FromMinutes(1)));
+            else if (messageType!=null)
+                contractConnection.RegisterResiliencePolicy(messageType, retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(100)),
+                circuitBreakPolicy: (circuitBreakCount, TimeSpan.FromMinutes(1)));
+            else if (useGenerics)
+                contractConnection.RegisterResiliencePolicy<BasicMessage>(retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(100)),
+                circuitBreakPolicy: (circuitBreakCount, TimeSpan.FromMinutes(1)));
+            else
+                contractConnection.RegisterResiliencePolicy(retryPolicy: (retryCount, (cnt) => TimeSpan.FromMilliseconds(100)),
+                circuitBreakPolicy: (circuitBreakCount, TimeSpan.FromMinutes(1)));
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var retryResults = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel);
+            var circuitBreakResults = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, circuitBreakCount, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(retryResults);
+            Assert.IsNotNull(circuitBreakResults);
+            Assert.AreEqual(testMessages.Count(), retryResults.Count());
+            Assert.AreEqual(testMessages.Count(), circuitBreakResults.Count());
+            var retryFailure = retryResults.Last();
+            Assert.IsTrue(retryFailure.IsError);
+            Assert.IsNotNull(retryFailure.Error);
+            Assert.IsInstanceOfType<ResillianceException>(retryFailure.Error.Exception);
+            Assert.AreEqual(ResillianceTypes.Retry, ((ResillianceException)retryFailure.Error.Exception).Type);
+            Assert.AreEqual(error, retryFailure.Error.Exception.InnerException);
+            Assert.IsTrue(Array.TrueForAll(circuitBreakResults.ToArray(), result => result.IsError
+            && result.Error!=null 
+            && result.Error.Exception is ResillianceException re 
+            && Equals(ResillianceTypes.CircuitBreak,re.Type)
+            && re.InnerException is BrokenCircuitException));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.BulkPublishAsync(It.IsAny<IEnumerable<ServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Exactly(retryCount+1));
+            #endregion
+        }
     }
 }
