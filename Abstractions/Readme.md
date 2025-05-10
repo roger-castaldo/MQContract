@@ -17,6 +17,11 @@
 - [ConsumerMessageChannelAttribute](#T-MQContract-Attributes-ConsumerMessageChannelAttribute 'MQContract.Attributes.ConsumerMessageChannelAttribute')
   - [#ctor(name)](#M-MQContract-Attributes-ConsumerMessageChannelAttribute-#ctor-System-String- 'MQContract.Attributes.ConsumerMessageChannelAttribute.#ctor(System.String)')
   - [Name](#P-MQContract-Attributes-ConsumerMessageChannelAttribute-Name 'MQContract.Attributes.ConsumerMessageChannelAttribute.Name')
+- [ErrorMessage](#T-MQContract-Messages-ErrorMessage 'MQContract.Messages.ErrorMessage')
+  - [#ctor(exception,isFatal)](#M-MQContract-Messages-ErrorMessage-#ctor-System-Exception,System-Boolean- 'MQContract.Messages.ErrorMessage.#ctor(System.Exception,System.Boolean)')
+  - [Exception](#P-MQContract-Messages-ErrorMessage-Exception 'MQContract.Messages.ErrorMessage.Exception')
+  - [IsFatal](#P-MQContract-Messages-ErrorMessage-IsFatal 'MQContract.Messages.ErrorMessage.IsFatal')
+  - [Message](#P-MQContract-Messages-ErrorMessage-Message 'MQContract.Messages.ErrorMessage.Message')
 - [IAfterDecodeMiddleware](#T-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware 'MQContract.Interfaces.Middleware.IAfterDecodeMiddleware')
   - [AfterMessageDecodeAsync\`\`1(context,message,ID,messageHeader,receivedTimestamp,processedTimeStamp)](#M-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware-AfterMessageDecodeAsync``1-MQContract-Interfaces-Middleware-IContext,``0,System-String,MQContract-Messages-MessageHeader,System-DateTime,System-DateTime- 'MQContract.Interfaces.Middleware.IAfterDecodeMiddleware.AfterMessageDecodeAsync``1(MQContract.Interfaces.Middleware.IContext,``0,System.String,MQContract.Messages.MessageHeader,System.DateTime,System.DateTime)')
 - [IAfterDecodeSpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-IAfterDecodeSpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.IAfterDecodeSpecificTypeMiddleware`1')
@@ -392,6 +397,56 @@ and can be overriden by passing a channel value when registering the consumer.
 ##### Summary
 
 The name of the channel specified for this Consumer to listen to
+
+<a name='T-MQContract-Messages-ErrorMessage'></a>
+## ErrorMessage `type`
+
+##### Namespace
+
+MQContract.Messages
+
+##### Summary
+
+Houses an Exception thrown that needs to be recorded as part of the tranmission result
+
+<a name='M-MQContract-Messages-ErrorMessage-#ctor-System-Exception,System-Boolean-'></a>
+### #ctor(exception,isFatal) `constructor`
+
+##### Summary
+
+Used to construct an instance of the Error object
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exception | [System.Exception](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Exception 'System.Exception') | The error that occured |
+| isFatal | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Used to indicate if the error was fatal.  There is also some additional checks inside that will set to Fatal if a given exception type is supplied. |
+
+##### Remarks
+
+The exceptions that will override and mark fatal are ObjectDisposedException, ArgumentNullException, ArgumentOutOfRangeException, OperationCanceledException, InvalidOperationException
+
+<a name='P-MQContract-Messages-ErrorMessage-Exception'></a>
+### Exception `property`
+
+##### Summary
+
+The exception that was thrown
+
+<a name='P-MQContract-Messages-ErrorMessage-IsFatal'></a>
+### IsFatal `property`
+
+##### Summary
+
+Used to indicate if it was Fatal or not.  If it is a Fatal exception, it will cause the Retry Policies to not be used
+
+<a name='P-MQContract-Messages-ErrorMessage-Message'></a>
+### Message `property`
+
+##### Summary
+
+The error message from the exception
 
 <a name='T-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware'></a>
 ## IAfterDecodeMiddleware `type`

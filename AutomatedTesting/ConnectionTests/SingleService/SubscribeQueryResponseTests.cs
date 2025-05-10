@@ -264,6 +264,43 @@ namespace AutomatedTesting.ConnectionTests.SingleService
         }
 
         [TestMethod]
+        public async Task TestSubscribeQueryResponseAsyncWithExceptionThrownDuringSubscription()
+        {
+            #region Arrange
+            var exception = new Exception("Error occured subscribing");
+
+            var serviceConnection = new Mock<IQueryResponseMessageServiceConnection>();
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(
+                It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(),
+                It.IsAny<Action<Exception>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+               .ThrowsAsync(exception);
+            
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var error = await Assert.ThrowsAsync<Exception>(async ()=> 
+                _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
+                {
+                    return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(new(msg.Message.TypeName), null));
+                }, (error) => { }) 
+            );
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            Assert.AreEqual(exception, error);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
         public async Task TestSubscribeQueryResponseAsyncCleanup()
         {
             #region Arrange

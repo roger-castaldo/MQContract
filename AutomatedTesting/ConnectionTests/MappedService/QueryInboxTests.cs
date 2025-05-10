@@ -128,7 +128,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Assert
             Assert.IsNotNull(exception);
-            Assert.AreEqual(errorMessage, exception.Message);
+            Assert.IsNotNull(exception.InnerException);
+            Assert.AreEqual(errorMessage, exception.InnerException.Message);
             #endregion
 
             #region Verify

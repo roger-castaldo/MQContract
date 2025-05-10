@@ -60,8 +60,8 @@
     /// </summary>
     public class QuerySubmissionFailedException : Exception
     {
-        internal QuerySubmissionFailedException(string message)
-            : base(message) { }
+        internal QuerySubmissionFailedException(Exception innerException)
+            : base("Query Submission failed due to error", innerException) { }
     }
 
     /// <summary>

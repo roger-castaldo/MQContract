@@ -40,8 +40,8 @@ namespace MQContract.Connections
             AsyncPolicy<IEnumerable<T>>? circuit = null;
             if (retryPolicy!=null)
             {
-                fallbackPolicy = Policy.Handle<Exception>(ex => ex is not BrokenCircuitException)
-                        .OrResult<IEnumerable<T>>(results => results.Any(r => r.IsError))
+                fallbackPolicy = Policy
+                        .HandleResult<IEnumerable<T>>(results => results.Any(r => r.IsError && !r.Error!.IsFatal))
                         .FallbackAsync<IEnumerable<T>>(
                             fallbackAction: (delegateResult, context, cancellationToken) =>
                             {
@@ -62,7 +62,7 @@ namespace MQContract.Connections
             if (circuitBreakPolicy!=null)
             {
                 circuit = Policy
-                        .HandleResult<IEnumerable<T>>(results => results.Any(r => r.IsError))
+                        .HandleResult<IEnumerable<T>>(results => results.Any(r => r.IsError && !r.Error!.IsFatal))
                         .CircuitBreakerAsync(circuitBreakPolicy.Value.handledEventsAllowedBeforeBreaking, circuitBreakPolicy.Value.durationOfBreak);
             }
             return (retry, circuit) switch
@@ -105,7 +105,7 @@ namespace MQContract.Connections
                     var serviceMessages = (ServiceMessage[])context[ServiceMessagesKey];
                     var response = await func(serviceMessages.Where(msg=>!currentSuccess.Any(res=>Equals(msg.ID,res.ID))), cancellation);
                     context.Remove(SuccessStorageKey);
-                    context.Add(SuccessStorageKey, currentSuccess.Concat(response.Where(resp => !resp.IsError)).ToArray());
+                    context.Add(SuccessStorageKey, currentSuccess.Concat(response.Where(resp => !resp.IsError || (resp.IsError && resp.Error!.IsFatal))).ToArray());
                     return currentSuccess.Concat(response)
                         .OrderBy(rep => Array.FindIndex(serviceMessages, msg => Equals(msg.ID, rep.ID)))
                         .ToArray();

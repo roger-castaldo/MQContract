@@ -453,7 +453,7 @@ namespace MQContract.Connections
                 await inboxSemaphore.WaitAsync(cancellationToken);
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
-                throw new QuerySubmissionFailedException(result.Error!.Message);
+                throw new QuerySubmissionFailedException(result.Error!.Exception);
             }
             try
             {
@@ -520,17 +520,28 @@ namespace MQContract.Connections
                 if (serviceConnection is IQueryResponseMessageServiceConnection queryableMessageServiceConnection)
                 {
                     logger?.LogInformation("Executing a QueryResponse call on a QueryResponse service connection");
-                    return await ExecuteResilliantTransmissionAsync<R>(
-                        async (ct) => await ProduceResultAsync<R>(
-                            serviceConnection.MaxMessageBodySize,
-                            await queryableMessageServiceConnection.QueryAsync(
-                                serviceMessage,
-                                realTimeout??queryableMessageServiceConnection.DefaultTimeout,
-                                ct
-                            ),
-                            serviceConnection,
-                            connectionName
-                        ),
+                    return await ExecuteResilliantTransmissionAsync<Q, R>(
+                        async (ct) =>
+                        {
+                            ServiceQueryResult result;
+                            try
+                            {
+                                result = await queryableMessageServiceConnection.QueryAsync(
+                                        serviceMessage,
+                                        realTimeout??queryableMessageServiceConnection.DefaultTimeout,
+                                        ct
+                                );
+                            }catch(TransmissionException te)
+                            {
+                                return new QueryResult<R>(serviceMessage.ID, new([]), Error: new(te));
+                            }
+                            return await ProduceResultAsync<R>(
+                                serviceConnection.MaxMessageBodySize,
+                                result,
+                                serviceConnection,
+                                connectionName
+                            );
+                        },
                         serviceMessage.Channel,
                         cancellationToken
                     );
@@ -538,7 +549,7 @@ namespace MQContract.Connections
                 else if (serviceConnection is IInboxQueryableMessageServiceConnection inboxMessageServiceConnection)
                 {
                     logger?.LogInformation("Executing a QueryResponse call on an InboxQuery service connection");
-                    return await ExecuteResilliantTransmissionAsync<R>(
+                    return await ExecuteResilliantTransmissionAsync<Q, R>(
                         async (ct) => await ProduceResultAsync<R>(
                             serviceConnection.MaxMessageBodySize,
                             await ProcessInboxMessageAsync<Q>(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, activity, ct),
@@ -550,7 +561,7 @@ namespace MQContract.Connections
                     );
                 }
                 logger?.LogInformation("Executing a QueryResponse call on a standard PubSub service connection using {ResponseChannel}", responseChannel);
-                return await ExecuteResilliantTransmissionAsync<R>(
+                return await ExecuteResilliantTransmissionAsync<Q, R>(
                             async (ct) => await ProcessPubSubQuery<Q, R>(serviceConnection, connectionName, responseChannel, realTimeout, serviceMessage, activity, ct),
                             serviceMessage.Channel,
                             cancellationToken

@@ -1,5 +1,4 @@
 ﻿using AutomatedTesting.Messages;
-using Castle.Core.Internal;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
@@ -237,7 +236,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Arrange
             var testMessage = new BasicQueryMessage("testMessage");
             var responseMessage = new BasicResponseMessage("testResponse");
-            var responseChannel = typeof(BasicQueryMessage).GetAttribute<QueryResponseChannelAttribute>()?.Name;
+            var responseChannel = typeof(BasicQueryMessage).GetCustomAttribute<QueryResponseChannelAttribute>()?.Name;
             using var ms = new MemoryStream();
             await JsonSerializer.SerializeAsync(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();

@@ -1,6 +1,7 @@
 ﻿using MQContract.Interfaces;
 using MQContract.Messages;
 using System.Collections.Concurrent;
+using System.Threading.Channels;
 
 namespace MQContract.Connections
 {
@@ -33,31 +34,33 @@ namespace MQContract.Connections
         void IResillientContractConnection.RegisterResiliencePolicy(string messageChannel, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => resilliancePolicies.TryAdd(messageChannel, BuildPolicy(retryPolicy, circuitBreakPolicy));
 
-        protected async ValueTask<TransmissionResult> ExecuteResilliantTransmissionAsync<T>(Func<CancellationToken, ValueTask<TransmissionResult>> func, string channel, CancellationToken cancellationToken)
+        private ResilliancePolicy? GetResilliancePolicy<T>(string channel)
         {
             if (!resilliancePolicies.TryGetValue(channel, out var policy)
                 && !resilliancePolicies.TryGetValue(typeof(T), out policy))
-                    policy = defaultResilliancePolicy;
+                policy = defaultResilliancePolicy;
+            return policy;
+        }
+
+        protected async ValueTask<TransmissionResult> ExecuteResilliantTransmissionAsync<T>(Func<CancellationToken, ValueTask<TransmissionResult>> func, string channel, CancellationToken cancellationToken)
+        {
+            var policy = GetResilliancePolicy<T>(channel);
             if (policy==null)
                 return await func(cancellationToken);
             return await policy.ExecuteResilliantTransmissionAsync(func, cancellationToken);
         }
 
-        protected async ValueTask<QueryResult<T>> ExecuteResilliantTransmissionAsync<T>(Func<CancellationToken, ValueTask<QueryResult<T>>> func, string channel, CancellationToken cancellationToken)
+        protected async ValueTask<QueryResult<R>> ExecuteResilliantTransmissionAsync<Q, R>(Func<CancellationToken, ValueTask<QueryResult<R>>> func, string channel, CancellationToken cancellationToken)
         {
-            if (!resilliancePolicies.TryGetValue(channel, out var policy)
-                && !resilliancePolicies.TryGetValue(typeof(T), out policy))
-                policy = defaultResilliancePolicy;
+            var policy = GetResilliancePolicy<Q>(channel);
             if (policy==null)
                 return await func(cancellationToken);
-            return await policy.ExecuteResilliantTransmissionAsync<T>(func, cancellationToken);
+            return await policy.ExecuteResilliantTransmissionAsync<R>(func, cancellationToken);
         }
 
         protected async ValueTask<IEnumerable<TransmissionResult>> ExecuteResilliantTransmissionAsync<T>(Func<IEnumerable<ServiceMessage>, CancellationToken, ValueTask<IEnumerable<TransmissionResult>>> func, IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
         {
-            if (!resilliancePolicies.TryGetValue(messages.First().Channel, out var policy)
-                && !resilliancePolicies.TryGetValue(typeof(T), out policy))
-                policy = defaultResilliancePolicy;
+            var policy = GetResilliancePolicy<T>(messages.First().Channel);
             if (policy == null)
                 return await func(messages, cancellationToken);
             return await policy.ExecuteResilliantTransmissionAsync(func, messages, cancellationToken);
