@@ -449,6 +449,8 @@ namespace MQContract.Connections
             OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, inboxMessageServiceConnection, connectionName);
             if (result.IsError)
             {
+                if (!token.IsCancellationRequested)
+                    await token.CancelAsync();
                 logger?.LogInformation("Inbox Query tranmission failed cleaning up resources");
                 await inboxSemaphore.WaitAsync(cancellationToken);
                 inboxResponses.Remove(messageID);
@@ -607,6 +609,13 @@ namespace MQContract.Connections
                 cancellationToken
             );
             OtelHelper.AddMessagePublishedEvent(activity, msg, result, serviceConnection, connectionName);
+            if (result.IsError)
+            {
+                if (!token.IsCancellationRequested)
+                    await token.CancelAsync();
+                logger?.LogInformation("Inbox Query tranmission failed cleaning up resources");
+                throw new QuerySubmissionFailedException(result.Error!.Exception);
+            }
             try
             {
                 logger?.LogInformation("Waiting on Query Response over PubSub");
