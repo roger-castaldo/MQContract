@@ -55,7 +55,7 @@ namespace MQContract.Connections
                                 return Task.CompletedTask;
                             }
                         );
-                retry = Policy
+                retry = Policy                    
                       .HandleResult<IEnumerable<T>>(results => results.Any(result => result.IsError && !result.Error!.IsFatal))
                       .WaitAndRetryAsync(retryPolicy.Value.retryCount, retryPolicy.Value.sleepDurationProvider);
             }

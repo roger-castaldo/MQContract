@@ -43,12 +43,10 @@ namespace MQContract.Connections
         private ResilliancePolicy? GetResilliancePolicy<T>(string? connectionName,string channel)
         {
             ResilliancePolicy? policy = null;
-            if (connectionName!=null)
-            {
-                if(!resilliancePolicies.TryGetValue(new(connectionName,channel),out policy)
-                    && !resilliancePolicies.TryGetValue(new(connectionName, typeof(T)),out policy))
-                    resilliancePolicies.TryGetValue(new(connectionName, null), out policy);
-            }
+            if (connectionName!=null
+                &&!resilliancePolicies.TryGetValue(new(connectionName, channel), out policy)
+                && !resilliancePolicies.TryGetValue(new(connectionName, typeof(T)), out policy))
+                resilliancePolicies.TryGetValue(new(connectionName, null), out policy);
             if (policy==null 
                 && !resilliancePolicies.TryGetValue(new(null, channel), out policy)
                 && !resilliancePolicies.TryGetValue(new(null, typeof(T)), out policy))

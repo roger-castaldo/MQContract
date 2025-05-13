@@ -159,6 +159,20 @@ namespace AutomatedTesting.ConnectionTests
             return (listener, capturedActivities, sourceName);
         }
 
+        public static void AssignResiliencePolicy<T>(
+            IMappedContractConnection contractConnection,
+            string? serviceName, string? channel, Type? messageType, bool useGenerics,
+            int? retryCount, int? circuitBreakFailureCount)
+            => AssignResiliencePolicy<T, IMappedContractConnection>(
+                contractConnection,
+                channel,
+                messageType,
+                useGenerics,
+                retryCount,
+                circuitBreakFailureCount,
+                serviceName
+            );
+
         public static void AssignResiliencePolicy<T>(IContractedConnection contractConnection,
             string? channel, Type? messageType, bool useGenerics,
             int? retryCount, int? circuitBreakFailureCount)
@@ -168,12 +182,15 @@ namespace AutomatedTesting.ConnectionTests
                 messageType, 
                 useGenerics, 
                 retryCount, 
-                circuitBreakFailureCount
+                circuitBreakFailureCount,
+                null
             );
 
-        public static void AssignResiliencePolicy<T,C>(IResillientContractConnection<C> contractConnection,
+        public static void AssignResiliencePolicy<T,C>(
+            IResillientContractConnection<C> contractConnection,
             string? channel, Type? messageType, bool useGenerics,
-            int? retryCount, int? circuitBreakFailureCount)
+            int? retryCount, int? circuitBreakFailureCount,
+            string? serviceName)
             where C : IBaseContractConnection
         {
             (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy = null;
@@ -182,28 +199,60 @@ namespace AutomatedTesting.ConnectionTests
             (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakerPolicy = null;
             if (circuitBreakFailureCount!=null)
                 circuitBreakerPolicy = (circuitBreakFailureCount.Value, TimeSpan.FromMinutes(1));
-            if (channel!=null)
-                contractConnection.RegisterResiliencePolicy(
-                    channel, 
-                    retryPolicy: retryPolicy,
-                    circuitBreakPolicy: circuitBreakerPolicy
-                );
-            else if (messageType!=null)
-                contractConnection.RegisterResiliencePolicy(
-                    messageType,
-                    retryPolicy: retryPolicy,
-                    circuitBreakPolicy: circuitBreakerPolicy
-                );
-            else if (useGenerics)
-                contractConnection.RegisterResiliencePolicy<T>(
-                    retryPolicy: retryPolicy,
-                    circuitBreakPolicy: circuitBreakerPolicy
-                );
+            if (serviceName!=null && contractConnection is IMappableContractConnection<C> mappableContractConnection)
+            {
+                if (channel!=null)
+                    mappableContractConnection.RegisterResiliencePolicy(
+                        serviceName,
+                        channel,
+                        retryPolicy: retryPolicy,
+                        circuitBreakPolicy: circuitBreakerPolicy
+                    );
+                else if (messageType!=null)
+                    mappableContractConnection.RegisterResiliencePolicy(
+                        serviceName,
+                        messageType,
+                        retryPolicy: retryPolicy,
+                        circuitBreakPolicy: circuitBreakerPolicy
+                    );
+                else if (useGenerics)
+                    mappableContractConnection.RegisterResiliencePolicy<T>(
+                        serviceName,
+                        retryPolicy: retryPolicy,
+                        circuitBreakPolicy: circuitBreakerPolicy
+                    );
+                else
+                    mappableContractConnection.RegisterResiliencePolicy(
+                        serviceName,
+                        retryPolicy: retryPolicy,
+                        circuitBreakPolicy: circuitBreakerPolicy
+                    );
+            }
             else
-                contractConnection.RegisterResiliencePolicy(
-                    retryPolicy: retryPolicy,
-                    circuitBreakPolicy: circuitBreakerPolicy
-                );
+            {
+                if (channel!=null)
+                    contractConnection.RegisterResiliencePolicy(
+                        channel,
+                        retryPolicy: retryPolicy,
+                        circuitBreakPolicy: circuitBreakerPolicy
+                    );
+                else if (messageType!=null)
+                    contractConnection.RegisterResiliencePolicy(
+                        messageType,
+                        retryPolicy: retryPolicy,
+                        circuitBreakPolicy: circuitBreakerPolicy
+                    );
+                else if (useGenerics)
+                    contractConnection.RegisterResiliencePolicy<T>(
+                        retryPolicy: retryPolicy,
+                        circuitBreakPolicy: circuitBreakerPolicy
+                    );
+                else
+                    contractConnection.RegisterResiliencePolicy(
+                        retryPolicy: retryPolicy,
+                        circuitBreakPolicy: circuitBreakerPolicy
+                    );
+            }
         }
     }
 }
