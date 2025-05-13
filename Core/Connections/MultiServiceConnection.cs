@@ -8,6 +8,7 @@ using MQContract.Messages;
 using MQContract.Subscriptions;
 using System.Diagnostics;
 using System.Reflection;
+using static MQContract.Connections.ServiceConnectionList;
 
 namespace MQContract.Connections
 {
@@ -61,7 +62,15 @@ namespace MQContract.Connections
                 .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () =>
                 {
                     OtelHelper.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                    var result = await c.MessageServiceConnection.PublishAsync(serviceMessage, cancellationToken);
+                    var result = await ExecuteResilliantTransmissionAsync<T>(
+                        (ct) => c.MessageServiceConnection.PublishAsync(
+                            serviceMessage,
+                            ct
+                        ),
+                        c.ServiceConnectionName,
+                        serviceMessage.Channel,
+                        cancellationToken
+                    );
                     OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, c.MessageServiceConnection, c.ServiceConnectionName);
                     return result;
                 }));
@@ -86,7 +95,7 @@ namespace MQContract.Connections
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
                 OtelHelper.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                var result = await BulkPublishAsync<T>(serviceMessages, c.MessageServiceConnection, activity, cancellationToken);
+                var result = await BulkPublishAsync<T>(serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
             publishLock.Release();

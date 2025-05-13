@@ -302,17 +302,22 @@ namespace MQContract.Connections
         protected async ValueTask<TransmissionResult> PublishMessageAsync<T>(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
         {
             await publishLock.WaitAsync(cancellationToken);
-            var result = await ExecuteResilliantTransmissionAsync<T>((ct) => serviceConnection.PublishAsync(
-                serviceMessage,
-                ct
-            ), serviceMessage.Channel, cancellationToken);
+            var result = await ExecuteResilliantTransmissionAsync<T>(
+                (ct) => serviceConnection.PublishAsync(
+                    serviceMessage,
+                    ct
+                ), 
+                connectionName, 
+                serviceMessage.Channel, 
+                cancellationToken
+            );
             OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
             publishLock.Release();
             activity?.SetStatus(result.IsError ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;
         }
-        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken)
+        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken, string? connectionName=null)
         {
             IEnumerable<TransmissionResult> result;
             using var scope = SetScope();
@@ -320,7 +325,12 @@ namespace MQContract.Connections
             if (serviceConnection is IBulkPublishableMessageServiceConnection bulkPublishableMessageServiceConnection)
             {
                 logger?.LogInformation("Executing bulk publish against a service connection that supports bulk publish");
-                result = await ExecuteResilliantTransmissionAsync<T>(bulkPublishableMessageServiceConnection.BulkPublishAsync, serviceMessages, cancellationToken);
+                result = await ExecuteResilliantTransmissionAsync<T>(
+                    bulkPublishableMessageServiceConnection.BulkPublishAsync, 
+                    connectionName, 
+                    serviceMessages, 
+                    cancellationToken
+                );
                 if (activity!=null)
                 {
                     foreach (var res in result)
@@ -338,10 +348,15 @@ namespace MQContract.Connections
                 result = await serviceMessages
                     .WhenAll(async message =>
                     {
-                        var result = await ExecuteResilliantTransmissionAsync<T>((ct) => serviceConnection.PublishAsync(
-                            message,
-                            ct
-                        ), message.Channel, cancellationToken);
+                        var result = await ExecuteResilliantTransmissionAsync<T>(
+                            (ct) => serviceConnection.PublishAsync(
+                                message,
+                                ct
+                            ),
+                            connectionName,
+                            message.Channel, 
+                            cancellationToken
+                        );
                         activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
                             new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",false),
                             new(OpenTelemetryMiddleware.MessageIdKey,message.ID),
@@ -443,6 +458,7 @@ namespace MQContract.Connections
             logger?.LogInformation("Transmitting Inbox Query request to underlying system with {CorrelationID} and being waiting on response", messageID);
             var result = await ExecuteResilliantTransmissionAsync<T>(
                 async (ct) => await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, ct), 
+                connectionName, 
                 serviceMessage.Channel, 
                 cancellationToken
             );
@@ -544,6 +560,7 @@ namespace MQContract.Connections
                                 connectionName
                             );
                         },
+                        connectionName,
                         serviceMessage.Channel,
                         cancellationToken
                     );
@@ -558,6 +575,7 @@ namespace MQContract.Connections
                             serviceConnection,
                             connectionName
                         ),
+                        connectionName,
                         serviceMessage.Channel,
                         cancellationToken
                     );
@@ -565,6 +583,7 @@ namespace MQContract.Connections
                 logger?.LogInformation("Executing a QueryResponse call on a standard PubSub service connection using {ResponseChannel}", responseChannel);
                 return await ExecuteResilliantTransmissionAsync<Q, R>(
                             async (ct) => await ProcessPubSubQuery<Q, R>(serviceConnection, connectionName, responseChannel, realTimeout, serviceMessage, activity, ct),
+                            connectionName,
                             serviceMessage.Channel,
                             cancellationToken
                         );
@@ -605,6 +624,7 @@ namespace MQContract.Connections
             logger?.LogInformation("Transmitting Query request over PubSub");
             var result = await ExecuteResilliantTransmissionAsync<Q>(
                 async (ct) => await serviceConnection.PublishAsync(msg, cancellationToken: ct),
+                connectionName,
                 serviceMessage.Channel,
                 cancellationToken
             );

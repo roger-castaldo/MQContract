@@ -6,7 +6,7 @@ namespace MQContract.Interfaces
     /// <summary>
     /// This interface represents a portion of the Contract Connection, specifically the portion for registering all Consumer classes
     /// </summary>
-    public interface IConsumerContractConnection : IResillientContractConnection
+    public interface IConsumerContractConnection : IBaseContractConnection
     {
         /// <summary>
         /// Called to load all defined consumers found within the application, either within the supplied assembly or if null within the default LoadContext

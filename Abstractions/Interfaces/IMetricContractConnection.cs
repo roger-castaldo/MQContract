@@ -7,7 +7,7 @@ namespace MQContract.Interfaces
     /// Houses the metric pieces for a given contract connection
     /// </summary>
     /// <typeparam name="CC">The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining.</typeparam>
-    public interface IMetricContractConnection<CC> : IConsumerContractConnection
+    public interface IMetricContractConnection<CC> : IResillientContractConnection<CC>
         where CC : IBaseContractConnection
     {
         /// <summary>

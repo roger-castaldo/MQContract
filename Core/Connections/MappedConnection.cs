@@ -110,7 +110,7 @@ namespace MQContract.Connections
             var serviceConnection = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(T), serviceMessages.First().Header);
             OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
             await publishLock.WaitAsync(cancellationToken);
-            var result = await BulkPublishAsync<T>(serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken);
+            var result = await BulkPublishAsync<T>(serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken, connectionName: serviceConnection.ServiceConnectionName);
             publishLock.Release();
             activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();

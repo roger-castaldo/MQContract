@@ -159,9 +159,22 @@ namespace AutomatedTesting.ConnectionTests
             return (listener, capturedActivities, sourceName);
         }
 
-        public static void AssignResiliencePolicy<T>(IResillientContractConnection contractConnection,
+        public static void AssignResiliencePolicy<T>(IContractedConnection contractConnection,
             string? channel, Type? messageType, bool useGenerics,
             int? retryCount, int? circuitBreakFailureCount)
+            => AssignResiliencePolicy<T, IContractedConnection>(
+                contractConnection, 
+                channel, 
+                messageType, 
+                useGenerics, 
+                retryCount, 
+                circuitBreakFailureCount
+            );
+
+        public static void AssignResiliencePolicy<T,C>(IResillientContractConnection<C> contractConnection,
+            string? channel, Type? messageType, bool useGenerics,
+            int? retryCount, int? circuitBreakFailureCount)
+            where C : IBaseContractConnection
         {
             (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy = null;
             if (retryCount!=null)
