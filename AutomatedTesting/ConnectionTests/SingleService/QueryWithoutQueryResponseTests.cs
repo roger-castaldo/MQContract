@@ -543,8 +543,8 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, retryCount+1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(exception);
             Assert.IsNotNull(exception.InnerException);
-            Assert.IsInstanceOfType<ResillianceException>(exception.InnerException);
-            Assert.AreEqual(ResillianceTypes.Retry, ((ResillianceException)exception.InnerException).Type);
+            Assert.IsInstanceOfType<ResilienceException>(exception.InnerException);
+            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)exception.InnerException).Type);
             Assert.IsNotNull(exception.InnerException.InnerException);
             Assert.AreEqual(transmissionResult.Error!.Exception, exception.InnerException.InnerException);
             #endregion
@@ -598,8 +598,8 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, circuitBreakCount, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(exception);
             Assert.IsNotNull(exception.InnerException);
-            Assert.IsInstanceOfType<ResillianceException>(exception.InnerException);
-            Assert.AreEqual(ResillianceTypes.CircuitBreak, ((ResillianceException)exception.InnerException).Type);
+            Assert.IsInstanceOfType<ResilienceException>(exception.InnerException);
+            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)exception.InnerException).Type);
             Assert.IsNotNull(exception.InnerException.InnerException);
             Assert.IsInstanceOfType<BrokenCircuitException>(exception.InnerException.InnerException);
             #endregion
@@ -654,14 +654,14 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, retryCount+1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(retryException);
             Assert.IsNotNull(retryException.InnerException);
-            Assert.IsInstanceOfType<ResillianceException>(retryException.InnerException);
-            Assert.AreEqual(ResillianceTypes.Retry, ((ResillianceException)retryException.InnerException).Type);
+            Assert.IsInstanceOfType<ResilienceException>(retryException.InnerException);
+            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)retryException.InnerException).Type);
             Assert.IsNotNull(retryException.InnerException.InnerException);
             Assert.AreEqual(transmissionResult.Error!.Exception, retryException.InnerException.InnerException);
             Assert.IsNotNull(circuitException);
             Assert.IsNotNull(circuitException.InnerException);
-            Assert.IsInstanceOfType<ResillianceException>(circuitException.InnerException);
-            Assert.AreEqual(ResillianceTypes.CircuitBreak, ((ResillianceException)circuitException.InnerException).Type);
+            Assert.IsInstanceOfType<ResilienceException>(circuitException.InnerException);
+            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)circuitException.InnerException).Type);
             Assert.IsNotNull(circuitException.InnerException.InnerException);
             Assert.IsInstanceOfType<BrokenCircuitException>(circuitException.InnerException.InnerException);
             #endregion
@@ -716,11 +716,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(retryException);
             Assert.IsNotNull(retryException.InnerException);
-            Assert.IsNotInstanceOfType<ResillianceException>(retryException.InnerException);
+            Assert.IsNotInstanceOfType<ResilienceException>(retryException.InnerException);
             Assert.AreEqual(transmissionResult.Error!.Exception, retryException.InnerException);
             Assert.IsNotNull(circuitException);
             Assert.IsNotNull(circuitException.InnerException);
-            Assert.IsNotInstanceOfType<ResillianceException>(circuitException.InnerException);
+            Assert.IsNotInstanceOfType<ResilienceException>(circuitException.InnerException);
             Assert.AreEqual(transmissionResult.Error!.Exception, circuitException.InnerException);
             #endregion
 
@@ -779,12 +779,12 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNotNull(typeRetryException);
             Assert.IsNotNull(typeCircuitException);
 
-            Assert.IsTrue(Array.TrueForAll([channelRetryException, typeRetryException], (ex) => ex.InnerException is ResillianceException re
-            && Equals(ResillianceTypes.Retry, re.Type)
+            Assert.IsTrue(Array.TrueForAll([channelRetryException, typeRetryException], (ex) => ex.InnerException is ResilienceException re
+            && Equals(ResilienceTypes.Retry, re.Type)
             && Equals(error, re.InnerException)));
 
-            Assert.IsTrue(Array.TrueForAll([channelCircuitException, typeCircuitException], (ex) => ex.InnerException is ResillianceException re
-            && Equals(ResillianceTypes.CircuitBreak, re.Type)
+            Assert.IsTrue(Array.TrueForAll([channelCircuitException, typeCircuitException], (ex) => ex.InnerException is ResilienceException re
+            && Equals(ResilienceTypes.CircuitBreak, re.Type)
             && re.InnerException is BrokenCircuitException));
             #endregion
 

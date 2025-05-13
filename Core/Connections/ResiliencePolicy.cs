@@ -6,12 +6,12 @@ using System.Collections.Concurrent;
 
 namespace MQContract.Connections
 {
-    internal class ResilliancePolicy(ILogger? logger,
+    internal class ResiliencePolicy(ILogger? logger,
         (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, 
         (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy
     )
     {
-        private static IEnumerable<T> WrapInstance<T>(ResillianceTypes type, IEnumerable<T> instances)
+        private static IEnumerable<T> WrapInstance<T>(ResilienceTypes type, IEnumerable<T> instances)
             where T : TransmissionResult
         {
             var constructor = typeof(T).GetConstructors()[0];
@@ -21,7 +21,7 @@ namespace MQContract.Connections
                     var value = typeof(T).GetProperty(p.Name!)!.GetValue(instance);
                     if (value is ErrorMessage errorMessage)
                     {
-                        return new ErrorMessage(new ResillianceException(type, errorMessage.Exception), errorMessage.IsFatal);
+                        return new ErrorMessage(new ResilienceException(type, errorMessage.Exception), errorMessage.IsFatal);
                     }
                     return value;
                 }).ToArray();
@@ -47,7 +47,7 @@ namespace MQContract.Connections
                             {
                                 foreach (var result in delegateResult.Result.Where(r => r.IsError))
                                     logger?.LogDebug("Retry fallback has been triggered for {MessageID}", result.ID);
-                                return Task.FromResult(WrapInstance<T>(ResillianceTypes.Retry, delegateResult.Result));
+                                return Task.FromResult(WrapInstance<T>(ResilienceTypes.Retry, delegateResult.Result));
                             },
                             onFallbackAsync: (delegateResult, cancellationToken) =>
                             {
@@ -87,7 +87,7 @@ namespace MQContract.Connections
             }
             catch (BrokenCircuitException bce)
             {
-                return new(string.Empty, new(new ResillianceException(ResillianceTypes.CircuitBreak, bce)));
+                return new(string.Empty, new(new ResilienceException(ResilienceTypes.CircuitBreak, bce)));
             }
         }
 
@@ -113,7 +113,7 @@ namespace MQContract.Connections
             }
             catch (BrokenCircuitException bce)
             {
-                return messages.Select(msg => new TransmissionResult(msg.ID, new(new ResillianceException(ResillianceTypes.CircuitBreak, bce))));
+                return messages.Select(msg => new TransmissionResult(msg.ID, new(new ResilienceException(ResilienceTypes.CircuitBreak, bce))));
             }
         }
 
@@ -130,7 +130,7 @@ namespace MQContract.Connections
             }
             catch (BrokenCircuitException bce)
             {
-                return new(string.Empty, new([]), Error: new(new ResillianceException(ResillianceTypes.CircuitBreak, bce)));
+                return new(string.Empty, new([]), Error: new(new ResilienceException(ResilienceTypes.CircuitBreak, bce)));
             }
         }
     }

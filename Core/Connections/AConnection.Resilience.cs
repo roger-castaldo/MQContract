@@ -11,9 +11,9 @@ namespace MQContract.Connections
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
         where CC : IBaseContractConnection
     {
-        private readonly ConcurrentDictionary<Tuple<string?,object?>, ResilliancePolicy> resilliancePolicies = [];
+        private readonly ConcurrentDictionary<Tuple<string?,object?>, ResiliencePolicy> resilliancePolicies = [];
 
-        private ResilliancePolicy BuildPolicy((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        private ResiliencePolicy BuildPolicy((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
         {
             if (retryPolicy==null && circuitBreakPolicy == null)
                 throw new InvalidPolicyArgumentsException([nameof(retryPolicy), nameof(circuitBreakPolicy)]);
@@ -28,21 +28,21 @@ namespace MQContract.Connections
             return (CC)(IBaseContractConnection)this;
         }
 
-        CC IResillientContractConnection<CC>.RegisterResiliencePolicy((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        CC IResilientContractConnection<CC>.RegisterResiliencePolicy((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(null, null, retryPolicy, circuitBreakPolicy);
 
-        CC IResillientContractConnection<CC>.RegisterResiliencePolicy<T>((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        CC IResilientContractConnection<CC>.RegisterResiliencePolicy<T>((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(null,typeof(T), retryPolicy, circuitBreakPolicy);
 
-        CC IResillientContractConnection<CC>.RegisterResiliencePolicy(Type messageType, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        CC IResilientContractConnection<CC>.RegisterResiliencePolicy(Type messageType, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(null,messageType, retryPolicy, circuitBreakPolicy);
 
-        CC IResillientContractConnection<CC>.RegisterResiliencePolicy(string messageChannel, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        CC IResilientContractConnection<CC>.RegisterResiliencePolicy(string messageChannel, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(null,messageChannel, retryPolicy, circuitBreakPolicy);
 
-        private ResilliancePolicy? GetResilliancePolicy<T>(string? connectionName,string channel)
+        private ResiliencePolicy? GetResilliancePolicy<T>(string? connectionName,string channel)
         {
-            ResilliancePolicy? policy = null;
+            ResiliencePolicy? policy = null;
             if (connectionName!=null
                 &&!resilliancePolicies.TryGetValue(new(connectionName, channel), out policy)
                 && !resilliancePolicies.TryGetValue(new(connectionName, typeof(T)), out policy))

@@ -154,11 +154,11 @@
   - [Message](#P-MQContract-Interfaces-IReceivedMessage`1-Message 'MQContract.Interfaces.IReceivedMessage`1.Message')
   - [ProcessedTimestamp](#P-MQContract-Interfaces-IReceivedMessage`1-ProcessedTimestamp 'MQContract.Interfaces.IReceivedMessage`1.ProcessedTimestamp')
   - [ReceivedTimestamp](#P-MQContract-Interfaces-IReceivedMessage`1-ReceivedTimestamp 'MQContract.Interfaces.IReceivedMessage`1.ReceivedTimestamp')
-- [IResillientContractConnection\`1](#T-MQContract-Interfaces-IResillientContractConnection`1 'MQContract.Interfaces.IResillientContractConnection`1')
-  - [RegisterResiliencePolicy(retryPolicy,circuitBreakPolicy)](#M-MQContract-Interfaces-IResillientContractConnection`1-RegisterResiliencePolicy-System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}- 'MQContract.Interfaces.IResillientContractConnection`1.RegisterResiliencePolicy(System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}},System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}})')
-  - [RegisterResiliencePolicy(messageType,retryPolicy,circuitBreakPolicy)](#M-MQContract-Interfaces-IResillientContractConnection`1-RegisterResiliencePolicy-System-Type,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}- 'MQContract.Interfaces.IResillientContractConnection`1.RegisterResiliencePolicy(System.Type,System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}},System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}})')
-  - [RegisterResiliencePolicy(messageChannel,retryPolicy,circuitBreakPolicy)](#M-MQContract-Interfaces-IResillientContractConnection`1-RegisterResiliencePolicy-System-String,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}- 'MQContract.Interfaces.IResillientContractConnection`1.RegisterResiliencePolicy(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}},System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}})')
-  - [RegisterResiliencePolicy\`\`1(retryPolicy,circuitBreakPolicy)](#M-MQContract-Interfaces-IResillientContractConnection`1-RegisterResiliencePolicy``1-System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}- 'MQContract.Interfaces.IResillientContractConnection`1.RegisterResiliencePolicy``1(System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}},System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}})')
+- [IResilientContractConnection\`1](#T-MQContract-Interfaces-IResilientContractConnection`1 'MQContract.Interfaces.IResilientContractConnection`1')
+  - [RegisterResiliencePolicy(retryPolicy,circuitBreakPolicy)](#M-MQContract-Interfaces-IResilientContractConnection`1-RegisterResiliencePolicy-System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}- 'MQContract.Interfaces.IResilientContractConnection`1.RegisterResiliencePolicy(System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}},System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}})')
+  - [RegisterResiliencePolicy(messageType,retryPolicy,circuitBreakPolicy)](#M-MQContract-Interfaces-IResilientContractConnection`1-RegisterResiliencePolicy-System-Type,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}- 'MQContract.Interfaces.IResilientContractConnection`1.RegisterResiliencePolicy(System.Type,System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}},System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}})')
+  - [RegisterResiliencePolicy(messageChannel,retryPolicy,circuitBreakPolicy)](#M-MQContract-Interfaces-IResilientContractConnection`1-RegisterResiliencePolicy-System-String,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}- 'MQContract.Interfaces.IResilientContractConnection`1.RegisterResiliencePolicy(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}},System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}})')
+  - [RegisterResiliencePolicy\`\`1(retryPolicy,circuitBreakPolicy)](#M-MQContract-Interfaces-IResilientContractConnection`1-RegisterResiliencePolicy``1-System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}- 'MQContract.Interfaces.IResilientContractConnection`1.RegisterResiliencePolicy``1(System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}},System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}})')
 - [IServiceSubscription](#T-MQContract-Interfaces-Service-IServiceSubscription 'MQContract.Interfaces.Service.IServiceSubscription')
   - [EndAsync()](#M-MQContract-Interfaces-Service-IServiceSubscription-EndAsync 'MQContract.Interfaces.Service.IServiceSubscription.EndAsync')
 - [ISpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.ISpecificTypeMiddleware`1')
@@ -215,6 +215,12 @@
   - [#ctor(ID,MessageTypeID,Channel,Header,Data,Acknowledge)](#M-MQContract-Messages-ReceivedServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte},System-Func{System-Threading-Tasks-ValueTask}- 'MQContract.Messages.ReceivedServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.ReadOnlyMemory{System.Byte},System.Func{System.Threading.Tasks.ValueTask})')
   - [Acknowledge](#P-MQContract-Messages-ReceivedServiceMessage-Acknowledge 'MQContract.Messages.ReceivedServiceMessage.Acknowledge')
   - [ReceivedTimestamp](#P-MQContract-Messages-ReceivedServiceMessage-ReceivedTimestamp 'MQContract.Messages.ReceivedServiceMessage.ReceivedTimestamp')
+- [ResilienceException](#T-MQContract-ResilienceException 'MQContract.ResilienceException')
+  - [#ctor(type,error)](#M-MQContract-ResilienceException-#ctor-MQContract-ResilienceTypes,System-Exception- 'MQContract.ResilienceException.#ctor(MQContract.ResilienceTypes,System.Exception)')
+  - [Type](#P-MQContract-ResilienceException-Type 'MQContract.ResilienceException.Type')
+- [ResilienceTypes](#T-MQContract-ResilienceTypes 'MQContract.ResilienceTypes')
+  - [CircuitBreak](#F-MQContract-ResilienceTypes-CircuitBreak 'MQContract.ResilienceTypes.CircuitBreak')
+  - [Retry](#F-MQContract-ResilienceTypes-Retry 'MQContract.ResilienceTypes.Retry')
 - [ServiceMessage](#T-MQContract-Messages-ServiceMessage 'MQContract.Messages.ServiceMessage')
   - [#ctor(ID,MessageTypeID,Channel,Header,Data)](#M-MQContract-Messages-ServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte}- 'MQContract.Messages.ServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.ReadOnlyMemory{System.Byte})')
   - [Channel](#P-MQContract-Messages-ServiceMessage-Channel 'MQContract.Messages.ServiceMessage.Channel')
@@ -228,6 +234,9 @@
   - [Header](#P-MQContract-Messages-ServiceQueryResult-Header 'MQContract.Messages.ServiceQueryResult.Header')
   - [ID](#P-MQContract-Messages-ServiceQueryResult-ID 'MQContract.Messages.ServiceQueryResult.ID')
   - [MessageTypeID](#P-MQContract-Messages-ServiceQueryResult-MessageTypeID 'MQContract.Messages.ServiceQueryResult.MessageTypeID')
+- [TransmissionException](#T-MQContract-TransmissionException 'MQContract.TransmissionException')
+  - [#ctor(underlyingError,isFatal)](#M-MQContract-TransmissionException-#ctor-System-Exception,System-Boolean- 'MQContract.TransmissionException.#ctor(System.Exception,System.Boolean)')
+  - [IsFatal](#P-MQContract-TransmissionException-IsFatal 'MQContract.TransmissionException.IsFatal')
 - [TransmissionResult](#T-MQContract-Messages-TransmissionResult 'MQContract.Messages.TransmissionResult')
   - [#ctor(ID,Error)](#M-MQContract-Messages-TransmissionResult-#ctor-System-String,MQContract-Messages-ErrorMessage- 'MQContract.Messages.TransmissionResult.#ctor(System.String,MQContract.Messages.ErrorMessage)')
   - [Error](#P-MQContract-Messages-TransmissionResult-Error 'MQContract.Messages.TransmissionResult.Error')
@@ -2709,8 +2718,8 @@ The timestamp of when the received message was converted into the actual class p
 
 The timestamp of when the message was received by the underlying service connection
 
-<a name='T-MQContract-Interfaces-IResillientContractConnection`1'></a>
-## IResillientContractConnection\`1 `type`
+<a name='T-MQContract-Interfaces-IResilientContractConnection`1'></a>
+## IResilientContractConnection\`1 `type`
 
 ##### Namespace
 
@@ -2734,7 +2743,7 @@ Channel
 Type
 Default
 
-<a name='M-MQContract-Interfaces-IResillientContractConnection`1-RegisterResiliencePolicy-System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}-'></a>
+<a name='M-MQContract-Interfaces-IResilientContractConnection`1-RegisterResiliencePolicy-System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}-'></a>
 ### RegisterResiliencePolicy(retryPolicy,circuitBreakPolicy) `method`
 
 ##### Summary
@@ -2748,7 +2757,7 @@ Register a default resiliency policy that will apply to any message transmission
 | retryPolicy | [System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}}') | The settings to use for retries if desired |
 | circuitBreakPolicy | [System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}}') | The settings to use for circuit breaking if desired |
 
-<a name='M-MQContract-Interfaces-IResillientContractConnection`1-RegisterResiliencePolicy-System-Type,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}-'></a>
+<a name='M-MQContract-Interfaces-IResilientContractConnection`1-RegisterResiliencePolicy-System-Type,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}-'></a>
 ### RegisterResiliencePolicy(messageType,retryPolicy,circuitBreakPolicy) `method`
 
 ##### Summary
@@ -2763,7 +2772,7 @@ Register a resiliency policy that will apply to any message transmission of the 
 | retryPolicy | [System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}}') | The settings to use for retries if desired |
 | circuitBreakPolicy | [System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}}') | The settings to use for circuit breaking if desired |
 
-<a name='M-MQContract-Interfaces-IResillientContractConnection`1-RegisterResiliencePolicy-System-String,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}-'></a>
+<a name='M-MQContract-Interfaces-IResilientContractConnection`1-RegisterResiliencePolicy-System-String,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}-'></a>
 ### RegisterResiliencePolicy(messageChannel,retryPolicy,circuitBreakPolicy) `method`
 
 ##### Summary
@@ -2778,7 +2787,7 @@ Register a resiliency policy that will apply to any message transmission of a me
 | retryPolicy | [System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}}') | The settings to use for retries if desired |
 | circuitBreakPolicy | [System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}}') | The settings to use for circuit breaking if desired |
 
-<a name='M-MQContract-Interfaces-IResillientContractConnection`1-RegisterResiliencePolicy``1-System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}-'></a>
+<a name='M-MQContract-Interfaces-IResilientContractConnection`1-RegisterResiliencePolicy``1-System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}-'></a>
 ### RegisterResiliencePolicy\`\`1(retryPolicy,circuitBreakPolicy) `method`
 
 ##### Summary
@@ -3562,6 +3571,69 @@ The acknowledgement callback to be called when the message is received if the un
 
 A timestamp for when the message was received
 
+<a name='T-MQContract-ResilienceException'></a>
+## ResilienceException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown when a Resilience failure occurs attempting to transmit a message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| type | [T:MQContract.ResilienceException](#T-T-MQContract-ResilienceException 'T:MQContract.ResilienceException') | The type of resilience failure that occured |
+
+<a name='M-MQContract-ResilienceException-#ctor-MQContract-ResilienceTypes,System-Exception-'></a>
+### #ctor(type,error) `constructor`
+
+##### Summary
+
+Thrown when a Resilience failure occurs attempting to transmit a message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| type | [MQContract.ResilienceTypes](#T-MQContract-ResilienceTypes 'MQContract.ResilienceTypes') | The type of resilience failure that occured |
+| error | [System.Exception](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Exception 'System.Exception') | An underlying error for the resilience (may be a circuit broken or the underlying error that retry has failed through) |
+
+<a name='P-MQContract-ResilienceException-Type'></a>
+### Type `property`
+
+##### Summary
+
+The type of resilience failure that has occured
+
+<a name='T-MQContract-ResilienceTypes'></a>
+## ResilienceTypes `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Houses the different types of Resilience errors that can occur
+
+<a name='F-MQContract-ResilienceTypes-CircuitBreak'></a>
+### CircuitBreak `constants`
+
+##### Summary
+
+Failed due to the Circuit being broken based on the policy defined
+
+<a name='F-MQContract-ResilienceTypes-Retry'></a>
+### Retry `constants`
+
+##### Summary
+
+Failed through the retry attempts defined
+
 <a name='T-MQContract-Messages-ServiceMessage'></a>
 ## ServiceMessage `type`
 
@@ -3691,6 +3763,44 @@ The ID of the message
 ##### Summary
 
 The type of message encoded
+
+<a name='T-MQContract-TransmissionException'></a>
+## TransmissionException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown when an error occurs attempting to transmit a given message and is flagged if it is fatal or not
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| underlyingError | [T:MQContract.TransmissionException](#T-T-MQContract-TransmissionException 'T:MQContract.TransmissionException') | The underlying error that occured |
+
+<a name='M-MQContract-TransmissionException-#ctor-System-Exception,System-Boolean-'></a>
+### #ctor(underlyingError,isFatal) `constructor`
+
+##### Summary
+
+Thrown when an error occurs attempting to transmit a given message and is flagged if it is fatal or not
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| underlyingError | [System.Exception](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Exception 'System.Exception') | The underlying error that occured |
+| isFatal | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Flag if this error is a fatal error (don't run resilience when it is fatal) |
+
+<a name='P-MQContract-TransmissionException-IsFatal'></a>
+### IsFatal `property`
+
+##### Summary
+
+Indicates if the error that occured is fatal
 
 <a name='T-MQContract-Messages-TransmissionResult'></a>
 ## TransmissionResult `type`

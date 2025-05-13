@@ -1185,8 +1185,8 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.IsError);
             Assert.IsNotNull(result.Error);
-            Assert.IsInstanceOfType<ResillianceException>(result.Error.Exception);
-            Assert.AreEqual(ResillianceTypes.Retry, ((ResillianceException)result.Error.Exception).Type);
+            Assert.IsInstanceOfType<ResilienceException>(result.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)result.Error.Exception).Type);
             Assert.IsNotNull(result.Error.Exception.InnerException);
             Assert.AreEqual(error, result.Error.Exception.InnerException);
             #endregion
@@ -1233,8 +1233,8 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.IsError);
             Assert.IsNotNull(result.Error);
-            Assert.IsInstanceOfType<ResillianceException>(result.Error.Exception);
-            Assert.AreEqual(ResillianceTypes.CircuitBreak, ((ResillianceException)result.Error.Exception).Type);
+            Assert.IsInstanceOfType<ResilienceException>(result.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)result.Error.Exception).Type);
             Assert.IsNotNull(result.Error.Exception.InnerException);
             Assert.IsInstanceOfType<BrokenCircuitException>(result.Error.Exception.InnerException);
             #endregion
@@ -1286,15 +1286,15 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var retryFailure = result.First();
             Assert.IsTrue(retryFailure.IsError);
             Assert.IsNotNull(retryFailure.Error);
-            Assert.IsInstanceOfType<ResillianceException>(retryFailure.Error.Exception);
-            Assert.AreEqual(ResillianceTypes.Retry, ((ResillianceException)retryFailure.Error.Exception).Type);
+            Assert.IsInstanceOfType<ResilienceException>(retryFailure.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)retryFailure.Error.Exception).Type);
             Assert.IsNotNull(retryFailure.Error.Exception.InnerException);
             Assert.AreEqual(error, retryFailure.Error.Exception.InnerException);
             var circuitBreakFailure = result.Last();
             Assert.IsTrue(circuitBreakFailure.IsError);
             Assert.IsNotNull(circuitBreakFailure.Error);
-            Assert.IsInstanceOfType<ResillianceException>(circuitBreakFailure.Error.Exception);
-            Assert.AreEqual(ResillianceTypes.CircuitBreak, ((ResillianceException)circuitBreakFailure.Error.Exception).Type);
+            Assert.IsInstanceOfType<ResilienceException>(circuitBreakFailure.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)circuitBreakFailure.Error.Exception).Type);
             Assert.IsNotNull(circuitBreakFailure.Error.Exception.InnerException);
             Assert.IsInstanceOfType<BrokenCircuitException>(circuitBreakFailure.Error.Exception.InnerException);
             #endregion
@@ -1396,14 +1396,14 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             Assert.IsTrue(Array.TrueForAll([channelRetryResult, typeRetryResult], (res) => res.IsError
             && res.Error!=null
-            && res.Error.Exception is ResillianceException re
-            && Equals(ResillianceTypes.Retry, re.Type)
+            && res.Error.Exception is ResilienceException re
+            && Equals(ResilienceTypes.Retry, re.Type)
             && Equals(error, re.InnerException)));
 
             Assert.IsTrue(Array.TrueForAll([channelCircuitBreakResult, typeCircuitBreakResult], (res) => res.IsError
             && res.Error!=null
-            && res.Error.Exception is ResillianceException re
-            && Equals(ResillianceTypes.CircuitBreak, re.Type)
+            && res.Error.Exception is ResilienceException re
+            && Equals(ResilienceTypes.CircuitBreak, re.Type)
             && re.InnerException is BrokenCircuitException));
             #endregion
 

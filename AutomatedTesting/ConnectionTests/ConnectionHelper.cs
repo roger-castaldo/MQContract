@@ -187,7 +187,7 @@ namespace AutomatedTesting.ConnectionTests
             );
 
         public static void AssignResiliencePolicy<T,C>(
-            IResillientContractConnection<C> contractConnection,
+            IResilientContractConnection<C> contractConnection,
             string? channel, Type? messageType, bool useGenerics,
             int? retryCount, int? circuitBreakFailureCount,
             string? serviceName)
