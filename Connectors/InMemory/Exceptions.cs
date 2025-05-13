@@ -5,7 +5,7 @@
     /// </summary>
     public class TransmissionResultException : Exception
     {
-        internal TransmissionResultException() 
-         : base("Unable to transmit"){ }
+        internal TransmissionResultException()
+         : base("Unable to transmit") { }
     }
 }

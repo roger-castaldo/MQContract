@@ -43,7 +43,7 @@ namespace MQContract.Connections
             => RegisterServiceConnection(pars => Equals(pars.messageHeader[messageHeaderKey], messageHeaderValue), serviceConnectionName, messageServiceConnection);
 
         CC IMappableContractConnection<CC>.RegisterResiliencePolicy(string serviceConnectionName, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
-            => AddPolicy(serviceConnectionName, null, retryPolicy, circuitBreakPolicy);   
+            => AddPolicy(serviceConnectionName, null, retryPolicy, circuitBreakPolicy);
 
         CC IMappableContractConnection<CC>.RegisterResiliencePolicy<T>(string serviceConnectionName, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(serviceConnectionName, typeof(T), retryPolicy, circuitBreakPolicy);

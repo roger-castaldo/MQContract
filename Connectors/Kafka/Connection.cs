@@ -63,7 +63,7 @@ namespace MQContract.Kafka
             }
             catch (Exception ex)
             {
-                return new TransmissionResult(message.ID, Error: new(ex,ex switch
+                return new TransmissionResult(message.ID, Error: new(ex, ex switch
                 {
                     ProduceException<string, byte[]> => ((ProduceException<string, byte[]>)ex).Error.IsFatal,
                     _ => false

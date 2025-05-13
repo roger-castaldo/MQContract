@@ -88,7 +88,7 @@ namespace MQContract.AzureServiceBus
             }
             try
             {
-                await sender.SendMessagesAsync(messageBatch,cancellationToken);
+                await sender.SendMessagesAsync(messageBatch, cancellationToken);
             }
             catch (Exception e)
             {

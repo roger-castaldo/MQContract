@@ -3,9 +3,7 @@ using Moq;
 using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
-using MQContract.Messages;
 using Polly.CircuitBreaker;
-using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -703,7 +701,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
             List<ServiceMessage> messages = [];
-            
+
             var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
             serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
@@ -718,7 +716,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async()=> await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel:channel));
+            var exception = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             await contractConnection.CloseAsync();

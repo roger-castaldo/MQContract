@@ -277,16 +277,16 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
                .ThrowsAsync(exception);
-            
+
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<Exception>(async ()=> 
+            var error = await Assert.ThrowsAsync<Exception>(async () =>
                 _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
                 {
                     return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(new(msg.Message.TypeName), null));
-                }, (error) => { }) 
+                }, (error) => { })
             );
             #endregion
 

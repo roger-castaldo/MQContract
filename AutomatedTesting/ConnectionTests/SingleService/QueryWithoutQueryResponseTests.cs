@@ -7,7 +7,6 @@ using Polly.CircuitBreaker;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AutomatedTesting.ConnectionTests.SingleService
 {
@@ -520,7 +519,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var mockSubscription = new Mock<IServiceSubscription>();
 
             List<ServiceMessage> messages = [];
-            
+
             var serviceConnection = new Mock<IMessageServiceConnection>();
             serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -644,7 +643,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var retryException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel:responseChannel));
+            var retryException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
             var circuitException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");

@@ -306,9 +306,9 @@ namespace MQContract.Connections
                 (ct) => serviceConnection.PublishAsync(
                     serviceMessage,
                     ct
-                ), 
-                connectionName, 
-                serviceMessage.Channel, 
+                ),
+                connectionName,
+                serviceMessage.Channel,
                 cancellationToken
             );
             OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
@@ -317,7 +317,7 @@ namespace MQContract.Connections
             activity?.Stop();
             return result;
         }
-        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken, string? connectionName=null)
+        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken, string? connectionName = null)
         {
             IEnumerable<TransmissionResult> result;
             using var scope = SetScope();
@@ -326,9 +326,9 @@ namespace MQContract.Connections
             {
                 logger?.LogInformation("Executing bulk publish against a service connection that supports bulk publish");
                 result = await ExecuteResilliantTransmissionAsync<T>(
-                    bulkPublishableMessageServiceConnection.BulkPublishAsync, 
-                    connectionName, 
-                    serviceMessages, 
+                    bulkPublishableMessageServiceConnection.BulkPublishAsync,
+                    connectionName,
+                    serviceMessages,
                     cancellationToken
                 );
                 if (activity!=null)
@@ -354,7 +354,7 @@ namespace MQContract.Connections
                                 ct
                             ),
                             connectionName,
-                            message.Channel, 
+                            message.Channel,
                             cancellationToken
                         );
                         activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
@@ -457,9 +457,9 @@ namespace MQContract.Connections
             token.CancelAfter(timeout);
             logger?.LogInformation("Transmitting Inbox Query request to underlying system with {CorrelationID} and being waiting on response", messageID);
             var result = await ExecuteResilliantTransmissionAsync<T>(
-                async (ct) => await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, ct), 
-                connectionName, 
-                serviceMessage.Channel, 
+                async (ct) => await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, ct),
+                connectionName,
+                serviceMessage.Channel,
                 cancellationToken
             );
             OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, inboxMessageServiceConnection, connectionName);
@@ -549,7 +549,8 @@ namespace MQContract.Connections
                                         realTimeout??queryableMessageServiceConnection.DefaultTimeout,
                                         ct
                                 );
-                            }catch(TransmissionException te)
+                            }
+                            catch (TransmissionException te)
                             {
                                 return new QueryResult<R>(serviceMessage.ID, new([]), Error: new(te));
                             }

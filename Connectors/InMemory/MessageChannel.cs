@@ -29,7 +29,7 @@ namespace MQContract.InMemory
         internal async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             if (!await Publish(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data), cancellationToken))
-                return new(message.ID, Error:new(new TransmissionResultException(),true));
+                return new(message.ID, Error: new(new TransmissionResultException(), true));
             return new(message.ID);
         }
 
@@ -43,7 +43,7 @@ namespace MQContract.InMemory
                     await groups
                         .WhenAll(grp => grp.PublishMessage(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data)))
                     ).ToArray();
-                results=results.Append(new(message.ID, Error:Array.TrueForAll(messageResults, mr => mr) ? null : new(new TransmissionResultException(), true)));
+                results=results.Append(new(message.ID, Error: Array.TrueForAll(messageResults, mr => mr) ? null : new(new TransmissionResultException(), true)));
             }
             locker.ExitReadLock();
             return results;

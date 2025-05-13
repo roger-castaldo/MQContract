@@ -1,5 +1,4 @@
 ﻿using AutomatedTesting.Messages;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
@@ -327,10 +326,10 @@ namespace AutomatedTesting.ConnectionTests.SingleService
         }
 
         [TestMethod]
-        [DataRow(null,null,false)]
+        [DataRow(null, null, false)]
         [DataRow(null, null, true)]
-        [DataRow("testChannel",null, false)]
-        [DataRow(null,typeof(BasicMessage), false)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
         public async Task TestBulkPublishAsyncWithNoBulkSupportAndRetryFailure(string? channel, Type? messageType, bool useGenerics)
         {
             #region Arrange
@@ -349,7 +348,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
                 .ReturnsInOrder(
                     ValueTask.FromResult(transmissionResult),
-                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(),new(error,false))),
+                    ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false))),
                     ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false))),
                     ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), new(error, false)))
                 );
@@ -360,7 +359,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages,channel:channel);
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -416,7 +415,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages,channel:channel);
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -473,7 +472,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel:channel);
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -721,9 +720,9 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)retryFailure.Error.Exception).Type);
             Assert.AreEqual(error, retryFailure.Error.Exception.InnerException);
             Assert.IsTrue(Array.TrueForAll(circuitBreakResults.ToArray(), result => result.IsError
-            && result.Error!=null 
-            && result.Error.Exception is ResilienceException re 
-            && Equals(ResilienceTypes.CircuitBreak,re.Type)
+            && result.Error!=null
+            && result.Error.Exception is ResilienceException re
+            && Equals(ResilienceTypes.CircuitBreak, re.Type)
             && re.InnerException is BrokenCircuitException));
             #endregion
 

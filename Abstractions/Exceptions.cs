@@ -5,8 +5,8 @@
     /// </summary>
     /// <param name="underlyingError">The underlying error that occured</param>
     /// <param name="isFatal">Flag if this error is a fatal error (don't run resilience when it is fatal)</param>
-    public sealed class TransmissionException(Exception underlyingError, bool isFatal = false) 
-        : Exception("Transmission Exception occured",underlyingError)
+    public sealed class TransmissionException(Exception underlyingError, bool isFatal = false)
+        : Exception("Transmission Exception occured", underlyingError)
     {
         /// <summary>
         /// Indicates if the error that occured is fatal
@@ -34,7 +34,7 @@
     /// </summary>
     /// <param name="type">The type of resilience failure that occured</param>
     /// <param name="error">An underlying error for the resilience (may be a circuit broken or the underlying error that retry has failed through)</param>
-    public sealed class ResilienceException(ResilienceTypes type, Exception error) 
+    public sealed class ResilienceException(ResilienceTypes type, Exception error)
         : Exception("The action failed through the resilliance", error)
     {
         /// <summary>

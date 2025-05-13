@@ -8,7 +8,6 @@ using MQContract.Messages;
 using MQContract.Subscriptions;
 using System.Diagnostics;
 using System.Reflection;
-using static MQContract.Connections.ServiceConnectionList;
 
 namespace MQContract.Connections
 {

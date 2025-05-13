@@ -37,7 +37,7 @@
                 ObjectDisposedException => true,
                 ArgumentNullException => true,
                 ArgumentOutOfRangeException => true,
-                OperationCanceledException=>true,
+                OperationCanceledException => true,
                 InvalidOperationException => true,
                 TimeoutException => false,
                 _ => false

@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 namespace MQContract.Connections
 {
     internal class ResiliencePolicy(ILogger? logger,
-        (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, 
+        (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy,
         (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy
     )
     {
@@ -16,8 +16,10 @@ namespace MQContract.Connections
         {
             var constructor = typeof(T).GetConstructors()[0];
             var parameters = constructor.GetParameters();
-            return instances.Select(instance => { 
-                var arguments = parameters.Select(p => {
+            return instances.Select(instance =>
+            {
+                var arguments = parameters.Select(p =>
+                {
                     var value = typeof(T).GetProperty(p.Name!)!.GetValue(instance);
                     if (value is ErrorMessage errorMessage)
                     {
@@ -55,7 +57,7 @@ namespace MQContract.Connections
                                 return Task.CompletedTask;
                             }
                         );
-                retry = Policy                    
+                retry = Policy
                       .HandleResult<IEnumerable<T>>(results => results.Any(result => result.IsError && !result.Error!.IsFatal))
                       .WaitAndRetryAsync(retryPolicy.Value.retryCount, retryPolicy.Value.sleepDurationProvider);
             }
@@ -91,7 +93,7 @@ namespace MQContract.Connections
             }
         }
 
-        
+
         public async ValueTask<IEnumerable<TransmissionResult>> ExecuteResilliantTransmissionAsync(Func<IEnumerable<ServiceMessage>, CancellationToken, ValueTask<IEnumerable<TransmissionResult>>> func, IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
         {
             var resultContext = new Context();
@@ -103,7 +105,7 @@ namespace MQContract.Connections
                 {
                     IEnumerable<TransmissionResult> currentSuccess = (context.ContainsKey(SuccessStorageKey) ? (IEnumerable<TransmissionResult>)context[SuccessStorageKey] : []);
                     var serviceMessages = (ServiceMessage[])context[ServiceMessagesKey];
-                    var response = await func(serviceMessages.Where(msg=>!currentSuccess.Any(res=>Equals(msg.ID,res.ID))), cancellation);
+                    var response = await func(serviceMessages.Where(msg => !currentSuccess.Any(res => Equals(msg.ID, res.ID))), cancellation);
                     context.Remove(SuccessStorageKey);
                     context.Add(SuccessStorageKey, currentSuccess.Concat(response.Where(resp => !resp.IsError || (resp.IsError && resp.Error!.IsFatal))).ToArray());
                     return currentSuccess.Concat(response)
@@ -119,7 +121,7 @@ namespace MQContract.Connections
 
         public async ValueTask<QueryResult<T>> ExecuteResilliantTransmissionAsync<T>(Func<CancellationToken, ValueTask<QueryResult<T>>> func, CancellationToken cancellationToken)
         {
-            if (!queryPolicies.TryGetValue(typeof(T),out var policy))
+            if (!queryPolicies.TryGetValue(typeof(T), out var policy))
             {
                 policy = BuildPolicy<QueryResult<T>>(logger, retryPolicy, circuitBreakPolicy);
                 queryPolicies.TryAdd(typeof(T), policy);

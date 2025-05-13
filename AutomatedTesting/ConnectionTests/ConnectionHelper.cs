@@ -1,8 +1,4 @@
-﻿using AutomatedTesting.Messages;
-using MQContract;
-using MQContract.Interfaces;
-using Polly.CircuitBreaker;
-using Polly.Retry;
+﻿using MQContract.Interfaces;
 using System.Diagnostics;
 
 namespace AutomatedTesting.ConnectionTests
@@ -177,16 +173,16 @@ namespace AutomatedTesting.ConnectionTests
             string? channel, Type? messageType, bool useGenerics,
             int? retryCount, int? circuitBreakFailureCount)
             => AssignResiliencePolicy<T, IContractedConnection>(
-                contractConnection, 
-                channel, 
-                messageType, 
-                useGenerics, 
-                retryCount, 
+                contractConnection,
+                channel,
+                messageType,
+                useGenerics,
+                retryCount,
                 circuitBreakFailureCount,
                 null
             );
 
-        public static void AssignResiliencePolicy<T,C>(
+        public static void AssignResiliencePolicy<T, C>(
             IResilientContractConnection<C> contractConnection,
             string? channel, Type? messageType, bool useGenerics,
             int? retryCount, int? circuitBreakFailureCount,

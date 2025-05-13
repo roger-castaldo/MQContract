@@ -9,7 +9,6 @@ using MQContract.Attributes;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
-using Polly;
 using Polly.CircuitBreaker;
 using System.Diagnostics;
 using System.IO.Compression;
@@ -790,7 +789,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #region Arrange
             (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
 
-            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(new Exception("Failed"),true));
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(new Exception("Failed"), true));
 
             var testMessage = new BasicMessage("testMessage");
 
@@ -844,7 +843,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
         public async Task TestPublishAsyncAndRetryFailure(string? channel, Type? messageType, bool useGenerics)
         {
             #region Arrange
-            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(),Error:new(new Exception("error occured"),false));
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(new Exception("error occured"), false));
             var retryCount = 2;
 
             var testMessage = new BasicMessage("testMessage");
@@ -861,7 +860,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage,channel:channel);
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion

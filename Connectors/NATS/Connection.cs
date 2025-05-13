@@ -145,7 +145,7 @@ namespace MQContract.NATS
             }
             catch (Exception ex)
             {
-                return new TransmissionResult(message.ID, Error: new(ex,ex switch
+                return new TransmissionResult(message.ID, Error: new(ex, ex switch
                 {
                     NatsPayloadTooLargeException => true,
                     _ => false

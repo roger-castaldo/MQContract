@@ -7,7 +7,6 @@ using Polly.CircuitBreaker;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AutomatedTesting.ConnectionTests.MappedService
 {
@@ -590,7 +589,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel:channel);
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion

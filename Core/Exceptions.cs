@@ -131,7 +131,7 @@
 
     public class InvalidRetryCircuitBreakTriggersException : ArgumentException
     {
-            internal InvalidRetryCircuitBreakTriggersException(string retryArgumentName, string circuitBreakArumentName)
-                : base($"The value for {retryArgumentName} should be less than {circuitBreakArumentName}") { }
+        internal InvalidRetryCircuitBreakTriggersException(string retryArgumentName, string circuitBreakArumentName)
+            : base($"The value for {retryArgumentName} should be less than {circuitBreakArumentName}") { }
     }
 }

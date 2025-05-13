@@ -160,7 +160,7 @@ namespace MQContract.RabbitMQ
             }
             catch (Exception e)
             {
-                result = new TransmissionResult(message.ID, Error: new(e,e switch
+                result = new TransmissionResult(message.ID, Error: new(e, e switch
                 {
                     PublishException => true,
                     _ => false

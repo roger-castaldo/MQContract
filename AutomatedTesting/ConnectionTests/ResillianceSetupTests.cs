@@ -19,7 +19,7 @@ namespace AutomatedTesting.ConnectionTests
 
             #region Act
             Assert.Throws<InvalidPolicyArgumentsException>(() => contractConnection.RegisterResiliencePolicy(null, null));
-            Assert.Throws<InvalidRetryCircuitBreakTriggersException>(() => contractConnection.RegisterResiliencePolicy((2,(cnt)=>TimeSpan.FromMilliseconds(100)), (1,TimeSpan.FromMilliseconds(100))));
+            Assert.Throws<InvalidRetryCircuitBreakTriggersException>(() => contractConnection.RegisterResiliencePolicy((2, (cnt) => TimeSpan.FromMilliseconds(100)), (1, TimeSpan.FromMilliseconds(100))));
             #endregion
         }
 

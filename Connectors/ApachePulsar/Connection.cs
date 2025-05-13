@@ -67,7 +67,7 @@ namespace MQContract.ApachePulsar
             }
             catch (Exception ex)
             {
-                return new(message.ID, Error: new(ex,ex switch
+                return new(message.ID, Error: new(ex, ex switch
                 {
                     ProducerFaultedException => true,
                     ProducerClosedException => true,
