@@ -405,7 +405,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(2, result.Count());
-            var failed = result.Last().Results.First(r=>Equals(r.ServiceName, ServiceName));
+            var failed = result.Last().Results.First(r => Equals(r.ServiceName, ServiceName));
             Assert.IsTrue(failed.IsError);
             Assert.IsNotNull(failed.Error);
             Assert.IsInstanceOfType<ResilienceException>(failed.Error.Exception);
@@ -604,7 +604,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(2, result.Count());
-            Assert.IsTrue(Array.TrueForAll(result.SelectMany(r=>r.Results.Where(r=>Equals(r.ServiceName,ServiceName))).ToArray(), r => r.IsError && Equals(error, r.Error!.Exception) && r.Error!.IsFatal));
+            Assert.IsTrue(Array.TrueForAll(result.SelectMany(r => r.Results.Where(r => Equals(r.ServiceName, ServiceName))).ToArray(), r => r.IsError && Equals(error, r.Error!.Exception) && r.Error!.IsFatal));
             Assert.IsTrue(Array.TrueForAll(result.SelectMany(r => r.Results.Where(r => Equals(r.ServiceName, ServiceName2))).ToArray(), r => !r.IsError));
             #endregion
 
@@ -661,7 +661,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Assert
             Assert.IsNotNull(result);
-            var failed = result.Last().Results.First(r=>Equals(ServiceName,r.ServiceName));
+            var failed = result.Last().Results.First(r => Equals(ServiceName, r.ServiceName));
             Assert.IsTrue(failed.IsError);
             Assert.IsNotNull(failed.Error);
             Assert.IsInstanceOfType<ResilienceException>(failed.Error.Exception);
@@ -799,7 +799,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsInstanceOfType<ResilienceException>(retryFailure.Error.Exception);
             Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)retryFailure.Error.Exception).Type);
             Assert.AreEqual(error, retryFailure.Error.Exception.InnerException);
-            Assert.IsTrue(Array.TrueForAll(circuitBreakResults.SelectMany(result=>result.Results.Where(r=>Equals(ServiceName,r.ServiceName))).ToArray(), result => result.IsError
+            Assert.IsTrue(Array.TrueForAll(circuitBreakResults.SelectMany(result => result.Results.Where(r => Equals(ServiceName, r.ServiceName))).ToArray(), result => result.IsError
             && result.Error!=null
             && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.CircuitBreak, re.Type)
@@ -951,7 +951,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 retryFailure => retryFailure.IsError
                 && retryFailure.Error!=null
                 && retryFailure.Error.Exception is ResilienceException resilienceException
-                && Equals(ResilienceTypes.Retry,resilienceException.Type)
+                && Equals(ResilienceTypes.Retry, resilienceException.Type)
                 && Equals(error, resilienceException.InnerException)
             ));
             Assert.IsTrue(Array.TrueForAll(channelCircuitBreakResults.SelectMany(result => result.Results.Where(r => Equals(ServiceName, r.ServiceName))).ToArray(), result => result.IsError
@@ -975,7 +975,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.CircuitBreak, re.Type)
             && re.InnerException is BrokenCircuitException));
-            
+
             Assert.IsTrue(Array.TrueForAll(channelRetryResults.SelectMany(r => r.Results.Where(r => Equals(r.ServiceName, ServiceName2))).ToArray(), r => !r.IsError));
             Assert.IsTrue(Array.TrueForAll(channelCircuitBreakResults.SelectMany(r => r.Results.Where(r => Equals(r.ServiceName, ServiceName2))).ToArray(), r => !r.IsError));
             Assert.IsTrue(Array.TrueForAll(typeRetryResults.SelectMany(r => r.Results.Where(r => Equals(r.ServiceName, ServiceName2))).ToArray(), r => !r.IsError));

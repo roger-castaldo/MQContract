@@ -406,7 +406,7 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        private async ValueTask<(ServiceQueryResult? serviceQueryResult,ErrorMessage? errorMessage)> ProcessInboxMessageAsync<T>(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
+        private async ValueTask<(ServiceQueryResult? serviceQueryResult, ErrorMessage? errorMessage)> ProcessInboxMessageAsync<T>(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
         {
             using var scope = SetScope(serviceMessage.ID);
             logger?.LogDebug("Establishing an instance of Inbox Message style handling for a QueryResponse call on {ConnectionName}", connectionName);
@@ -485,7 +485,7 @@ namespace MQContract.Connections
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
             }
-            return (tcs.Task.Result,null);
+            return (tcs.Task.Result, null);
         }
         protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize, ServiceQueryResult queryResult, IMessageServiceConnection serviceConnection, string? serviceConnectionName, string responseChannel = "")
         {

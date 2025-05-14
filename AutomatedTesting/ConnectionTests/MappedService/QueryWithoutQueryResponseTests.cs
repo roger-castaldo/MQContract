@@ -779,7 +779,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(typeCircuitResult);
 
             Assert.IsTrue(Array.TrueForAll([channelRetryResult, typeRetryResult], (result) => result.IsError
-            && result.Error!=null 
+            && result.Error!=null
             && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.Retry, re.Type)
             && Equals(error, re.InnerException)));

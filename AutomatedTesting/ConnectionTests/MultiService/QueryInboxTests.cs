@@ -3,9 +3,7 @@ using Moq;
 using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
-using MQContract.Messages;
 using Polly.CircuitBreaker;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
@@ -703,7 +701,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage,channel:channel);
+            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             await contractConnection.CloseAsync();
@@ -1007,7 +1005,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsTrue(circuitResults.Any(result => result.IsError
             && result.Error!=null
             && result.Error.Exception is not ResilienceException
-            && Equals(error,result.Error.Exception)
+            && Equals(error, result.Error.Exception)
             ));
             Assert.IsTrue(circuitResults.Any(result => !result.IsError));
             #endregion

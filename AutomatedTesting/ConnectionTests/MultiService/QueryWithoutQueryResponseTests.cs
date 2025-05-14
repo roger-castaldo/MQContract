@@ -537,7 +537,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new TransmissionResult(Guid.NewGuid().ToString(),Error:new(transmitionError,false)));
+                .ReturnsAsync(new TransmissionResult(Guid.NewGuid().ToString(), Error: new(transmitionError, false)));
             var serviceConnection2 = new Mock<IMessageServiceConnection>();
             serviceConnection2.Setup(x => x.SubscribeAsync(Capture.In(messageActions), It.IsAny<Action<Exception>>(),
                 Capture.In(channels), It.IsAny<string>(), It.IsAny<CancellationToken>()))

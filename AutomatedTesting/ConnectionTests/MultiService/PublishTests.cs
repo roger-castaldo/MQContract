@@ -783,7 +783,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var results = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel:channel);
+            var results = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -797,7 +797,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)result.Error.Exception).Type);
             Assert.IsNotNull(result.Error.Exception.InnerException);
             Assert.AreEqual(transmissionResult.Error!.Exception, result.Error.Exception.InnerException);
-            Assert.IsTrue(results.Results.Where(r=>Equals(ServiceName2,r.ServiceName)).All(r=>!r.IsError));
+            Assert.IsTrue(results.Results.Where(r => Equals(ServiceName2, r.ServiceName)).All(r => !r.IsError));
             #endregion
 
             #region Verify
