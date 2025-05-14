@@ -527,19 +527,20 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, retryCount+1, TimeSpan.FromMinutes(1)));
-            Assert.IsNotNull(exception);
-            Assert.IsNotNull(exception.InnerException);
-            Assert.IsInstanceOfType<ResilienceException>(exception.InnerException);
-            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)exception.InnerException).Type);
-            Assert.IsNotNull(exception.InnerException.InnerException);
-            Assert.AreEqual(transmissionResult.Error!.Exception, exception.InnerException.InnerException);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.IsError);
+            Assert.IsNotNull(result.Error);
+            Assert.IsInstanceOfType<ResilienceException>(result.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)result.Error.Exception).Type);
+            Assert.IsNotNull(result.Error.Exception.InnerException);
+            Assert.AreEqual(transmissionResult.Error!.Exception, result.Error.Exception.InnerException);
             #endregion
 
             #region Verify
@@ -581,20 +582,21 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            _ = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel));
-            var exception = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
+            _ = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, circuitBreakCount, TimeSpan.FromMinutes(1)));
-            Assert.IsNotNull(exception);
-            Assert.IsNotNull(exception.InnerException);
-            Assert.IsInstanceOfType<ResilienceException>(exception.InnerException);
-            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)exception.InnerException).Type);
-            Assert.IsNotNull(exception.InnerException.InnerException);
-            Assert.IsInstanceOfType<BrokenCircuitException>(exception.InnerException.InnerException);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.IsError);
+            Assert.IsNotNull(result.Error);
+            Assert.IsInstanceOfType<ResilienceException>(result.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)result.Error.Exception).Type);
+            Assert.IsNotNull(result.Error.Exception.InnerException);
+            Assert.IsInstanceOfType<BrokenCircuitException>(result.Error.Exception.InnerException);
             #endregion
 
             #region Verify
@@ -637,26 +639,28 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var retryException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
-            var circuitException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
+            var retryResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel);
+            var circuitResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, retryCount+1, TimeSpan.FromMinutes(1)));
-            Assert.IsNotNull(retryException);
-            Assert.IsNotNull(retryException.InnerException);
-            Assert.IsInstanceOfType<ResilienceException>(retryException.InnerException);
-            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)retryException.InnerException).Type);
-            Assert.IsNotNull(retryException.InnerException.InnerException);
-            Assert.AreEqual(transmissionResult.Error!.Exception, retryException.InnerException.InnerException);
-            Assert.IsNotNull(circuitException);
-            Assert.IsNotNull(circuitException.InnerException);
-            Assert.IsInstanceOfType<ResilienceException>(circuitException.InnerException);
-            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)circuitException.InnerException).Type);
-            Assert.IsNotNull(circuitException.InnerException.InnerException);
-            Assert.IsInstanceOfType<BrokenCircuitException>(circuitException.InnerException.InnerException);
+            Assert.IsNotNull(retryResult);
+            Assert.IsTrue(retryResult.IsError);
+            Assert.IsNotNull(retryResult.Error);
+            Assert.IsInstanceOfType<ResilienceException>(retryResult.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)retryResult.Error.Exception).Type);
+            Assert.IsNotNull(retryResult.Error.Exception.InnerException);
+            Assert.AreEqual(transmissionResult.Error!.Exception, retryResult.Error.Exception.InnerException);
+            Assert.IsNotNull(circuitResult);
+            Assert.IsTrue(circuitResult.IsError);
+            Assert.IsNotNull(circuitResult.Error);
+            Assert.IsInstanceOfType<ResilienceException>(circuitResult.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)circuitResult.Error.Exception).Type);
+            Assert.IsNotNull(circuitResult.Error.Exception.InnerException);
+            Assert.IsInstanceOfType<BrokenCircuitException>(circuitResult.Error.Exception.InnerException);
             #endregion
 
             #region Verify
@@ -699,22 +703,24 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var retryException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
-            var circuitException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
+            var retryResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel);
+            var circuitResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
-            Assert.IsNotNull(retryException);
-            Assert.IsNotNull(retryException.InnerException);
-            Assert.IsNotInstanceOfType<ResilienceException>(retryException.InnerException);
-            Assert.AreEqual(transmissionResult.Error!.Exception, retryException.InnerException);
-            Assert.IsNotNull(circuitException);
-            Assert.IsNotNull(circuitException.InnerException);
-            Assert.IsNotInstanceOfType<ResilienceException>(circuitException.InnerException);
-            Assert.AreEqual(transmissionResult.Error!.Exception, circuitException.InnerException);
+            Assert.IsNotNull(retryResult);
+            Assert.IsTrue(retryResult.IsError);
+            Assert.IsNotNull(retryResult.Error);
+            Assert.IsNotInstanceOfType<ResilienceException>(retryResult.Error.Exception);
+            Assert.AreEqual(transmissionResult.Error!.Exception, retryResult.Error.Exception);
+            Assert.IsNotNull(circuitResult);
+            Assert.IsTrue(circuitResult.IsError);
+            Assert.IsNotNull(circuitResult.Error);
+            Assert.IsNotInstanceOfType<ResilienceException>(circuitResult.Error.Exception);
+            Assert.AreEqual(transmissionResult.Error!.Exception, circuitResult.Error.Exception);
             #endregion
 
             #region Verify
@@ -757,26 +763,30 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var channelRetryException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
-            var channelCircuitException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel));
-            var typeRetryException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel));
-            var typeCircuitException = await Assert.ThrowsAsync<QuerySubmissionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel));
+            var channelRetryResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel);
+            var channelCircuitResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, responseChannel: responseChannel);
+            var typeRetryResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel);
+            var typeCircuitResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, retryCount+1, TimeSpan.FromMinutes(1)));
-            Assert.IsNotNull(channelRetryException);
-            Assert.IsNotNull(channelCircuitException);
-            Assert.IsNotNull(typeRetryException);
-            Assert.IsNotNull(typeCircuitException);
+            Assert.IsNotNull(channelRetryResult);
+            Assert.IsNotNull(channelCircuitResult);
+            Assert.IsNotNull(typeRetryResult);
+            Assert.IsNotNull(typeCircuitResult);
 
-            Assert.IsTrue(Array.TrueForAll([channelRetryException, typeRetryException], (ex) => ex.InnerException is ResilienceException re
+            Assert.IsTrue(Array.TrueForAll([channelRetryResult, typeRetryResult], (result) => result.IsError
+            && result.Error!=null 
+            && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.Retry, re.Type)
             && Equals(error, re.InnerException)));
 
-            Assert.IsTrue(Array.TrueForAll([channelCircuitException, typeCircuitException], (ex) => ex.InnerException is ResilienceException re
+            Assert.IsTrue(Array.TrueForAll([channelCircuitResult, typeCircuitResult], (result) => result.IsError
+            && result.Error!=null
+            && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.CircuitBreak, re.Type)
             && re.InnerException is BrokenCircuitException));
             #endregion

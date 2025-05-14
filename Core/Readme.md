@@ -31,13 +31,13 @@
 - [InvalidConsumerTypeException](#T-MQContract-InvalidConsumerTypeException 'MQContract.InvalidConsumerTypeException')
 - [InvalidPolicyArgumentsException](#T-MQContract-InvalidPolicyArgumentsException 'MQContract.InvalidPolicyArgumentsException')
 - [InvalidQueryResponseMessageReceivedException](#T-MQContract-InvalidQueryResponseMessageReceivedException 'MQContract.InvalidQueryResponseMessageReceivedException')
+- [InvalidRetryCircuitBreakTriggersException](#T-MQContract-InvalidRetryCircuitBreakTriggersException 'MQContract.InvalidRetryCircuitBreakTriggersException')
 - [MessageChannelNullException](#T-MQContract-MessageChannelNullException 'MQContract.MessageChannelNullException')
 - [MessageConversionException](#T-MQContract-MessageConversionException 'MQContract.MessageConversionException')
 - [NoConnectionMatchException](#T-MQContract-NoConnectionMatchException 'MQContract.NoConnectionMatchException')
 - [PingNotSupportedException](#T-MQContract-PingNotSupportedException 'MQContract.PingNotSupportedException')
 - [QueryExecutionFailedException](#T-MQContract-QueryExecutionFailedException 'MQContract.QueryExecutionFailedException')
 - [QueryResponseException](#T-MQContract-QueryResponseException 'MQContract.QueryResponseException')
-- [QuerySubmissionFailedException](#T-MQContract-QuerySubmissionFailedException 'MQContract.QuerySubmissionFailedException')
 - [QueryTimeoutException](#T-MQContract-QueryTimeoutException 'MQContract.QueryTimeoutException')
 - [SubscriptionFailedException](#T-MQContract-SubscriptionFailedException 'MQContract.SubscriptionFailedException')
 - [TooManyConnectionMatchesException](#T-MQContract-TooManyConnectionMatchesException 'MQContract.TooManyConnectionMatchesException')
@@ -507,7 +507,7 @@ MQContract
 
 ##### Summary
 
-Thrown from a Resiliant Contract Connection when at attempt to create a policy is made but there is not any valid arguments
+Thrown from a Resiliant Contract Connection when an attempt to create a policy is made but there is not any valid arguments
 
 <a name='T-MQContract-InvalidQueryResponseMessageReceivedException'></a>
 ## InvalidQueryResponseMessageReceivedException `type`
@@ -519,6 +519,17 @@ MQContract
 ##### Summary
 
 Thrown when a query call message is received without proper data
+
+<a name='T-MQContract-InvalidRetryCircuitBreakTriggersException'></a>
+## InvalidRetryCircuitBreakTriggersException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown from a Resiliant Contract Connection when an attempt to create a policy is made but the retry count is higher than the circuit break count
 
 <a name='T-MQContract-MessageChannelNullException'></a>
 ## MessageChannelNullException `type`
@@ -585,17 +596,6 @@ MQContract
 ##### Summary
 
 Thrown when a Query call is made and there is an error in the response
-
-<a name='T-MQContract-QuerySubmissionFailedException'></a>
-## QuerySubmissionFailedException `type`
-
-##### Namespace
-
-MQContract
-
-##### Summary
-
-Thrown when a query call is being made to an inbox style service and the message fails to transmit
 
 <a name='T-MQContract-QueryTimeoutException'></a>
 ## QueryTimeoutException `type`

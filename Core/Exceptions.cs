@@ -56,15 +56,6 @@
     }
 
     /// <summary>
-    /// Thrown when a query call is being made to an inbox style service and the message fails to transmit
-    /// </summary>
-    public class QuerySubmissionFailedException : Exception
-    {
-        internal QuerySubmissionFailedException(Exception innerException)
-            : base("Query Submission failed due to error", innerException) { }
-    }
-
-    /// <summary>
     /// Thrown when a query call times out waiting for the response
     /// </summary>
     public class QueryTimeoutException : Exception
@@ -121,7 +112,7 @@
     }
 
     /// <summary>
-    /// Thrown from a Resiliant Contract Connection when at attempt to create a policy is made but there is not any valid arguments
+    /// Thrown from a Resiliant Contract Connection when an attempt to create a policy is made but there is not any valid arguments
     /// </summary>
     public class InvalidPolicyArgumentsException : ArgumentException
     {
@@ -129,6 +120,9 @@
             : base($"You must supply at least a {string.Join(" or a ", argumentNames)}") { }
     }
 
+    /// <summary>
+    /// Thrown from a Resiliant Contract Connection when an attempt to create a policy is made but the retry count is higher than the circuit break count
+    /// </summary>
     public class InvalidRetryCircuitBreakTriggersException : ArgumentException
     {
         internal InvalidRetryCircuitBreakTriggersException(string retryArgumentName, string circuitBreakArumentName)

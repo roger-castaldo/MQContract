@@ -406,7 +406,7 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        private async ValueTask<ServiceQueryResult> ProcessInboxMessageAsync<T>(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
+        private async ValueTask<(ServiceQueryResult? serviceQueryResult,ErrorMessage? errorMessage)> ProcessInboxMessageAsync<T>(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
         {
             using var scope = SetScope(serviceMessage.ID);
             logger?.LogDebug("Establishing an instance of Inbox Message style handling for a QueryResponse call on {ConnectionName}", connectionName);
@@ -471,7 +471,7 @@ namespace MQContract.Connections
                 await inboxSemaphore.WaitAsync(cancellationToken);
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
-                throw new QuerySubmissionFailedException(result.Error!.Exception);
+                return (null, result.Error);
             }
             try
             {
@@ -485,7 +485,7 @@ namespace MQContract.Connections
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
             }
-            return tcs.Task.Result;
+            return (tcs.Task.Result,null);
         }
         protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize, ServiceQueryResult queryResult, IMessageServiceConnection serviceConnection, string? serviceConnectionName, string responseChannel = "")
         {
@@ -569,29 +569,23 @@ namespace MQContract.Connections
                 else if (serviceConnection is IInboxQueryableMessageServiceConnection inboxMessageServiceConnection)
                 {
                     logger?.LogInformation("Executing a QueryResponse call on an InboxQuery service connection");
-                    return await ExecuteResilliantTransmissionAsync<Q, R>(
-                        async (ct) => await ProduceResultAsync<R>(
+                    var (serviceQueryResult, errorMessage)= await ProcessInboxMessageAsync<Q>(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, activity, cancellationToken);
+                    if (serviceQueryResult!=null)
+                        return await ProduceResultAsync<R>(
                             serviceConnection.MaxMessageBodySize,
-                            await ProcessInboxMessageAsync<Q>(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, activity, ct),
+                            serviceQueryResult!,
                             serviceConnection,
                             connectionName
-                        ),
-                        connectionName,
-                        serviceMessage.Channel,
-                        cancellationToken
-                    );
+                        );
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return new(serviceMessage.ID, new([]), Error: errorMessage);
                 }
                 logger?.LogInformation("Executing a QueryResponse call on a standard PubSub service connection using {ResponseChannel}", responseChannel);
-                return await ExecuteResilliantTransmissionAsync<Q, R>(
-                            async (ct) => await ProcessPubSubQuery<Q, R>(serviceConnection, connectionName, responseChannel, realTimeout, serviceMessage, activity, ct),
-                            connectionName,
-                            serviceMessage.Channel,
-                            cancellationToken
-                        );
+                return await ProcessPubSubQuery<Q, R>(serviceConnection, connectionName, responseChannel, realTimeout, serviceMessage, activity, cancellationToken);
             }
             catch (Exception ex)
             {
-                if (ex is QuerySubmissionFailedException || ex is QueryTimeoutException || ex is QueryExecutionFailedException)
+                if (ex is QueryTimeoutException || ex is QueryExecutionFailedException)
                     activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }
@@ -635,7 +629,8 @@ namespace MQContract.Connections
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
                 logger?.LogInformation("Inbox Query tranmission failed cleaning up resources");
-                throw new QuerySubmissionFailedException(result.Error!.Exception);
+                activity?.SetStatus(ActivityStatusCode.Error);
+                return new(serviceMessage.ID, new([]), Error: result.Error);
             }
             try
             {

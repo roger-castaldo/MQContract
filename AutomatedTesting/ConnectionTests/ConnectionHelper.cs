@@ -156,6 +156,20 @@ namespace AutomatedTesting.ConnectionTests
         }
 
         public static void AssignResiliencePolicy<T>(
+            IMultiServiceContractConnection contractConnection,
+            string? serviceName, string? channel, Type? messageType, bool useGenerics,
+            int? retryCount, int? circuitBreakFailureCount)
+            => AssignResiliencePolicy<T, IMultiServiceContractConnection>(
+                contractConnection,
+                channel,
+                messageType,
+                useGenerics,
+                retryCount,
+                circuitBreakFailureCount,
+                serviceName
+            );
+
+        public static void AssignResiliencePolicy<T>(
             IMappedContractConnection contractConnection,
             string? serviceName, string? channel, Type? messageType, bool useGenerics,
             int? retryCount, int? circuitBreakFailureCount)
