@@ -57,11 +57,17 @@ namespace MQContract.Kafka
                     Headers=ExtractHeaders(message),
                     Value=message.Data.ToArray()
                 }, cancellationToken);
+                if (!Equals(result.Status, PersistenceStatus.Persisted))
+                    return new(message.ID, Error: new(new PersistenceFailedException(), false));
                 return new TransmissionResult(result.Key);
             }
             catch (Exception ex)
             {
-                return new TransmissionResult(message.ID, ex.Message);
+                return new TransmissionResult(message.ID, Error: new(ex, ex switch
+                {
+                    ProduceException<string, byte[]> => ((ProduceException<string, byte[]>)ex).Error.IsFatal,
+                    _ => false
+                }));
             }
         }
 

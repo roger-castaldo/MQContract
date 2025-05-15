@@ -308,7 +308,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<InvalidConsumerType>(async () => await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(PubSubAsyncConsumerTests)));
+            var error = await Assert.ThrowsAsync<InvalidConsumerTypeException>(async () => await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(PubSubAsyncConsumerTests)));
             #endregion
 
             #region Assert

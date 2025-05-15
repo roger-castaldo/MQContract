@@ -1,5 +1,7 @@
-﻿using Google.Cloud.PubSub.V1;
+﻿using Google;
+using Google.Cloud.PubSub.V1;
 using Google.Protobuf;
+using Grpc.Core;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 
@@ -67,7 +69,30 @@ namespace MQContract.GooglePubSub
             }
             catch (Exception ex)
             {
-                return new(message.ID, ex.Message);
+                return new TransmissionResult(message.ID, Error: new(ex, ex switch
+                {
+                    RpcException => ((RpcException)ex).StatusCode switch
+                    {
+                        StatusCode.Aborted => true,
+                        StatusCode.AlreadyExists => true,
+                        StatusCode.Cancelled => true,
+                        StatusCode.DataLoss => true,
+                        StatusCode.DeadlineExceeded => false,
+                        StatusCode.FailedPrecondition => true,
+                        StatusCode.Internal => true,
+                        StatusCode.InvalidArgument => true,
+                        StatusCode.NotFound => true,
+                        StatusCode.OutOfRange => true,
+                        StatusCode.PermissionDenied => true,
+                        StatusCode.ResourceExhausted => false,
+                        StatusCode.Unauthenticated => true,
+                        StatusCode.Unavailable => false,
+                        StatusCode.Unimplemented => true,
+                        _ => true
+                    },
+                    GoogleApiException => true,
+                    _ => false
+                }));
             }
             finally
             {

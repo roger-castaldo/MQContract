@@ -162,7 +162,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             logger?.LogDebug("Producing Service Message for message of type {Type}", typeof(T));
-            var context = new Context(mapType, activity);
+            var context = new Middleware.Context(mapType, activity);
             (message, channel, messageHeader) = await BeforeMessageEncodeAsync<T>(context, message, channel??messageFactory.MessageChannel, messageHeader??new([]));
             return await AfterMessageEncodeAsync<T>(context,
                 await messageFactory.ConvertMessageAsync(message, ignoreChannel, channel, messageHeader)
@@ -173,7 +173,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope(message.ID);
             logger?.LogDebug("Decoding Service Message message of type {Type}", typeof(T));
-            var context = new Context(mapType, activity);
+            var context = new Middleware.Context(mapType, activity);
             (var messageHeader, var data) = await BeforeMessageDecodeAsync(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
             var taskMessage = await messageFactory.ConvertMessageAsync(logger, new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, messageHeader, data, message.Acknowledge))
                                 ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
@@ -299,11 +299,16 @@ namespace MQContract.Connections
         #endregion
 
         #region PubSub
-        protected async ValueTask<TransmissionResult> PublishMessageAsync(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
+        protected async ValueTask<TransmissionResult> PublishMessageAsync<T>(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
         {
             await publishLock.WaitAsync(cancellationToken);
-            var result = await serviceConnection.PublishAsync(
-                serviceMessage,
+            var result = await ExecuteResilliantTransmissionAsync<T>(
+                (ct) => serviceConnection.PublishAsync(
+                    serviceMessage,
+                    ct
+                ),
+                connectionName,
+                serviceMessage.Channel,
                 cancellationToken
             );
             OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
@@ -312,7 +317,7 @@ namespace MQContract.Connections
             activity?.Stop();
             return result;
         }
-        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken)
+        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken, string? connectionName = null)
         {
             IEnumerable<TransmissionResult> result;
             using var scope = SetScope();
@@ -320,7 +325,12 @@ namespace MQContract.Connections
             if (serviceConnection is IBulkPublishableMessageServiceConnection bulkPublishableMessageServiceConnection)
             {
                 logger?.LogInformation("Executing bulk publish against a service connection that supports bulk publish");
-                result = await bulkPublishableMessageServiceConnection.BulkPublishAsync(serviceMessages, cancellationToken);
+                result = await ExecuteResilliantTransmissionAsync<T>(
+                    bulkPublishableMessageServiceConnection.BulkPublishAsync,
+                    connectionName,
+                    serviceMessages,
+                    cancellationToken
+                );
                 if (activity!=null)
                 {
                     foreach (var res in result)
@@ -338,7 +348,15 @@ namespace MQContract.Connections
                 result = await serviceMessages
                     .WhenAll(async message =>
                     {
-                        var result = await serviceConnection.PublishAsync(message, cancellationToken);
+                        var result = await ExecuteResilliantTransmissionAsync<T>(
+                            (ct) => serviceConnection.PublishAsync(
+                                message,
+                                ct
+                            ),
+                            connectionName,
+                            message.Channel,
+                            cancellationToken
+                        );
                         activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
                             new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",false),
                             new(OpenTelemetryMiddleware.MessageIdKey,message.ID),
@@ -388,7 +406,7 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        private async ValueTask<ServiceQueryResult> ProcessInboxMessageAsync(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
+        private async ValueTask<(ServiceQueryResult? serviceQueryResult, ErrorMessage? errorMessage)> ProcessInboxMessageAsync<T>(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
         {
             using var scope = SetScope(serviceMessage.ID);
             logger?.LogDebug("Establishing an instance of Inbox Message style handling for a QueryResponse call on {ConnectionName}", connectionName);
@@ -438,15 +456,22 @@ namespace MQContract.Connections
             });
             token.CancelAfter(timeout);
             logger?.LogInformation("Transmitting Inbox Query request to underlying system with {CorrelationID} and being waiting on response", messageID);
-            var result = await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, cancellationToken);
+            var result = await ExecuteResilliantTransmissionAsync<T>(
+                async (ct) => await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, ct),
+                connectionName,
+                serviceMessage.Channel,
+                cancellationToken
+            );
             OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, inboxMessageServiceConnection, connectionName);
             if (result.IsError)
             {
+                if (!token.IsCancellationRequested)
+                    await token.CancelAsync();
                 logger?.LogInformation("Inbox Query tranmission failed cleaning up resources");
                 await inboxSemaphore.WaitAsync(cancellationToken);
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
-                throw new QuerySubmissionFailedException(result.Error!);
+                return (null, result.Error);
             }
             try
             {
@@ -460,7 +485,7 @@ namespace MQContract.Connections
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
             }
-            return tcs.Task.Result;
+            return (tcs.Task.Result, null);
         }
         protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(uint? maxMessageBodySize, ServiceQueryResult queryResult, IMessageServiceConnection serviceConnection, string? serviceConnectionName, string responseChannel = "")
         {
@@ -484,7 +509,7 @@ namespace MQContract.Connections
                     queryResult.ID,
                     queryResult.Header,
                     Result: default,
-                    Error: qre.Message
+                    Error: new(qre)
                 );
             }
             catch (Exception ex)
@@ -494,7 +519,7 @@ namespace MQContract.Connections
                     queryResult.ID,
                     queryResult.Header,
                     Result: default,
-                    Error: ex.Message
+                    Error: new(ex)
                 );
             }
             activity?.SetStatus(result.IsError ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
@@ -513,33 +538,54 @@ namespace MQContract.Connections
                 if (serviceConnection is IQueryResponseMessageServiceConnection queryableMessageServiceConnection)
                 {
                     logger?.LogInformation("Executing a QueryResponse call on a QueryResponse service connection");
-                    return await ProduceResultAsync<R>(
-                        serviceConnection.MaxMessageBodySize,
-                        await queryableMessageServiceConnection.QueryAsync(
-                            serviceMessage,
-                            realTimeout??queryableMessageServiceConnection.DefaultTimeout,
-                            cancellationToken
-                        ),
-                        serviceConnection,
-                        connectionName
+                    return await ExecuteResilliantTransmissionAsync<Q, R>(
+                        async (ct) =>
+                        {
+                            ServiceQueryResult result;
+                            try
+                            {
+                                result = await queryableMessageServiceConnection.QueryAsync(
+                                        serviceMessage,
+                                        realTimeout??queryableMessageServiceConnection.DefaultTimeout,
+                                        ct
+                                );
+                            }
+                            catch (TransmissionException te)
+                            {
+                                return new QueryResult<R>(serviceMessage.ID, new([]), Error: new(te));
+                            }
+                            return await ProduceResultAsync<R>(
+                                serviceConnection.MaxMessageBodySize,
+                                result,
+                                serviceConnection,
+                                connectionName
+                            );
+                        },
+                        connectionName,
+                        serviceMessage.Channel,
+                        cancellationToken
                     );
                 }
                 else if (serviceConnection is IInboxQueryableMessageServiceConnection inboxMessageServiceConnection)
                 {
                     logger?.LogInformation("Executing a QueryResponse call on an InboxQuery service connection");
-                    return await ProduceResultAsync<R>(
-                        serviceConnection.MaxMessageBodySize,
-                        await ProcessInboxMessageAsync(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, activity, cancellationToken),
-                        serviceConnection,
-                        connectionName
-                    );
+                    var (serviceQueryResult, errorMessage)= await ProcessInboxMessageAsync<Q>(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, activity, cancellationToken);
+                    if (serviceQueryResult!=null)
+                        return await ProduceResultAsync<R>(
+                            serviceConnection.MaxMessageBodySize,
+                            serviceQueryResult!,
+                            serviceConnection,
+                            connectionName
+                        );
+                    activity?.SetStatus(ActivityStatusCode.Error);
+                    return new(serviceMessage.ID, new([]), Error: errorMessage);
                 }
                 logger?.LogInformation("Executing a QueryResponse call on a standard PubSub service connection using {ResponseChannel}", responseChannel);
                 return await ProcessPubSubQuery<Q, R>(serviceConnection, connectionName, responseChannel, realTimeout, serviceMessage, activity, cancellationToken);
             }
             catch (Exception ex)
             {
-                if (ex is QuerySubmissionFailedException || ex is QueryTimeoutException || ex is QueryExecutionFailedException)
+                if (ex is QueryTimeoutException || ex is QueryExecutionFailedException)
                     activity?.SetStatus(ActivityStatusCode.Error);
                 throw;
             }
@@ -571,8 +617,21 @@ namespace MQContract.Connections
                 null
             );
             logger?.LogInformation("Transmitting Query request over PubSub");
-            var result = await serviceConnection.PublishAsync(msg, cancellationToken: cancellationToken);
+            var result = await ExecuteResilliantTransmissionAsync<Q>(
+                async (ct) => await serviceConnection.PublishAsync(msg, cancellationToken: ct),
+                connectionName,
+                serviceMessage.Channel,
+                cancellationToken
+            );
             OtelHelper.AddMessagePublishedEvent(activity, msg, result, serviceConnection, connectionName);
+            if (result.IsError)
+            {
+                if (!token.IsCancellationRequested)
+                    await token.CancelAsync();
+                logger?.LogInformation("Inbox Query tranmission failed cleaning up resources");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                return new(serviceMessage.ID, new([]), Error: result.Error);
+            }
             try
             {
                 logger?.LogInformation("Waiting on Query Response over PubSub");

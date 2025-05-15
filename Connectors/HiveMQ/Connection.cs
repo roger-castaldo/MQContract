@@ -74,6 +74,9 @@ namespace MQContract.HiveMQ
             );
         }
 
+        private static TransmissionResult ProduceFromException(string messageID, Exception e)
+            => new(messageID, Error: new(e));
+
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             try
@@ -82,7 +85,7 @@ namespace MQContract.HiveMQ
             }
             catch (Exception e)
             {
-                return new(message.ID, e.Message);
+                return ProduceFromException(message.ID, e);
             }
             return new(message.ID);
         }
@@ -144,7 +147,7 @@ namespace MQContract.HiveMQ
             }
             catch (Exception e)
             {
-                return new(message.ID, e.Message);
+                return ProduceFromException(message.ID, e);
             }
             return new(message.ID);
         }

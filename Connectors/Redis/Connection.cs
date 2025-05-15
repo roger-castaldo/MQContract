@@ -129,7 +129,7 @@ namespace MQContract.Redis
             }
             catch (Exception e)
             {
-                return new(message.ID, e.Message);
+                return new(message.ID, Error: new(e));
             }
         }
 
@@ -156,7 +156,7 @@ namespace MQContract.Redis
                 else
                     await Task.Delay((int)timeout.TotalMilliseconds/500, cancellationToken);
             }
-            throw new TimeoutException();
+            throw new TransmissionException(new TimeoutException());
         }
 
         async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)

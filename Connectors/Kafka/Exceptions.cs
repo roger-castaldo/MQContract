@@ -1,5 +1,10 @@
 ﻿namespace MQContract.Kafka
 {
+    internal class PersistenceFailedException : Exception
+    {
+        internal PersistenceFailedException()
+            : base("Persistence Failed") { }
+    }
     internal class QueryAsyncReponseException : Exception
     {
         internal QueryAsyncReponseException(string error)

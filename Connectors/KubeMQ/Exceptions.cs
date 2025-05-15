@@ -1,6 +1,4 @@
-﻿using Grpc.Core;
-
-namespace MQContract.KubeMQ
+﻿namespace MQContract.KubeMQ
 {
     /// <summary>
     /// Thrown when an error occurs attempting to connect to the KubeMQ server.  
@@ -34,11 +32,5 @@ namespace MQContract.KubeMQ
     {
         internal NullResponseException()
             : base("null response received from KubeMQ server") { }
-    }
-
-    internal class RPCErrorException : Exception
-    {
-        internal RPCErrorException(RpcException error)
-            : base($"Status: {error.Status}, Message: {error.Message}") { }
     }
 }

@@ -169,17 +169,36 @@ namespace MQContract.KubeMQ
                     Store=storedChannelOptions.Exists(sco => Equals(message.Channel, sco.ChannelName)),
                     Tags={ ConvertMessageHeader(message.Header) }
                 }, connectionOptions.GrpcMetadata, cancellationToken);
-                return new TransmissionResult(res.EventID, res.Error);
+                return new TransmissionResult(res.EventID, Error: string.IsNullOrWhiteSpace(res.Error) ? null : new(new Exception(res.Error), false));
             }
             catch (RpcException ex)
             {
                 connectionOptions.Logger?.LogError(ex, "RPC error occured on Send in send Message:{ErrorMessage}, Status: {StatusCode}", ex.Message, ex.Status);
-                return new TransmissionResult(message.ID, $"Status: {ex.Status}, Message: {ex.Message}");
+                return new TransmissionResult(message.ID, Error: new(ex, ex.StatusCode switch
+                {
+                    StatusCode.Aborted => true,
+                    StatusCode.AlreadyExists => true,
+                    StatusCode.Cancelled => true,
+                    StatusCode.DataLoss => true,
+                    StatusCode.DeadlineExceeded => false,
+                    StatusCode.FailedPrecondition => true,
+                    StatusCode.Internal => true,
+                    StatusCode.InvalidArgument => true,
+                    StatusCode.NotFound => true,
+                    StatusCode.OutOfRange => true,
+                    StatusCode.PermissionDenied => true,
+                    StatusCode.ResourceExhausted => false,
+                    StatusCode.Unauthenticated => true,
+                    StatusCode.Unavailable => false,
+                    StatusCode.Unimplemented => true,
+                    _ => true
+                })
+                );
             }
             catch (Exception ex)
             {
                 connectionOptions.Logger?.LogError(ex, "Exception occured in Send Message:{ErrorMessage}", ex.Message);
-                return new TransmissionResult(message.ID, ex.Message);
+                return new TransmissionResult(message.ID, Error: new(ex));
             }
         }
 
@@ -202,7 +221,7 @@ namespace MQContract.KubeMQ
                 if (res==null)
                 {
                     connectionOptions.Logger?.LogError("Transmission Result for RPC {MessageID} is null", message.ID);
-                    throw new NullResponseException();
+                    throw new TransmissionException(new NullResponseException(), true);
                 }
                 connectionOptions.Logger?.LogDebug("Transmission Result for RPC {MessageID} (IsError:{IsError},Error:{ErrorMessage})", message.ID, !string.IsNullOrEmpty(res.Error), res.Error);
                 return new ServiceQueryResult(message.ID, ConvertMessageHeader(res.Tags), res.Metadata, res.Body.ToArray());
@@ -210,12 +229,30 @@ namespace MQContract.KubeMQ
             catch (RpcException ex)
             {
                 connectionOptions.Logger?.LogError(ex, "RPC error occured on Send in send Message:{ErrorMessage}, Status: {StatusCode}", ex.Message, ex.Status);
-                throw new RPCErrorException(ex);
+                throw new TransmissionException(ex, ex.StatusCode switch
+                {
+                    StatusCode.Aborted => true,
+                    StatusCode.AlreadyExists => true,
+                    StatusCode.Cancelled => true,
+                    StatusCode.DataLoss => true,
+                    StatusCode.DeadlineExceeded => false,
+                    StatusCode.FailedPrecondition => true,
+                    StatusCode.Internal => true,
+                    StatusCode.InvalidArgument => true,
+                    StatusCode.NotFound => true,
+                    StatusCode.OutOfRange => true,
+                    StatusCode.PermissionDenied => true,
+                    StatusCode.ResourceExhausted => false,
+                    StatusCode.Unauthenticated => true,
+                    StatusCode.Unavailable => false,
+                    StatusCode.Unimplemented => true,
+                    _ => true
+                });
             }
             catch (Exception ex)
             {
                 connectionOptions.Logger?.LogError(ex, "Exception occured in Send Message:{ErrorMessage}", ex.Message);
-                throw;
+                throw new TransmissionException(ex);
             }
 #pragma warning restore S2139 // Exceptions should be either logged or rethrown but not both
         }

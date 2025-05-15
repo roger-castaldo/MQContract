@@ -9,6 +9,7 @@ using MQContract.Attributes;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
+using Polly.CircuitBreaker;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
@@ -788,7 +789,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #region Arrange
             (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
 
-            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: "Failed");
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(new Exception("Failed"), true));
 
             var testMessage = new BasicMessage("testMessage");
 
@@ -831,6 +832,267 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Verify
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        [DataRow(null, null, false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
+        public async Task TestPublishAsyncAndRetryFailure(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(new Exception("error occured"), false));
+            var retryCount = 2;
+
+            var testMessage = new BasicMessage("testMessage");
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            ConnectionHelper.AssignResiliencePolicy<BasicMessage>(contractConnection, channel, messageType, useGenerics, retryCount, null);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, retryCount+1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.IsError);
+            Assert.IsNotNull(result.Error);
+            Assert.IsInstanceOfType<ResilienceException>(result.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)result.Error.Exception).Type);
+            Assert.IsNotNull(result.Error.Exception.InnerException);
+            Assert.AreEqual(transmissionResult.Error!.Exception, result.Error.Exception.InnerException);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(retryCount+1));
+            #endregion
+        }
+
+        [TestMethod]
+        [DataRow(null, null, false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
+        public async Task TestPublishAsyncAndCircuitBreakFailure(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(new Exception("error occured"), false));
+            var circuitBreakCount = 1;
+
+            var testMessage = new BasicMessage("testMessage");
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            ConnectionHelper.AssignResiliencePolicy<BasicMessage>(contractConnection, channel, messageType, useGenerics, null, circuitBreakCount);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, circuitBreakCount, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.IsError);
+            Assert.IsNotNull(result.Error);
+            Assert.IsInstanceOfType<ResilienceException>(result.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)result.Error.Exception).Type);
+            Assert.IsNotNull(result.Error.Exception.InnerException);
+            Assert.IsInstanceOfType<BrokenCircuitException>(result.Error.Exception.InnerException);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(circuitBreakCount));
+            #endregion
+        }
+
+        [TestMethod]
+        [DataRow(null, null, false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
+        public async Task TestPublishAsyncWithRetryAndCircuitBreakWithFailure(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var error = new Exception("error occured");
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(error, false));
+            var circuitBreakCount = 2;
+            var retryCount = 1;
+
+            var testMessage = new BasicMessage("testMessage");
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            ConnectionHelper.AssignResiliencePolicy<BasicMessage>(contractConnection, channel, messageType, useGenerics, retryCount, circuitBreakCount);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            IEnumerable<TransmissionResult> result = [
+                await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel),
+                await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel)
+            ];
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, retryCount+1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            var retryFailure = result.First();
+            Assert.IsTrue(retryFailure.IsError);
+            Assert.IsNotNull(retryFailure.Error);
+            Assert.IsInstanceOfType<ResilienceException>(retryFailure.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.Retry, ((ResilienceException)retryFailure.Error.Exception).Type);
+            Assert.IsNotNull(retryFailure.Error.Exception.InnerException);
+            Assert.AreEqual(transmissionResult.Error!.Exception, retryFailure.Error.Exception.InnerException);
+            var circuitBreakFailure = result.Last();
+            Assert.IsTrue(circuitBreakFailure.IsError);
+            Assert.IsNotNull(circuitBreakFailure.Error);
+            Assert.IsInstanceOfType<ResilienceException>(circuitBreakFailure.Error.Exception);
+            Assert.AreEqual(ResilienceTypes.CircuitBreak, ((ResilienceException)circuitBreakFailure.Error.Exception).Type);
+            Assert.IsNotNull(circuitBreakFailure.Error.Exception.InnerException);
+            Assert.IsInstanceOfType<BrokenCircuitException>(circuitBreakFailure.Error.Exception.InnerException);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(retryCount+1));
+            #endregion
+        }
+
+        [TestMethod]
+        [DataRow(null, null, false)]
+        [DataRow(null, null, true)]
+        [DataRow("testChannel", null, false)]
+        [DataRow(null, typeof(BasicMessage), false)]
+        public async Task TestPublishAsyncWithRetryAndCircuitBreakWithoutTripping(string? channel, Type? messageType, bool useGenerics)
+        {
+            #region Arrange
+            var error = new Exception("error occured");
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(error, true));
+            var circuitBreakCount = 2;
+            var retryCount = 1;
+
+            var testMessage = new BasicMessage("testMessage");
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            ConnectionHelper.AssignResiliencePolicy<BasicMessage>(contractConnection, channel, messageType, useGenerics, retryCount, circuitBreakCount);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            IEnumerable<TransmissionResult> result = [
+                await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel),
+                await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel),
+                await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel)
+            ];
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, result.Count(), TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(result);
+            Assert.IsTrue(Array.TrueForAll(result.ToArray(), r => r.IsError
+            && r.Error!=null
+            && r.Error.Exception is Exception ex
+            && Equals(error, ex)));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(result.Count()));
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestPublishAsyncWithRetryAndCircuitBreakFailureAndEnsuringPriority()
+        {
+            #region Arrange
+            var channel = "testChannel";
+            var messageType = typeof(BasicMessage);
+            var error = new Exception("Failed");
+            var circuitBreakCount = 2;
+            var retryCount = 1;
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString(), Error: new(error, false));
+
+            var testMessage = new BasicMessage("testMessage");
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            ConnectionHelper.AssignResiliencePolicy<BasicMessage>(contractConnection, channel, null, false, retryCount, circuitBreakCount);
+            ConnectionHelper.AssignResiliencePolicy<BasicMessage>(contractConnection, null, messageType, false, retryCount+1, circuitBreakCount+1);
+            #endregion
+
+            #region Act
+            var stopwatch = Stopwatch.StartNew();
+            var channelRetryResult = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
+            var channelCircuitBreakResult = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
+            var typeRetryResult = await contractConnection.PublishAsync<BasicMessage>(testMessage);
+            var typeCircuitBreakResult = await contractConnection.PublishAsync<BasicMessage>(testMessage);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, (circuitBreakCount*2)+1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(channelRetryResult);
+            Assert.IsNotNull(channelCircuitBreakResult);
+            Assert.IsNotNull(typeRetryResult);
+            Assert.IsNotNull(typeCircuitBreakResult);
+
+            Assert.IsTrue(Array.TrueForAll([channelRetryResult, typeRetryResult], (res) => res.IsError
+            && res.Error!=null
+            && res.Error.Exception is ResilienceException re
+            && Equals(ResilienceTypes.Retry, re.Type)
+            && Equals(error, re.InnerException)));
+
+            Assert.IsTrue(Array.TrueForAll([channelCircuitBreakResult, typeCircuitBreakResult], (res) => res.IsError
+            && res.Error!=null
+            && res.Error.Exception is ResilienceException re
+            && Equals(ResilienceTypes.CircuitBreak, re.Type)
+            && re.InnerException is BrokenCircuitException));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(((retryCount+1)*2)+1));
             #endregion
         }
     }

@@ -79,7 +79,13 @@ namespace MQContract.ActiveMQ
             }
             catch (Exception ex)
             {
-                return new TransmissionResult(message.ID, Error: ex.Message);
+                return new TransmissionResult(message.ID, Error: new(ex, ex switch
+                {
+                    IllegalStateException => true,
+                    InvalidDestinationException => true,
+                    MessageFormatException => true,
+                    _ => false
+                }));
             }
         }
 

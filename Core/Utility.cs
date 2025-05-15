@@ -57,7 +57,7 @@ namespace MQContract
                     (string)type.GetProperty(nameof(QueryResult<object>.ID))!.GetValue(obj)!,
                     (MessageHeader)type.GetProperty(nameof(QueryResult<object>.Header))!.GetValue(obj)!,
                     type.GetProperty(nameof(QueryResult<object>.Result))!.GetValue(obj),
-                    (string?)type.GetProperty(nameof(QueryResult<object>.Error))!.GetValue(obj)
+                    (ErrorMessage?)type.GetProperty(nameof(QueryResult<object>.Error))!.GetValue(obj)
                 );
             }
             throw new InvalidCastException();

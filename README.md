@@ -24,3 +24,5 @@ global level or on a per message type level through implementation of the approp
 	* [NATS](/Connectors/NATS/Readme.md)
 	* [RabbitMQ](/Connectors/RabbitMQ/Readme.md)
 	* [Redis](/Connectors/Redis/Readme.md)
+* [OpenTelemetry](/OpenTelemetry.md)
+* [Resiliency](/Resiliency.md)
