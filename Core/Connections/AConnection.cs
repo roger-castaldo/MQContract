@@ -207,7 +207,7 @@ namespace MQContract.Connections
                 parent = new ActivityContext(current.TraceId, current.SpanId, ActivityTraceFlags.Recorded);
             using var activity = ActivitySource?.StartActivity(name, activityKind, parent,
                 links: Activity.Current!=null
-                ? [new ActivityLink(ActivityContext.Parse(Activity.Current!.ParentId!, Activity.Current!.TraceStateString))]
+                ? [new ActivityLink(ActivityContext.Parse((Activity.Current.Parent!=null ? Activity.Current!.ParentId! : Activity.Current.Id), Activity.Current!.TraceStateString))]
                 : []);
             if (serviceConnection!=null)
                 OtelHelper.AssignConnectionType(activity, serviceConnection!, connectionName);
