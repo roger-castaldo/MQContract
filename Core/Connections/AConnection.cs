@@ -27,10 +27,13 @@ namespace MQContract.Connections
         : IMetricContractConnection<CC>
         where CC : IBaseContractConnection
     {
+        private static readonly CompressionMiddleware compressionMiddleware = new();
+
         private bool disposedValue;
         protected readonly Guid indentifier = Guid.NewGuid();
         protected readonly SemaphoreSlim dataLock = new(1, 1);
         private readonly List<object> middleware = [new ChannelMappingMiddleware(channelMapper)];
+        private readonly List<object> encryptionMiddlewares = [];
         private readonly SemaphoreSlim inboxSemaphore = new(1, 1);
         private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
         private readonly Dictionary<string, IServiceSubscription> inboxSubscriptions = [];
@@ -39,7 +42,7 @@ namespace MQContract.Connections
         protected ILogger? Logger => logger;
         protected IDisposable? SetScope(string? messageID = null) => logger?.BeginScope<string>($"Connection[{indentifier}]{(messageID==null ? "" : $"|Message[{messageID}]")}");
 
-        protected IMessageFactory<T> GetMessageFactory<T>(uint? maxMessageBodySize, bool ignoreMessageHeader = false)
+        protected IMessageFactory<T> GetMessageFactory<T>(bool ignoreMessageHeader = false)
         {
             using var scope = SetScope();
             logger?.LogInformation("Obtaining message factory for {Type}", typeof(T));
@@ -49,7 +52,7 @@ namespace MQContract.Connections
             if (result == null)
             {
                 logger?.LogInformation("Cached message factory for {Type} was not found, establishing a new instance and caching it", typeof(T));
-                result = new MessageTypeFactory<T>(defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, ignoreMessageHeader, maxMessageBodySize);
+                result = new MessageTypeFactory<T>(defaultMessageEncoder, serviceProvider, ignoreMessageHeader);
                 dataLock.Wait();
                 if (!typeFactories.Any(fact => fact.GetType().GetGenericArguments()[0] == typeof(T) && fact.IgnoreMessageHeader == ignoreMessageHeader))
                     typeFactories = typeFactories.Concat([result]);
@@ -115,7 +118,18 @@ namespace MQContract.Connections
             IAfterEncodeMiddleware[] genericHandlers;
             lock (middleware)
             {
-                genericHandlers = middleware.OfType<IAfterEncodeMiddleware>().ToArray();
+                var encryptor = encryptionMiddlewares.OfType<EncryptionMiddleware<T>>().FirstOrDefault();
+                if (encryptor==null)
+                {
+                    encryptor = new EncryptionMiddleware<T>(defaultMessageEncryptor, serviceProvider);
+                    encryptionMiddlewares.Add(encryptor);
+                }
+                genericHandlers =
+                [
+                    .. middleware.OfType<IAfterEncodeMiddleware>(),
+                    compressionMiddleware,
+                    encryptor
+                ];
             }
             logger?.LogInformation("Executing generic After Messge Encode middleware for message of type {Type}", typeof(T));
             foreach (var handler in genericHandlers)
@@ -123,14 +137,24 @@ namespace MQContract.Connections
             return message;
         }
 
-        private async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
+        private async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync<T>(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
         {
             using var scope = SetScope(id);
             logger?.LogInformation("Executing Before Message Decode middleware");
             IBeforeDecodeMiddleware[] genericHandlers;
             lock (middleware)
             {
-                genericHandlers = middleware.OfType<IBeforeDecodeMiddleware>().ToArray();
+                var encryptor = encryptionMiddlewares.OfType<EncryptionMiddleware<T>>().FirstOrDefault();
+                if (encryptor==null)
+                {
+                    encryptor = new EncryptionMiddleware<T>(defaultMessageEncryptor, serviceProvider);
+                    encryptionMiddlewares.Add(encryptor);
+                }
+                genericHandlers = [
+                    encryptor,
+                    compressionMiddleware,
+                    .. middleware.OfType<IBeforeDecodeMiddleware>()
+                ];
             }
             logger?.LogInformation("Executing generic Before Messge Decode middleware");
             foreach (var handler in genericHandlers)
@@ -158,11 +182,11 @@ namespace MQContract.Connections
             return (message, messageHeader);
         }
 
-        protected async ValueTask<ServiceMessage> ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, T message, bool ignoreChannel, Activity? activity, string? channel = null, MessageHeader? messageHeader = null)
+        protected async ValueTask<ServiceMessage> ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, T message, bool ignoreChannel, Activity? activity, uint? maxMessageSize = null, string? channel = null, MessageHeader? messageHeader = null)
         {
             using var scope = SetScope();
             logger?.LogDebug("Producing Service Message for message of type {Type}", typeof(T));
-            var context = new Middleware.Context(mapType, activity);
+            var context = new Middleware.Context(mapType, activity, maxMessageSize);
             (message, channel, messageHeader) = await BeforeMessageEncodeAsync<T>(context, message, channel??messageFactory.MessageChannel, messageHeader??new([]));
             return await AfterMessageEncodeAsync<T>(context,
                 await messageFactory.ConvertMessageAsync(message, ignoreChannel, channel, messageHeader)
@@ -174,7 +198,7 @@ namespace MQContract.Connections
             using var scope = SetScope(message.ID);
             logger?.LogDebug("Decoding Service Message message of type {Type}", typeof(T));
             var context = new Middleware.Context(mapType, activity);
-            (var messageHeader, var data) = await BeforeMessageDecodeAsync(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
+            (var messageHeader, var data) = await BeforeMessageDecodeAsync<T>(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
             var taskMessage = await messageFactory.ConvertMessageAsync(logger, new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, messageHeader, data, message.Acknowledge))
                                 ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
             return await AfterMessageDecodeAsync<T>(context, taskMessage!, message.ID, messageHeader, message.ReceivedTimestamp, DateTime.Now);
@@ -495,7 +519,12 @@ namespace MQContract.Connections
             (var activity, _) = StartActivity(Constants.ConsumeQueryResponseActivityName, ActivityKind.Consumer, queryResult.Header, serviceConnection, serviceConnectionName);
             try
             {
-                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(ChannelMapper.MapTypes.QueryResponse, GetMessageFactory<R>(maxMessageBodySize, true), new(queryResult.ID, queryResult.MessageTypeID, responseChannel, queryResult.Header, queryResult.Data), activity);
+                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(
+                    ChannelMapper.MapTypes.QueryResponse, 
+                    GetMessageFactory<R>(true), 
+                    new(queryResult.ID, queryResult.MessageTypeID, responseChannel, queryResult.Header, queryResult.Data), 
+                    activity
+                );
                 result = new QueryResult<R>(
                     queryResult.ID,
                     messageHeader,
@@ -681,8 +710,9 @@ namespace MQContract.Connections
                             result.Message,
                             true,
                             responseActivity,
-                            replyChannel,
-                            headers
+                            maxMessageSize: serviceConnection.MaxMessageBodySize,
+                            channel: replyChannel,
+                            messageHeader: headers
                         );
                         responseActivity?.SetStatus(ActivityStatusCode.Ok);
                         return (response, responseActivity);

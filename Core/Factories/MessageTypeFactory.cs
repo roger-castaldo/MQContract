@@ -4,11 +4,9 @@ using MQContract.Attributes;
 using MQContract.Defaults;
 using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encoding;
-using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Messages;
 using MQContract.Messages;
-using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Text.RegularExpressions;
@@ -18,24 +16,19 @@ namespace MQContract.Factories
     internal class MessageTypeFactory<T>
         : IMessageFactory<T>
     {
-        private static Regex RegMetaData => new(@"^(U|C)-(.+)-((\d+\.)*(\d+))$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(200));
+        private static Regex RegMetaData => new(@"^(.+)-((\d+\.)*(\d+))$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(200));
 
-        private readonly IMessageEncryptor? globalMessageEncryptor;
         private readonly IMessageEncoder? globalMessageEncoder;
         private readonly IMessageTypeEncoder<T>? messageEncoder;
-        private readonly IMessageTypeEncryptor<T>? messageEncryptor;
         private readonly IEnumerable<IConversionPath<T>> converters;
-        private readonly uint maxMessageSize;
         public bool IgnoreMessageHeader { get; private init; }
 
         private readonly string messageName = Utility.MessageTypeName<T>();
         private readonly string messageVersion = Utility.MessageVersionString<T>();
         public string? MessageChannel => typeof(T).GetCustomAttributes<MessageChannelAttribute>().Select(mc => mc.Name).FirstOrDefault();
 
-        public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider, bool ignoreMessageHeader, uint? maxMessageSize)
+        public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider, bool ignoreMessageHeader)
         {
-            this.maxMessageSize = maxMessageSize??int.MaxValue;
-            this.globalMessageEncryptor = globalMessageEncryptor;
             this.globalMessageEncoder = globalMessageEncoder;
             IgnoreMessageHeader = ignoreMessageHeader;
             var types = AssemblyLoadContext.All
@@ -47,7 +40,6 @@ namespace MQContract.Factories
                         return assembly.GetTypes()
                         .Where(t => !t.IsInterface && !t.IsAbstract
                             && Array.Exists(t.GetInterfaces(), iface => iface == typeof(IMessageTypeEncoder<T>)
-                                || iface == typeof(IMessageTypeEncryptor<T>)
                                 || iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)));
                     }
                     catch (Exception)
@@ -57,8 +49,6 @@ namespace MQContract.Factories
                 });
             var encoderType = types
                 .FirstOrDefault(type => type.GetInterfaces().Contains(typeof(IMessageTypeEncoder<T>)));
-            var encryptorType = types
-                .FirstOrDefault(type => type.GetInterfaces().Contains(typeof(IMessageTypeEncryptor<T>)));
             messageEncoder = (IMessageTypeEncoder<T>?)((serviceProvider, encoderType, globalMessageEncoder) switch
             {
                 (not null, not null, _) => ActivatorUtilities.CreateInstance(serviceProvider!, encoderType!),
@@ -66,19 +56,12 @@ namespace MQContract.Factories
                 (_, null, null) => new JsonEncoder<T>(),
                 _ => null
             });
-            messageEncryptor = (IMessageTypeEncryptor<T>?)((serviceProvider, encryptorType, globalMessageEncryptor) switch
-            {
-                (not null, not null, _) => ActivatorUtilities.CreateInstance(serviceProvider, encryptorType),
-                (null, not null, _) => Activator.CreateInstance(encryptorType)!,
-                (_, null, null) => new NonEncryptor<T>(),
-                _ => null
-            });
             converters = IgnoreMessageHeader
                 ? []
-                : ProduceConverters<T>(types, globalMessageEncoder, globalMessageEncryptor, serviceProvider);
+                : ProduceConverters<T>(types, globalMessageEncoder, serviceProvider);
         }
 
-        private static IEnumerable<IConversionPath<M>> ProduceConverters<M>(IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IMessageEncryptor? globalMessageEncryptor, IServiceProvider? serviceProvider)
+        private static IEnumerable<IConversionPath<M>> ProduceConverters<M>(IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
         {
             var paths = types
                 .Where(t => Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType &&
@@ -116,7 +99,7 @@ namespace MQContract.Factories
                 .Select(path =>
                 {
 #pragma warning disable CS8601 // Possible null reference assignment.
-                    var args = new object[] { path, types, globalMessageEncoder, globalMessageEncryptor, serviceProvider };
+                    var args = new object[] { path, types, globalMessageEncoder, serviceProvider };
 #pragma warning restore CS8601 // Possible null reference assignment.
                     var type = typeof(ConversionPath<,>).MakeGenericType(
                         ExtractGenericArguements(path.First().GetType())[0],
@@ -128,15 +111,13 @@ namespace MQContract.Factories
 
         private static Type[] ExtractGenericArguements(Type t) => t.GetInterfaces().First(iface => iface.IsGenericType && iface.GetGenericTypeDefinition()==typeof(IMessageConverter<,>)).GetGenericArguments();
 
-        private static bool IsMessageTypeMatch(string metaData, Type t, out bool isCompressed)
+        private static bool IsMessageTypeMatch(string metaData, Type t)
         {
-            isCompressed=false;
             var match = RegMetaData.Match(metaData);
             if (match.Success)
             {
-                isCompressed=match.Groups[1].Value=="C";
-                if (match.Groups[2].Value==t.GetCustomAttributes<MessageNameAttribute>().Select(mn => mn.Value).FirstOrDefault(Utility.TypeName(t))
-                    && new Version(match.Groups[3].Value)==new Version(t.GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0")))
+                if (match.Groups[1].Value==t.GetCustomAttributes<MessageNameAttribute>().Select(mn => mn.Value).FirstOrDefault(Utility.TypeName(t))
+                    && new Version(match.Groups[2].Value)==new Version(t.GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0")))
                     return true;
 
             }
@@ -150,27 +131,13 @@ namespace MQContract.Factories
             if (string.IsNullOrWhiteSpace(channel)&&!ignoreChannel)
                 throw new MessageChannelNullException();
 
-            var encodedData = await (messageEncoder?.EncodeAsync(message)??globalMessageEncoder!.EncodeAsync<T>(message));
-            (var body, var messageHeaders) = await (messageEncryptor?.EncryptAsync(encodedData)??globalMessageEncryptor!.EncryptAsync(encodedData));
-
-            var metaData = string.Empty;
-            if (body.Length>maxMessageSize)
-            {
-                using var ms = new MemoryStream();
-                var zip = new GZipStream(ms, System.IO.Compression.CompressionLevel.SmallestSize, false);
-                await zip.WriteAsync(body);
-                await zip.FlushAsync();
-                body = ms.ToArray();
-                metaData = "C";
-
-                if (body.Length > maxMessageSize)
-                    throw new ArgumentOutOfRangeException(nameof(message), $"message data exceeds maxmium message size (MaxSize:{maxMessageSize},EncodedSize:{body.Length})");
-            }
-            else
-                metaData="U";
-            metaData+=$"-{messageName}-{messageVersion}";
-
-            return new ServiceMessage(Guid.NewGuid().ToString(), metaData, channel??string.Empty, new MessageHeader(messageHeader, messageHeaders), body);
+            return new ServiceMessage(
+                Guid.NewGuid().ToString(),
+                $"{messageName}-{messageVersion}", 
+                channel??string.Empty, 
+                messageHeader,
+                await (messageEncoder?.EncodeAsync(message)??globalMessageEncoder!.EncodeAsync<T>(message))
+            );
         }
 
         async ValueTask<T?> IConversionPath<T>.ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
@@ -183,30 +150,14 @@ namespace MQContract.Factories
                 throw ErrorServiceMessage.DecodeError(message.Data);
             IConversionPath<T>? converter = null;
             T? result;
-            var compressed = false;
-            if (IgnoreMessageHeader || IsMessageTypeMatch(message.MessageTypeID, typeof(T), out compressed))
-            {
-                dataStream = (compressed ? new GZipStream(new MemoryStream(message.Data.ToArray()), System.IO.Compression.CompressionMode.Decompress) : new MemoryStream(message.Data.ToArray()));
-                dataStream = await (messageEncryptor?.DecryptAsync(dataStream, message.Header)??globalMessageEncryptor!.DecryptAsync(dataStream, message.Header));
-                if (messageEncoder!=null)
-                    result = await messageEncoder.DecodeAsync(dataStream);
-                else
-                    result = await globalMessageEncoder!.DecodeAsync<T>(dataStream);
-            }
+            if (IgnoreMessageHeader || IsMessageTypeMatch(message.MessageTypeID, typeof(T)))
+                result = await (messageEncoder?.DecodeAsync(new MemoryStream(message.Data.ToArray()))??globalMessageEncoder!.DecodeAsync<T>(new MemoryStream(message.Data.ToArray())));
             else
             {
-                foreach (var conv in converters)
-                {
-                    if (IsMessageTypeMatch(message.MessageTypeID, conv.GetType().GetGenericArguments()[0], out compressed))
-                    {
-                        converter=conv;
-                        break;
-                    }
-                }
+                converter = converters.FirstOrDefault(conv => IsMessageTypeMatch(message.MessageTypeID, conv.GetType().GetGenericArguments()[0]));
                 if (converter==null)
                     throw new InvalidCastException();
-                dataStream = (compressed ? new GZipStream(new MemoryStream(message.Data.ToArray()), System.IO.Compression.CompressionMode.Decompress) : new MemoryStream(message.Data.ToArray()));
-                result = await converter.ConvertMessageAsync(logger, message, dataStream: dataStream);
+                result = await converter.ConvertMessageAsync(logger, message, dataStream: new MemoryStream(message.Data.ToArray()));
             }
             if (Equals(result, default(T?)))
                 throw new MessageConversionException(typeof(T), converter?.GetType()??GetType());

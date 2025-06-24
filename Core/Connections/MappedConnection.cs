@@ -75,7 +75,7 @@ namespace MQContract.Connections
         {
             (var connection, channel) = await GetConnectionsAsync<T>(channel, ChannelMapper.MapTypes.PublishSubscription);
             return await CreateSubscriptionAsync<T>(
-                GetMessageFactory<T>(connection.MessageServiceConnection.MaxMessageBodySize, ignoreMessageHeader),
+                GetMessageFactory<T>(ignoreMessageHeader),
                 connection.MessageServiceConnection,
                 messageReceived,
                 errorReceived,
@@ -92,7 +92,16 @@ namespace MQContract.Connections
             using var scope = SetScope();
             Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
             (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader, null);
-            var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), message, false, activity, channel, messageHeader);
+            var serviceMessage = await ProduceServiceMessageAsync<T>(
+                ChannelMapper.MapTypes.Publish,
+                GetMessageFactory<T>(),
+                message,
+                false,
+                activity,
+                maxMessageSize: MaxMessageBodySize,
+                channel: channel, 
+                messageHeader: messageHeader
+            );
             var serviceConnection = await GetConnectionsAsync(serviceMessage.Channel, typeof(T), serviceMessage.Header);
             OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
             return await PublishMessageAsync<T>(publishLock, serviceMessage, serviceConnection.MessageServiceConnection, activity, serviceConnection.ServiceConnectionName, cancellationToken);
@@ -105,7 +114,16 @@ namespace MQContract.Connections
             (var activity, var headers) = StartActivity(Constants.BulkPublishActivityName, ActivityKind.Producer, null, null);
             var serviceMessages = await
             messages.WhenAll(m =>
-                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(MaxMessageBodySize), m.message, false, activity, channel, new(m.messageHeader, headers))
+                    ProduceServiceMessageAsync<T>(
+                        ChannelMapper.MapTypes.Publish,
+                        GetMessageFactory<T>(),
+                        m.message,
+                        false,
+                        activity,
+                        maxMessageSize: MaxMessageBodySize,
+                        channel: channel, 
+                        messageHeader: new(m.messageHeader, headers)
+                    )
                 );
             var serviceConnection = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(T), serviceMessages.First().Header);
             OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
@@ -124,7 +142,16 @@ namespace MQContract.Connections
             using var scope = SetScope();
             Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);
             (var activity, messageHeader) = StartActivity(Constants.PublishQueryActivityName, ActivityKind.Producer, messageHeader, null);
-            var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(MaxMessageBodySize), message, false, activity, channel: channel, messageHeader: messageHeader);
+            var serviceMessage = await ProduceServiceMessageAsync<Q>(
+                ChannelMapper.MapTypes.Query, 
+                GetMessageFactory<Q>(), 
+                message, 
+                false, 
+                activity, 
+                maxMessageSize: MaxMessageBodySize,
+                channel: channel, 
+                messageHeader: messageHeader
+            );
             var serviceConnection = await GetConnectionsAsync(serviceMessage.Channel, typeof(Q), serviceMessage.Header);
             OtelHelper.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
             return await ExecuteQueryAsync<Q, R>(serviceConnection.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: serviceConnection.ServiceConnectionName, cancellationToken: cancellationToken);
@@ -167,8 +194,8 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Producing QueryResponse Subscription for {Q} responding with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
-            var queryMessageFactory = GetMessageFactory<Q>(MaxMessageBodySize, ignoreMessageHeader);
-            var responseMessageFactory = GetMessageFactory<R>(MaxMessageBodySize);
+            var queryMessageFactory = GetMessageFactory<Q>(ignoreMessageHeader);
+            var responseMessageFactory = GetMessageFactory<R>();
             (var serviceConnection, channel) = await GetConnectionsAsync<Q>(channel, ChannelMapper.MapTypes.QuerySubscription);
             return await CreateSubscriptionAsync<Q, R>(queryMessageFactory, responseMessageFactory, serviceConnection.MessageServiceConnection, messageReceived, errorReceived, channel, group, synchronous, serviceConnection.ServiceConnectionName, cancellationToken);
         }
