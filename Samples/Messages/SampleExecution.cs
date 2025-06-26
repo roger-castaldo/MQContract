@@ -1,5 +1,6 @@
 ﻿using MQContract;
 using MQContract.Interfaces;
+using MQContract.Interfaces.Middleware;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Text.Json;
@@ -8,13 +9,16 @@ namespace Messages
 {
     public static class SampleExecution
     {
-        public static async ValueTask ExecuteSample(IMessageServiceConnection serviceConnection, string serviceName, ChannelMapper? mapper = null)
+        public static async ValueTask ExecuteSample(IMessageServiceConnection serviceConnection, string serviceName, ChannelMapper? mapper = null, IEnumerable<IMiddleware>? middlewares = null)
         {
             using var sourceCancel = new CancellationTokenSource();
 
             var contractConnection = ContractConnection.Instance(serviceConnection, channelMapper: mapper);
             contractConnection.AddMetrics(null, true)
                 .EnableOpenTelemetry(linkActivitiesAcrossSystems: true);
+
+            foreach (var middleware in middlewares?? [])
+                contractConnection = contractConnection.RegisterMiddleware(middleware);
 
             var announcementSubscription1 = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
                 (announcement) =>

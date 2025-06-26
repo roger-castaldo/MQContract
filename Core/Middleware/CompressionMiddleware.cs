@@ -1,7 +1,6 @@
 ﻿using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using System.IO.Compression;
-using System.Reflection.Metadata;
 
 namespace MQContract.Middleware
 {

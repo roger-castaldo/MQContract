@@ -1,5 +1,4 @@
-﻿using MQContract.Interfaces.Middleware;
-using System.Diagnostics.Metrics;
+﻿using System.Diagnostics.Metrics;
 
 namespace MQContract.Interfaces
 {
@@ -7,41 +6,9 @@ namespace MQContract.Interfaces
     /// Houses the metric pieces for a given contract connection
     /// </summary>
     /// <typeparam name="CC">The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining.</typeparam>
-    public interface IMetricContractConnection<CC> : IResilientContractConnection<CC>
+    public interface IMetricContractConnection<CC> : IMiddlewareContractConnection<CC>
         where CC : IBaseContractConnection
     {
-        /// <summary>
-        /// Register a middleware of a given type T to be used by the contract connection
-        /// </summary>
-        /// <typeparam name="T">The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware</typeparam>
-        /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        CC RegisterMiddleware<T>()
-            where T : IMiddleware;
-        /// <summary>
-        /// Register a middleware of a given type T to be used by the contract connection
-        /// </summary>
-        /// <param name="constructInstance">Callback to create the instance</param>
-        /// <typeparam name="T">The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware</typeparam>
-        /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        CC RegisterMiddleware<T>(Func<T> constructInstance)
-            where T : IMiddleware;
-        /// <summary>
-        /// Register a middleware of a given type T to be used by the contract connection
-        /// </summary>
-        /// <typeparam name="T">The type of middle ware to register, it must implement IBeforeEncodeSpecificTypeMiddleware&lt;M&gt; or IAfterDecodeSpecificTypeMiddleware&lt;M&gt;</typeparam>
-        /// <typeparam name="M">The message type that this middleware is specifically called for</typeparam>
-        /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        CC RegisterMiddleware<T, M>()
-            where T : ISpecificTypeMiddleware<M>;
-        /// <summary>
-        /// Register a middleware of a given type T to be used by the contract connection
-        /// </summary>
-        /// <param name="constructInstance">Callback to create the instance</param>
-        /// <typeparam name="T">The type of middle ware to register, it must implement IBeforeEncodeSpecificTypeMiddleware&lt;M&gt; or IAfterDecodeSpecificTypeMiddleware&lt;M&gt;</typeparam>
-        /// <typeparam name="M">The message type that this middleware is specifically called for</typeparam>
-        /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        CC RegisterMiddleware<T, M>(Func<T> constructInstance)
-            where T : ISpecificTypeMiddleware<M>;
         /// <summary>
         /// Called to enable Open Telemetry capabilities within the Contract Connection which will include passing activity information across the messages
         /// </summary>

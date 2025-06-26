@@ -66,8 +66,19 @@ namespace MQContract.Connections
 
         #region Middleware
 
-        private CC RegisterMiddleware(object element)
+        private static readonly Type[] validMiddlewareTypes = [
+            typeof(IAfterDecodeMiddleware),
+            typeof(IAfterDecodeSpecificTypeMiddleware<>),
+            typeof(IAfterEncodeMiddleware),
+            typeof(IBeforeDecodeMiddleware),
+            typeof(IBeforeEncodeMiddleware),
+            typeof(IBeforeEncodeSpecificTypeMiddleware<>)
+        ];
+
+        private CC RegisterMiddlewareInstance(object element)
         {
+            if (!Array.Exists(element.GetType().GetInterfaces(),(i) => validMiddlewareTypes.Contains((i.IsGenericType ? i.GetGenericTypeDefinition() : i))))
+                throw new InvalidMiddlewareException(element.GetType());
             using var scope = SetScope();
             logger?.LogDebug("Registering middleware of type {Type}", element.GetType());
             dataLock.Wait();
@@ -77,19 +88,34 @@ namespace MQContract.Connections
         }
 
         private CC RegisterMiddlewareType(Type type)
-            => RegisterMiddleware((serviceProvider == null ? Activator.CreateInstance(type) : ActivatorUtilities.CreateInstance(serviceProvider, type))!);
+            => RegisterMiddlewareInstance((serviceProvider == null ? Activator.CreateInstance(type) : ActivatorUtilities.CreateInstance(serviceProvider, type))!);
 
-        CC IMetricContractConnection<CC>.RegisterMiddleware<T>()
+        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<T>()
             => RegisterMiddlewareType(typeof(T));
 
-        CC IMetricContractConnection<CC>.RegisterMiddleware<T>(Func<T> constructInstance)
-            => RegisterMiddleware(constructInstance());
+        CC IMiddlewareContractConnection<CC>.RegisterMiddleware(Type middleware)
+            => RegisterMiddlewareType(middleware);
 
-        CC IMetricContractConnection<CC>.RegisterMiddleware<T, M>()
+        CC IMiddlewareContractConnection<CC>.RegisterMiddleware(IMiddleware instance)
+            => RegisterMiddlewareInstance(middleware);
+
+        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<T>(Func<T> constructInstance)
+            => RegisterMiddlewareInstance(constructInstance());
+
+        CC IMiddlewareContractConnection<CC>.RegisterMiddleware(Func<IMiddleware> constructInstance)
+            => RegisterMiddlewareInstance(constructInstance());
+
+        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<M>(Func<ISpecificTypeMiddleware<M>> constructInstance)
+            => RegisterMiddlewareInstance(constructInstance());
+
+        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<M>(ISpecificTypeMiddleware<M> instance)
+            => RegisterMiddlewareInstance(instance);
+
+        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<T, M>()
             => RegisterMiddlewareType(typeof(T));
 
-        CC IMetricContractConnection<CC>.RegisterMiddleware<T, M>(Func<T> constructInstance)
-            => RegisterMiddleware(constructInstance());
+        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<T, M>(Func<T> constructInstance)
+            => RegisterMiddlewareInstance(constructInstance());
 
         private async ValueTask<(T message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
         {
