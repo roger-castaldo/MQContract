@@ -16,25 +16,50 @@ namespace MQContract.Kafka.Middleware
     ) : IAfterEncodeMiddleware, IBeforeDecodeMiddleware
     {
         private const string SchemaIdHeader = "_kafkaSchemaId";
+        private readonly static string[] IgnoredMessageTypes = [
+            $"{typeof(ushort).Name}-0.0.0.0",
+            $"{typeof(string).Name}-0.0.0.0",
+            $"{typeof(char).Name}-0.0.0.0",
+            $"{typeof(short).Name}-0.0.0.0",
+            $"{typeof(long).Name}-0.0.0.0",
+            $"{typeof(ulong).Name}-0.0.0.0",
+            $"{typeof(uint).Name}-0.0.0.0",
+            $"{typeof(int).Name}-0.0.0.0",
+            $"{typeof(Half).Name}-0.0.0.0",
+            $"{typeof(float).Name}-0.0.0.0",
+            $"{typeof(double).Name}-0.0.0.0",
+            $"{typeof(decimal).Name}-0.0.0.0",
+            $"{typeof(byte).Name}-0.0.0.0",
+            $"{typeof(byte[]).Name}-0.0.0.0",
+            $"{typeof(bool).Name}-0.0.0.0"
+        ];
 
         async ValueTask<ServiceMessage> IAfterEncodeMiddleware.AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
         {
-            var schemaId = (await schemaRegistryClient.GetLatestSchemaAsync(message.MessageTypeID))?.Id;
-            if (schemaId==null)
+            if (!IgnoredMessageTypes.Contains(message.MessageTypeID))
             {
-                if (autoRegisterSchema)
-                    schemaId = await schemaRegistryClient.RegisterSchemaAsync(message.MessageTypeID, new Schema(await ExtractSchemaAsync(messageType), registerSchemaType));
+                int? schemaId = null;
+                try
+                {
+                    schemaId = (await schemaRegistryClient.GetLatestSchemaAsync(message.MessageTypeID))?.Id;
+                }
+                catch { }
+                if (schemaId==null)
+                {
+                    if (autoRegisterSchema)
+                        schemaId = await schemaRegistryClient.RegisterSchemaAsync(message.MessageTypeID, new Schema(await ExtractSchemaAsync(messageType), registerSchemaType));
+                }
+                if (schemaId==null && failOnMissingSchema)
+                    throw new Exception("This is a dummy for now");
+                else if (schemaId!=null)
+                    return new(
+                        message.ID,
+                        message.MessageTypeID,
+                        message.Channel,
+                        new(message.Header, new Dictionary<string, string?>() { { SchemaIdHeader, schemaId?.ToString() } }),
+                        message.Data
+                    );
             }
-            if (schemaId==null && failOnMissingSchema)
-                throw new Exception("This is a dummy for now");
-            else if (schemaId!=null)
-                return new(
-                    message.ID,
-                    message.MessageTypeID,
-                    message.Channel,
-                    new(message.Header, new Dictionary<string, string?>() { { SchemaIdHeader, schemaId?.ToString() } }),
-                    message.Data
-                );
             return message;
         }
 
@@ -49,24 +74,24 @@ namespace MQContract.Kafka.Middleware
 
         async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
         {
-            var schemaId = messageHeader[SchemaIdHeader];
-            if (string.IsNullOrWhiteSpace(schemaId))
+            if (!IgnoredMessageTypes.Contains(messageTypeID))
             {
-                if (data.Span[0]==0)
+                var schemaId = messageHeader[SchemaIdHeader];
+                if (string.IsNullOrWhiteSpace(schemaId)&&data.Span[0]==0)
                 {
                     schemaId = BinaryPrimitives.ReadInt32BigEndian(data.Slice(1, 4).Span).ToString();
                     data = data.Slice(5);
                 }
-            }
-            if (string.IsNullOrWhiteSpace(schemaId) && failOnMissingSchema)
-                throw new Exception("This is a dummy for now");
-            else if (!string.IsNullOrWhiteSpace(schemaId))
-            {
-                var schema = await schemaRegistryClient.GetSchemaAsync(int.Parse(schemaId));
-                if (schema == null && failOnMissingSchema)
+                if (string.IsNullOrWhiteSpace(schemaId) && failOnMissingSchema)
                     throw new Exception("This is a dummy for now");
-                else if (schema!=null && !(await ValidateSchemaAsync(schema, new MemoryStream(data.ToArray()))))
-                    throw new Exception("This is a dummy for now");
+                else if (!string.IsNullOrWhiteSpace(schemaId))
+                {
+                    var schema = await schemaRegistryClient.GetSchemaAsync(int.Parse(schemaId));
+                    if (schema == null && failOnMissingSchema)
+                        throw new Exception("This is a dummy for now");
+                    else if (schema!=null && !(await ValidateSchemaAsync(schema, new MemoryStream(data.ToArray()))))
+                        throw new Exception("This is a dummy for now");
+                }
             }
             return (messageHeader,data);
         }

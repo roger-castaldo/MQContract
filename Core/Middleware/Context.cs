@@ -9,11 +9,12 @@ namespace MQContract.Middleware
         private const string MaxMessageSizeKey = "_MaxMessageSize";
         private readonly Dictionary<string, object> values = [];
 
-        public Context(ChannelMapper.MapTypes mapDirection, Activity? activity, uint? maxMessageSize = null)
+        public Context(ChannelMapper.MapTypes mapDirection, Activity? activity, uint? maxMessageSize = null, Type? expectedType = null)
         {
             this[MapTypeKey] = mapDirection;
             Activity = activity;
             this[MaxMessageSizeKey] = maxMessageSize??int.MaxValue;
+            this[EncryptionMiddleware.ExpectedTypeKey] = expectedType;
         }
 
         public object? this[string key]
@@ -30,10 +31,11 @@ namespace MQContract.Middleware
 
         public Activity? Activity { get; private init; }
 
-        public uint MaxMessageSize 
+        public uint MaxMessageSize
             => (uint)this[MaxMessageSizeKey]!;
 
         public ChannelMapper.MapTypes MapDirection
             => (ChannelMapper.MapTypes)this[MapTypeKey]!;
+
     }
 }

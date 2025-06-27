@@ -63,7 +63,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
-            (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader, serviceConnection);
+            using var activity = StartActivity(Constants.PublishActivityName, serviceConnection: serviceConnection);
             var serviceMessage = await ProduceServiceMessageAsync<T>(
                 ChannelMapper.MapTypes.Publish, 
                 GetMessageFactory<T>(), 
@@ -81,7 +81,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Bulk Publishing messages {T} on {Channel}", typeof(T), channel);
-            (var activity, var headers) = StartActivity(Constants.BulkPublishActivityName, ActivityKind.Producer, null, serviceConnection);
+            using var activity = StartActivity(Constants.BulkPublishActivityName, serviceConnection:serviceConnection);
             activity?.SetTag(Constants.BulkPublishCountTag, messages.Count());
             var serviceMessages = await
                 messages.WhenAll(m =>
@@ -93,7 +93,7 @@ namespace MQContract.Connections
                         activity, 
                         maxMessageSize:serviceConnection.MaxMessageBodySize,
                         channel:channel, 
-                        messageHeader: new(m.messageHeader, headers)
+                        messageHeader: m.messageHeader
                     )
                 );
             await publishLock.WaitAsync(cancellationToken);
@@ -110,7 +110,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);
-            (var activity, messageHeader) = StartActivity(Constants.PublishQueryActivityName, ActivityKind.Producer, messageHeader, serviceConnection);
+            using var activity = StartActivity(Constants.PublishQueryActivityName, serviceConnection: serviceConnection);
             var serviceMessage = await ProduceServiceMessageAsync<Q>(
                 ChannelMapper.MapTypes.Query, 
                 GetMessageFactory<Q>(), 

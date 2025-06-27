@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Connections;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using MQContract.Middleware;
 using System.Diagnostics;
 
 namespace MQContract.Subscriptions
@@ -65,7 +65,7 @@ namespace MQContract.Subscriptions
                                     replyChannel!
                                 );
                                 var res = await connection.PublishAsync(QueryResponseHelper.EncodeMessage(resultMessage, queryClientID, replyID, null, replyChannel), cancellationToken);
-                                OtelHelper.AddMessagePublishedEvent(activity, resultMessage, res, connection, serviceConnectionName);
+                                OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, resultMessage, res, connection, serviceConnectionName);
                             }
                         },
                         error => errorReceived(error),

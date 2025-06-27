@@ -26,7 +26,9 @@ namespace Messages
                     Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName} in member 1 of the group.. [{announcement.ID},{announcement.ReceivedTimestamp}]");
                     return ValueTask.CompletedTask;
                 },
-                (error) => Console.WriteLine($"Announcement error: {error.Message}"),
+                (error) => {
+                    Console.WriteLine($"Announcement error: {error.Message}");
+                },
                 group: "AnnouncementGroup",
                 cancellationToken: sourceCancel.Token
             );
@@ -89,7 +91,7 @@ namespace Messages
             var bulkResult = await contractConnection.BulkPublishAsync<ArrivalAnnouncement>(arrivalAnnouncements, cancellationToken: sourceCancel.Token);
 
             foreach (var res in bulkResult)
-                Console.WriteLine($"Bulk Broadcast Result [Success:{res.IsError}, ID:{res.ID}]");
+                Console.WriteLine($"Bulk Broadcast Result [Success:{!res.IsError}, ID:{res.ID}]");
 
             var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Response 1 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");

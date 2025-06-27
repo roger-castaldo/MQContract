@@ -32,8 +32,7 @@ namespace MQContract.Connections
         private bool disposedValue;
         protected readonly Guid indentifier = Guid.NewGuid();
         protected readonly SemaphoreSlim dataLock = new(1, 1);
-        private readonly List<object> middleware = [new ChannelMappingMiddleware(channelMapper)];
-        private readonly List<object> encryptionMiddlewares = [];
+        private readonly MiddlewareCollection middleware = new(logger,channelMapper, defaultMessageEncryptor, serviceProvider);
         private readonly SemaphoreSlim inboxSemaphore = new(1, 1);
         private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
         private readonly Dictionary<string, IServiceSubscription> inboxSubscriptions = [];
@@ -66,24 +65,10 @@ namespace MQContract.Connections
 
         #region Middleware
 
-        private static readonly Type[] validMiddlewareTypes = [
-            typeof(IAfterDecodeMiddleware),
-            typeof(IAfterDecodeSpecificTypeMiddleware<>),
-            typeof(IAfterEncodeMiddleware),
-            typeof(IBeforeDecodeMiddleware),
-            typeof(IBeforeEncodeMiddleware),
-            typeof(IBeforeEncodeSpecificTypeMiddleware<>)
-        ];
-
         private CC RegisterMiddlewareInstance(object element)
         {
-            if (!Array.Exists(element.GetType().GetInterfaces(),(i) => validMiddlewareTypes.Contains((i.IsGenericType ? i.GetGenericTypeDefinition() : i))))
-                throw new InvalidMiddlewareException(element.GetType());
             using var scope = SetScope();
-            logger?.LogDebug("Registering middleware of type {Type}", element.GetType());
-            dataLock.Wait();
-            middleware.Add(element);
-            dataLock.Release();
+            middleware.RegisterMiddlewareInstance(element);
             return (CC)(IBaseContractConnection)this;
         }
 
@@ -97,7 +82,7 @@ namespace MQContract.Connections
             => RegisterMiddlewareType(middleware);
 
         CC IMiddlewareContractConnection<CC>.RegisterMiddleware(IMiddleware instance)
-            => RegisterMiddlewareInstance(middleware);
+            => RegisterMiddlewareInstance(instance);
 
         CC IMiddlewareContractConnection<CC>.RegisterMiddleware<T>(Func<T> constructInstance)
             => RegisterMiddlewareInstance(constructInstance());
@@ -121,13 +106,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             logger?.LogInformation("Executing Before Message Encode middleware for message of type {Type}", typeof(T));
-            IBeforeEncodeMiddleware[] genericHandlers;
-            IBeforeEncodeSpecificTypeMiddleware<T>[] specificHandlers;
-            lock (middleware)
-            {
-                genericHandlers = middleware.OfType<IBeforeEncodeMiddleware>().ToArray();
-                specificHandlers = middleware.OfType<IBeforeEncodeSpecificTypeMiddleware<T>>().ToArray();
-            }
+            var (genericHandlers, specificHandlers) = middleware.GetHandlers<IBeforeEncodeMiddleware,IBeforeEncodeSpecificTypeMiddleware<T>>();
             logger?.LogInformation("Executing generic Before Messge Encode middleware for message of type {Type}", typeof(T));
             foreach (var handler in genericHandlers)
                 (message, channel, messageHeader) = await handler.BeforeMessageEncodeAsync<T>(context, message, channel, messageHeader);
@@ -141,22 +120,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope(message.ID);
             logger?.LogInformation("Executing After Message Encode middleware for message of type {Type}", typeof(T));
-            IAfterEncodeMiddleware[] genericHandlers;
-            lock (middleware)
-            {
-                var encryptor = encryptionMiddlewares.OfType<EncryptionMiddleware<T>>().FirstOrDefault();
-                if (encryptor==null)
-                {
-                    encryptor = new EncryptionMiddleware<T>(defaultMessageEncryptor, serviceProvider);
-                    encryptionMiddlewares.Add(encryptor);
-                }
-                genericHandlers =
-                [
-                    .. middleware.OfType<IAfterEncodeMiddleware>(),
-                    compressionMiddleware,
-                    encryptor
-                ];
-            }
+            var genericHandlers = middleware.GetHandlers<IAfterEncodeMiddleware>();
             logger?.LogInformation("Executing generic After Messge Encode middleware for message of type {Type}", typeof(T));
             foreach (var handler in genericHandlers)
                 message = await handler.AfterMessageEncodeAsync(typeof(T), context, message);
@@ -167,21 +131,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope(id);
             logger?.LogInformation("Executing Before Message Decode middleware");
-            IBeforeDecodeMiddleware[] genericHandlers;
-            lock (middleware)
-            {
-                var encryptor = encryptionMiddlewares.OfType<EncryptionMiddleware<T>>().FirstOrDefault();
-                if (encryptor==null)
-                {
-                    encryptor = new EncryptionMiddleware<T>(defaultMessageEncryptor, serviceProvider);
-                    encryptionMiddlewares.Add(encryptor);
-                }
-                genericHandlers = [
-                    encryptor,
-                    compressionMiddleware,
-                    .. middleware.OfType<IBeforeDecodeMiddleware>()
-                ];
-            }
+            var genericHandlers = middleware.GetHandlers<IBeforeDecodeMiddleware>();
             logger?.LogInformation("Executing generic Before Messge Decode middleware");
             foreach (var handler in genericHandlers)
                 (messageHeader, data) = await handler.BeforeMessageDecodeAsync(context, id, messageHeader, messageTypeID, messageChannel, data);
@@ -192,13 +142,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope(ID);
             logger?.LogInformation("Executing After Message Decode middleware for message of type {Type}", typeof(T));
-            IAfterDecodeMiddleware[] genericHandlers;
-            IAfterDecodeSpecificTypeMiddleware<T>[] specificHandlers;
-            lock (middleware)
-            {
-                genericHandlers = middleware.OfType<IAfterDecodeMiddleware>().ToArray();
-                specificHandlers = middleware.OfType<IAfterDecodeSpecificTypeMiddleware<T>>().ToArray();
-            }
+            var (genericHandlers, specificHandlers) = middleware.GetHandlers<IAfterDecodeMiddleware,IAfterDecodeSpecificTypeMiddleware<T>>();
             logger?.LogInformation("Executing generic After Messge Decode middleware for message of type {Type}", typeof(T));
             foreach (var handler in genericHandlers)
                 (message, messageHeader) = await handler.AfterMessageDecodeAsync<T>(context, message, ID, messageHeader, receivedTimestamp, processedTimeStamp);
@@ -223,87 +167,56 @@ namespace MQContract.Connections
         {
             using var scope = SetScope(message.ID);
             logger?.LogDebug("Decoding Service Message message of type {Type}", typeof(T));
-            var context = new Middleware.Context(mapType, activity);
+            var context = new Middleware.Context(mapType, activity, expectedType:typeof(T));
             (var messageHeader, var data) = await BeforeMessageDecodeAsync<T>(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
             var taskMessage = await messageFactory.ConvertMessageAsync(logger, new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, messageHeader, data, message.Acknowledge))
                                 ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(T).FullName}");
             return await AfterMessageDecodeAsync<T>(context, taskMessage!, message.ID, messageHeader, message.ReceivedTimestamp, DateTime.Now);
         }
+        #endregion
 
         #region OTEL
-        private ActivitySource? ActivitySource = null;
-        private bool LinkActivitiesAcrossSystems = true;
-        private const string TraceParentHeaderKey = "_traceParentId";
-        private const string TraceParentSpanHeaderKey = "_traceParentSpanId";
-
+        private OpenTelemetryMiddleware? openTelemetryMiddleware;
 
         CC IMetricContractConnection<CC>.EnableOpenTelemetry(string activitySource, bool linkActivitiesAcrossSystems)
         {
-            ActivitySource = new(activitySource);
-            LinkActivitiesAcrossSystems=linkActivitiesAcrossSystems;
-            dataLock.Wait();
-            middleware.Insert(0, new OpenTelemetryMiddleware());
-            dataLock.Release();
+            openTelemetryMiddleware = new(activitySource, linkActivitiesAcrossSystems);
+            middleware.RegisterInjectionMiddleware<IBeforeEncodeMiddleware>(openTelemetryMiddleware, MiddlewareCollection.InjectionPositions.Pre);
+            middleware.RegisterInjectionMiddleware<IAfterEncodeMiddleware>(openTelemetryMiddleware, MiddlewareCollection.InjectionPositions.Post);
+            middleware.RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(openTelemetryMiddleware, MiddlewareCollection.InjectionPositions.Pre);
+            middleware.RegisterInjectionMiddleware<IAfterDecodeMiddleware>(openTelemetryMiddleware, MiddlewareCollection.InjectionPositions.Post);
             return (CC)(IBaseContractConnection)this;
         }
 
 
-        protected (Activity? activity, MessageHeader? messageHeader) StartActivity(string name, ActivityKind activityKind, MessageHeader? messageHeader, IMessageServiceConnection? serviceConnection, string? connectionName = null, Activity? current = null)
-        {
-            ActivityContext parent = default;
-            if (!string.IsNullOrWhiteSpace(messageHeader?[TraceParentHeaderKey]))
-                parent=new ActivityContext(ActivityTraceId.CreateFromString(messageHeader![TraceParentHeaderKey]!), ActivitySpanId.CreateFromString(messageHeader![TraceParentSpanHeaderKey]), ActivityTraceFlags.Recorded);
-            else if (current!=null)
-                parent = new ActivityContext(current.TraceId, current.SpanId, ActivityTraceFlags.Recorded);
-            using var activity = ActivitySource?.StartActivity(name, activityKind, parent,
-                links: Activity.Current!=null
-                ? [new ActivityLink(ActivityContext.Parse((Activity.Current.Parent!=null ? Activity.Current!.ParentId! : Activity.Current.Id), Activity.Current!.TraceStateString))]
-                : []);
-            if (serviceConnection!=null)
-                OtelHelper.AssignConnectionType(activity, serviceConnection!, connectionName);
-            if (LinkActivitiesAcrossSystems && activity!=null && string.IsNullOrWhiteSpace(messageHeader?[TraceParentHeaderKey]))
-                messageHeader = new(messageHeader, new Dictionary<string, string?>([
-                    new(TraceParentHeaderKey, activity.TraceId.ToString()),
-                    new(TraceParentSpanHeaderKey, activity.SpanId.ToString())
-                ]));
-            return (activity, messageHeader);
-        }
-        #endregion
+        protected Activity? StartActivity(string name, MessageHeader? messageHeader = null, IMessageServiceConnection? serviceConnection = null, string? connectionName = null, Activity? current = null)
+            => openTelemetryMiddleware?.StartActivity(name, messageHeader, serviceConnection, connectionName, current);
         #endregion
 
         #region Metrics
+
+        private MetricsMiddleware? metricsMiddleware;
 
         CC IMetricContractConnection<CC>.AddMetrics(Meter? meter, bool useInternal)
         {
             using var scope = SetScope();
             logger?.LogDebug("Enabling metrics on service connection with {Meter} and {UseInternal}", meter, useInternal);
-            dataLock.Wait();
-            middleware.Insert(0, new MetricsMiddleware(meter, useInternal));
-            dataLock.Release();
+            metricsMiddleware = new MetricsMiddleware(meter, useInternal);
+            middleware.RegisterInjectionMiddleware<IBeforeEncodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Pre);
+            middleware.RegisterInjectionMiddleware<IAfterEncodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Post);
+            middleware.RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Pre);
+            middleware.RegisterInjectionMiddleware<IAfterDecodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Post);
             return (CC)(IBaseContractConnection)this;
         }
 
-        private MetricsMiddleware? MetricsMiddleware
-        {
-            get
-            {
-                MetricsMiddleware? metricsMiddleware;
-                lock (middleware)
-                {
-                    metricsMiddleware = middleware.OfType<MetricsMiddleware>().FirstOrDefault();
-                }
-                return metricsMiddleware;
-            }
-        }
-
         IContractMetric? IMetricContractConnection<CC>.GetSnapshot(bool sent)
-            => MetricsMiddleware?.GetSnapshot(sent);
+            => metricsMiddleware?.GetSnapshot(sent);
         IContractMetric? IMetricContractConnection<CC>.GetSnapshot(Type messageType, bool sent)
-            => MetricsMiddleware?.GetSnapshot(messageType, sent);
+            => metricsMiddleware?.GetSnapshot(messageType, sent);
         IContractMetric? IMetricContractConnection<CC>.GetSnapshot<T>(bool sent)
-            => MetricsMiddleware?.GetSnapshot(typeof(T), sent);
+            => metricsMiddleware?.GetSnapshot(typeof(T), sent);
         IContractMetric? IMetricContractConnection<CC>.GetSnapshot(string channel, bool sent)
-            => MetricsMiddleware?.GetSnapshot(channel, sent);
+            => metricsMiddleware?.GetSnapshot(channel, sent);
         #endregion
 
         #region Subscriptions
@@ -361,7 +274,7 @@ namespace MQContract.Connections
                 serviceMessage.Channel,
                 cancellationToken
             );
-            OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
+            OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
             publishLock.Release();
             activity?.SetStatus(result.IsError ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
@@ -385,10 +298,10 @@ namespace MQContract.Connections
                 {
                     foreach (var res in result)
                         activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
-                           new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",true),
+                            new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",true),
                             new(OpenTelemetryMiddleware.MessageIdKey,res.ID),
-                            OtelHelper.CreateMessagePublishStatusTag(res),
-                            OtelHelper.CreateConnectionTypeTag(serviceConnection)
+                            OpenTelemetryMiddleware.CreateMessagePublishStatusTag(res),
+                            OpenTelemetryMiddleware.CreateConnectionTypeTag(serviceConnection)
                        ])));
                 }
             }
@@ -410,8 +323,8 @@ namespace MQContract.Connections
                         activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
                             new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",false),
                             new(OpenTelemetryMiddleware.MessageIdKey,message.ID),
-                            OtelHelper.CreateMessagePublishStatusTag(result),
-                            OtelHelper.CreateConnectionTypeTag(serviceConnection)
+                            OpenTelemetryMiddleware.CreateMessagePublishStatusTag(result),
+                            OpenTelemetryMiddleware.CreateConnectionTypeTag(serviceConnection)
                         ])));
                         return result;
                     });
@@ -428,7 +341,7 @@ namespace MQContract.Connections
             var subscription = new PubSubSubscription<T>(
                 async (serviceMessage) =>
                 {
-                    (var activity, _) = StartActivity(Constants.ConsumeActivityName, ActivityKind.Consumer, serviceMessage.Header, serviceConnection, serviceConnectionName);
+                    using var activity = StartActivity(Constants.ConsumeActivityName, messageHeader:serviceMessage.Header, serviceConnection:serviceConnection, connectionName:serviceConnectionName);
                     try
                     {
                         (var taskMessage, var messageHeader) = await DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes.PublishSubscription, messageFactory, serviceMessage, activity);
@@ -512,7 +425,7 @@ namespace MQContract.Connections
                 serviceMessage.Channel,
                 cancellationToken
             );
-            OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, inboxMessageServiceConnection, connectionName);
+            OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, serviceMessage, result, inboxMessageServiceConnection, connectionName);
             if (result.IsError)
             {
                 if (!token.IsCancellationRequested)
@@ -542,7 +455,7 @@ namespace MQContract.Connections
             using var scope = SetScope(queryResult.ID);
             logger?.LogDebug("Attempting to produce a Query Result of {R} from the Service Message of the type {MessageTypeID}", typeof(R), queryResult.MessageTypeID);
             QueryResult<R> result;
-            (var activity, _) = StartActivity(Constants.ConsumeQueryResponseActivityName, ActivityKind.Consumer, queryResult.Header, serviceConnection, serviceConnectionName);
+            using var activity = StartActivity(Constants.ConsumeQueryResponseActivityName, messageHeader: queryResult.Header, serviceConnection: serviceConnection, connectionName: serviceConnectionName);
             try
             {
                 (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(
@@ -678,7 +591,7 @@ namespace MQContract.Connections
                 serviceMessage.Channel,
                 cancellationToken
             );
-            OtelHelper.AddMessagePublishedEvent(activity, msg, result, serviceConnection, connectionName);
+            OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, msg, result, serviceConnection, connectionName);
             if (result.IsError)
             {
                 if (!token.IsCancellationRequested)
@@ -708,7 +621,7 @@ namespace MQContract.Connections
             var subscription = new QueryResponseSubscription<Q>(
                 async (message, replyChannel) =>
                 {
-                    (var consumeActivity, _) = StartActivity(Constants.ConsumeQueryActivityName, ActivityKind.Consumer, message.Header, serviceConnection, serviceConnectionName);
+                    using var consumeActivity = StartActivity(Constants.ConsumeQueryActivityName, messageHeader: message.Header, serviceConnection: serviceConnection, connectionName: serviceConnectionName);
                     Q? taskMessage;
                     MessageHeader? messageHeader;
                     try
@@ -727,7 +640,12 @@ namespace MQContract.Connections
                     }
                     consumeActivity?.SetStatus(ActivityStatusCode.Ok);
                     var result = await messageReceived(new ReceivedMessage<Q>(message.ID, taskMessage!, messageHeader, message.ReceivedTimestamp, DateTime.Now, consumeActivity));
-                    (var responseActivity, var headers) = StartActivity(Constants.ProduceQueryResponseActivityName, ActivityKind.Producer, new(result.Headers), serviceConnection, serviceConnectionName, consumeActivity);
+                    using var responseActivity = StartActivity(
+                        Constants.ProduceQueryResponseActivityName, 
+                        serviceConnection:serviceConnection, 
+                        connectionName:serviceConnectionName, 
+                        current:consumeActivity
+                    );
                     try
                     {
                         var response = await ProduceServiceMessageAsync<R>(
@@ -738,7 +656,7 @@ namespace MQContract.Connections
                             responseActivity,
                             maxMessageSize: serviceConnection.MaxMessageBodySize,
                             channel: replyChannel,
-                            messageHeader: headers
+                            messageHeader: new(result.Headers)
                         );
                         responseActivity?.SetStatus(ActivityStatusCode.Ok);
                         return (response, responseActivity);

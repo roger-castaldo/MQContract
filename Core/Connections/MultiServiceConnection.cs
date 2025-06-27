@@ -5,6 +5,7 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using MQContract.Middleware;
 using MQContract.Subscriptions;
 using System.Diagnostics;
 using System.Reflection;
@@ -53,7 +54,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
-            (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader, null);
+            using var activity = StartActivity(Constants.PublishActivityName);
             var serviceMessage = await ProduceServiceMessageAsync<T>(
                 ChannelMapper.MapTypes.Publish, 
                 GetMessageFactory<T>(), 
@@ -69,7 +70,7 @@ namespace MQContract.Connections
             var results = await connections
                 .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () =>
                 {
-                    OtelHelper.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
+                    OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
                     var result = await ExecuteResilliantTransmissionAsync<T>(
                         (ct) => c.MessageServiceConnection.PublishAsync(
                             serviceMessage,
@@ -79,7 +80,7 @@ namespace MQContract.Connections
                         serviceMessage.Channel,
                         cancellationToken
                     );
-                    OtelHelper.AddMessagePublishedEvent(activity, serviceMessage, result, c.MessageServiceConnection, c.ServiceConnectionName);
+                    OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, serviceMessage, result, c.MessageServiceConnection, c.ServiceConnectionName);
                     return result;
                 }));
             publishLock.Release();
@@ -92,7 +93,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Bulk Publishing messages {T} on {Channel}", typeof(T), channel);
-            (var activity, var headers) = StartActivity(Constants.BulkPublishActivityName, ActivityKind.Producer, null, null);
+            using var activity = StartActivity(Constants.BulkPublishActivityName);
             activity?.SetTag(Constants.BulkPublishCountTag, messages.Count());
             var serviceMessages = await
             messages.WhenAll(m =>
@@ -104,14 +105,14 @@ namespace MQContract.Connections
                         activity, 
                         maxMessageSize: MaxMessageBodySize,
                         channel: channel, 
-                        messageHeader: new(m.messageHeader, headers)
+                        messageHeader: m.messageHeader
                     )
             );
             var connections = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(T), serviceMessages.First().Header);
             await publishLock.WaitAsync(cancellationToken);
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
-                OtelHelper.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
+                OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
                 var result = await BulkPublishAsync<T>(serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
@@ -149,7 +150,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);
-            (var activity, messageHeader) = StartActivity(Constants.PublishQueryActivityName, ActivityKind.Producer, messageHeader, null);
+            using var activity = StartActivity(Constants.PublishQueryActivityName);
             var serviceMessage = await ProduceServiceMessageAsync<Q>(
                 ChannelMapper.MapTypes.Query, 
                 GetMessageFactory<Q>(), 
@@ -164,7 +165,7 @@ namespace MQContract.Connections
             return await connections
                 .WhenAll(conn =>
                 {
-                    OtelHelper.AssignConnectionType(activity, conn.MessageServiceConnection, conn.ServiceConnectionName);
+                    OpenTelemetryMiddleware.AssignConnectionType(activity, conn.MessageServiceConnection, conn.ServiceConnectionName);
                     return ExecuteQueryAsync<Q, R>(conn.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: conn.ServiceConnectionName, cancellationToken: cancellationToken);
                 });
         }

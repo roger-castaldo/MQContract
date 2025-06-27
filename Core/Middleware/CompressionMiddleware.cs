@@ -4,6 +4,8 @@ using System.IO.Compression;
 
 namespace MQContract.Middleware
 {
+    [MiddlewareInjectionOrder<IAfterEncodeMiddleware>(postIndex:1)]
+    [MiddlewareInjectionOrder<IBeforeDecodeMiddleware>(preIndex:3)]
     internal class CompressionMiddleware : IAfterEncodeMiddleware,IBeforeDecodeMiddleware
     {
         private const string CompressedHeader = "_isCompressed";
@@ -13,7 +15,7 @@ namespace MQContract.Middleware
             if (context is Context c && message.Data.Length>c.MaxMessageSize)
             {
                 using var ms = new MemoryStream();
-                var zip = new GZipStream(ms, System.IO.Compression.CompressionLevel.SmallestSize, false);
+                var zip = new GZipStream(ms, CompressionLevel.SmallestSize, false);
                 await zip.WriteAsync(message.Data);
                 await zip.FlushAsync();
                 if (ms.Length>c.MaxMessageSize)
