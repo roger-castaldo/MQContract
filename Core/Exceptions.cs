@@ -128,4 +128,13 @@
         internal InvalidRetryCircuitBreakTriggersException(string retryArgumentName, string circuitBreakArumentName)
             : base($"The value for {retryArgumentName} should be less than {circuitBreakArumentName}") { }
     }
+
+    /// <summary>
+    /// Thrown from a Contract Connection when an attempt is made to register a middleware that does not implement any middleware interfaces
+    /// </summary>
+    public class InvalidMiddlewareException : ArgumentException
+    {
+        internal InvalidMiddlewareException(Type middlewareType)
+            : base($"The type {middlewareType} does not implement any of the available middleware interfaces") { }
+    }
 }

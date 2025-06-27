@@ -1,34 +1,71 @@
-﻿using MQContract.Messages;
+﻿using MQContract.Interfaces.Service;
+using MQContract.Messages;
 
 namespace MQContract.Kafka.Subscriptions
 {
     internal class PublishSubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel)
-        : SubscriptionBase(consumer, channel)
+        : IServiceSubscription
     {
-        protected override ValueTask RunAction()
+        private bool disposedValue;
+        protected readonly CancellationTokenSource cancelToken = new();
+
+        public Task Run()
         {
-            while (!cancelToken.IsCancellationRequested)
+            var resultSource = new TaskCompletionSource();
+            consumer.Subscribe(channel);
+            Task.Run(() =>
             {
+                Task.Run(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(500));
+                    resultSource.TrySetResult();
+                });
+                while (!cancelToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        var msg = consumer.Consume(cancellationToken: cancelToken.Token);
+                        var headers = Connection.ExtractHeaders(msg.Message.Headers, out var messageTypeID);
+                        messageReceived(new ReceivedServiceMessage(
+                            msg.Message.Key??string.Empty,
+                            messageTypeID??string.Empty,
+                            channel,
+                            headers,
+                            msg.Message.Value
+                        ));
+                    }
+                    catch (OperationCanceledException) { }
+                    catch (Exception ex)
+                    {
+                        errorReceived(ex);
+                    }
+                    finally { }
+                }
+                consumer.Close();
+            });
+            return resultSource.Task;
+        }
+
+        public async ValueTask EndAsync()
+        {
+            try { await cancelToken.CancelAsync(); } catch { }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!disposedValue)
+            {
+                disposedValue=true;
+                if (!cancelToken.IsCancellationRequested)
+                    await cancelToken.CancelAsync();
                 try
                 {
-                    var msg = Consumer.Consume(cancellationToken: cancelToken.Token);
-                    var headers = Connection.ExtractHeaders(msg.Message.Headers, out var messageTypeID);
-                    messageReceived(new ReceivedServiceMessage(
-                        msg.Message.Key??string.Empty,
-                        messageTypeID??string.Empty,
-                        Channel,
-                        headers,
-                        msg.Message.Value
-                    ));
+                    consumer.Close();
                 }
-                catch (OperationCanceledException) { }
-                catch (Exception ex)
-                {
-                    errorReceived(ex);
-                }
-                finally { }
+                catch (Exception) { }
+                consumer.Dispose();
+                cancelToken.Dispose();
             }
-            return ValueTask.CompletedTask;
         }
     }
 }

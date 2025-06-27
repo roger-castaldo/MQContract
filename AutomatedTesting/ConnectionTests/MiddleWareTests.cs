@@ -1,4 +1,5 @@
-﻿using AutomatedTesting.ContractConnectionTests.Middlewares;
+﻿using AutomatedTesting.ConnectionTests.Middlewares;
+using AutomatedTesting.ContractConnectionTests.Middlewares;
 using AutomatedTesting.Messages;
 using Moq;
 using MQContract;
@@ -28,6 +29,96 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
                 .RegisterMiddleware<ChannelChangeMiddleware>();
+            #endregion
+
+            #region Act
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.AreEqual(messages[0].Channel, ChannelChangeMiddleware.ChangeChannel(messageChannel));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestRegisterMiddlewareThroughType()
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("testMessage");
+            var messageChannel = "TestRegisterGenericMiddleware";
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddleware(typeof(ChannelChangeMiddleware));
+            #endregion
+
+            #region Act
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.AreEqual(messages[0].Channel, ChannelChangeMiddleware.ChangeChannel(messageChannel));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestRegisterMiddlewareWithInvalidType()
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var error = Assert.Throws<InvalidMiddlewareException>(() => contractConnection.RegisterMiddleware(typeof(InvalidMiddleware)));
+            #endregion
+
+            #region Assert
+            Assert.IsNotNull(error);
+            Assert.IsTrue(error.Message.Contains(typeof(InvalidMiddleware).ToString()));
+            #endregion
+
+            #region Verify
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestRegisterMiddlewareThroughInstance()
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("testMessage");
+            var messageChannel = "TestRegisterGenericMiddleware";
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddleware(new ChannelChangeMiddleware());
             #endregion
 
             #region Act
@@ -92,6 +183,40 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
         }
 
+
+        [TestMethod]
+        public async Task TestRegisterMiddlewareThroughInstanceFunction()
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("testMessage");
+            var messageChannel = "TestRegisterGenericMiddleware";
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddleware(()=>new ChannelChangeMiddleware());
+            #endregion
+
+            #region Act
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.AreEqual(messages[0].Channel, ChannelChangeMiddleware.ChangeChannel(messageChannel));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
         [TestMethod]
         public async Task TestRegisterSpecificTypeMiddleware()
         {
@@ -109,6 +234,39 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
                 .RegisterMiddleware<ChannelChangeMiddlewareForBasicMessage, BasicMessage>();
+            #endregion
+
+            #region Act
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.AreEqual(messages[0].Channel, ChannelChangeMiddlewareForBasicMessage.ChangeChannel(messageChannel));
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestRegisterSpecificTypeMiddlewareThroughInstance()
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("testMessage");
+            var messageChannel = "TestRegisterSpecificTypeMiddleware";
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddleware<BasicMessage>(new ChannelChangeMiddlewareForBasicMessage());
             #endregion
 
             #region Act
@@ -154,6 +312,54 @@ namespace AutomatedTesting.ContractConnectionTests
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
                 .RegisterMiddleware<IBeforeEncodeSpecificTypeMiddleware<BasicMessage>, BasicMessage>(() => mockMiddleware.Object);
+            #endregion
+
+            #region Act
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.AreEqual(messages[0].Channel, newChannel);
+            Assert.AreEqual(1, messages[0].Header.Keys.Count());
+            Assert.AreEqual(headers[headers.Keys.First()], messages[0].Header[messages[0].Header.Keys.First()]);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockMiddleware.Verify(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestRegisterSpecificTypeMiddlewareThroughInstanceFunction()
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+
+            var testMessage = new BasicMessage("testMessage");
+            var messageChannel = "TestRegisterSpecificTypeMiddlewareThroughFunction";
+            var newChannel = "NewTestRegisterSpecificTypeMiddlewareThroughFunction";
+            var headers = new MessageHeader([
+                new KeyValuePair<string,string>("test","test")
+            ]);
+
+            List<ServiceMessage> messages = [];
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(transmissionResult);
+
+            var mockMiddleware = new Mock<IBeforeEncodeSpecificTypeMiddleware<BasicMessage>>();
+            mockMiddleware.Setup(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()))
+                .Returns((IContext context, BasicMessage message, string? channel, MessageHeader messageHeader) =>
+                {
+                    return ValueTask.FromResult<(BasicMessage message, string? channel, MessageHeader headers)>((message, newChannel, headers));
+                });
+
+
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddleware<BasicMessage>(() => mockMiddleware.Object);
             #endregion
 
             #region Act

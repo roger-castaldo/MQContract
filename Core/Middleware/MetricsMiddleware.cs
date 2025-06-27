@@ -8,6 +8,10 @@ using System.Threading.Channels;
 
 namespace MQContract.Middleware
 {
+    [MiddlewareInjectionOrder<IBeforeEncodeMiddleware>(preIndex: 1)]
+    [MiddlewareInjectionOrder<IAfterEncodeMiddleware>(postIndex: 3)]
+    [MiddlewareInjectionOrder<IBeforeDecodeMiddleware>(preIndex: 1)]
+    [MiddlewareInjectionOrder<IAfterDecodeMiddleware>(postIndex: 3)]
     internal class MetricsMiddleware : IBeforeEncodeMiddleware, IAfterEncodeMiddleware, IBeforeDecodeMiddleware, IAfterDecodeMiddleware
     {
         private const string StopWatchKey = "_MetricStopwatch";

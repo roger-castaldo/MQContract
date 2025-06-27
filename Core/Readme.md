@@ -29,6 +29,7 @@
   - [MappedServiceInstance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-MappedServiceInstance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.MappedServiceInstance(MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
   - [MultiServiceInstance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-MultiServiceInstance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.MultiServiceInstance(MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
 - [InvalidConsumerTypeException](#T-MQContract-InvalidConsumerTypeException 'MQContract.InvalidConsumerTypeException')
+- [InvalidMiddlewareException](#T-MQContract-InvalidMiddlewareException 'MQContract.InvalidMiddlewareException')
 - [InvalidPolicyArgumentsException](#T-MQContract-InvalidPolicyArgumentsException 'MQContract.InvalidPolicyArgumentsException')
 - [InvalidQueryResponseMessageReceivedException](#T-MQContract-InvalidQueryResponseMessageReceivedException 'MQContract.InvalidQueryResponseMessageReceivedException')
 - [InvalidRetryCircuitBreakTriggersException](#T-MQContract-InvalidRetryCircuitBreakTriggersException 'MQContract.InvalidRetryCircuitBreakTriggersException')
@@ -497,6 +498,17 @@ MQContract
 ##### Summary
 
 Thrown from a ContractConnection when an attempt to Register a given consumer through Type is not valid because the type does not implement the appropriate interface
+
+<a name='T-MQContract-InvalidMiddlewareException'></a>
+## InvalidMiddlewareException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown from a Contract Connection when an attempt is made to register a middleware that does not implement any middleware interfaces
 
 <a name='T-MQContract-InvalidPolicyArgumentsException'></a>
 ## InvalidPolicyArgumentsException `type`

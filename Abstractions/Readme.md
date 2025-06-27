@@ -120,11 +120,17 @@
   - [GetSnapshot(messageType,sent)](#M-MQContract-Interfaces-IMetricContractConnection`1-GetSnapshot-System-Type,System-Boolean- 'MQContract.Interfaces.IMetricContractConnection`1.GetSnapshot(System.Type,System.Boolean)')
   - [GetSnapshot(channel,sent)](#M-MQContract-Interfaces-IMetricContractConnection`1-GetSnapshot-System-String,System-Boolean- 'MQContract.Interfaces.IMetricContractConnection`1.GetSnapshot(System.String,System.Boolean)')
   - [GetSnapshot\`\`1(sent)](#M-MQContract-Interfaces-IMetricContractConnection`1-GetSnapshot``1-System-Boolean- 'MQContract.Interfaces.IMetricContractConnection`1.GetSnapshot``1(System.Boolean)')
-  - [RegisterMiddleware\`\`1()](#M-MQContract-Interfaces-IMetricContractConnection`1-RegisterMiddleware``1 'MQContract.Interfaces.IMetricContractConnection`1.RegisterMiddleware``1')
-  - [RegisterMiddleware\`\`1(constructInstance)](#M-MQContract-Interfaces-IMetricContractConnection`1-RegisterMiddleware``1-System-Func{``0}- 'MQContract.Interfaces.IMetricContractConnection`1.RegisterMiddleware``1(System.Func{``0})')
-  - [RegisterMiddleware\`\`2()](#M-MQContract-Interfaces-IMetricContractConnection`1-RegisterMiddleware``2 'MQContract.Interfaces.IMetricContractConnection`1.RegisterMiddleware``2')
-  - [RegisterMiddleware\`\`2(constructInstance)](#M-MQContract-Interfaces-IMetricContractConnection`1-RegisterMiddleware``2-System-Func{``0}- 'MQContract.Interfaces.IMetricContractConnection`1.RegisterMiddleware``2(System.Func{``0})')
 - [IMiddleware](#T-MQContract-Interfaces-Middleware-IMiddleware 'MQContract.Interfaces.Middleware.IMiddleware')
+- [IMiddlewareContractConnection\`1](#T-MQContract-Interfaces-IMiddlewareContractConnection`1 'MQContract.Interfaces.IMiddlewareContractConnection`1')
+  - [RegisterMiddleware(middleware)](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware-System-Type- 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddleware(System.Type)')
+  - [RegisterMiddleware(instance)](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware-MQContract-Interfaces-Middleware-IMiddleware- 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddleware(MQContract.Interfaces.Middleware.IMiddleware)')
+  - [RegisterMiddleware(constructInstance)](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware-System-Func{MQContract-Interfaces-Middleware-IMiddleware}- 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddleware(System.Func{MQContract.Interfaces.Middleware.IMiddleware})')
+  - [RegisterMiddleware\`\`1()](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddleware``1')
+  - [RegisterMiddleware\`\`1(constructInstance)](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1-System-Func{``0}- 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddleware``1(System.Func{``0})')
+  - [RegisterMiddleware\`\`1(constructInstance)](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1-System-Func{MQContract-Interfaces-Middleware-ISpecificTypeMiddleware{``0}}- 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddleware``1(System.Func{MQContract.Interfaces.Middleware.ISpecificTypeMiddleware{``0}})')
+  - [RegisterMiddleware\`\`1(instance)](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware{``0}- 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddleware``1(MQContract.Interfaces.Middleware.ISpecificTypeMiddleware{``0})')
+  - [RegisterMiddleware\`\`2()](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``2 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddleware``2')
+  - [RegisterMiddleware\`\`2(constructInstance)](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``2-System-Func{``0}- 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddleware``2(System.Func{``0})')
 - [IMultiServiceContractConnection](#T-MQContract-Interfaces-IMultiServiceContractConnection 'MQContract.Interfaces.IMultiServiceContractConnection')
   - [BulkPublishAsync\`\`1(messages,channel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{System-ValueTuple{``0,MQContract-Messages-MessageHeader}},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.BulkPublishAsync``1(System.Collections.Generic.IEnumerable{System.ValueTuple{``0,MQContract.Messages.MessageHeader}},System.String,System.Threading.CancellationToken)')
   - [PingAsync()](#M-MQContract-Interfaces-IMultiServiceContractConnection-PingAsync 'MQContract.Interfaces.IMultiServiceContractConnection.PingAsync')
@@ -2177,7 +2183,86 @@ A record of the current metric snapshot or null if not available
 | ---- | ----------- |
 | T | The type of message to look for |
 
-<a name='M-MQContract-Interfaces-IMetricContractConnection`1-RegisterMiddleware``1'></a>
+<a name='T-MQContract-Interfaces-Middleware-IMiddleware'></a>
+## IMiddleware `type`
+
+##### Namespace
+
+MQContract.Interfaces.Middleware
+
+##### Summary
+
+Base Middleware just used to limit Generic Types for Register Middleware
+
+<a name='T-MQContract-Interfaces-IMiddlewareContractConnection`1'></a>
+## IMiddlewareContractConnection\`1 `type`
+
+##### Namespace
+
+MQContract.Interfaces
+
+##### Summary
+
+Houses the middleware pieces for a given contract connection
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| CC | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
+
+<a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware-System-Type-'></a>
+### RegisterMiddleware(middleware) `method`
+
+##### Summary
+
+Register a middleware of a given type
+
+##### Returns
+
+The Contract Connection instance to allow chaining calls
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| middleware | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware or IBeforeEncodeSpecificTypeMiddleware<> or IAfterDecodeSpecificTypeMiddleware<> |
+
+<a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware-MQContract-Interfaces-Middleware-IMiddleware-'></a>
+### RegisterMiddleware(instance) `method`
+
+##### Summary
+
+Register a middleware instance
+
+##### Returns
+
+The Contract Connection instance to allow chaining calls
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| instance | [MQContract.Interfaces.Middleware.IMiddleware](#T-MQContract-Interfaces-Middleware-IMiddleware 'MQContract.Interfaces.Middleware.IMiddleware') | The middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware or IBeforeEncodeSpecificTypeMiddleware<> or IAfterDecodeSpecificTypeMiddleware<> |
+
+<a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware-System-Func{MQContract-Interfaces-Middleware-IMiddleware}-'></a>
+### RegisterMiddleware(constructInstance) `method`
+
+##### Summary
+
+Register a middleware through a construct instance function
+
+##### Returns
+
+The Contract Connection instance to allow chaining calls
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| constructInstance | [System.Func{MQContract.Interfaces.Middleware.IMiddleware}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Interfaces.Middleware.IMiddleware}') | Callback to create the instance.  The object returned must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware or IBeforeEncodeSpecificTypeMiddleware<> or IAfterDecodeSpecificTypeMiddleware<> |
+
+<a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1'></a>
 ### RegisterMiddleware\`\`1() `method`
 
 ##### Summary
@@ -2198,7 +2283,7 @@ This method has no parameters.
 | ---- | ----------- |
 | T | The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware |
 
-<a name='M-MQContract-Interfaces-IMetricContractConnection`1-RegisterMiddleware``1-System-Func{``0}-'></a>
+<a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1-System-Func{``0}-'></a>
 ### RegisterMiddleware\`\`1(constructInstance) `method`
 
 ##### Summary
@@ -2221,7 +2306,53 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | T | The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware |
 
-<a name='M-MQContract-Interfaces-IMetricContractConnection`1-RegisterMiddleware``2'></a>
+<a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1-System-Func{MQContract-Interfaces-Middleware-ISpecificTypeMiddleware{``0}}-'></a>
+### RegisterMiddleware\`\`1(constructInstance) `method`
+
+##### Summary
+
+Register a middleware of a given type T to be used by the contract connection
+
+##### Returns
+
+The Contract Connection instance to allow chaining calls
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| constructInstance | [System.Func{MQContract.Interfaces.Middleware.ISpecificTypeMiddleware{\`\`0}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Interfaces.Middleware.ISpecificTypeMiddleware{``0}}') | Callback to create the instance.  The object returned it must implement IBeforeEncodeSpecificTypeMiddleware<M> or IAfterDecodeSpecificTypeMiddleware<M> |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| M | The message type that this middleware is specifically called for |
+
+<a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware{``0}-'></a>
+### RegisterMiddleware\`\`1(instance) `method`
+
+##### Summary
+
+Register a middleware of a given type T to be used by the contract connection
+
+##### Returns
+
+The Contract Connection instance to allow chaining calls
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| instance | [MQContract.Interfaces.Middleware.ISpecificTypeMiddleware{\`\`0}](#T-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware{``0} 'MQContract.Interfaces.Middleware.ISpecificTypeMiddleware{``0}') | The middle ware to register, it must implement it must implement IBeforeEncodeSpecificTypeMiddleware<M> or IAfterDecodeSpecificTypeMiddleware<M> |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| M | The message type that this middleware is specifically called for |
+
+<a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``2'></a>
 ### RegisterMiddleware\`\`2() `method`
 
 ##### Summary
@@ -2243,7 +2374,7 @@ This method has no parameters.
 | T | The type of middle ware to register, it must implement IBeforeEncodeSpecificTypeMiddleware<M> or IAfterDecodeSpecificTypeMiddleware<M> |
 | M | The message type that this middleware is specifically called for |
 
-<a name='M-MQContract-Interfaces-IMetricContractConnection`1-RegisterMiddleware``2-System-Func{``0}-'></a>
+<a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``2-System-Func{``0}-'></a>
 ### RegisterMiddleware\`\`2(constructInstance) `method`
 
 ##### Summary
@@ -2266,17 +2397,6 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | T | The type of middle ware to register, it must implement IBeforeEncodeSpecificTypeMiddleware<M> or IAfterDecodeSpecificTypeMiddleware<M> |
 | M | The message type that this middleware is specifically called for |
-
-<a name='T-MQContract-Interfaces-Middleware-IMiddleware'></a>
-## IMiddleware `type`
-
-##### Namespace
-
-MQContract.Interfaces.Middleware
-
-##### Summary
-
-Base Middleware just used to limit Generic Types for Register Middleware
 
 <a name='T-MQContract-Interfaces-IMultiServiceContractConnection'></a>
 ## IMultiServiceContractConnection `type`

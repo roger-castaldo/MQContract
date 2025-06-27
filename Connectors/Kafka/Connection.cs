@@ -76,7 +76,8 @@ namespace MQContract.Kafka
             var subscription = new PublishSubscription(
                 new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
                 {
-                    GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString())
+                    GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
+                    AutoOffsetReset = AutoOffsetReset.Earliest
                 }).Build(),
                 messageReceived,
                 errorReceived,

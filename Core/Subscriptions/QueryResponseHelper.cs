@@ -64,7 +64,8 @@ namespace MQContract.Subscriptions
                 },
                 error => { },
                 replyChannel,
-                cancellationToken: token.Token
+                cancellationToken: token.Token,
+                group: identifier.ToString()
             )??throw new QueryExecutionFailedException();
             token.Token.Register(async () =>
             {

@@ -48,7 +48,7 @@ namespace MQContract.Connections
         #region PubSub
         protected override ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
             => CreateSubscriptionAsync<T>(
-                GetMessageFactory<T>(serviceConnection.MaxMessageBodySize, ignoreMessageHeader),
+                GetMessageFactory<T>(ignoreMessageHeader),
                 serviceConnection,
                 messageReceived,
                 errorReceived,
@@ -63,8 +63,17 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
-            (var activity, messageHeader) = StartActivity(Constants.PublishActivityName, ActivityKind.Producer, messageHeader, serviceConnection);
-            var serviceMessage = await ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), message, false, activity, channel, messageHeader);
+            using var activity = StartActivity(Constants.PublishActivityName, serviceConnection: serviceConnection);
+            var serviceMessage = await ProduceServiceMessageAsync<T>(
+                ChannelMapper.MapTypes.Publish, 
+                GetMessageFactory<T>(), 
+                message, 
+                false, 
+                activity, 
+                maxMessageSize: serviceConnection.MaxMessageBodySize,
+                channel: channel, 
+                messageHeader: messageHeader
+            );
             return await PublishMessageAsync<T>(publishLock, serviceMessage, serviceConnection, activity, null, cancellationToken);
         }
 
@@ -72,11 +81,20 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Bulk Publishing messages {T} on {Channel}", typeof(T), channel);
-            (var activity, var headers) = StartActivity(Constants.BulkPublishActivityName, ActivityKind.Producer, null, serviceConnection);
+            using var activity = StartActivity(Constants.BulkPublishActivityName, serviceConnection:serviceConnection);
             activity?.SetTag(Constants.BulkPublishCountTag, messages.Count());
             var serviceMessages = await
                 messages.WhenAll(m =>
-                    ProduceServiceMessageAsync<T>(ChannelMapper.MapTypes.Publish, GetMessageFactory<T>(serviceConnection.MaxMessageBodySize), m.message, false, activity, channel, new(m.messageHeader, headers))
+                    ProduceServiceMessageAsync<T>(
+                        ChannelMapper.MapTypes.Publish, 
+                        GetMessageFactory<T>(), 
+                        m.message, 
+                        false, 
+                        activity, 
+                        maxMessageSize:serviceConnection.MaxMessageBodySize,
+                        channel:channel, 
+                        messageHeader: m.messageHeader
+                    )
                 );
             await publishLock.WaitAsync(cancellationToken);
             var result = await BulkPublishAsync<T>(serviceMessages, serviceConnection, activity, cancellationToken);
@@ -92,8 +110,17 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);
-            (var activity, messageHeader) = StartActivity(Constants.PublishQueryActivityName, ActivityKind.Producer, messageHeader, serviceConnection);
-            var serviceMessage = await ProduceServiceMessageAsync<Q>(ChannelMapper.MapTypes.Query, GetMessageFactory<Q>(serviceConnection.MaxMessageBodySize), message, false, activity, channel: channel, messageHeader: messageHeader);
+            using var activity = StartActivity(Constants.PublishQueryActivityName, serviceConnection: serviceConnection);
+            var serviceMessage = await ProduceServiceMessageAsync<Q>(
+                ChannelMapper.MapTypes.Query, 
+                GetMessageFactory<Q>(), 
+                message, 
+                false, 
+                activity, 
+                maxMessageSize: serviceConnection.MaxMessageBodySize,
+                channel: channel, 
+                messageHeader: messageHeader
+            );
             return await ExecuteQueryAsync<Q, R>(serviceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken);
         }
 
@@ -134,9 +161,20 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             Logger?.LogDebug("Producing QueryResponse Subscription for {Q} responding with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
-            var queryMessageFactory = GetMessageFactory<Q>(serviceConnection.MaxMessageBodySize, ignoreMessageHeader);
-            var responseMessageFactory = GetMessageFactory<R>(serviceConnection.MaxMessageBodySize);
-            return await CreateSubscriptionAsync<Q, R>(queryMessageFactory, responseMessageFactory, serviceConnection, messageReceived, errorReceived, channel, group, synchronous, null, cancellationToken);
+            var queryMessageFactory = GetMessageFactory<Q>(ignoreMessageHeader);
+            var responseMessageFactory = GetMessageFactory<R>();
+            return await CreateSubscriptionAsync<Q, R>(
+                queryMessageFactory, 
+                responseMessageFactory, 
+                serviceConnection, 
+                messageReceived, 
+                errorReceived, 
+                channel, 
+                group, 
+                synchronous, 
+                null, 
+                cancellationToken
+            );
         }
         #endregion
     }

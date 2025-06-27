@@ -52,7 +52,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
-            Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             #endregion
@@ -92,7 +92,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual($"Not{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}", messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
-            Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage, JsonSerializer.Deserialize<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             #endregion
@@ -133,7 +133,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage, JsonSerializer.Deserialize<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(messageHeader.Keys.Count(), messages[0].Header.Keys.Count());
@@ -177,8 +177,9 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
-            Assert.AreEqual("C-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(1, messages[0].Header.Keys.Count());
+            Assert.AreEqual("true", messages[0].Header[messages[0].Header.Keys.First()]);
+            Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(
                 new GZipStream(new MemoryStream(messages[0].Data.ToArray()), CompressionMode.Decompress)
@@ -225,7 +226,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual("BasicMessage", messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
-            Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(Convert.ToBase64String(encodedData), Convert.ToBase64String(messages[0].Data.ToArray()));
             #endregion
@@ -273,7 +274,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual("BasicMessage", messages[0].Channel);
-            Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(Convert.ToBase64String(binaries[0].Reverse().ToArray()), Convert.ToBase64String(messages[0].Data.ToArray()));
             Assert.AreEqual(headers.Count, messages[0].Header.Keys.Count());
@@ -317,7 +318,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
-            Assert.AreEqual($"U-{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageNameAttribute>(false)?.Value}-{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageVersionAttribute>(false)?.Version}", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.NamedAndVersionedMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage, JsonSerializer.Deserialize<NamedAndVersionedMessage>(new MemoryStream(messages[0].Data.ToArray())));
             #endregion
@@ -357,7 +358,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
-            Assert.AreEqual("U-CustomEncoderMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.CustomEncoderMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage, await new TestMessageEncoder().DecodeAsync(new MemoryStream(messages[0].Data.ToArray())));
             #endregion
@@ -400,7 +401,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
-            Assert.AreEqual("U-CustomEncoderWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.CustomEncoderWithInjectionMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage,
                 await new TestMessageEncoderWithInjection(services.GetRequiredService<IInjectableService>()).DecodeAsync(new MemoryStream(messages[0].Data.ToArray()))
@@ -441,7 +442,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual("U-CustomEncryptorMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.CustomEncryptorMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             var decodedData = await new TestMessageEncryptor().DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorMessage>(decodedData));
@@ -483,7 +484,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual("U-CustomEncryptorWithInjectionMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.CustomEncryptorWithInjectionMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             var decodedData = await new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorWithInjectionMessage>(decodedData));
@@ -601,7 +602,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(transmissionResult, result1);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
-            Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage1, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
 
@@ -609,7 +610,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(transmissionResult, result2);
             Assert.AreEqual("TestChannel2", messages[1].Channel);
             Assert.AreEqual(0, messages[1].Header.Keys.Count());
-            Assert.AreEqual("U-NoChannelMessage-0.0.0.0", messages[1].MessageTypeID);
+            Assert.AreEqual(Constants.NoChannelMessageType, messages[1].MessageTypeID);
             Assert.IsTrue(messages[1].Data.Length > 0);
             Assert.AreEqual(testMessage2, await JsonSerializer.DeserializeAsync<NoChannelMessage>(new MemoryStream(messages[1].Data.ToArray())));
             #endregion
@@ -717,7 +718,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(transmissionResult, result);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual((withLinking ? 2 : 0), messages[0].Header.Keys.Count());
-            Assert.AreEqual("U-BasicMessage-0.0.0.0", messages[0].MessageTypeID);
+            Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(1, capturedActivities.Count);
