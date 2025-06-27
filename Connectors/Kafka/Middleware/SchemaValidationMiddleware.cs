@@ -7,6 +7,16 @@ using System.Buffers.Binary;
 
 namespace MQContract.Kafka.Middleware
 {
+    /// <summary>
+    /// Used to inject a confluent schema registry validation middleware that will use the confluent style schema registry to validate message types and 
+    /// attach schema information to each message
+    /// </summary>
+    /// <param name="schemaRegistryClient">A schema registry client used to validate messages</param>
+    /// <param name="failOnMissingSchema">Indicates if the message should fail when no schema is available</param>
+    /// <param name="autoRegisterSchema">Indicates if the system should attempt to register a schema when one is not found on the publish side</param>
+    /// <param name="registerSchemaType">The default schema registration type to use when registering a schema</param>
+    /// <param name="extractSchemaAsync">An alternative call to generate the schema for a given message type, otherwise NJsonSchema will be used</param>
+    /// <param name="validateSchemaAsync">An alternative call to validate the schema and the incoming message content, otherwise it will default through NJsonSchema</param>
     public class SchemaValidationMiddleware(ISchemaRegistryClient schemaRegistryClient,
         bool failOnMissingSchema=true,
         bool autoRegisterSchema=true,
