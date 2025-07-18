@@ -5,6 +5,9 @@
 
 - [Connection](#T-MQContract-Kafka-Connection 'MQContract.Kafka.Connection')
   - [#ctor(clientConfig)](#M-MQContract-Kafka-Connection-#ctor-Confluent-Kafka-ClientConfig- 'MQContract.Kafka.Connection.#ctor(Confluent.Kafka.ClientConfig)')
+- [MissingSchemaException](#T-MQContract-Kafka-MissingSchemaException 'MQContract.Kafka.MissingSchemaException')
+- [PersistenceFailedException](#T-MQContract-Kafka-PersistenceFailedException 'MQContract.Kafka.PersistenceFailedException')
+- [SchemaValidationFailedException](#T-MQContract-Kafka-SchemaValidationFailedException 'MQContract.Kafka.SchemaValidationFailedException')
 - [SchemaValidationMiddleware](#T-MQContract-Kafka-Middleware-SchemaValidationMiddleware 'MQContract.Kafka.Middleware.SchemaValidationMiddleware')
   - [#ctor(schemaRegistryClient,failOnMissingSchema,autoRegisterSchema,registerSchemaType,extractSchemaAsync,validateSchemaAsync)](#M-MQContract-Kafka-Middleware-SchemaValidationMiddleware-#ctor-Confluent-SchemaRegistry-ISchemaRegistryClient,System-Boolean,System-Boolean,Confluent-SchemaRegistry-SchemaType,System-Func{System-Type,System-Threading-Tasks-ValueTask{System-String}},System-Func{Confluent-SchemaRegistry-Schema,System-IO-Stream,System-Threading-Tasks-ValueTask{System-Boolean}}- 'MQContract.Kafka.Middleware.SchemaValidationMiddleware.#ctor(Confluent.SchemaRegistry.ISchemaRegistryClient,System.Boolean,System.Boolean,Confluent.SchemaRegistry.SchemaType,System.Func{System.Type,System.Threading.Tasks.ValueTask{System.String}},System.Func{Confluent.SchemaRegistry.Schema,System.IO.Stream,System.Threading.Tasks.ValueTask{System.Boolean}})')
 
@@ -37,6 +40,39 @@ This is the MessageServiceConnection implementation for using Kafka
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | clientConfig | [Confluent.Kafka.ClientConfig](#T-Confluent-Kafka-ClientConfig 'Confluent.Kafka.ClientConfig') | The Kafka Client Configuration to provide |
+
+<a name='T-MQContract-Kafka-MissingSchemaException'></a>
+## MissingSchemaException `type`
+
+##### Namespace
+
+MQContract.Kafka
+
+##### Summary
+
+Thrown when the service is unable to find a schema for a given message and it is set to fail when missing
+
+<a name='T-MQContract-Kafka-PersistenceFailedException'></a>
+## PersistenceFailedException `type`
+
+##### Namespace
+
+MQContract.Kafka
+
+##### Summary
+
+Thrown when a publish message fails to persist in the system
+
+<a name='T-MQContract-Kafka-SchemaValidationFailedException'></a>
+## SchemaValidationFailedException `type`
+
+##### Namespace
+
+MQContract.Kafka
+
+##### Summary
+
+Thrown when the content of a message fails to validate against the schema
 
 <a name='T-MQContract-Kafka-Middleware-SchemaValidationMiddleware'></a>
 ## SchemaValidationMiddleware `type`
