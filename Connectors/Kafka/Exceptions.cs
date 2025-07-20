@@ -1,31 +1,30 @@
 ﻿namespace MQContract.Kafka
 {
-    internal class PersistenceFailedException : Exception
+    /// <summary>
+    /// Thrown when a publish message fails to persist in the system
+    /// </summary>
+    public class PersistenceFailedException : Exception
     {
         internal PersistenceFailedException()
             : base("Persistence Failed") { }
     }
-    internal class QueryAsyncReponseException : Exception
+    
+    /// <summary>
+    /// Thrown when the service is unable to find a schema for a given message and it is set to fail when missing
+    /// </summary>
+    public class MissingSchemaException : Exception
     {
-        internal QueryAsyncReponseException(string error)
-            : base(error) { }
+        internal MissingSchemaException(string messageType)
+            : base($"Unable to load a schema from the registry for the message type {messageType}") { }
     }
 
-    internal class QueryLockFailedException : Exception
+    /// <summary>
+    /// Thrown when the content of a message fails to validate against the schema
+    /// </summary>
+    public class SchemaValidationFailedException : Exception
     {
-        internal QueryLockFailedException()
-            : base("Failed to produce query lock") { }
+        internal SchemaValidationFailedException(int schemaId,string messageType)
+            : base($"The schema with id {schemaId} failed to validate against the message type {messageType}"){}
     }
 
-    internal class QueryResultMissingException : Exception
-    {
-        internal QueryResultMissingException()
-            : base("Query result not found") { }
-    }
-
-    internal class QueryExecutionFailedException : Exception
-    {
-        internal QueryExecutionFailedException()
-            : base("Failed to execute query") { }
-    }
 }
