@@ -9,7 +9,8 @@
 - [PersistenceFailedException](#T-MQContract-Kafka-PersistenceFailedException 'MQContract.Kafka.PersistenceFailedException')
 - [SchemaValidationFailedException](#T-MQContract-Kafka-SchemaValidationFailedException 'MQContract.Kafka.SchemaValidationFailedException')
 - [SchemaValidationMiddleware](#T-MQContract-Kafka-Middleware-SchemaValidationMiddleware 'MQContract.Kafka.Middleware.SchemaValidationMiddleware')
-  - [#ctor(schemaRegistryClient,failOnMissingSchema,autoRegisterSchema,registerSchemaType,extractSchemaAsync,validateSchemaAsync)](#M-MQContract-Kafka-Middleware-SchemaValidationMiddleware-#ctor-Confluent-SchemaRegistry-ISchemaRegistryClient,System-Boolean,System-Boolean,Confluent-SchemaRegistry-SchemaType,System-Func{System-Type,System-Threading-Tasks-ValueTask{System-String}},System-Func{Confluent-SchemaRegistry-Schema,System-IO-Stream,System-Threading-Tasks-ValueTask{System-Boolean}}- 'MQContract.Kafka.Middleware.SchemaValidationMiddleware.#ctor(Confluent.SchemaRegistry.ISchemaRegistryClient,System.Boolean,System.Boolean,Confluent.SchemaRegistry.SchemaType,System.Func{System.Type,System.Threading.Tasks.ValueTask{System.String}},System.Func{Confluent.SchemaRegistry.Schema,System.IO.Stream,System.Threading.Tasks.ValueTask{System.Boolean}})')
+  - [#ctor(schemaRegistryClient,failOnMissingSchema,autoRegisterSchema,registerSchemaType,extractSchemaAsync,validateSchemaAsync)](#M-MQContract-Kafka-Middleware-SchemaValidationMiddleware-#ctor-Confluent-SchemaRegistry-ISchemaRegistryClient,System-Boolean,System-Boolean,Confluent-SchemaRegistry-SchemaType,System-Func{System-Type,System-String,System-Threading-Tasks-ValueTask{System-String}},System-Func{System-Type,System-Threading-Tasks-ValueTask{System-String}},System-Func{Confluent-SchemaRegistry-Schema,System-IO-Stream,System-Threading-Tasks-ValueTask{System-Boolean}}- 'MQContract.Kafka.Middleware.SchemaValidationMiddleware.#ctor(Confluent.SchemaRegistry.ISchemaRegistryClient,System.Boolean,System.Boolean,Confluent.SchemaRegistry.SchemaType,System.Func{System.Type,System.String,System.Threading.Tasks.ValueTask{System.String}},System.Func{System.Type,System.Threading.Tasks.ValueTask{System.String}},System.Func{Confluent.SchemaRegistry.Schema,System.IO.Stream,System.Threading.Tasks.ValueTask{System.Boolean}})')
+- [UnableToPingException](#T-MQContract-Kafka-UnableToPingException 'MQContract.Kafka.UnableToPingException')
 
 <a name='T-MQContract-Kafka-Connection'></a>
 ## Connection `type`
@@ -92,7 +93,7 @@ attach schema information to each message
 | ---- | ---- | ----------- |
 | schemaRegistryClient | [T:MQContract.Kafka.Middleware.SchemaValidationMiddleware](#T-T-MQContract-Kafka-Middleware-SchemaValidationMiddleware 'T:MQContract.Kafka.Middleware.SchemaValidationMiddleware') | A schema registry client used to validate messages |
 
-<a name='M-MQContract-Kafka-Middleware-SchemaValidationMiddleware-#ctor-Confluent-SchemaRegistry-ISchemaRegistryClient,System-Boolean,System-Boolean,Confluent-SchemaRegistry-SchemaType,System-Func{System-Type,System-Threading-Tasks-ValueTask{System-String}},System-Func{Confluent-SchemaRegistry-Schema,System-IO-Stream,System-Threading-Tasks-ValueTask{System-Boolean}}-'></a>
+<a name='M-MQContract-Kafka-Middleware-SchemaValidationMiddleware-#ctor-Confluent-SchemaRegistry-ISchemaRegistryClient,System-Boolean,System-Boolean,Confluent-SchemaRegistry-SchemaType,System-Func{System-Type,System-String,System-Threading-Tasks-ValueTask{System-String}},System-Func{System-Type,System-Threading-Tasks-ValueTask{System-String}},System-Func{Confluent-SchemaRegistry-Schema,System-IO-Stream,System-Threading-Tasks-ValueTask{System-Boolean}}-'></a>
 ### #ctor(schemaRegistryClient,failOnMissingSchema,autoRegisterSchema,registerSchemaType,extractSchemaAsync,validateSchemaAsync) `constructor`
 
 ##### Summary
@@ -108,5 +109,16 @@ attach schema information to each message
 | failOnMissingSchema | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates if the message should fail when no schema is available |
 | autoRegisterSchema | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates if the system should attempt to register a schema when one is not found on the publish side |
 | registerSchemaType | [Confluent.SchemaRegistry.SchemaType](#T-Confluent-SchemaRegistry-SchemaType 'Confluent.SchemaRegistry.SchemaType') | The default schema registration type to use when registering a schema |
-| extractSchemaAsync | [System.Func{System.Type,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.Type,System.Threading.Tasks.ValueTask{System.String}}') | An alternative call to generate the schema for a given message type, otherwise NJsonSchema will be used |
-| validateSchemaAsync | [System.Func{Confluent.SchemaRegistry.Schema,System.IO.Stream,System.Threading.Tasks.ValueTask{System.Boolean}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{Confluent.SchemaRegistry.Schema,System.IO.Stream,System.Threading.Tasks.ValueTask{System.Boolean}}') | An alternative call to validate the schema and the incoming message content, otherwise it will default through NJsonSchema |
+| extractSchemaAsync | [System.Func{System.Type,System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.Type,System.String,System.Threading.Tasks.ValueTask{System.String}}') | An alternative call to generate the schema for a given message type, otherwise NJsonSchema will be used |
+| validateSchemaAsync | [System.Func{System.Type,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.Type,System.Threading.Tasks.ValueTask{System.String}}') | An alternative call to validate the schema and the incoming message content, otherwise it will default through NJsonSchema |
+
+<a name='T-MQContract-Kafka-UnableToPingException'></a>
+## UnableToPingException `type`
+
+##### Namespace
+
+MQContract.Kafka
+
+##### Summary
+
+Thrown when the Connection is unable to obtain the Broker MetaData to create a PingResponse

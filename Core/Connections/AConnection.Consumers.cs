@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using MQContract.Attributes;
 using MQContract.Interfaces;
@@ -119,6 +120,10 @@ namespace MQContract.Connections
                 return true;
             }
         }
+
+        private IHealthCheck? healthCheck;
+        protected abstract ConnectionHealthCheck? ProduceConnectionHealthCheck();
+        IHealthCheck? IBaseContractConnection.HealthCheck => healthCheck??=ProduceConnectionHealthCheck();
 
         #region PubSubConsumer
         ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync<T, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)

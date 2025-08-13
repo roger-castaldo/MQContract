@@ -4,6 +4,7 @@ using DotPulsar.Exceptions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Buffers;
+using System.Diagnostics;
 
 namespace MQContract.ApachePulsar
 {
@@ -11,7 +12,7 @@ namespace MQContract.ApachePulsar
     /// This is the MessageServiceConnection implemenation for using ApaxhePulsar
     /// </summary>
     /// <param name="pulsarClientBuilder">An instance of a pulsar client builder used to build the underlying client connection</param>
-    public class Connection(IPulsarClientBuilder pulsarClientBuilder) : IMessageServiceConnection, IAsyncDisposable
+    public class Connection(IPulsarClientBuilder pulsarClientBuilder) : IPingableMessageServiceConnection, IAsyncDisposable
     {
         private const string MessageTypeID = "_MessageTypeID";
 
@@ -93,6 +94,28 @@ namespace MQContract.ApachePulsar
             );
             subscription.Start();
             return ValueTask.FromResult<IServiceSubscription?>(subscription);
+        }
+
+        async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+        {
+            try
+            {
+                await producerLock.WaitAsync();
+                var start = Stopwatch.GetTimestamp();
+                var producer = pulsarClient.CreateProducer<byte[]>(new("non-persistent://public/default/heartbeat", Schema.ByteArray));
+
+                _ = await producer.Send(new(),new byte[0]); // empty payload
+
+                await producer.DisposeAsync();
+                producerLock.Release();
+                return new(pulsarClient.ServiceUrl.ToString(), string.Empty, Stopwatch.GetElapsedTime(start));
+            }
+            catch
+            {
+                producerLock.Release();
+                throw new PingFailedException("Unable to create a producer and publish to the heartbeat path");
+            }
+            
         }
 
         async ValueTask IAsyncDisposable.DisposeAsync()

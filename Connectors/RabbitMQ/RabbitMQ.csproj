@@ -12,6 +12,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="Connection.cs~RF31a2302.TMP" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <PackageReference Include="RabbitMQ.Client" Version="7.*" />
 	</ItemGroup>
 

@@ -1,4 +1,5 @@
-﻿using MQContract.Messages;
+﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using MQContract.Messages;
 
 namespace MQContract.Interfaces
 {
@@ -66,5 +67,9 @@ namespace MQContract.Interfaces
         /// </summary>
         /// <returns>A task for the closure of the connection</returns>
         ValueTask CloseAsync();
+        /// <summary>
+        /// Provides a usable HealthCheck implementation to provide HealthCheck information for the given Contract Connection
+        /// </summary>
+        IHealthCheck? HealthCheck { get; }
     }
 }

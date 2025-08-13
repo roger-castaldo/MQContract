@@ -3,17 +3,20 @@ using HiveMQtt.Client.Options;
 using HiveMQtt.MQTT5.Types;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using System.Diagnostics;
 
 namespace MQContract.HiveMQ
 {
     /// <summary>
     /// This is the MessageServiceConnection implementation for using HiveMQ
     /// </summary>
-    public class Connection : IInboxQueryableMessageServiceConnection, IDisposable
+    public class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IDisposable
     {
         private readonly HiveMQClientOptions clientOptions;
         private readonly HiveMQClient client;
         private readonly Guid connectionID = Guid.NewGuid();
+        private long lastPingTimestamp = long.MinValue;
+        private TimeSpan lastPingDuration = TimeSpan.MaxValue;
         private bool disposedValue;
 
         /// <summary>
@@ -28,6 +31,14 @@ namespace MQContract.HiveMQ
             connectTask.Wait();
             if (connectTask.Result.ReasonCode!=HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
                 throw new ConnectionFailedException(connectTask.Result.ReasonString);
+            client.OnPingReqSent += (obj,e) =>
+            {
+                lastPingTimestamp = Stopwatch.GetTimestamp();
+            };
+            client.OnPingRespReceived += (obj, e) =>
+            {
+                lastPingDuration = Stopwatch.GetElapsedTime(lastPingTimestamp);
+            };
         }
 
         uint? IMessageServiceConnection.MaxMessageBodySize => (uint?)clientOptions.ClientMaximumPacketSize;
@@ -174,6 +185,9 @@ namespace MQContract.HiveMQ
             await result.EstablishAsync();
             return result;
         }
+
+        ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+            => ValueTask.FromResult<PingResult>(new(clientOptions.Host, string.Empty, lastPingDuration));
 
         private void Dispose(bool disposing)
         {

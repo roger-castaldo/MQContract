@@ -31,6 +31,7 @@
 - [IBaseConsumer](#T-MQContract-Interfaces-Consumers-IBaseConsumer 'MQContract.Interfaces.Consumers.IBaseConsumer')
   - [ErrorRecieved(error)](#M-MQContract-Interfaces-Consumers-IBaseConsumer-ErrorRecieved-System-Exception- 'MQContract.Interfaces.Consumers.IBaseConsumer.ErrorRecieved(System.Exception)')
 - [IBaseContractConnection](#T-MQContract-Interfaces-IBaseContractConnection 'MQContract.Interfaces.IBaseContractConnection')
+  - [HealthCheck](#P-MQContract-Interfaces-IBaseContractConnection-HealthCheck 'MQContract.Interfaces.IBaseContractConnection.HealthCheck')
   - [CloseAsync()](#M-MQContract-Interfaces-IBaseContractConnection-CloseAsync 'MQContract.Interfaces.IBaseContractConnection.CloseAsync')
   - [SubscribeAsync\`\`1(messageReceived,errorReceived,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IBaseContractConnection-SubscribeAsync``1-System-Func{MQContract-Interfaces-IReceivedMessage{``0},System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IBaseContractConnection.SubscribeAsync``1(System.Func{MQContract.Interfaces.IReceivedMessage{``0},System.Threading.Tasks.ValueTask},System.Action{System.Exception},System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
   - [SubscribeAsync\`\`1(messageReceived,errorReceived,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IBaseContractConnection-SubscribeAsync``1-System-Action{MQContract-Interfaces-IReceivedMessage{``0}},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IBaseContractConnection.SubscribeAsync``1(System.Action{MQContract.Interfaces.IReceivedMessage{``0}},System.Action{System.Exception},System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
@@ -195,6 +196,8 @@
   - [HasError](#P-MQContract-Messages-MultiTransmissionResult-HasError 'MQContract.Messages.MultiTransmissionResult.HasError')
   - [ID](#P-MQContract-Messages-MultiTransmissionResult-ID 'MQContract.Messages.MultiTransmissionResult.ID')
   - [Results](#P-MQContract-Messages-MultiTransmissionResult-Results 'MQContract.Messages.MultiTransmissionResult.Results')
+- [PingFailedException](#T-MQContract-PingFailedException 'MQContract.PingFailedException')
+  - [#ctor()](#M-MQContract-PingFailedException-#ctor-System-String- 'MQContract.PingFailedException.#ctor(System.String)')
 - [PingResult](#T-MQContract-Messages-PingResult 'MQContract.Messages.PingResult')
   - [#ctor(Host,Version,ResponseTime)](#M-MQContract-Messages-PingResult-#ctor-System-String,System-String,System-TimeSpan- 'MQContract.Messages.PingResult.#ctor(System.String,System.String,System.TimeSpan)')
   - [Host](#P-MQContract-Messages-PingResult-Host 'MQContract.Messages.PingResult.Host')
@@ -608,6 +611,13 @@ MQContract.Interfaces
 ##### Summary
 
 Represents the Base for all Contract Connections and contains the definition of all items defined by all Contract Connections
+
+<a name='P-MQContract-Interfaces-IBaseContractConnection-HealthCheck'></a>
+### HealthCheck `property`
+
+##### Summary
+
+Provides a usable HealthCheck implementation to provide HealthCheck information for the given Contract Connection
 
 <a name='M-MQContract-Interfaces-IBaseContractConnection-CloseAsync'></a>
 ### CloseAsync() `method`
@@ -3345,6 +3355,28 @@ The unique ID of the message that was transmitted
 ##### Summary
 
 Houses all the results from each underlying system connection used
+
+<a name='T-MQContract-PingFailedException'></a>
+## PingFailedException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown when a Ping Attempt fails
+
+<a name='M-MQContract-PingFailedException-#ctor-System-String-'></a>
+### #ctor() `constructor`
+
+##### Summary
+
+Thrown when a Ping Attempt fails
+
+##### Parameters
+
+This constructor has no parameters.
 
 <a name='T-MQContract-Messages-PingResult'></a>
 ## PingResult `type`

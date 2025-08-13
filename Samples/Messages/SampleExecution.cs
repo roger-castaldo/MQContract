@@ -14,6 +14,8 @@ namespace Messages
             using var sourceCancel = new CancellationTokenSource();
 
             var contractConnection = ContractConnection.Instance(serviceConnection, channelMapper: mapper);
+            var healthCheck = contractConnection.HealthCheck;
+            Console.WriteLine($"Current Health: {(await healthCheck.CheckHealthAsync(new(), sourceCancel.Token)).Description}");
             contractConnection.AddMetrics(null, true)
                 .EnableOpenTelemetry(linkActivitiesAcrossSystems: true);
 
@@ -104,6 +106,8 @@ namespace Messages
             Console.WriteLine($"Stored Result 2 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
 
             Console.WriteLine("Press Enter to close");
+
+            Console.WriteLine($"Current Health: {(await healthCheck.CheckHealthAsync(new(), sourceCancel.Token)).Description}");
 
             Console.ReadLine();
             await sourceCancel.CancelAsync();

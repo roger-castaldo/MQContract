@@ -3,7 +3,6 @@ using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using NJsonSchema;
 using System.Buffers.Binary;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace MQContract.Kafka.Middleware
@@ -16,17 +15,20 @@ namespace MQContract.Kafka.Middleware
     /// <param name="failOnMissingSchema">Indicates if the message should fail when no schema is available</param>
     /// <param name="autoRegisterSchema">Indicates if the system should attempt to register a schema when one is not found on the publish side</param>
     /// <param name="registerSchemaType">The default schema registration type to use when registering a schema</param>
+    /// <param name="mapMessageSchemaName">A callback used to change the schema name for a given message, by default it will use the MessageTypeID.  The arguments pass will be the type (class) of the message, the topic and the message type id and is expecting a string with for the schema identifier.</param>
     /// <param name="extractSchemaAsync">An alternative call to generate the schema for a given message type, otherwise NJsonSchema will be used</param>
     /// <param name="validateSchemaAsync">An alternative call to validate the schema and the incoming message content, otherwise it will default through NJsonSchema</param>
     public class SchemaValidationMiddleware(ISchemaRegistryClient schemaRegistryClient,
         bool failOnMissingSchema=true,
         bool autoRegisterSchema=true,
         Confluent.SchemaRegistry.SchemaType registerSchemaType = Confluent.SchemaRegistry.SchemaType.Json,
+        Func<Type,string,string,ValueTask<string>>? mapMessageSchemaName = null,
         Func<Type,ValueTask<string>>? extractSchemaAsync = null,
         Func<Schema,Stream,ValueTask<bool>>? validateSchemaAsync = null
     ) : IAfterEncodeMiddleware, IBeforeDecodeMiddleware
     {
         private const string SchemaIdHeader = "_kafkaSchemaId";
+        private const byte MagicByte = 0x00;
         private readonly static string[] IgnoredMessageTypes = [
             $"{typeof(ushort).Name}-0.0.0.0",
             $"{typeof(string).Name}-0.0.0.0",
@@ -59,27 +61,34 @@ namespace MQContract.Kafka.Middleware
             if (!IgnoredMessageTypes.Contains(message.MessageTypeID))
             {
                 int? schemaId;
+                var schehmaName = (mapMessageSchemaName==null ? message.MessageTypeID : await mapMessageSchemaName(messageType, message.Channel, message.MessageTypeID));
                 try
                 {
-                    schemaId = (await schemaRegistryClient.GetLatestSchemaAsync(message.MessageTypeID))?.Id;
+                    schemaId = (await schemaRegistryClient.GetLatestSchemaAsync(schehmaName))?.Id;
                 }
                 catch {
                     schemaId=null;
                 }
                 if (schemaId==null && autoRegisterSchema)
-                        schemaId = await schemaRegistryClient.RegisterSchemaAsync(message.MessageTypeID, new Schema(await ExtractSchemaAsync(messageType), registerSchemaType));
+                        schemaId = await schemaRegistryClient.RegisterSchemaAsync(schehmaName, new Schema(await ExtractSchemaAsync(messageType), registerSchemaType));
                 else if (schemaId!=null)
                     await LoadAndCheckSchemaAsync(schemaId.Value, message.MessageTypeID, message.Data);
                 if (schemaId==null && failOnMissingSchema)
                     throw new MissingSchemaException(message.MessageTypeID);
                 else if (schemaId!=null)
+                {
+                    var data = new byte[message.Data.Length];
+                    data[0] = MagicByte;
+                    BinaryPrimitives.WriteInt32BigEndian(data.AsSpan(1, 4), schemaId.Value);
+                    message.Data.ToArray().CopyTo(data, 5);
                     return new(
                         message.ID,
                         message.MessageTypeID,
                         message.Channel,
                         new(message.Header, new Dictionary<string, string?>() { { SchemaIdHeader, schemaId?.ToString() } }),
-                        message.Data
+                        data
                     );
+                }
             }
             return message;
         }
@@ -98,10 +107,12 @@ namespace MQContract.Kafka.Middleware
             if (!IgnoredMessageTypes.Contains(messageTypeID))
             {
                 var schemaId = messageHeader[SchemaIdHeader];
-                if (string.IsNullOrWhiteSpace(schemaId)&&data.Span[0]==0)
+                if (data.Span[0]==MagicByte)
                 {
-                    schemaId = BinaryPrimitives.ReadInt32BigEndian(data.Slice(1, 4).Span).ToString();
+                    var otherSchemaId = BinaryPrimitives.ReadInt32BigEndian(data.Slice(1, 4).Span).ToString();
                     data = data.Slice(5);
+                    if (schemaId!=otherSchemaId)
+                        schemaId= otherSchemaId;
                 }
                 if (string.IsNullOrWhiteSpace(schemaId) && failOnMissingSchema)
                     throw new MissingSchemaException(messageTypeID);

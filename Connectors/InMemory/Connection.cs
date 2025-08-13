@@ -1,13 +1,14 @@
 ﻿using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Collections.Concurrent;
+using System.Reflection;
 
 namespace MQContract.InMemory
 {
     /// <summary>
     /// Used as an in memory connection messaging system where all transmission are done through Channels within the connection.  You must use the same underlying connection.
     /// </summary>
-    public class Connection : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection
+    public class Connection : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection, IPingableMessageServiceConnection
     {
         private readonly ConcurrentDictionary<string, MessageChannel> channels = [];
         private readonly string inboxChannel = $"_inbox/{Guid.NewGuid()}";
@@ -61,5 +62,8 @@ namespace MQContract.InMemory
             => GetChannel(inboxChannel).EstablishInboxSubscriptionAsync(messageReceived, cancellationToken);
         ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
             => GetChannel(message.Channel).QueryAsync(message, inboxChannel, correlationID, cancellationToken);
+
+        ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+            => ValueTask.FromResult<PingResult>(new(Assembly.GetEntryAssembly()?.GetName()?.Name??string.Empty, Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString()??string.Empty, TimeSpan.Zero));
     }
 }

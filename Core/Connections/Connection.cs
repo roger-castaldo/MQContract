@@ -24,6 +24,9 @@ namespace MQContract.Connections
         ValueTask<PingResult> IContractConnection.PingAsync()
             => (serviceConnection is IPingableMessageServiceConnection pingableService ? pingableService.PingAsync() : throw new PingNotSupportedException());
 
+        protected override ConnectionHealthCheck? ProduceConnectionHealthCheck()
+            => new(connection: serviceConnection);
+
         protected override async ValueTask CloseAsync()
             => await (serviceConnection?.CloseAsync()??ValueTask.CompletedTask);
 
