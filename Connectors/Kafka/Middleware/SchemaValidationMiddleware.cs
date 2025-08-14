@@ -77,7 +77,7 @@ namespace MQContract.Kafka.Middleware
                     throw new MissingSchemaException(message.MessageTypeID);
                 else if (schemaId!=null)
                 {
-                    var data = new byte[message.Data.Length];
+                    var data = new byte[message.Data.Length+5];
                     data[0] = MagicByte;
                     BinaryPrimitives.WriteInt32BigEndian(data.AsSpan(1, 4), schemaId.Value);
                     message.Data.ToArray().CopyTo(data, 5);

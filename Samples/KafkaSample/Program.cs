@@ -22,5 +22,8 @@ var schemaRegistryConfig = new SchemaRegistryConfig
 using var schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryConfig);
 
 await SampleExecution.ExecuteSample(serviceConnection, "Kafka", middlewares: [
-    new SchemaValidationMiddleware(schemaRegistryClient)
+    new SchemaValidationMiddleware(
+        schemaRegistryClient,
+        mapMessageSchemaName:(messageType,messageChannel,messageTypeId)=>ValueTask.FromResult<string>($"{messageChannel}-{messageTypeId}")
+    )
 ]);

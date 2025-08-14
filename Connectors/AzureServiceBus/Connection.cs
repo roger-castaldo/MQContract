@@ -9,6 +9,7 @@ namespace MQContract.AzureServiceBus
     /// This is the MessageServiceConnection implemenation for using AzureServiceBus
     /// </summary>
     /// <param name="client">The ServiceBusClient to use with this instance</param>
+    /// <param name="pingableQueue">A queue to create a receiver against as a form of pinging to ensure connectivity</param>
     /// <remarks>
     /// In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
     /// with RequiresSession as true
@@ -199,8 +200,8 @@ namespace MQContract.AzureServiceBus
             var start = Stopwatch.GetTimestamp();
             try
             {
-                await using var reciever = client.CreateReceiver(pingableQueue??"pingable");
-                _ = await reciever.PeekMessageAsync();
+                await using var receiver = client.CreateReceiver(pingableQueue??"pingable");
+                _ = await receiver.PeekMessageAsync();
             }catch (ServiceBusException ex) when(ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound){
                 return new(string.Empty, string.Empty, Stopwatch.GetElapsedTime(start));
             }
