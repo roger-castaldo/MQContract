@@ -4,7 +4,7 @@
 ## Contents
 
 - [Connection](#T-MQContract-AzureServiceBus-Connection 'MQContract.AzureServiceBus.Connection')
-  - [#ctor(client)](#M-MQContract-AzureServiceBus-Connection-#ctor-Azure-Messaging-ServiceBus-ServiceBusClient- 'MQContract.AzureServiceBus.Connection.#ctor(Azure.Messaging.ServiceBus.ServiceBusClient)')
+  - [#ctor(client,pingableQueue)](#M-MQContract-AzureServiceBus-Connection-#ctor-Azure-Messaging-ServiceBus-ServiceBusClient,System-String- 'MQContract.AzureServiceBus.Connection.#ctor(Azure.Messaging.ServiceBus.ServiceBusClient,System.String)')
   - [MaxMessageBodySize](#P-MQContract-AzureServiceBus-Connection-MaxMessageBodySize 'MQContract.AzureServiceBus.Connection.MaxMessageBodySize')
 
 <a name='T-MQContract-AzureServiceBus-Connection'></a>
@@ -29,8 +29,8 @@ This is the MessageServiceConnection implemenation for using AzureServiceBus
 In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
 with RequiresSession as true
 
-<a name='M-MQContract-AzureServiceBus-Connection-#ctor-Azure-Messaging-ServiceBus-ServiceBusClient-'></a>
-### #ctor(client) `constructor`
+<a name='M-MQContract-AzureServiceBus-Connection-#ctor-Azure-Messaging-ServiceBus-ServiceBusClient,System-String-'></a>
+### #ctor(client,pingableQueue) `constructor`
 
 ##### Summary
 
@@ -41,6 +41,7 @@ This is the MessageServiceConnection implemenation for using AzureServiceBus
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | client | [Azure.Messaging.ServiceBus.ServiceBusClient](#T-Azure-Messaging-ServiceBus-ServiceBusClient 'Azure.Messaging.ServiceBus.ServiceBusClient') | The ServiceBusClient to use with this instance |
+| pingableQueue | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | A queue to create a receiver against as a form of pinging to ensure connectivity |
 
 ##### Remarks
 

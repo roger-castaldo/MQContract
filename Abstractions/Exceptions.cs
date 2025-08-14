@@ -42,4 +42,11 @@
         /// </summary>
         public ResilienceTypes Type => type;
     }
+
+    /// <summary>
+    /// Thrown when a Ping Attempt fails
+    /// </summary>
+    public sealed class PingFailedException(string message) 
+        : Exception(message)
+    {}
 }

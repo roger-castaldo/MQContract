@@ -3,13 +3,14 @@ using Apache.NMS.Util;
 using MQContract.ActiveMQ.Subscriptions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using System.Diagnostics;
 
 namespace MQContract.ActiveMQ
 {
     /// <summary>
     /// This is the MessageServiceConnection implemenation for using ActiveMQ
     /// </summary>
-    public sealed class Connection : IMessageServiceConnection, IAsyncDisposable, IDisposable
+    public sealed class Connection : IPingableMessageServiceConnection, IAsyncDisposable, IDisposable
     {
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private bool disposedValue;
@@ -128,6 +129,21 @@ namespace MQContract.ActiveMQ
 
             Dispose(disposing: false);
             GC.SuppressFinalize(this);
+        }
+
+        async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+        {
+            try
+            {
+                var start = Stopwatch.GetTimestamp();
+                using var sess = await connection.CreateSessionAsync(AcknowledgementMode.AutoAcknowledge);
+                using var tempQueue = await sess.CreateTemporaryQueueAsync();
+                return new(connection.MetaData.NMSProviderName, connection.MetaData.NMSVersion, Stopwatch.GetElapsedTime(start));
+            }
+            catch
+            {
+                throw new PingFailedException("Unable to create a temporary session or queue in order to ping ActiveMQ instance");
+            }
         }
 
         private void Dispose(bool disposing)

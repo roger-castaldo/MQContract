@@ -18,6 +18,7 @@ namespace MQContract.Connections
     {
         private readonly ServiceConnectionList connectionList = new();
 
+
         protected IEnumerable<ServiceConnectionList.ServiceConnection> FullList => connectionList.FullList;
         protected uint? MaxMessageBodySize => connectionList.MaxMessageBodySize;
 
@@ -26,6 +27,9 @@ namespace MQContract.Connections
             connectionList.Add(checkCallback, serviceConnectionName, messageServiceConnection);
             return (CC)(IBaseContractConnection)this;
         }
+
+        protected override ConnectionHealthCheck? ProduceConnectionHealthCheck()
+            => new(serviceConnectionList: connectionList);
 
         CC IMappableContractConnection<CC>.RegisterServiceConnection(Func<(string channel, Type messageType, MessageHeader messageHeader), bool> checkCallback, string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
             => RegisterServiceConnection(pars => checkCallback(pars), serviceConnectionName, messageServiceConnection);

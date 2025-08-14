@@ -10,7 +10,7 @@ namespace MQContract.Redis
     /// <summary>
     /// This is the MessageServiceConnection implementation for using Redis
     /// </summary>
-    public class Connection : IQueryResponseMessageServiceConnection, IAsyncDisposable, IDisposable
+    public class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable, IDisposable
     {
         private readonly ConnectionMultiplexer connectionMultiplexer;
         private readonly IDatabase database;
@@ -166,6 +166,14 @@ namespace MQContract.Redis
             var result = new QueryResponseSubscription(messageReceived, errorReceived, database, connectionID, channel, group);
             await result.StartAsync();
             return result;
+        }
+
+        async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+        {
+            var server = connectionMultiplexer.GetServers().FirstOrDefault(s => s.IsConnected);
+            if (server!=null)
+                return new(string.Empty, server.Version.ToString(), await server.PingAsync());
+            throw new PingFailedException("Unable to find connected server to ping");
         }
 
         async ValueTask IAsyncDisposable.DisposeAsync()

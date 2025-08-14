@@ -2,6 +2,7 @@
 using MQContract.Interfaces.Service;
 using MQContract.Kafka.Subscriptions;
 using MQContract.Messages;
+using System.Diagnostics;
 using System.Text;
 
 namespace MQContract.Kafka
@@ -10,7 +11,7 @@ namespace MQContract.Kafka
     /// This is the MessageServiceConnection implementation for using Kafka
     /// </summary>
     /// <param name="clientConfig">The Kafka Client Configuration to provide</param>
-    public sealed class Connection(ClientConfig clientConfig) : IMessageServiceConnection
+    public sealed class Connection(ClientConfig clientConfig) : IPingableMessageServiceConnection
     {
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
 
@@ -84,6 +85,16 @@ namespace MQContract.Kafka
                 channel);
             await subscription.Run();
             return subscription;
+        }
+
+        ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+        {
+            using var adminClient = new AdminClientBuilder(clientConfig).Build();
+            var start = Stopwatch.GetTimestamp();
+            var metaData = adminClient.GetMetadata(TimeSpan.FromMinutes(1));
+            if (metaData.Brokers.Count>0)
+                return ValueTask.FromResult<PingResult>(new(metaData.OriginatingBrokerName,string.Empty,Stopwatch.GetElapsedTime(start)));
+            throw new UnableToPingException();
         }
 
         ValueTask IMessageServiceConnection.CloseAsync()

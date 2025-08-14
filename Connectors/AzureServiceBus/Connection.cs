@@ -1,6 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using System.Diagnostics;
 
 namespace MQContract.AzureServiceBus
 {
@@ -8,11 +9,12 @@ namespace MQContract.AzureServiceBus
     /// This is the MessageServiceConnection implemenation for using AzureServiceBus
     /// </summary>
     /// <param name="client">The ServiceBusClient to use with this instance</param>
+    /// <param name="pingableQueue">A queue to create a receiver against as a form of pinging to ensure connectivity</param>
     /// <remarks>
     /// In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
     /// with RequiresSession as true
     /// </remarks>
-    public sealed class Connection(ServiceBusClient client) : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection, IDisposable
+    public sealed class Connection(ServiceBusClient client,string? pingableQueue = null) : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection,IPingableMessageServiceConnection, IDisposable
     {
         private const string INBOX_CHANNEL_NAME = "QueryResponse.Inbox";
         private readonly SemaphoreSlim locker = new(1, 1);
@@ -192,6 +194,23 @@ namespace MQContract.AzureServiceBus
                 channel,
                 group
             ));
+
+        async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+        {
+            var start = Stopwatch.GetTimestamp();
+            try
+            {
+                await using var receiver = client.CreateReceiver(pingableQueue??"pingable");
+                _ = await receiver.PeekMessageAsync();
+            }catch (ServiceBusException ex) when(ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound){
+                return new(string.Empty, string.Empty, Stopwatch.GetElapsedTime(start));
+            }
+            catch
+            {
+                throw new PingFailedException("Unable to create a test receiver to the service bus");
+            }
+            return new(string.Empty, string.Empty, Stopwatch.GetElapsedTime(start));
+        }
 
         private void Dispose(bool disposing)
         {

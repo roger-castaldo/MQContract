@@ -1,9 +1,12 @@
 ﻿using Google;
+using Google.Api.Gax.Grpc;
 using Google.Cloud.PubSub.V1;
 using Google.Protobuf;
 using Grpc.Core;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using System.Diagnostics;
+using System.Threading;
 
 namespace MQContract.GooglePubSub
 {
@@ -14,7 +17,7 @@ namespace MQContract.GooglePubSub
     /// <param name="publisherClientApi">Used for building publishers</param>
     /// <param name="subscriberClientApi">Used for building subscribers</param>
     public sealed class Connection(string projectId, PublisherServiceApiClient publisherClientApi, SubscriberServiceApiClient subscriberClientApi) :
-        IMessageServiceConnection, IAsyncDisposable
+        IPingableMessageServiceConnection, IAsyncDisposable
     {
         private const string MessageTypeID = "_MessageTypeID";
         private bool disposedValue;
@@ -134,6 +137,25 @@ namespace MQContract.GooglePubSub
                 builderLock.Release();
             }
             return result;
+        }
+
+        async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+        {
+            var start = Stopwatch.GetTimestamp();
+            try
+            {
+                await publisherClientApi.GetTopicAsync(TopicName.FromProjectTopic(projectId, "ping"));
+                return new(projectId, string.Empty, Stopwatch.GetElapsedTime(start));
+            }
+            catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+            {
+                // Means the connection worked but resource doesn’t exist — still a good "ping"
+                return new(projectId, string.Empty, Stopwatch.GetElapsedTime(start));
+            }
+            catch
+            {
+                throw new PingFailedException("Unable to make a call against the Google PubSub services");
+            }
         }
 
         ValueTask IAsyncDisposable.DisposeAsync()

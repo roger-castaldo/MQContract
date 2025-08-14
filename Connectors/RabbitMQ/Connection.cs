@@ -10,7 +10,7 @@ namespace MQContract.RabbitMQ
     /// <summary>
     /// This is the MessageServiceConnection implemenation for using RabbitMQ
     /// </summary>
-    public sealed class Connection : IInboxQueryableMessageServiceConnection, IAsyncDisposable
+    public sealed class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
     {
         private const string InboxExchange = "_Inbox";
 
@@ -272,6 +272,13 @@ namespace MQContract.RabbitMQ
 
         ValueTask IMessageServiceConnection.CloseAsync()
          => ((IAsyncDisposable)this).DisposeAsync();
+
+        ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+        {
+            if (conn.IsOpen)
+                return ValueTask.FromResult<PingResult>(new(conn.Endpoint.HostName, string.Empty, conn.Heartbeat));
+            throw new PingFailedException("Unable to validate connection to RabbitMQ instance");
+        }
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {

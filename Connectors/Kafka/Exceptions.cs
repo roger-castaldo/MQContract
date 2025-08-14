@@ -27,4 +27,13 @@
             : base($"The schema with id {schemaId} failed to validate against the message type {messageType}"){}
     }
 
+    /// <summary>
+    /// Thrown when the Connection is unable to obtain the Broker MetaData to create a PingResponse
+    /// </summary>
+    public class UnableToPingException : Exception
+    {
+        internal UnableToPingException()
+            : base("Unable to extract Meta Data from broker to obtain PingResponse") { }
+    }
+
 }
