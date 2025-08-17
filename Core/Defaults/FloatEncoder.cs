@@ -2,12 +2,14 @@
 
 namespace MQContract.Defaults
 {
-    internal class FloatEncoder : IMessageTypeEncoder<float>
+    internal class FloatEncoder : ABitEncoder<float>
     {
-        async ValueTask<float> IMessageTypeEncoder<float>.DecodeAsync(Stream stream)
-        => BitConverter.ToSingle(await BitConverterHelper.StreamToByteArray(stream));
+        protected override int ByteSize => sizeof(float);
 
-        ValueTask<byte[]> IMessageTypeEncoder<float>.EncodeAsync(float message)
-        => ValueTask.FromResult(BitConverter.GetBytes(message));
+        protected override float ConvertValue(ReadOnlySpan<byte> value)
+            => BitConverter.ToSingle(value);
+
+        protected override byte[] ConvertValue(float value)
+            => BitConverter.GetBytes(value);
     }
 }

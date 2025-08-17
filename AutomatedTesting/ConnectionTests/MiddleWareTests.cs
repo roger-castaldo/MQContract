@@ -79,7 +79,7 @@ namespace AutomatedTesting.ContractConnectionTests
         }
 
         [TestMethod]
-        public async Task TestRegisterMiddlewareWithInvalidType()
+        public void TestRegisterMiddlewareWithInvalidType()
         {
             #region Arrange
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());

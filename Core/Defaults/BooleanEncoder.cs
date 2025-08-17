@@ -1,13 +1,13 @@
-﻿using MQContract.Interfaces.Encoding;
-
-namespace MQContract.Defaults
+﻿namespace MQContract.Defaults
 {
-    internal class BooleanEncoder : IMessageTypeEncoder<bool>
+    internal class BooleanEncoder : ABitEncoder<bool>
     {
-        async ValueTask<bool> IMessageTypeEncoder<bool>.DecodeAsync(Stream stream)
-            => BitConverter.ToBoolean(await BitConverterHelper.StreamToByteArray(stream));
+        protected override int ByteSize => 1;
 
-        ValueTask<byte[]> IMessageTypeEncoder<bool>.EncodeAsync(bool message)
-            => ValueTask.FromResult(BitConverter.GetBytes(message));
+        protected override bool ConvertValue(ReadOnlySpan<byte> value)
+            => BitConverter.ToBoolean(value);
+
+        protected override byte[] ConvertValue(bool value)
+            => BitConverter.GetBytes(value);
     }
 }

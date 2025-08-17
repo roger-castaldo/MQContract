@@ -1,12 +1,10 @@
 ﻿using Google;
-using Google.Api.Gax.Grpc;
 using Google.Cloud.PubSub.V1;
 using Google.Protobuf;
 using Grpc.Core;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Diagnostics;
-using System.Threading;
 
 namespace MQContract.GooglePubSub
 {
