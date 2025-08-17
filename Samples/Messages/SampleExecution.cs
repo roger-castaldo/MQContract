@@ -15,7 +15,7 @@ namespace Messages
 
             var contractConnection = ContractConnection.Instance(serviceConnection, channelMapper: mapper);
             var healthCheck = contractConnection.HealthCheck;
-            Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck.CheckHealthAsync(new(), sourceCancel.Token))}");
+            Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck!.CheckHealthAsync(new(), sourceCancel.Token))}");
             contractConnection.AddMetrics(null, true)
                 .EnableOpenTelemetry(linkActivitiesAcrossSystems: true);
 

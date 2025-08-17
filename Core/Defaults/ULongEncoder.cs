@@ -2,12 +2,14 @@
 
 namespace MQContract.Defaults
 {
-    internal class ULongEncoder : IMessageTypeEncoder<ulong>
+    internal class ULongEncoder : ABitEncoder<ulong>
     {
-        async ValueTask<ulong> IMessageTypeEncoder<ulong>.DecodeAsync(Stream stream)
-        => BitConverter.ToUInt64(await BitConverterHelper.StreamToByteArray(stream));
+        protected override int ByteSize => sizeof(ulong);
 
-        ValueTask<byte[]> IMessageTypeEncoder<ulong>.EncodeAsync(ulong message)
-        => ValueTask.FromResult(BitConverter.GetBytes(message));
+        protected override ulong ConvertValue(ReadOnlySpan<byte> value)
+            => BitConverter.ToUInt64(value);
+
+        protected override byte[] ConvertValue(ulong value)
+            => BitConverter.GetBytes(value);
     }
 }

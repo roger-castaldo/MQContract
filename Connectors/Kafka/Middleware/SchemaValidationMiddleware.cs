@@ -31,20 +31,42 @@ namespace MQContract.Kafka.Middleware
         private const byte MagicByte = 0x00;
         private readonly static string[] IgnoredMessageTypes = [
             $"{typeof(ushort).Name}-0.0.0.0",
+            $"{typeof(ushort[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<ushort>).Name}-0.0.0.0",
             $"{typeof(string).Name}-0.0.0.0",
             $"{typeof(char).Name}-0.0.0.0",
             $"{typeof(short).Name}-0.0.0.0",
+            $"{typeof(short[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<short>).Name}-0.0.0.0",
             $"{typeof(long).Name}-0.0.0.0",
+            $"{typeof(long[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<long>).Name}-0.0.0.0",
             $"{typeof(ulong).Name}-0.0.0.0",
+            $"{typeof(ulong[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<ulong>).Name}-0.0.0.0",
             $"{typeof(uint).Name}-0.0.0.0",
+            $"{typeof(uint[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<uint>).Name}-0.0.0.0",
             $"{typeof(int).Name}-0.0.0.0",
+            $"{typeof(int[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<int>).Name}-0.0.0.0",
             $"{typeof(Half).Name}-0.0.0.0",
+            $"{typeof(Half[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<Half>).Name}-0.0.0.0",
             $"{typeof(float).Name}-0.0.0.0",
+            $"{typeof(float[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<float>).Name}-0.0.0.0",
             $"{typeof(double).Name}-0.0.0.0",
+            $"{typeof(double[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<double>).Name}-0.0.0.0",
             $"{typeof(decimal).Name}-0.0.0.0",
+            $"{typeof(decimal[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<decimal>).Name}-0.0.0.0",
             $"{typeof(byte).Name}-0.0.0.0",
             $"{typeof(byte[]).Name}-0.0.0.0",
-            $"{typeof(bool).Name}-0.0.0.0"
+            $"{typeof(bool).Name}-0.0.0.0",
+            $"{typeof(bool[]).Name}-0.0.0.0",
+            $"{typeof(IEnumerable<bool>).Name}-0.0.0.0"
         ];
 
         private async Task LoadAndCheckSchemaAsync(int schemaId, string messageTypeID, ReadOnlyMemory<byte> data)

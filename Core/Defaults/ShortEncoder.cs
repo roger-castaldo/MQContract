@@ -2,12 +2,14 @@
 
 namespace MQContract.Defaults
 {
-    internal class ShortEncoder : IMessageTypeEncoder<short>
+    internal class ShortEncoder : ABitEncoder<short>
     {
-        async ValueTask<short> IMessageTypeEncoder<short>.DecodeAsync(Stream stream)
-        => BitConverter.ToInt16(await BitConverterHelper.StreamToByteArray(stream));
+        protected override int ByteSize => sizeof(short);
 
-        ValueTask<byte[]> IMessageTypeEncoder<short>.EncodeAsync(short message)
-        => ValueTask.FromResult(BitConverter.GetBytes(message));
+        protected override short ConvertValue(ReadOnlySpan<byte> value)
+            => BitConverter.ToInt16(value);
+
+        protected override byte[] ConvertValue(short value)
+            => BitConverter.GetBytes(value);
     }
 }

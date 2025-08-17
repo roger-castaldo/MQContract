@@ -70,9 +70,10 @@ namespace MQContract.Middleware
         async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
         {
             using var dataStream = await GetEncryptor((Type)context[ExpectedTypeKey]!).DecryptAsync(new MemoryStream(data.ToArray()), messageHeader);
-            var result = new byte[dataStream.Length];
-            await dataStream.ReadAsync(result);
-            return (messageHeader, result);
+            using var ms = new MemoryStream();
+            await dataStream.CopyToAsync(ms);
+            ms.TryGetBuffer(out ArraySegment<byte> buffer);
+            return (messageHeader,buffer.AsMemory(0, (int)ms.Length));
         }
     }
 }

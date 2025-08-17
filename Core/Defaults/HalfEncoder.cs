@@ -2,12 +2,14 @@
 
 namespace MQContract.Defaults
 {
-    internal class HalfEncoder : IMessageTypeEncoder<Half>
+    internal class HalfEncoder : ABitEncoder<Half>
     {
-        async ValueTask<Half> IMessageTypeEncoder<Half>.DecodeAsync(Stream stream)
-        => BitConverter.ToHalf(await BitConverterHelper.StreamToByteArray(stream));
+        protected override int ByteSize => 2;
 
-        ValueTask<byte[]> IMessageTypeEncoder<Half>.EncodeAsync(Half message)
-        => ValueTask.FromResult(BitConverter.GetBytes(message));
+        protected override Half ConvertValue(ReadOnlySpan<byte> value)
+            => BitConverter.ToHalf(value);
+
+        protected override byte[] ConvertValue(Half value)
+            => BitConverter.GetBytes(value);
     }
 }
