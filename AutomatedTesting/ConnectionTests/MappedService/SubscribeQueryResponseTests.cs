@@ -214,7 +214,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<NoChannelMessage, BasicResponseMessage>(
+            var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<NoChannelMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );
@@ -248,7 +248,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
+            var exception = await Assert.ThrowsExactlyAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );
@@ -695,7 +695,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () => _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
+            var error = await Assert.ThrowsExactlyAsync<TooManyConnectionMatchesException>(async () => _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
                 {
                     return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
                 },
@@ -740,7 +740,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<NoConnectionMatchException>(async () => _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
+            var error = await Assert.ThrowsExactlyAsync<NoConnectionMatchException>(async () => _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
             {
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             },

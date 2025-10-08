@@ -8,17 +8,16 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>MQContract.$(MSBuildProjectName)</AssemblyName>
 		<RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
-		<Title>Redis Connector for MQContract</Title>
+		<Title>ZeroMQ Connector for MQContract</Title>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="StackExchange.Redis" Version="2.*" />
+		<PackageReference Include="NetMQ" Version="4.*" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Abstractions\Abstractions.csproj" />
 	</ItemGroup>
-
 
 	<ItemGroup>
 		<None Update="Readme.md">
@@ -27,8 +26,7 @@
 		</None>
 	</ItemGroup>
 
-
 	<ItemGroup>
-	  <PackageReference Update="Vsxmd" Version="1.4.6" />
+		<PackageReference Update="Vsxmd" Version="1.4.6" />
 	</ItemGroup>
 </Project>

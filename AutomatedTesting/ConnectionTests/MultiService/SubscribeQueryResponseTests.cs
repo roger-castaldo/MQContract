@@ -218,7 +218,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<NoChannelMessage, BasicResponseMessage>(
+            var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<NoChannelMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );
@@ -253,7 +253,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
+            var exception = await Assert.ThrowsExactlyAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { })
             );

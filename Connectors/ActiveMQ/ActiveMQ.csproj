@@ -24,4 +24,8 @@
 			<PackagePath>\</PackagePath>
 		</None>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Update="Vsxmd" Version="1.4.6" />
+	</ItemGroup>
 </Project>

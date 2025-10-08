@@ -1,6 +1,7 @@
 # MQContract
 [![.NET-Test-8x](https://github.com/roger-castaldo/MQContract/actions/workflows/unittests8x.yml/badge.svg)](https://github.com/roger-castaldo/MQContract/actions/workflows/unittests8x.yml)
 [![CodeQL](https://github.com/roger-castaldo/MQContract/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/roger-castaldo/MQContract/actions/workflows/github-code-scanning/codeql)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/roger-castaldo/MQContract)
 
 The idea behind MQContract is to wrap the interactions with multiple MQ server types (ie KubeMQ, NATS.io, Kafka ...) in a simple and easy to use interface.  
 This is done through defining Messages (classes) and tagging them appropriately as necessary, then using those to interact with a ContractConnection.  Using this concept 

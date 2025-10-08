@@ -24,10 +24,18 @@ using var tracerProvider = Sdk.CreateTracerProviderBuilder()
 var serviceConnection = new Connection(new NATS.Client.Core.NatsOpts()
 {
     LoggerFactory=new Microsoft.Extensions.Logging.LoggerFactory(),
-    Name="NATSSample"
+    Name="NATSSample",
+    Url="tls://connect.ngs.global:4222",
+    AuthOpts = new()
+    {
+        CredsFile="./NGS-Default-test_run.creds"
+    }
 });
 
-var streamConfig = new StreamConfig("StoredArrivalsStream", ["StoredArrivals"]);
+var streamConfig = new StreamConfig("StoredArrivalsStream", ["StoredArrivals"])
+{
+    MaxBytes = 100 * 1024 * 1024
+};
 await serviceConnection.CreateStreamAsync(streamConfig);
 
 var mapper = new ChannelMapper()
