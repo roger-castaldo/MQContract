@@ -16,6 +16,7 @@ global level or on a per message type level through implementation of the approp
 * [Core](/Core/Readme.md)
 * Connectors
 	* [ActiveMQ](/Connectors/ActiveMQ/Readme.md)
+	* [AmazonSNQS](/Connectors/AmazonSNQS/Readme.md)
 	* [ApachePulsar](/Connectors/ApachePulsar/Readme.md)
 	* [AzureServiceBus](/Connectors/AzureServiceBus/Readme.md)
 	* [GooglePubSub](/Connectors/GooglePubSub/Readme.md)
@@ -26,5 +27,6 @@ global level or on a per message type level through implementation of the approp
 	* [NATS](/Connectors/NATS/Readme.md)
 	* [RabbitMQ](/Connectors/RabbitMQ/Readme.md)
 	* [Redis](/Connectors/Redis/Readme.md)
+	* [ZeroMQ](/Connectors/ZeroMQ/Readme.md)
 * [OpenTelemetry](/OpenTelemetry.md)
 * [Resiliency](/Resiliency.md)

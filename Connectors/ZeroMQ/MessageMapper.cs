@@ -45,6 +45,7 @@ namespace MQContract.ZeroMQ
             }
             bw.Write(message.Data.Length);
             bw.Write(message.Data.ToArray());
+            bw.Flush();
             return ms.ToArray();
         }
 

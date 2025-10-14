@@ -4,7 +4,6 @@ using NetMQ;
 using NetMQ.Monitoring;
 using NetMQ.Sockets;
 using System.Diagnostics;
-using System.Net.WebSockets;
 
 namespace MQContract.ZeroMQ
 {
