@@ -67,6 +67,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmazonSNQS", "Connectors\Am
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmazonSNQSSample", "Samples\AmazonSNQSSample\AmazonSNQSSample.csproj", "{5D2549D8-CD27-4B2C-8B57-11A47A22D657}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchMark", "BenchMark\BenchMark.csproj", "{B0D4B103-94A7-4583-B9E6-CEF795D6BD98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -193,6 +195,10 @@ Global
 		{5D2549D8-CD27-4B2C-8B57-11A47A22D657}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D2549D8-CD27-4B2C-8B57-11A47A22D657}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D2549D8-CD27-4B2C-8B57-11A47A22D657}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0D4B103-94A7-4583-B9E6-CEF795D6BD98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0D4B103-94A7-4583-B9E6-CEF795D6BD98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0D4B103-94A7-4583-B9E6-CEF795D6BD98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0D4B103-94A7-4583-B9E6-CEF795D6BD98}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

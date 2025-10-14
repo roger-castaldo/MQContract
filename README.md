@@ -12,6 +12,11 @@ their systems to supply the new version of the message.  By default all message 
 and unencrypted, all of which can be overridden on a 
 global level or on a per message type level through implementation of the appropriate interfaces.
 
+## Benchmarks
+
+Below is a sample performance benchmarking to indicate how small the effect is on using MQContract vs directly connecting to a service
+![Sample Benchmarks](images/performance.jpg)
+
 * [Abstractions](/Abstractions/Readme.md)
 * [Core](/Core/Readme.md)
 * Connectors
