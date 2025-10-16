@@ -72,7 +72,7 @@ namespace MQContract.Connections
         }
 
         #region PubSub
-        protected override async ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
+        protected override async ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, bool synchronous, CancellationToken cancellationToken)
         {
             (var connection, channel) = await GetConnectionsAsync<T>(channel, ChannelMapper.MapTypes.PublishSubscription);
             return await CreateSubscriptionAsync<T>(
@@ -84,6 +84,7 @@ namespace MQContract.Connections
                 group,
                 synchronous,
                 connection.ServiceConnectionName,
+                messageFilters,
                 cancellationToken
             );
         }

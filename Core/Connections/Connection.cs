@@ -49,7 +49,7 @@ namespace MQContract.Connections
         }
 
         #region PubSub
-        protected override ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
+        protected override ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, bool synchronous, CancellationToken cancellationToken)
             => CreateSubscriptionAsync<T>(
                 GetMessageFactory<T>(ignoreMessageHeader),
                 serviceConnection,
@@ -59,6 +59,7 @@ namespace MQContract.Connections
                 group,
                 synchronous,
                 null,
+                messageFilters,
                 cancellationToken
             );
 

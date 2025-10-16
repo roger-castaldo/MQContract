@@ -9,18 +9,16 @@ namespace BenchMark.PublishBenchmarks
     public class PublishingWithMiddleware
     {
         [Params("", "Metrics", "OTEL")]
-        public string Middleware { get; set; }
+        public string Middleware { get; set; } = string.Empty;
 
         public const string ChannelName = "sample";
         private const string MessageContent = "The quick brown fox";
-        private IMessageServiceConnection serviceConnection;
-        private IContractedConnection contractConnection;
+        private IContractedConnection? contractConnection;
 
         [GlobalSetup]
         public void Setup()
         {
-            serviceConnection = new FakePublishConnection();
-            contractConnection = ContractConnection.Instance(serviceConnection);
+            contractConnection = ContractConnection.Instance(new FakePublishConnection());
             switch (Middleware)
             {
                 case "Metrics":
@@ -37,7 +35,7 @@ namespace BenchMark.PublishBenchmarks
         [Benchmark]
         public async Task PublishBasicEncodedMessage()
         {
-            _ = await contractConnection.PublishAsync<string>(MessageContent, channel: ChannelName);
+            _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
         }
     }
 }

@@ -11,6 +11,7 @@
         public const string ProduceQueryResponseActivityName = $"{BaseActivityName}.ProduceQueryResponse";
         public const string ConsumeQueryResponseActivityName = $"{BaseActivityName}.ConsumeQueryResponse";
         public const string PublishBulkMessagesMessageEvent = "BulkMessagePublished";
+        public const string MessageFilteredName = $"{BaseActivityName}.MessageFiltered";
 
         public const string BulkPublishCountTag = "mqcontract.bulkmessagecount";
 
