@@ -51,7 +51,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
         public async Task TestPingExceptionUnhealthyCheck()
         {
             #region Arrange
-            var error = new Exception("Ping failed");
+            var error = new PingFailedException("Ping failed");
 
             var serviceConnection = new Mock<IPingableMessageServiceConnection>();
             serviceConnection.Setup(x => x.PingAsync())
