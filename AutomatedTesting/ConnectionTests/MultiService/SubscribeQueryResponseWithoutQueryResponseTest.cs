@@ -141,7 +141,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
-            var error = await Assert.ThrowsExceptionAsync<QueryTimeoutException>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, timeout: TimeSpan.FromSeconds(2)));
+            var error = await Assert.ThrowsExactlyAsync<QueryTimeoutException>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, timeout: TimeSpan.FromSeconds(2)));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 

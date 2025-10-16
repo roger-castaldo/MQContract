@@ -1,6 +1,4 @@
-﻿using MQContract.Interfaces.Encoding;
-
-namespace MQContract.Defaults
+﻿namespace MQContract.Defaults
 {
     internal class UIntEncoder : ABitEncoder<uint>
     {

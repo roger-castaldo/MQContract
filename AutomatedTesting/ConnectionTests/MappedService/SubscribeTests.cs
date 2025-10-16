@@ -259,7 +259,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }));
+            var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }));
             #endregion
 
             #region Assert
@@ -287,7 +287,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }));
+            var exception = await Assert.ThrowsExactlyAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }));
             #endregion
 
             #region Assert
@@ -967,7 +967,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () => _ = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
+            var error = await Assert.ThrowsExactlyAsync<TooManyConnectionMatchesException>(async () => _ = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
             {
                 return ValueTask.CompletedTask;
             }, (error) => { }
@@ -1004,7 +1004,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<NoConnectionMatchException>(async () => _ = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
+            var error = await Assert.ThrowsExactlyAsync<NoConnectionMatchException>(async () => _ = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
             {
                 return ValueTask.CompletedTask;
             }, (error) => { }

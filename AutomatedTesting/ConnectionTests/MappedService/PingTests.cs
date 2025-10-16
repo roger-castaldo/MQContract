@@ -46,7 +46,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<PingNotSupportedException>(async () => await contractConnection.PingAsync());
+            var error = await Assert.ThrowsExactlyAsync<PingNotSupportedException>(async () => await contractConnection.PingAsync());
             #endregion
 
             #region Assert
@@ -73,7 +73,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () => await contractConnection.PingAsync());
+            var error = await Assert.ThrowsExactlyAsync<TooManyConnectionMatchesException>(async () => await contractConnection.PingAsync());
             #endregion
 
             #region Assert

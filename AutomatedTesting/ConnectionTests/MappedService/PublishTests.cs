@@ -94,7 +94,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
-            Assert.AreEqual(testMessage, JsonSerializer.Deserialize<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             #endregion
 
             #region Verify
@@ -135,7 +135,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
-            Assert.AreEqual(testMessage, JsonSerializer.Deserialize<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(messageHeader.Keys.Count(), messages[0].Header.Keys.Count());
             Assert.IsTrue(messageHeader.Keys.All(k => messages[0].Header.Keys.Contains(k)));
             Assert.IsTrue(messageHeader.Keys.All(k => Equals(messages[0].Header[k], messageHeader[k])));
@@ -320,7 +320,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.NamedAndVersionedMessageType, messages[0].MessageTypeID);
             Assert.IsTrue(messages[0].Data.Length > 0);
-            Assert.AreEqual(testMessage, JsonSerializer.Deserialize<NamedAndVersionedMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<NamedAndVersionedMessage>(new MemoryStream(messages[0].Data.ToArray())));
             #endregion
 
             #region Verify
@@ -514,7 +514,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.PublishAsync<NoChannelMessage>(testMessage));
+            var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.PublishAsync<NoChannelMessage>(testMessage));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -551,7 +551,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExceptionAsync<ArgumentOutOfRangeException>(async () => await contractConnection.PublishAsync<BasicMessage>(testMessage));
+            var exception = await Assert.ThrowsExactlyAsync<ArgumentOutOfRangeException>(async () => await contractConnection.PublishAsync<BasicMessage>(testMessage));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -640,7 +640,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<TooManyConnectionMatchesException>(async () => await contractConnection.PublishAsync<BasicMessage>(testMessage));
+            var error = await Assert.ThrowsExactlyAsync<TooManyConnectionMatchesException>(async () => await contractConnection.PublishAsync<BasicMessage>(testMessage));
             #endregion
 
             #region Assert
@@ -671,7 +671,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExceptionAsync<NoConnectionMatchException>(async () => await contractConnection.PublishAsync<BasicMessage>(testMessage));
+            var error = await Assert.ThrowsExactlyAsync<NoConnectionMatchException>(async () => await contractConnection.PublishAsync<BasicMessage>(testMessage));
             #endregion
 
             #region Assert
@@ -689,7 +689,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
         public async Task TestPublishAsyncWithTelemetryData(bool withLinking)
         {
             #region Arrange
-            (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
+            (var _, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var testMessage = new BasicMessage("testMessage");

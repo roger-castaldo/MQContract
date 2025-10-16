@@ -1,6 +1,7 @@
 # MQContract
 [![.NET-Test-8x](https://github.com/roger-castaldo/MQContract/actions/workflows/unittests8x.yml/badge.svg)](https://github.com/roger-castaldo/MQContract/actions/workflows/unittests8x.yml)
 [![CodeQL](https://github.com/roger-castaldo/MQContract/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/roger-castaldo/MQContract/actions/workflows/github-code-scanning/codeql)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/roger-castaldo/MQContract)
 
 The idea behind MQContract is to wrap the interactions with multiple MQ server types (ie KubeMQ, NATS.io, Kafka ...) in a simple and easy to use interface.  
 This is done through defining Messages (classes) and tagging them appropriately as necessary, then using those to interact with a ContractConnection.  Using this concept 
@@ -11,10 +12,16 @@ their systems to supply the new version of the message.  By default all message 
 and unencrypted, all of which can be overridden on a 
 global level or on a per message type level through implementation of the appropriate interfaces.
 
+## Benchmarks
+
+Below is a sample performance benchmarking to indicate how small the effect is on using MQContract vs directly connecting to a service
+![Sample Benchmarks](images/performance.jpg)
+
 * [Abstractions](/Abstractions/Readme.md)
 * [Core](/Core/Readme.md)
 * Connectors
 	* [ActiveMQ](/Connectors/ActiveMQ/Readme.md)
+	* [AmazonSNQS](/Connectors/AmazonSNQS/Readme.md)
 	* [ApachePulsar](/Connectors/ApachePulsar/Readme.md)
 	* [AzureServiceBus](/Connectors/AzureServiceBus/Readme.md)
 	* [GooglePubSub](/Connectors/GooglePubSub/Readme.md)
@@ -25,5 +32,6 @@ global level or on a per message type level through implementation of the approp
 	* [NATS](/Connectors/NATS/Readme.md)
 	* [RabbitMQ](/Connectors/RabbitMQ/Readme.md)
 	* [Redis](/Connectors/Redis/Readme.md)
+	* [ZeroMQ](/Connectors/ZeroMQ/Readme.md)
 * [OpenTelemetry](/OpenTelemetry.md)
 * [Resiliency](/Resiliency.md)

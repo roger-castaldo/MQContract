@@ -258,7 +258,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExceptionAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }));
+            var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }));
             #endregion
 
             #region Assert
@@ -286,7 +286,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExceptionAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }));
+            var exception = await Assert.ThrowsExactlyAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }));
             #endregion
 
             #region Assert

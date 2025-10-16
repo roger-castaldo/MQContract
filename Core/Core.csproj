@@ -15,9 +15,12 @@
   <ItemGroup>
 	    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[8.0.2,10.0)" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="[8.0.1,10.0)" />
-		<PackageReference Include="Polly" Version="8.5.2" />
+		<PackageReference Include="Polly" Version="8.6.4" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Update="Vsxmd" Version="1.4.6" />
     </ItemGroup>
 </Project>

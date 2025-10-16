@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="../../Shared.props" />
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>MQContract.$(MSBuildProjectName)</AssemblyName>
+		<RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
+		<Title>Amazon SNS/SQS Connector for MQContract</Title>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Abstractions\Abstractions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Readme.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Update="Vsxmd" Version="1.4.6" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="AWSSDK.SimpleNotificationService" Version="4.*" />
+	  <PackageReference Include="AWSSDK.SQS" Version="4.*" />
+	</ItemGroup>
+</Project>
