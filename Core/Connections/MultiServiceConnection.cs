@@ -125,7 +125,7 @@ namespace MQContract.Connections
                 .Select(grp => new MultiTransmissionResult(grp.Key, grp.SelectMany(g => g.Results)));
         }
 
-        protected override async ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
+        protected override async ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, bool synchronous, CancellationToken cancellationToken)
         {
             var messageFactory = GetMessageFactory<T>(ignoreMessageHeader);
             (var connections, channel) = await GetConnectionsAsync<T>(channel, ChannelMapper.MapTypes.PublishSubscription);
@@ -139,6 +139,7 @@ namespace MQContract.Connections
                     group,
                     synchronous,
                     conn.ServiceConnectionName,
+                    messageFilters,
                     cancellationToken
                 ))
             );

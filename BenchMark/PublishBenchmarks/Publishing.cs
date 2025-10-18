@@ -12,10 +12,10 @@ namespace BenchMark.PublishBenchmarks
     {
         public const string ChannelName = "sample";
         private const string MessageContent = "The quick brown fox";
-        private IMessageServiceConnection serviceConnection;
-        private IContractConnection contractConnection;
-        private Announcement announcement;
-        private EncodedAnnouncement encodedAnnouncement;
+        private IMessageServiceConnection? serviceConnection;
+        private IContractConnection? contractConnection;
+        private Announcement? announcement;
+        private EncodedAnnouncement? encodedAnnouncement;
 
         [GlobalSetup]
         public void Setup()
@@ -29,25 +29,25 @@ namespace BenchMark.PublishBenchmarks
         [Benchmark(Baseline = true)]
         public async Task PublishDirectlyToConnection()
         {
-            _ = await serviceConnection.PublishAsync(new(Guid.NewGuid().ToString(), "sample", ChannelName, new([]), ASCIIEncoding.ASCII.GetBytes(MessageContent)));
+            _ = await serviceConnection!.PublishAsync(new(Guid.NewGuid().ToString(), "sample", ChannelName, new([]), ASCIIEncoding.ASCII.GetBytes(MessageContent)));
         }
 
         [Benchmark]
         public async Task PublishBasicEncodedMessage()
         {
-            _ = await contractConnection.PublishAsync<string>(MessageContent, channel: ChannelName);
+            _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
         }
 
         [Benchmark]
         public async Task PublishDefaultEncodedMessage()
         {
-            _ = await contractConnection.PublishAsync<Announcement>(announcement, channel: ChannelName);
+            _ = await contractConnection!.PublishAsync<Announcement>(announcement!, channel: ChannelName);
         }
 
         [Benchmark]
         public async Task PublishCustomEncodedMessage()
         {
-            _ = await contractConnection.PublishAsync<EncodedAnnouncement>(encodedAnnouncement, channel: ChannelName);
+            _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(encodedAnnouncement!, channel: ChannelName);
         }
     }
 }

@@ -28,7 +28,8 @@ namespace Messages
                     Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName} in member 1 of the group.. [{announcement.ID},{announcement.ReceivedTimestamp}]");
                     return ValueTask.CompletedTask;
                 },
-                (error) => {
+                (error) =>
+                {
                     Console.WriteLine($"Announcement error: {error.Message}");
                 },
                 group: "AnnouncementGroup",

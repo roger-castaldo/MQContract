@@ -17,10 +17,11 @@ namespace MQContract.Interfaces
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
-        /// 
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<ISubscription> SubscribeAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false,
+            MessageFilters<T>? messageFilters = null, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to create a subscription into the underlying service Pub/Sub style and have the messages processed syncrhonously
         /// </summary>
@@ -30,10 +31,13 @@ namespace MQContract.Interfaces
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// 
+        /// 
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeAsync<T>(Action<IReceivedMessage<T>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<ISubscription> SubscribeAsync<T>(Action<IReceivedMessage<T>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false,
+            MessageFilters<T>? messageFilters = null, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to create a subscription into the underlying service Query/Reponse style and have the messages processed asynchronously
         /// </summary>
@@ -45,9 +49,9 @@ namespace MQContract.Interfaces
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
         /// <param name="cancellationToken">A cancellation token</param>
-        /// 
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeQueryAsyncResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<ISubscription> SubscribeQueryAsyncResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null,
+            bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to create a subscription into the underlying service Query/Reponse style and have the messages processed synchronously
         /// </summary>
@@ -59,9 +63,9 @@ namespace MQContract.Interfaces
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
         /// <param name="cancellationToken">A cancellation token</param>
-        /// 
         /// <returns>A subscription instance that can be ended when desired</returns>
-        ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, QueryResponseMessage<R>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<ISubscription> SubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, QueryResponseMessage<R>> messageReceived, Action<Exception> errorReceived, string? channel = null, string? group = null,
+            bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to close off the contract connection and close it's underlying service connection
         /// </summary>

@@ -4,7 +4,7 @@ using MQContract.Messages;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class PubSubSubscription<T>(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived,
+    internal sealed class PubSubSubscription<T>(Func<ReceivedServiceMessage, ValueTask<bool>> messageReceived, Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, bool synchronous = false, ILogger? logger = null)
         : SubscriptionBase<T>(mapChannel, channel, synchronous, logger)
@@ -33,8 +33,8 @@ namespace MQContract.Subscriptions
             {
                 Logger?.LogDebug("Processing service message with ID: {MessageID}", serviceMessage.ID);
                 var tsk = messageReceived(serviceMessage);
-                await tsk.ConfigureAwait(!Synchronous);
-                if (serviceMessage.Acknowledge!=null)
+                var ack = await tsk.ConfigureAwait(!Synchronous);
+                if (serviceMessage.Acknowledge!=null && ack)
                 {
                     Logger?.LogDebug("Acknowledging service message with ID: {MessageID}", serviceMessage.ID);
                     await serviceMessage.Acknowledge();

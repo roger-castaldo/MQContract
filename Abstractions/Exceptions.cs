@@ -1,4 +1,6 @@
-﻿namespace MQContract
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace MQContract
 {
     /// <summary>
     /// Thrown when an error occurs attempting to transmit a given message and is flagged if it is fatal or not

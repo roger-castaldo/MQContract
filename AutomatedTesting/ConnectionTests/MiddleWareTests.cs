@@ -200,7 +200,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware(()=>new ChannelChangeMiddleware());
+                .RegisterMiddleware(()=>((IMiddleware)new ChannelChangeMiddleware()));
             #endregion
 
             #region Act
