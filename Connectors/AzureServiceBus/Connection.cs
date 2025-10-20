@@ -23,6 +23,11 @@ namespace MQContract.AzureServiceBus
         private bool disposedValue;
 
         /// <summary>
+        /// The supplied service bus client, exposed for additional access if required
+        /// </summary>
+        public ServiceBusClient BusClient => client;
+
+        /// <summary>
         /// Maximum supported message body size in bytes
         /// </summary>
         public uint? MaxMessageBodySize { get; init; } = 1024*1024; //default 1MB

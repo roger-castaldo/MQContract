@@ -16,7 +16,11 @@ namespace MQContract.Kafka
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
 
         private readonly IProducer<string, byte[]> producer = new ProducerBuilder<string, byte[]>(clientConfig).Build();
-        private readonly ClientConfig clientConfig = clientConfig;
+
+        /// <summary>
+        /// Houses the supplied client configuration
+        /// </summary>
+        public ClientConfig ClientConfig => clientConfig;
 
         uint? IMessageServiceConnection.MaxMessageBodySize => (uint)Math.Abs(clientConfig.MessageMaxBytes??(1024*1024));
 

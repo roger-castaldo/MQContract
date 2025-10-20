@@ -12,14 +12,27 @@ namespace MQContract.GooglePubSub
     /// This is the MessageServiceConnection implementation for using GooglePubSub
     /// </summary>
     /// <param name="projectId">The project id to connect to through the PubSub Connections</param>
-    /// <param name="publisherClientApi">Used for building publishers</param>
-    /// <param name="subscriberClientApi">Used for building subscribers</param>
-    public sealed class Connection(string projectId, PublisherServiceApiClient publisherClientApi, SubscriberServiceApiClient subscriberClientApi) :
+    /// <param name="publisherServiceBuilder">Used for building publishers</param>
+    /// <param name="subscriberServiceBuilder">Used for building subscribers</param>
+    public sealed class Connection(string projectId, PublisherServiceApiClientBuilder publisherServiceBuilder, SubscriberServiceApiClientBuilder subscriberServiceBuilder) :
         IPingableMessageServiceConnection, IAsyncDisposable
     {
         private const string MessageTypeID = "_MessageTypeID";
         private bool disposedValue;
         private readonly SemaphoreSlim builderLock = new(1, 1);
+
+        /// <summary>
+        /// Houses the project id that was supplied in the constructor
+        /// </summary>
+        public string ProjectId => projectId;
+        /// <summary>
+        /// Houses the Publisher Service API Client used in the underlying service
+        /// </summary>
+        public PublisherServiceApiClient PublisherServiceApi => publisherServiceBuilder.Build();
+        /// <summary>
+        /// Houses the Subscriber Service API Client used in the underlying service
+        /// </summary>
+        public SubscriberServiceApiClient SubscriberServiceApi => subscriberServiceBuilder.Build();
 
         uint? IMessageServiceConnection.MaxMessageBodySize => 10*1024*1024; // 10MB limt according to current google definition
 
@@ -66,7 +79,7 @@ namespace MQContract.GooglePubSub
             await builderLock.WaitAsync(cancellationToken);
             try
             {
-                _ = await publisherClientApi.PublishAsync(ProduceRequest([ConvertMessage(message)], message.Channel), cancellationToken);
+                _ = await PublisherServiceApi.PublishAsync(ProduceRequest([ConvertMessage(message)], message.Channel), cancellationToken);
             }
             catch (Exception ex)
             {
@@ -113,16 +126,16 @@ namespace MQContract.GooglePubSub
                 var createSubscription = false;
                 try
                 {
-                    createSubscription = (await subscriberClientApi.GetSubscriptionAsync(subscriptionName))==null;
+                    createSubscription = (await SubscriberServiceApi.GetSubscriptionAsync(subscriptionName))==null;
                 }
                 catch
                 {
                     createSubscription=true;
                 }
                 if (createSubscription)
-                    await subscriberClientApi.CreateSubscriptionAsync(subscriptionName, topicName, new() { }, 60);
+                    await SubscriberServiceApi.CreateSubscriptionAsync(subscriptionName, topicName, new() { }, 60);
                 result = new Subscription(
-                    subscriberClientApi,
+                    SubscriberServiceApi,
                     subscriptionName,
                     messageReceived,
                     errorReceived,
@@ -142,7 +155,7 @@ namespace MQContract.GooglePubSub
             var start = Stopwatch.GetTimestamp();
             try
             {
-                await publisherClientApi.GetTopicAsync(TopicName.FromProjectTopic(projectId, "ping"));
+                await PublisherServiceApi.GetTopicAsync(TopicName.FromProjectTopic(projectId, "ping"));
                 return new(projectId, string.Empty, Stopwatch.GetElapsedTime(start));
             }
             catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)

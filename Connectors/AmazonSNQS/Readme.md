@@ -4,7 +4,7 @@
 ## Contents
 
 - [Connection](#T-MQContract-AmazonSNQS-Connection 'MQContract.AmazonSNQS.Connection')
-  - [#ctor()](#M-MQContract-AmazonSNQS-Connection-#ctor-Amazon-SimpleNotificationService-AmazonSimpleNotificationServiceClient,Amazon-SQS-AmazonSQSClient- 'MQContract.AmazonSNQS.Connection.#ctor(Amazon.SimpleNotificationService.AmazonSimpleNotificationServiceClient,Amazon.SQS.AmazonSQSClient)')
+  - [#ctor()](#M-MQContract-AmazonSNQS-Connection-#ctor-System-Nullable{System-ValueTuple{Amazon-Runtime-AWSCredentials,Amazon-SimpleNotificationService-AmazonSimpleNotificationServiceConfig}},System-Nullable{System-ValueTuple{Amazon-Runtime-AWSCredentials,Amazon-SQS-AmazonSQSConfig}}- 'MQContract.AmazonSNQS.Connection.#ctor(System.Nullable{System.ValueTuple{Amazon.Runtime.AWSCredentials,Amazon.SimpleNotificationService.AmazonSimpleNotificationServiceConfig}},System.Nullable{System.ValueTuple{Amazon.Runtime.AWSCredentials,Amazon.SQS.AmazonSQSConfig}})')
   - [MaxMessageBodySize](#P-MQContract-AmazonSNQS-Connection-MaxMessageBodySize 'MQContract.AmazonSNQS.Connection.MaxMessageBodySize')
   - [SNSClient](#P-MQContract-AmazonSNQS-Connection-SNSClient 'MQContract.AmazonSNQS.Connection.SNSClient')
   - [SQSClient](#P-MQContract-AmazonSNQS-Connection-SQSClient 'MQContract.AmazonSNQS.Connection.SQSClient')
@@ -25,13 +25,15 @@ MQContract.AmazonSNQS
 ##### Summary
 
 This is the MessageServiceConnection implementation for using Amazon SNS/SQS
+`snsClientConfiguration``sqsClientConfiguration`
 
-<a name='M-MQContract-AmazonSNQS-Connection-#ctor-Amazon-SimpleNotificationService-AmazonSimpleNotificationServiceClient,Amazon-SQS-AmazonSQSClient-'></a>
+<a name='M-MQContract-AmazonSNQS-Connection-#ctor-System-Nullable{System-ValueTuple{Amazon-Runtime-AWSCredentials,Amazon-SimpleNotificationService-AmazonSimpleNotificationServiceConfig}},System-Nullable{System-ValueTuple{Amazon-Runtime-AWSCredentials,Amazon-SQS-AmazonSQSConfig}}-'></a>
 ### #ctor() `constructor`
 
 ##### Summary
 
 This is the MessageServiceConnection implementation for using Amazon SNS/SQS
+`snsClientConfiguration``sqsClientConfiguration`
 
 ##### Parameters
 

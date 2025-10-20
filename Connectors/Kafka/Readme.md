@@ -5,6 +5,7 @@
 
 - [Connection](#T-MQContract-Kafka-Connection 'MQContract.Kafka.Connection')
   - [#ctor(clientConfig)](#M-MQContract-Kafka-Connection-#ctor-Confluent-Kafka-ClientConfig- 'MQContract.Kafka.Connection.#ctor(Confluent.Kafka.ClientConfig)')
+  - [ClientConfig](#P-MQContract-Kafka-Connection-ClientConfig 'MQContract.Kafka.Connection.ClientConfig')
 - [MissingSchemaException](#T-MQContract-Kafka-MissingSchemaException 'MQContract.Kafka.MissingSchemaException')
 - [PersistenceFailedException](#T-MQContract-Kafka-PersistenceFailedException 'MQContract.Kafka.PersistenceFailedException')
 - [SchemaValidationFailedException](#T-MQContract-Kafka-SchemaValidationFailedException 'MQContract.Kafka.SchemaValidationFailedException')
@@ -41,6 +42,13 @@ This is the MessageServiceConnection implementation for using Kafka
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | clientConfig | [Confluent.Kafka.ClientConfig](#T-Confluent-Kafka-ClientConfig 'Confluent.Kafka.ClientConfig') | The Kafka Client Configuration to provide |
+
+<a name='P-MQContract-Kafka-Connection-ClientConfig'></a>
+### ClientConfig `property`
+
+##### Summary
+
+Houses the supplied client configuration
 
 <a name='T-MQContract-Kafka-MissingSchemaException'></a>
 ## MissingSchemaException `type`

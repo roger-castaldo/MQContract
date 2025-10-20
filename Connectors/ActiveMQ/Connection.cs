@@ -15,11 +15,15 @@ namespace MQContract.ActiveMQ
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private bool disposedValue;
 
-        private readonly IConnection connection;
         private readonly ISession session;
         private readonly IMessageProducer producer;
         private readonly List<ConsumerInstance> consumerInstances = [];
         private readonly SemaphoreSlim locker = new(1, 1);
+
+        /// <summary>
+        /// Underlying connection used to connection to ActiveMQ.  Exposed here for additional control if required.
+        /// </summary>
+        public IConnection ActiveMQConnection { get; private init; }
 
         /// <summary>
         /// Default constructor for creating instance
@@ -30,9 +34,9 @@ namespace MQContract.ActiveMQ
         public Connection(Uri ConnectUri, string username, string password)
         {
             var connectionFactory = new NMSConnectionFactory(ConnectUri);
-            connection = connectionFactory.CreateConnection(username, password);
-            connection.Start();
-            session = connection.CreateSession();
+            ActiveMQConnection = connectionFactory.CreateConnection(username, password);
+            ActiveMQConnection.Start();
+            session = ActiveMQConnection.CreateSession();
             producer = session.CreateProducer();
         }
 
@@ -121,11 +125,11 @@ namespace MQContract.ActiveMQ
         }
 
         async ValueTask IMessageServiceConnection.CloseAsync()
-            => await connection.StopAsync();
+            => await ActiveMQConnection.StopAsync();
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
-            await connection.StopAsync().ConfigureAwait(true);
+            await ActiveMQConnection.StopAsync().ConfigureAwait(true);
 
             Dispose(disposing: false);
             GC.SuppressFinalize(this);
@@ -136,9 +140,9 @@ namespace MQContract.ActiveMQ
             try
             {
                 var start = Stopwatch.GetTimestamp();
-                using var sess = await connection.CreateSessionAsync(AcknowledgementMode.AutoAcknowledge);
+                using var sess = await ActiveMQConnection.CreateSessionAsync(AcknowledgementMode.AutoAcknowledge);
                 using var tempQueue = await sess.CreateTemporaryQueueAsync();
-                return new(connection.MetaData.NMSProviderName, connection.MetaData.NMSVersion, Stopwatch.GetElapsedTime(start));
+                return new(ActiveMQConnection.MetaData.NMSProviderName, ActiveMQConnection.MetaData.NMSVersion, Stopwatch.GetElapsedTime(start));
             }
             catch
             {
@@ -151,11 +155,11 @@ namespace MQContract.ActiveMQ
             if (!disposedValue)
             {
                 if (disposing)
-                    connection.Stop();
+                    ActiveMQConnection.Stop();
 
                 producer.Dispose();
                 session.Dispose();
-                connection.Dispose();
+                ActiveMQConnection.Dispose();
                 disposedValue=true;
             }
         }

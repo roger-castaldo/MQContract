@@ -10,14 +10,18 @@ namespace MQContract.HiveMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using HiveMQ
     /// </summary>
-    public class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IDisposable
+    public sealed class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IDisposable
     {
         private readonly HiveMQClientOptions clientOptions;
-        private readonly HiveMQClient client;
         private readonly Guid connectionID = Guid.NewGuid();
         private long lastPingTimestamp = long.MinValue;
         private TimeSpan lastPingDuration = TimeSpan.MaxValue;
         private bool disposedValue;
+
+        /// <summary>
+        /// Houses the underlying HiveMQ client that is being used by the connection
+        /// </summary>
+        public HiveMQClient Client { get; private init; }
 
         /// <summary>
         /// Default constructor that requires the HiveMQ client options settings to be provided
@@ -26,16 +30,16 @@ namespace MQContract.HiveMQ
         public Connection(HiveMQClientOptions clientOptions)
         {
             this.clientOptions = clientOptions;
-            client = new(clientOptions);
-            var connectTask = client.ConnectAsync();
+            Client = new(clientOptions);
+            var connectTask = Client.ConnectAsync();
             connectTask.Wait();
             if (connectTask.Result.ReasonCode!=HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
                 throw new ConnectionFailedException(connectTask.Result.ReasonString);
-            client.OnPingReqSent += (obj,e) =>
+            Client.OnPingReqSent += (obj,e) =>
             {
                 lastPingTimestamp = Stopwatch.GetTimestamp();
             };
-            client.OnPingRespReceived += (obj, e) =>
+            Client.OnPingRespReceived += (obj, e) =>
             {
                 lastPingDuration = Stopwatch.GetElapsedTime(lastPingTimestamp);
             };
@@ -49,7 +53,7 @@ namespace MQContract.HiveMQ
         public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
 
         async ValueTask IMessageServiceConnection.CloseAsync()
-            => await client.DisconnectAsync();
+            => await Client.DisconnectAsync();
 
         private const string MessageID = "_ID";
         private const string MessageTypeID = "_MessageTypeID";
@@ -92,7 +96,7 @@ namespace MQContract.HiveMQ
         {
             try
             {
-                _ = await client.PublishAsync(ConvertMessage(message), cancellationToken);
+                _ = await Client.PublishAsync(ConvertMessage(message), cancellationToken);
             }
             catch (Exception e)
             {
@@ -154,7 +158,7 @@ namespace MQContract.HiveMQ
         {
             try
             {
-                _ = await client.PublishAsync(ConvertMessage(message, responseTopic: InboxChannel, responseID: correlationID), cancellationToken);
+                _ = await Client.PublishAsync(ConvertMessage(message, responseTopic: InboxChannel, responseID: correlationID), cancellationToken);
             }
             catch (Exception e)
             {
@@ -172,7 +176,7 @@ namespace MQContract.HiveMQ
                     try
                     {
                         var result = await messageReceived(ConvertMessage(msg, out var responseID));
-                        _ = await client.PublishAsync(ConvertMessage(result, responseID: new Guid(responseID!), respondToTopic: msg.ResponseTopic), cancellationToken);
+                        _ = await Client.PublishAsync(ConvertMessage(result, responseID: new Guid(responseID!), respondToTopic: msg.ResponseTopic), cancellationToken);
                     }
                     catch (Exception e)
                     {
@@ -189,22 +193,14 @@ namespace MQContract.HiveMQ
         ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
             => ValueTask.FromResult<PingResult>(new(clientOptions.Host, string.Empty, lastPingDuration));
 
-        private void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    client.Dispose();
-                }
-                disposedValue=true;
-            }
-        }
-
         void IDisposable.Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
+            if (!disposedValue)
+            {
+                Client.Dispose();
+                disposedValue=true;
+            }
             GC.SuppressFinalize(this);
         }
     }

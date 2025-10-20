@@ -14,11 +14,15 @@ namespace MQContract.RabbitMQ
     {
         private const string InboxExchange = "_Inbox";
 
-        private readonly IConnection conn;
         private readonly IChannel channel;
         private readonly SemaphoreSlim semaphore = new(1, 1);
         private readonly string inboxChannel;
         private bool disposedValue;
+
+        /// <summary>
+        /// Houses the underlying Rabbit MQ Connection
+        /// </summary>
+        public IConnection RabbitMQConnection { get; private init; }
 
         /// <summary>
         /// Default constructor for creating instance
@@ -30,8 +34,8 @@ namespace MQContract.RabbitMQ
                 factory.ClientProvidedName = Guid.NewGuid().ToString();
             var connectionTask = factory.CreateConnectionAsync();
             connectionTask.Wait();
-            conn = connectionTask.Result;
-            var channelTask = conn.CreateChannelAsync();
+            RabbitMQConnection = connectionTask.Result;
+            var channelTask = RabbitMQConnection.CreateChannelAsync();
             channelTask.Wait();
             channel = channelTask.Result;
             MaxMessageBodySize = factory.MaxInboundMessageBodySize;
@@ -188,11 +192,11 @@ namespace MQContract.RabbitMQ
                     //this may throw an error is the queue already exists but checking for it fails
                 }
             }
-            return await Subscription.ProduceInstanceAsync(conn, channel, group, messageReceived, errorReceived);
+            return await Subscription.ProduceInstanceAsync(RabbitMQConnection, channel, group, messageReceived, errorReceived);
         }
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-            => await ProduceSubscriptionAsync(conn, channel, group,
+            => await ProduceSubscriptionAsync(RabbitMQConnection, channel, group,
                 (@event, modelChannel, acknowledge) =>
                 {
                     messageReceived(ConvertMessage(@event, channel, acknowledge, out _));
@@ -205,7 +209,7 @@ namespace MQContract.RabbitMQ
             await channel.ExchangeDeclareAsync(InboxExchange, ExchangeType.Direct, durable: false, autoDelete: true, cancellationToken: cancellationToken);
             await channel.QueueDeclareAsync(inboxChannel, durable: false, exclusive: false, autoDelete: true, cancellationToken: cancellationToken);
             return await Subscription.ProduceInstanceAsync(
-                conn,
+                RabbitMQConnection,
                 InboxExchange,
                 inboxChannel,
                 (@event, model, acknowledge) =>
@@ -251,7 +255,7 @@ namespace MQContract.RabbitMQ
         }
 
         async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-        => await ProduceSubscriptionAsync(conn, channel, group,
+        => await ProduceSubscriptionAsync(RabbitMQConnection, channel, group,
                 async (@event, model, acknowledge) =>
                 {
                     var result = await messageReceived(ConvertMessage(@event, channel, acknowledge, out var messageID));
@@ -275,8 +279,8 @@ namespace MQContract.RabbitMQ
 
         ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
         {
-            if (conn.IsOpen)
-                return ValueTask.FromResult<PingResult>(new(conn.Endpoint.HostName, string.Empty, conn.Heartbeat));
+            if (RabbitMQConnection.IsOpen)
+                return ValueTask.FromResult<PingResult>(new(RabbitMQConnection.Endpoint.HostName, string.Empty, RabbitMQConnection.Heartbeat));
             throw new PingFailedException("Unable to validate connection to RabbitMQ instance");
         }
 
@@ -288,8 +292,8 @@ namespace MQContract.RabbitMQ
                 await semaphore.WaitAsync();
                 await channel.CloseAsync();
                 await channel.DisposeAsync();
-                await conn.CloseAsync();
-                await conn.DisposeAsync();
+                await RabbitMQConnection.CloseAsync();
+                await RabbitMQConnection.DisposeAsync();
                 semaphore.Release();
                 semaphore.Dispose();
             }

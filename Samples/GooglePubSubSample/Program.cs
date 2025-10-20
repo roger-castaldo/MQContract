@@ -7,28 +7,30 @@ using MQContract.GooglePubSub;
 const string projectId = "sample-project-id";
 const string endpoint = "localhost:8085";
 
-var publisherService = await new PublisherServiceApiClientBuilder
+var publisherServiceBuilder = new PublisherServiceApiClientBuilder
 {
     EmulatorDetection = EmulatorDetection.EmulatorOrProduction,
     Endpoint=endpoint,
     ChannelCredentials = ChannelCredentials.Insecure
-}.BuildAsync();
+};
 
-var subscriberService = await new SubscriberServiceApiClientBuilder
+var subscriberServiceBuilder = new SubscriberServiceApiClientBuilder
 {
     EmulatorDetection = EmulatorDetection.EmulatorOrProduction,
     Endpoint=endpoint,
     ChannelCredentials = ChannelCredentials.Insecure
-}.BuildAsync();
+};
+
+var serviceConnection = new Connection(projectId, publisherServiceBuilder, subscriberServiceBuilder);
 
 foreach (var name in new string[] { "Arrivals", "Greeting", "Greeting.Response", "StoredArrivals" })
 {
     var topicName = new TopicName(projectId, name);
-    if (await publisherService.GetTopicAsync(topicName)==null)
-        await publisherService.CreateTopicAsync(topicName);
+    if (await serviceConnection.PublisherServiceApi.GetTopicAsync(topicName)==null)
+        await serviceConnection.PublisherServiceApi.CreateTopicAsync(topicName);
 }
 
 
-var serviceConnection = new Connection(projectId, publisherService, subscriberService);
+
 
 await SampleExecution.ExecuteSample(serviceConnection, "GooglePubSub");

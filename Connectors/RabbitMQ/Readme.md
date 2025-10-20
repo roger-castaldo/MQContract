@@ -7,6 +7,7 @@
   - [#ctor(factory)](#M-MQContract-RabbitMQ-Connection-#ctor-RabbitMQ-Client-ConnectionFactory- 'MQContract.RabbitMQ.Connection.#ctor(RabbitMQ.Client.ConnectionFactory)')
   - [DefaultTimeout](#P-MQContract-RabbitMQ-Connection-DefaultTimeout 'MQContract.RabbitMQ.Connection.DefaultTimeout')
   - [MaxMessageBodySize](#P-MQContract-RabbitMQ-Connection-MaxMessageBodySize 'MQContract.RabbitMQ.Connection.MaxMessageBodySize')
+  - [RabbitMQConnection](#P-MQContract-RabbitMQ-Connection-RabbitMQConnection 'MQContract.RabbitMQ.Connection.RabbitMQConnection')
   - [ExchangeDeclareAsync(exchange,type,durable,autoDelete,arguments)](#M-MQContract-RabbitMQ-Connection-ExchangeDeclareAsync-System-String,System-String,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}- 'MQContract.RabbitMQ.Connection.ExchangeDeclareAsync(System.String,System.String,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})')
   - [QueueDeclareAsync(queue,durable,exclusive,autoDelete,arguments)](#M-MQContract-RabbitMQ-Connection-QueueDeclareAsync-System-String,System-Boolean,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}- 'MQContract.RabbitMQ.Connection.QueueDeclareAsync(System.String,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.IDictionary{System.String,System.Object})')
   - [QueueDeleteAsync(queue,ifUnused,ifEmpty)](#M-MQContract-RabbitMQ-Connection-QueueDeleteAsync-System-String,System-Boolean,System-Boolean- 'MQContract.RabbitMQ.Connection.QueueDeleteAsync(System.String,System.Boolean,System.Boolean)')
@@ -49,6 +50,13 @@ DEFAULT: 1 minute
 ##### Summary
 
 The maximum message body size allowed
+
+<a name='P-MQContract-RabbitMQ-Connection-RabbitMQConnection'></a>
+### RabbitMQConnection `property`
+
+##### Summary
+
+Houses the underlying Rabbit MQ Connection
 
 <a name='M-MQContract-RabbitMQ-Connection-ExchangeDeclareAsync-System-String,System-String,System-Boolean,System-Boolean,System-Collections-Generic-IDictionary{System-String,System-Object}-'></a>
 ### ExchangeDeclareAsync(exchange,type,durable,autoDelete,arguments) `method`

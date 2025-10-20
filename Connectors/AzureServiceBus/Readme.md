@@ -5,6 +5,7 @@
 
 - [Connection](#T-MQContract-AzureServiceBus-Connection 'MQContract.AzureServiceBus.Connection')
   - [#ctor(client,pingableQueue)](#M-MQContract-AzureServiceBus-Connection-#ctor-Azure-Messaging-ServiceBus-ServiceBusClient,System-String- 'MQContract.AzureServiceBus.Connection.#ctor(Azure.Messaging.ServiceBus.ServiceBusClient,System.String)')
+  - [BusClient](#P-MQContract-AzureServiceBus-Connection-BusClient 'MQContract.AzureServiceBus.Connection.BusClient')
   - [MaxMessageBodySize](#P-MQContract-AzureServiceBus-Connection-MaxMessageBodySize 'MQContract.AzureServiceBus.Connection.MaxMessageBodySize')
 
 <a name='T-MQContract-AzureServiceBus-Connection'></a>
@@ -47,6 +48,13 @@ This is the MessageServiceConnection implemenation for using AzureServiceBus
 
 In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
 with RequiresSession as true
+
+<a name='P-MQContract-AzureServiceBus-Connection-BusClient'></a>
+### BusClient `property`
+
+##### Summary
+
+The supplied service bus client, exposed for additional access if required
 
 <a name='P-MQContract-AzureServiceBus-Connection-MaxMessageBodySize'></a>
 ### MaxMessageBodySize `property`

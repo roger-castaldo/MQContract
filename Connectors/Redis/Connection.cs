@@ -10,12 +10,19 @@ namespace MQContract.Redis
     /// <summary>
     /// This is the MessageServiceConnection implementation for using Redis
     /// </summary>
-    public class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable, IDisposable
+    public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable, IDisposable
     {
-        private readonly ConnectionMultiplexer connectionMultiplexer;
-        private readonly IDatabase database;
         private readonly Guid connectionID = Guid.NewGuid();
         private bool disposedValue;
+
+        /// <summary>
+        /// Houses the underlying Connection Multiplexer being used
+        /// </summary>
+        public ConnectionMultiplexer ConnectionMultiplexer { get; private init; }
+        /// <summary>
+        /// Houses the underlying Database being used
+        /// </summary>
+        public IDatabase Database { get; private init; }
 
         /// <summary>
         /// Default constructor that requires the Redis Configuration settings to be provided
@@ -23,8 +30,8 @@ namespace MQContract.Redis
         /// <param name="configuration">The configuration to use for the redis connections</param>
         public Connection(ConfigurationOptions configuration)
         {
-            connectionMultiplexer = ConnectionMultiplexer.Connect(configuration);
-            database = connectionMultiplexer.GetDatabase();
+            ConnectionMultiplexer = ConnectionMultiplexer.Connect(configuration);
+            Database = ConnectionMultiplexer.GetDatabase();
         }
 
         /// <summary>
@@ -35,10 +42,10 @@ namespace MQContract.Redis
         /// <returns>A ValueTask while the operation executes asynchronously</returns>
         public async ValueTask DefineConsumerGroupAsync(string channel, string group)
         {
-            if (!(await database.KeyExistsAsync(channel)) ||
-                    !(await database.StreamGroupInfoAsync(channel)).Any(x => Equals(x.Name, group)))
+            if (!(await Database.KeyExistsAsync(channel)) ||
+                    !(await Database.StreamGroupInfoAsync(channel)).Any(x => Equals(x.Name, group)))
             {
-                await database.StreamCreateConsumerGroupAsync(channel, group, "0-0", true);
+                await Database.StreamCreateConsumerGroupAsync(channel, group, "0-0", true);
             }
         }
 
@@ -53,7 +60,7 @@ namespace MQContract.Redis
         public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
 
         async ValueTask IMessageServiceConnection.CloseAsync()
-            => await connectionMultiplexer.CloseAsync();
+            => await ConnectionMultiplexer.CloseAsync();
 
         private const string MESSAGE_TYPE_KEY = "_MessageTypeID";
         private const string MESSAGE_ID_KEY = "_MessageID";
@@ -124,7 +131,7 @@ namespace MQContract.Redis
         {
             try
             {
-                _ = await database.StreamAddAsync(message.Channel, ConvertMessage(message));
+                _ = await Database.StreamAddAsync(message.Channel, ConvertMessage(message));
                 return new(message.ID);
             }
             catch (Exception e)
@@ -137,7 +144,7 @@ namespace MQContract.Redis
         {
             if (group!=null)
                 await DefineConsumerGroupAsync(channel, group!);
-            var result = new PubSubscription(messageReceived, errorReceived, database, connectionID, channel, group);
+            var result = new PubSubscription(messageReceived, errorReceived, Database, connectionID, channel, group);
             await result.StartAsync();
             return result;
         }
@@ -145,12 +152,12 @@ namespace MQContract.Redis
         async ValueTask<ServiceQueryResult> IQueryResponseMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
             var replyID = $"_inbox.{Guid.NewGuid()}";
-            await database.StreamAddAsync(message.Channel, ConvertMessage(message, replyID, timeout));
+            await Database.StreamAddAsync(message.Channel, ConvertMessage(message, replyID, timeout));
             using var cancellation = new CancellationTokenSource(timeout);
             using var cleanupEntry = cancellationToken.Register(() => cancellation.Cancel());
             while (!cancellation.IsCancellationRequested)
             {
-                var keyValue = await database.StringGetDeleteAsync(replyID);
+                var keyValue = await Database.StringGetDeleteAsync(replyID);
                 if (!keyValue.IsNull)
                     return DecodeMessage(keyValue.ToString());
                 else
@@ -163,14 +170,14 @@ namespace MQContract.Redis
         {
             if (group!=null)
                 await DefineConsumerGroupAsync(channel, group!);
-            var result = new QueryResponseSubscription(messageReceived, errorReceived, database, connectionID, channel, group);
+            var result = new QueryResponseSubscription(messageReceived, errorReceived, Database, connectionID, channel, group);
             await result.StartAsync();
             return result;
         }
 
         async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
         {
-            var server = connectionMultiplexer.GetServers().FirstOrDefault(s => s.IsConnected);
+            var server = ConnectionMultiplexer.GetServers().FirstOrDefault(s => s.IsConnected);
             if (server!=null)
                 return new(string.Empty, server.Version.ToString(), await server.PingAsync());
             throw new PingFailedException("Unable to find connected server to ping");
@@ -178,7 +185,7 @@ namespace MQContract.Redis
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
-            await connectionMultiplexer.DisposeAsync();
+            await ConnectionMultiplexer.DisposeAsync();
 
             Dispose(false);
             GC.SuppressFinalize(this);
@@ -189,7 +196,7 @@ namespace MQContract.Redis
             if (!disposedValue)
             {
                 if (disposing)
-                    connectionMultiplexer.Dispose();
+                    ConnectionMultiplexer.Dispose();
                 disposedValue=true;
             }
         }

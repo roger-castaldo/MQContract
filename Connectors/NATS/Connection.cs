@@ -19,11 +19,18 @@ namespace MQContract.NATS
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private const string QUERY_RESPONSE_ERROR_TYPE = "NatsQueryError";
 
-        private readonly NatsConnection natsConnection;
-        private readonly NatsJSContext natsJSContext;
         private readonly List<SubscriptionConsumerConfig> subscriptionConsumerConfigs = [];
         private readonly ILogger? logger;
         private bool disposedValue;
+
+        /// <summary>
+        /// Houses the underlying NATS service connection being used
+        /// </summary>
+        public NatsConnection NatsConnection { get; private init; }
+        /// <summary>
+        /// Houses the underlying JetStream conext being used
+        /// </summary>
+        public NatsJSContext NatsJSContext { get; private init; }
 
         /// <summary>
         /// Primary constructor to create an instance using the supplied configuration options.
@@ -31,21 +38,21 @@ namespace MQContract.NATS
         /// <param name="options"></param>
         public Connection(NatsOpts options)
         {
-            natsConnection = new(options);
-            natsJSContext = new(natsConnection);
+            NatsConnection = new(options);
+            NatsJSContext = new(NatsConnection);
             logger = options.LoggerFactory?.CreateLogger("NatsServiceConnection");
             ProcessConnection().Wait();
         }
 
         private async Task ProcessConnection()
         {
-            await natsConnection.ConnectAsync();
-            if (natsConnection.ConnectionState == NatsConnectionState.Open)
+            await NatsConnection.ConnectAsync();
+            if (NatsConnection.ConnectionState == NatsConnectionState.Open)
             {
-                var responseTime = await natsConnection.PingAsync();
+                var responseTime = await NatsConnection.PingAsync();
                 logger?.LogInformation("Established connection to [Host:{Address}, Version:{Version}, ResponseTime:{ResponseTime}]",
-                    natsConnection.ServerInfo?.Host,
-                    natsConnection.ServerInfo?.Version,
+                    NatsConnection.ServerInfo?.Host,
+                    NatsConnection.ServerInfo?.Version,
                     responseTime
                 );
             }
@@ -72,7 +79,7 @@ namespace MQContract.NATS
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The stream creation result</returns>
         public ValueTask<INatsJSStream> CreateStreamAsync(StreamConfig streamConfig, CancellationToken cancellationToken = default)
-            => natsJSContext.CreateStreamAsync(streamConfig, cancellationToken);
+            => NatsJSContext.CreateStreamAsync(streamConfig, cancellationToken);
 
         /// <summary>
         /// Called to register a consumer configuration for a given channel.  This is only used for stream channels and allows for configuring
@@ -88,9 +95,9 @@ namespace MQContract.NATS
         }
 
         async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
-            => new PingResult(natsConnection.ServerInfo?.Host??string.Empty,
-                natsConnection.ServerInfo?.Version??string.Empty,
-                await natsConnection.PingAsync()
+            => new PingResult(NatsConnection.ServerInfo?.Host??string.Empty,
+                NatsConnection.ServerInfo?.Version??string.Empty,
+                await NatsConnection.PingAsync()
             );
 
         internal static NatsHeaders ExtractHeader(ServiceMessage message)
@@ -135,7 +142,7 @@ namespace MQContract.NATS
         {
             try
             {
-                await natsConnection.PublishAsync<byte[]>(
+                await NatsConnection.PublishAsync<byte[]>(
                         message.Channel,
                         message.Data.ToArray(),
                         headers: ExtractHeader(message),
@@ -157,7 +164,7 @@ namespace MQContract.NATS
         {
             try
             {
-                var result = await natsConnection.RequestAsync<byte[], byte[]>(
+                var result = await NatsConnection.RequestAsync<byte[], byte[]>(
                     message.Channel,
                     message.Data.ToArray(),
                     headers: ExtractHeader(message),
@@ -192,7 +199,7 @@ namespace MQContract.NATS
             SubscriptionBase subscription;
             var isStream = false;
 #pragma warning disable S3267 // Loops should be simplified with "LINQ" expressions
-            await foreach (var name in natsJSContext.ListStreamNamesAsync(cancellationToken: cancellationToken))
+            await foreach (var name in NatsJSContext.ListStreamNamesAsync(cancellationToken: cancellationToken))
             {
                 if (Equals(channel, name))
                 {
@@ -209,12 +216,12 @@ namespace MQContract.NATS
                     ||Equals(group, scc.Configuration.Name)
                     ||Equals(group, scc.Configuration.DurableName)
                 ));
-                var consumer = await natsJSContext.CreateOrUpdateConsumerAsync(channel, config?.Configuration??new ConsumerConfig(group??Guid.NewGuid().ToString()) { AckPolicy = ConsumerConfigAckPolicy.Explicit }, cancellationToken);
+                var consumer = await NatsJSContext.CreateOrUpdateConsumerAsync(channel, config?.Configuration??new ConsumerConfig(group??Guid.NewGuid().ToString()) { AckPolicy = ConsumerConfigAckPolicy.Explicit }, cancellationToken);
                 subscription = new StreamSubscription(consumer, messageReceived, errorReceived);
             }
             else
                 subscription = new PublishSubscription(
-                    natsConnection.SubscribeAsync<byte[]>(
+                    NatsConnection.SubscribeAsync<byte[]>(
                         channel,
                         queueGroup: group,
                         cancellationToken: cancellationToken
@@ -229,7 +236,7 @@ namespace MQContract.NATS
         ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var sub = new QuerySubscription(
-                natsConnection.SubscribeAsync<byte[]>(
+                NatsConnection.SubscribeAsync<byte[]>(
                     channel,
                     queueGroup: group,
                     cancellationToken: cancellationToken
@@ -242,11 +249,11 @@ namespace MQContract.NATS
         }
 
         ValueTask IMessageServiceConnection.CloseAsync()
-            => natsConnection.DisposeAsync();
+            => NatsConnection.DisposeAsync();
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
-            await natsConnection.DisposeAsync().ConfigureAwait(true);
+            await NatsConnection.DisposeAsync().ConfigureAwait(true);
 
             Dispose(disposing: false);
             GC.SuppressFinalize(this);
@@ -257,7 +264,7 @@ namespace MQContract.NATS
             if (!disposedValue)
             {
                 if (disposing)
-                    natsConnection.DisposeAsync().AsTask().Wait();
+                    NatsConnection.DisposeAsync().AsTask().Wait();
                 disposedValue=true;
             }
         }
