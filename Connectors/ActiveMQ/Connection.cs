@@ -127,14 +127,6 @@ namespace MQContract.ActiveMQ
         async ValueTask IMessageServiceConnection.CloseAsync()
             => await ActiveMQConnection.StopAsync();
 
-        async ValueTask IAsyncDisposable.DisposeAsync()
-        {
-            await ActiveMQConnection.StopAsync().ConfigureAwait(true);
-
-            Dispose(disposing: false);
-            GC.SuppressFinalize(this);
-        }
-
         async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
         {
             try
@@ -150,24 +142,33 @@ namespace MQContract.ActiveMQ
             }
         }
 
-        private void Dispose(bool disposing)
+        private void DisposeComponents()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                    ActiveMQConnection.Stop();
-
+                disposedValue=true;
                 producer.Dispose();
                 session.Dispose();
                 ActiveMQConnection.Dispose();
-                disposedValue=true;
             }
+        }
+
+        async ValueTask IAsyncDisposable.DisposeAsync()
+        {
+            if (!disposedValue)
+                await ActiveMQConnection.StopAsync().ConfigureAwait(true);
+
+            DisposeComponents();
+            GC.SuppressFinalize(this);
         }
 
         void IDisposable.Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
+            if (!disposedValue)
+            {
+                ActiveMQConnection.Stop();
+                DisposeComponents();
+            }
             GC.SuppressFinalize(this);
         }
     }

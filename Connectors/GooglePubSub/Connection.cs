@@ -81,32 +81,34 @@ namespace MQContract.GooglePubSub
             {
                 _ = await PublisherServiceApi.PublishAsync(ProduceRequest([ConvertMessage(message)], message.Channel), cancellationToken);
             }
-            catch (Exception ex)
+            catch (RpcException rpc)
             {
-                return new TransmissionResult(message.ID, Error: new(ex, ex switch
+                return new TransmissionResult(message.ID, Error: new(rpc, rpc.StatusCode switch
                 {
-                    RpcException => ((RpcException)ex).StatusCode switch
-                    {
-                        StatusCode.Aborted => true,
-                        StatusCode.AlreadyExists => true,
-                        StatusCode.Cancelled => true,
-                        StatusCode.DataLoss => true,
-                        StatusCode.DeadlineExceeded => false,
-                        StatusCode.FailedPrecondition => true,
-                        StatusCode.Internal => true,
-                        StatusCode.InvalidArgument => true,
-                        StatusCode.NotFound => true,
-                        StatusCode.OutOfRange => true,
-                        StatusCode.PermissionDenied => true,
-                        StatusCode.ResourceExhausted => false,
-                        StatusCode.Unauthenticated => true,
-                        StatusCode.Unavailable => false,
-                        StatusCode.Unimplemented => true,
-                        _ => true
-                    },
-                    GoogleApiException => true,
-                    _ => false
+                    StatusCode.Aborted => true,
+                    StatusCode.AlreadyExists => true,
+                    StatusCode.Cancelled => true,
+                    StatusCode.DataLoss => true,
+                    StatusCode.DeadlineExceeded => false,
+                    StatusCode.FailedPrecondition => true,
+                    StatusCode.Internal => true,
+                    StatusCode.InvalidArgument => true,
+                    StatusCode.NotFound => true,
+                    StatusCode.OutOfRange => true,
+                    StatusCode.PermissionDenied => true,
+                    StatusCode.ResourceExhausted => false,
+                    StatusCode.Unauthenticated => true,
+                    StatusCode.Unavailable => false,
+                    StatusCode.Unimplemented => true,
+                    _ => true
                 }));
+            }
+            catch (GoogleApiException google)
+            {
+                return new(message.ID, Error: new(google, true));
+            }catch (Exception ex)
+            {
+                return new(message.ID, Error: new(ex, false));
             }
             finally
             {

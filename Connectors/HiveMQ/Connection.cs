@@ -16,7 +16,6 @@ namespace MQContract.HiveMQ
         private readonly Guid connectionID = Guid.NewGuid();
         private long lastPingTimestamp = long.MinValue;
         private TimeSpan lastPingDuration = TimeSpan.MaxValue;
-        private bool disposedValue;
 
         /// <summary>
         /// Houses the underlying HiveMQ client that is being used by the connection
@@ -195,13 +194,7 @@ namespace MQContract.HiveMQ
 
         void IDisposable.Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            if (!disposedValue)
-            {
-                Client.Dispose();
-                disposedValue=true;
-            }
-            GC.SuppressFinalize(this);
+            ((IDisposable)Client).Dispose();
         }
     }
 }
