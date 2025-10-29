@@ -107,7 +107,7 @@ namespace MQContract.Kafka.Middleware
                         message.ID,
                         message.MessageTypeID,
                         message.Channel,
-                        new(message.Header, new Dictionary<string, string?>() { { SchemaIdHeader, schemaId?.ToString() } }),
+                        new(message.Header, new Dictionary<string, string?>() { { SchemaIdHeader, schemaId.ToString() } }),
                         data
                     );
                 }

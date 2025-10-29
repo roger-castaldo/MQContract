@@ -10,7 +10,7 @@ namespace MQContract.Redis
     /// <summary>
     /// This is the MessageServiceConnection implementation for using Redis
     /// </summary>
-    public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable, IDisposable
+    public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
     {
         private readonly Guid connectionID = Guid.NewGuid();
         private bool disposedValue;
@@ -185,26 +185,11 @@ namespace MQContract.Redis
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
-            await ConnectionMultiplexer.DisposeAsync();
-
-            Dispose(false);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
-        {
             if (!disposedValue)
             {
-                if (disposing)
-                    ConnectionMultiplexer.Dispose();
                 disposedValue=true;
+                await ConnectionMultiplexer.DisposeAsync();
             }
-        }
-
-        void IDisposable.Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

@@ -30,15 +30,6 @@ namespace MQContract.Connections
         protected override async ValueTask CloseAsync()
             => await (serviceConnection?.CloseAsync()??ValueTask.CompletedTask);
 
-        protected override void InternalDispose()
-        {
-            if (serviceConnection is IDisposable disposable)
-                disposable.Dispose();
-            else if (serviceConnection is IAsyncDisposable asyncDisposable)
-                asyncDisposable.DisposeAsync().AsTask().Wait();
-            publishLock.Dispose();
-        }
-
         protected override async ValueTask InternalDisposeAsync()
         {
             if (serviceConnection is IAsyncDisposable asyncDisposable)

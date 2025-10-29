@@ -3,10 +3,22 @@
 
 ## Contents
 
+- [BulkTooLargeException](#T-MQContract-AzureServiceBus-BulkTooLargeException 'MQContract.AzureServiceBus.BulkTooLargeException')
 - [Connection](#T-MQContract-AzureServiceBus-Connection 'MQContract.AzureServiceBus.Connection')
   - [#ctor(client,pingableQueue)](#M-MQContract-AzureServiceBus-Connection-#ctor-Azure-Messaging-ServiceBus-ServiceBusClient,System-String- 'MQContract.AzureServiceBus.Connection.#ctor(Azure.Messaging.ServiceBus.ServiceBusClient,System.String)')
   - [BusClient](#P-MQContract-AzureServiceBus-Connection-BusClient 'MQContract.AzureServiceBus.Connection.BusClient')
   - [MaxMessageBodySize](#P-MQContract-AzureServiceBus-Connection-MaxMessageBodySize 'MQContract.AzureServiceBus.Connection.MaxMessageBodySize')
+
+<a name='T-MQContract-AzureServiceBus-BulkTooLargeException'></a>
+## BulkTooLargeException `type`
+
+##### Namespace
+
+MQContract.AzureServiceBus
+
+##### Summary
+
+Thrown when a bulk publish request exceeds the usable message batch size
 
 <a name='T-MQContract-AzureServiceBus-Connection'></a>
 ## Connection `type`

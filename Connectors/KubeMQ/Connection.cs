@@ -17,7 +17,8 @@ namespace MQContract.KubeMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using KubeMQ
     /// </summary>
-    public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IDisposable, IAsyncDisposable
+    public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection,
+        IAsyncDisposable
     {
         /// <summary>
         /// These are the different read styles to use when subscribing to a stored Event PubSub
@@ -293,26 +294,11 @@ namespace MQContract.KubeMQ
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
-            await client.DisposeAsync();
-
-            Dispose(disposing: false);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
-        {
             if (!disposedValue)
             {
-                if (disposing)
-                    client.DisposeAsync().AsTask().Wait();
                 disposedValue=true;
+                await client.DisposeAsync();
             }
-        }
-
-        void IDisposable.Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

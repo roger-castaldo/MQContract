@@ -80,13 +80,7 @@ namespace MQContract.Connections
         protected sealed override async ValueTask CloseAsync()
             => await connectionList.CloseAsync();
 
-        protected override void InternalDispose()
-            => connectionList.Dispose();
-
-        protected override ValueTask InternalDisposeAsync()
-        {
-            connectionList.Dispose();
-            return ValueTask.CompletedTask;
-        }
+        protected override async ValueTask InternalDisposeAsync()
+            => await ((IAsyncDisposable)connectionList).DisposeAsync();
     }
 }

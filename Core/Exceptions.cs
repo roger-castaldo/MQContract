@@ -26,6 +26,10 @@
         internal SubscriptionFailedException()
             : base("Failed to establish subscription through service connection")
         { }
+
+        internal SubscriptionFailedException(Exception innerException)
+            : base("Failed to establish subscription through service connection", innerException)
+        { }
     }
 
     /// <summary>

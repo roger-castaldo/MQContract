@@ -174,7 +174,7 @@ namespace MQContract.RabbitMQ
             return result;
         }
 
-        private async Task<Subscription> ProduceSubscriptionAsync(IConnection conn, string channel, string? group, Action<BasicDeliverEventArgs, IChannel, Func<ValueTask>> messageReceived, Action<Exception> errorReceived)
+        private async Task<Subscription> ProduceSubscriptionAsync(string channel, string? group, Action<BasicDeliverEventArgs, IChannel, Func<ValueTask>> messageReceived, Action<Exception> errorReceived)
         {
             if (group==null)
             {
@@ -196,7 +196,7 @@ namespace MQContract.RabbitMQ
         }
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-            => await ProduceSubscriptionAsync(RabbitMQConnection, channel, group,
+            => await ProduceSubscriptionAsync(channel, group,
                 (@event, modelChannel, acknowledge) =>
                 {
                     messageReceived(ConvertMessage(@event, channel, acknowledge, out _));
@@ -255,7 +255,7 @@ namespace MQContract.RabbitMQ
         }
 
         async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-        => await ProduceSubscriptionAsync(RabbitMQConnection, channel, group,
+        => await ProduceSubscriptionAsync(channel, group,
                 async (@event, model, acknowledge) =>
                 {
                     var result = await messageReceived(ConvertMessage(@event, channel, acknowledge, out var messageID));

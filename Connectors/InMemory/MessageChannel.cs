@@ -34,24 +34,34 @@ namespace MQContract.InMemory
             return new(message.ID);
         }
 
+        internal async ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)
+        => await Publish(message, cancellationToken);
+
         internal async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
         {
-            IEnumerable<TransmissionResult> results = [];
+            var messageIDs = messages.Select(m => m.ID).ToArray();
             locker.EnterReadLock();
-            foreach (var message in messages)
-            {
-                var messageResults = (
-                    await groups
-                        .WhenAll(grp => grp.PublishMessageAsync(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data)))
-                    ).ToArray();
-                results=results.Append(new(message.ID, Error: Array.TrueForAll(messageResults, mr => mr) ? null : new(new TransmissionResultException(), true)));
-            }
+            var results = (await messages
+                .WhenAll(async (message) =>
+                {
+                    try
+                    {
+                        var messageResults = (
+                        await groups
+                            .WhenAll(grp => grp.PublishMessageAsync(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data), cancellationToken))
+                        ).ToArray();
+                        return new TransmissionResult(message.ID, Error: Array.TrueForAll(messageResults, mr => mr) ? null : new(new TransmissionResultException(), true));
+                    }
+                    catch
+                    {
+                        return new TransmissionResult(message.ID, Error: new(new TransmissionResultException(), true));
+                    }
+                })
+                ).OrderBy(res=>Array.IndexOf(messageIDs,res.ID))
+                .ToArray();
             locker.ExitReadLock();
             return results;
         }
-
-        internal async ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)
-        => await Publish(message, cancellationToken);
 
         internal async ValueTask<TransmissionResult> QueryAsync(ServiceMessage message, string inbox, Guid correlationID, CancellationToken cancellationToken)
         {

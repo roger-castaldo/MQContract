@@ -143,7 +143,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
-                    null, It.IsAny<CancellationToken>()), Times.Once);
+                    null, It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
 

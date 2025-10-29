@@ -82,27 +82,30 @@ namespace MQContract.Connections
                     })
                     .Where(pair => pair.InterfaceType!=null)
                     .ToArray();
-                foreach (var consumerPair in loadablePairs)
-                {
-                    if (Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IPubSubConsumer<>)))
-                    {
-                        if (!(await ((IConsumerContractConnection)this).RegisterPubSubConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
-                            return false;
-                    }
-                    else if (Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IPubSubAsyncConsumer<>)))
-                    {
-                        if (!(await ((IConsumerContractConnection)this).RegisterPubSubAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
-                            return false;
-                    }
-                    else if (Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IQueryResponseConsumer<,>)))
-                    {
-                        if (!(await ((IConsumerContractConnection)this).RegisterQueryResponseConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
-                            return false;
-                    }
-                    else if (Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IQueryResponseAsyncConsumer<,>))
-                        &&!(await ((IConsumerContractConnection)this).RegisterQueryResponseAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken)))
-                        return false;
-                }
+                var pubSubResults = (await Task.WhenAll(
+                        loadablePairs
+                        .Where(consumerPair => Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IPubSubConsumer<>)))
+                        .Select(consumerPair => ((IConsumerContractConnection)this).RegisterPubSubConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
+                    )).ToArray();
+                var asyncPubSubResults = (await Task.WhenAll(
+                        loadablePairs
+                        .Where(consumerPair => Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IPubSubAsyncConsumer<>)))
+                        .Select(consumerPair => ((IConsumerContractConnection)this).RegisterPubSubAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
+                    )).ToArray();
+                var queryResponseResults = (await Task.WhenAll(
+                        loadablePairs
+                        .Where(consumerPair => Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IQueryResponseConsumer<,>)))
+                        .Select(consumerPair => ((IConsumerContractConnection)this).RegisterQueryResponseConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
+                    )).ToArray();
+                var asyncQueryResponseResults = (await Task.WhenAll(
+                        loadablePairs
+                        .Where(consumerPair => Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IQueryResponseAsyncConsumer<,>)))
+                        .Select(consumerPair => ((IConsumerContractConnection)this).RegisterQueryResponseAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
+                    )).ToArray();
+                return Array.TrueForAll(pubSubResults,r => r)
+                    && Array.TrueForAll(asyncPubSubResults, r => r)
+                    && Array.TrueForAll(queryResponseResults,r => r)
+                    && Array.TrueForAll(asyncQueryResponseResults,r => r);
             }
             return true;
         }

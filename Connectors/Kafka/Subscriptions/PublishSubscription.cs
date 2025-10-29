@@ -34,12 +34,13 @@ namespace MQContract.Kafka.Subscriptions
                             msg.Message.Value
                         ));
                     }
-                    catch (OperationCanceledException) { }
+                    catch (OperationCanceledException) { 
+                        //dropped this exception as it can occur when the consumption is stopped
+                    }
                     catch (Exception ex)
                     {
                         errorReceived(ex);
                     }
-                    finally { }
                 }
                 consumer.Close();
             });
@@ -48,7 +49,12 @@ namespace MQContract.Kafka.Subscriptions
 
         public async ValueTask EndAsync()
         {
-            try { await cancelToken.CancelAsync(); } catch { }
+            try { 
+                await cancelToken.CancelAsync(); 
+            } 
+            catch {
+                //ignoring the error as the goal is to call cancel and not care about the error
+            }
         }
 
         public async ValueTask DisposeAsync()
@@ -62,7 +68,9 @@ namespace MQContract.Kafka.Subscriptions
                 {
                     consumer.Close();
                 }
-                catch (Exception) { }
+                catch {
+                    //ignoring error here as we are attempting to dispose the resource
+                }
                 consumer.Dispose();
                 cancelToken.Dispose();
             }

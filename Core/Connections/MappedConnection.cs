@@ -33,16 +33,10 @@ namespace MQContract.Connections
             };
         }
 
-        protected override void InternalDispose()
-        {
-            base.InternalDispose();
-            publishLock.Dispose();
-        }
-
         protected override async ValueTask InternalDisposeAsync()
         {
-            await base.InternalDisposeAsync();
             publishLock.Dispose();
+            await base.InternalDisposeAsync();
         }
 
         private new async ValueTask<ServiceConnectionList.ServiceConnection> GetConnectionsAsync(string channel, Type messageType, MessageHeader messageHeader)

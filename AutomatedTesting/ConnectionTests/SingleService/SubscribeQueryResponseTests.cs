@@ -282,7 +282,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<Exception>(async () =>
+            var error = await Assert.ThrowsAsync<SubscriptionFailedException>(async () =>
                 _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
                 {
                     return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(new(msg.Message.TypeName), null));
@@ -292,7 +292,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Assert
             Assert.IsNotNull(error);
-            Assert.AreEqual(exception, error);
+            Assert.AreEqual(exception, error.InnerException);
             #endregion
 
             #region Verify

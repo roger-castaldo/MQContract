@@ -3,7 +3,7 @@ using MQContract.Messages;
 
 namespace MQContract.Connections
 {
-    internal class ServiceConnectionList : IDisposable
+    internal class ServiceConnectionList : IAsyncDisposable
     {
         public record ServiceConnection(string ServiceConnectionName, IMessageServiceConnection MessageServiceConnection);
         private sealed record ServiceConnectionEntry(Func<(string channel, Type messageType, MessageHeader messageHeader), bool> CheckCallback, string ServiceConnectionName, IMessageServiceConnection MessageServiceConnection)
@@ -56,40 +56,25 @@ namespace MQContract.Connections
             dataLock.Release();
         }
 
-        protected virtual void Dispose(bool disposing)
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    dataLock.Wait();
-                    foreach (var conn in connections.DistinctBy(ss => ss.ServiceConnectionName).ToArray())
-                    {
-                        if (conn.MessageServiceConnection is IDisposable disposable)
-                            disposable.Dispose();
-                        else if (conn.MessageServiceConnection is IAsyncDisposable asyncDisposable)
-                            asyncDisposable.DisposeAsync().AsTask().Wait();
-                    }
-                    connections.Clear();
-                    dataLock.Release();
-                    dataLock.Dispose();
-                }
                 disposedValue=true;
+                await dataLock.WaitAsync();
+                var conns = connections.DistinctBy(ss => ss.ServiceConnectionName).ToArray();
+                await Task.WhenAll(conns.Select(async conn =>
+                {
+                    if (conn.MessageServiceConnection is IAsyncDisposable asyncDisposable)
+                        await asyncDisposable.DisposeAsync();
+                    else if (conn.MessageServiceConnection is IDisposable disposable)
+                        disposable.Dispose();
+                }));
+                connections.Clear();
+                dataLock.Release();
+                dataLock.Dispose();
+                GC.SuppressFinalize(this);
             }
-        }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~ServiceConnectionList()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

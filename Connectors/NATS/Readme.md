@@ -11,6 +11,7 @@
   - [NatsJSContext](#P-MQContract-NATS-Connection-NatsJSContext 'MQContract.NATS.Connection.NatsJSContext')
   - [CreateStreamAsync(streamConfig,cancellationToken)](#M-MQContract-NATS-Connection-CreateStreamAsync-NATS-Client-JetStream-Models-StreamConfig,System-Threading-CancellationToken- 'MQContract.NATS.Connection.CreateStreamAsync(NATS.Client.JetStream.Models.StreamConfig,System.Threading.CancellationToken)')
   - [RegisterConsumerConfig(channelName,consumerConfig)](#M-MQContract-NATS-Connection-RegisterConsumerConfig-System-String,NATS-Client-JetStream-Models-ConsumerConfig- 'MQContract.NATS.Connection.RegisterConsumerConfig(System.String,NATS.Client.JetStream.Models.ConsumerConfig)')
+- [QueryAsyncReponseException](#T-MQContract-NATS-QueryAsyncReponseException 'MQContract.NATS.QueryAsyncReponseException')
 - [UnableToConnectException](#T-MQContract-NATS-UnableToConnectException 'MQContract.NATS.UnableToConnectException')
 
 <a name='T-MQContract-NATS-Connection'></a>
@@ -103,6 +104,17 @@ The underlying connection to allow for chaining
 | ---- | ---- | ----------- |
 | channelName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The underlying stream name that this configuration applies to |
 | consumerConfig | [NATS.Client.JetStream.Models.ConsumerConfig](#T-NATS-Client-JetStream-Models-ConsumerConfig 'NATS.Client.JetStream.Models.ConsumerConfig') | The consumer configuration to use for that stream |
+
+<a name='T-MQContract-NATS-QueryAsyncReponseException'></a>
+## QueryAsyncReponseException `type`
+
+##### Namespace
+
+MQContract.NATS
+
+##### Summary
+
+Thrown when a query response error is recieved through the system
 
 <a name='T-MQContract-NATS-UnableToConnectException'></a>
 ## UnableToConnectException `type`

@@ -10,7 +10,10 @@
             : base("Unable to establish connection to the NATS host") { }
     }
 
-    internal class QueryAsyncReponseException : Exception
+    /// <summary>
+    /// Thrown when a query response error is recieved through the system
+    /// </summary>
+    public class QueryAsyncReponseException : Exception
     {
         internal QueryAsyncReponseException(string error)
             : base(error) { }
