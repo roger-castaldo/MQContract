@@ -5,6 +5,7 @@
 
 - [Connection](#T-MQContract-HiveMQ-Connection 'MQContract.HiveMQ.Connection')
   - [#ctor(clientOptions)](#M-MQContract-HiveMQ-Connection-#ctor-HiveMQtt-Client-Options-HiveMQClientOptions- 'MQContract.HiveMQ.Connection.#ctor(HiveMQtt.Client.Options.HiveMQClientOptions)')
+  - [Client](#P-MQContract-HiveMQ-Connection-Client 'MQContract.HiveMQ.Connection.Client')
   - [DefaultTimeout](#P-MQContract-HiveMQ-Connection-DefaultTimeout 'MQContract.HiveMQ.Connection.DefaultTimeout')
 - [ConnectionFailedException](#T-MQContract-HiveMQ-ConnectionFailedException 'MQContract.HiveMQ.ConnectionFailedException')
 
@@ -31,6 +32,13 @@ Default constructor that requires the HiveMQ client options settings to be provi
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | clientOptions | [HiveMQtt.Client.Options.HiveMQClientOptions](#T-HiveMQtt-Client-Options-HiveMQClientOptions 'HiveMQtt.Client.Options.HiveMQClientOptions') | The required client options to connect to the HiveMQ instance |
+
+<a name='P-MQContract-HiveMQ-Connection-Client'></a>
+### Client `property`
+
+##### Summary
+
+Houses the underlying HiveMQ client that is being used by the connection
 
 <a name='P-MQContract-HiveMQ-Connection-DefaultTimeout'></a>
 ### DefaultTimeout `property`

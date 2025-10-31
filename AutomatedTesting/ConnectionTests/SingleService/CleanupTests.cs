@@ -31,49 +31,6 @@ namespace AutomatedTesting.ConnectionTests.SingleService
         }
 
         [TestMethod]
-        public void TestDispose()
-        {
-            #region Arrange
-            var serviceConnection = new Mock<IDisposable>();
-
-            var contractConnection = ContractConnection.Instance(serviceConnection.As<IMessageServiceConnection>().Object);
-            #endregion
-
-            #region Act
-            contractConnection.Dispose();
-            #endregion
-
-            #region Assert
-            #endregion
-
-            #region Verify
-            serviceConnection.Verify(x => x.Dispose(), Times.Once);
-            #endregion
-        }
-
-        [TestMethod]
-        public void TestDisposeWithAsyncDispose()
-        {
-            #region Arrange
-            var serviceConnection = new Mock<IAsyncDisposable>();
-            serviceConnection.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
-
-            var contractConnection = ContractConnection.Instance(serviceConnection.As<IMessageServiceConnection>().Object);
-            #endregion
-
-            #region Act
-            contractConnection.Dispose();
-            #endregion
-
-            #region Assert
-            #endregion
-
-            #region Verify
-            serviceConnection.Verify(x => x.DisposeAsync(), Times.Once);
-            #endregion
-        }
-
-        [TestMethod]
         public async Task TestDisposeAsyncWithDispose()
         {
             #region Arrange

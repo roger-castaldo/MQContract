@@ -5,6 +5,7 @@
 
 - [Connection](#T-MQContract-ActiveMQ-Connection 'MQContract.ActiveMQ.Connection')
   - [#ctor(ConnectUri,username,password)](#M-MQContract-ActiveMQ-Connection-#ctor-System-Uri,System-String,System-String- 'MQContract.ActiveMQ.Connection.#ctor(System.Uri,System.String,System.String)')
+  - [ActiveMQConnection](#P-MQContract-ActiveMQ-Connection-ActiveMQConnection 'MQContract.ActiveMQ.Connection.ActiveMQConnection')
 
 <a name='T-MQContract-ActiveMQ-Connection'></a>
 ## Connection `type`
@@ -31,3 +32,10 @@ Default constructor for creating instance
 | ConnectUri | [System.Uri](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Uri 'System.Uri') | The connection url to use |
 | username | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The username to use |
 | password | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The password to use |
+
+<a name='P-MQContract-ActiveMQ-Connection-ActiveMQConnection'></a>
+### ActiveMQConnection `property`
+
+##### Summary
+
+Underlying connection used to connection to ActiveMQ.  Exposed here for additional control if required.

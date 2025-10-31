@@ -80,7 +80,7 @@ namespace MQContract.Subscriptions
             catch (Exception ex)
             {
                 Logger?.LogError(ex, "Error occurred while establishing the subscription.");
-                throw;
+                throw new SubscriptionFailedException(ex);
             }
         }
 

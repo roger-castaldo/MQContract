@@ -104,12 +104,11 @@ namespace MQContract.Connections
         private async ValueTask<(T message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
         {
             using var scope = SetScope();
-            logger?.LogInformation("Executing Before Message Encode middleware for message of type {Type}", typeof(T));
             var (genericHandlers, specificHandlers) = middleware.GetHandlers<IBeforeEncodeMiddleware,IBeforeEncodeSpecificTypeMiddleware<T>>();
-            logger?.LogInformation("Executing generic Before Messge Encode middleware for message of type {Type}", typeof(T));
+            logger?.LogDebug("Executing generic Before Message Encode middleware for message of type {Type}", typeof(T));
             foreach (var handler in genericHandlers)
                 (message, channel, messageHeader) = await handler.BeforeMessageEncodeAsync<T>(context, message, channel, messageHeader);
-            logger?.LogInformation("Executing specific for type Before Messge Encode middleware for message of type {Type}", typeof(T));
+            logger?.LogDebug("Executing specific for type Before Message Encode middleware for message of type {Type}", typeof(T));
             foreach (var handler in specificHandlers)
                 (message, channel, messageHeader) = await handler.BeforeMessageEncodeAsync(context, message, channel, messageHeader);
             return (message, channel, messageHeader);
@@ -118,9 +117,9 @@ namespace MQContract.Connections
         private async ValueTask<ServiceMessage> AfterMessageEncodeAsync<T>(IContext context, ServiceMessage message)
         {
             using var scope = SetScope(message.ID);
-            logger?.LogInformation("Executing After Message Encode middleware for message of type {Type}", typeof(T));
+            logger?.LogDebug("Executing After Message Encode middleware for message of type {Type}", typeof(T));
             var genericHandlers = middleware.GetHandlers<IAfterEncodeMiddleware>();
-            logger?.LogInformation("Executing generic After Messge Encode middleware for message of type {Type}", typeof(T));
+            logger?.LogDebug("Executing generic After Message Encode middleware for message of type {Type}", typeof(T));
             foreach (var handler in genericHandlers)
                 message = await handler.AfterMessageEncodeAsync(typeof(T), context, message);
             return message;
@@ -129,9 +128,9 @@ namespace MQContract.Connections
         private async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
         {
             using var scope = SetScope(id);
-            logger?.LogInformation("Executing Before Message Decode middleware");
+            logger?.LogDebug("Executing Before Message Decode middleware");
             var genericHandlers = middleware.GetHandlers<IBeforeDecodeMiddleware>();
-            logger?.LogInformation("Executing generic Before Messge Decode middleware");
+            logger?.LogDebug("Executing generic Before Message Decode middleware");
             foreach (var handler in genericHandlers)
                 (messageHeader, data) = await handler.BeforeMessageDecodeAsync(context, id, messageHeader, messageTypeID, messageChannel, data);
             return (messageHeader, data);
@@ -140,12 +139,11 @@ namespace MQContract.Connections
         private async ValueTask<(T message, MessageHeader messageHeader)> AfterMessageDecodeAsync<T>(IContext context, T message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
         {
             using var scope = SetScope(ID);
-            logger?.LogInformation("Executing After Message Decode middleware for message of type {Type}", typeof(T));
             var (genericHandlers, specificHandlers) = middleware.GetHandlers<IAfterDecodeMiddleware,IAfterDecodeSpecificTypeMiddleware<T>>();
-            logger?.LogInformation("Executing generic After Messge Decode middleware for message of type {Type}", typeof(T));
+            logger?.LogDebug("Executing generic After Message Decode middleware for message of type {Type}", typeof(T));
             foreach (var handler in genericHandlers)
                 (message, messageHeader) = await handler.AfterMessageDecodeAsync<T>(context, message, ID, messageHeader, receivedTimestamp, processedTimeStamp);
-            logger?.LogInformation("Executing specific for type After Messge Decode middleware for message of type {Type}", typeof(T));
+            logger?.LogDebug("Executing specific for type After Message Decode middleware for message of type {Type}", typeof(T));
             foreach (var handler in specificHandlers)
                 (message, messageHeader) = await handler.AfterMessageDecodeAsync(context, message, ID, messageHeader, receivedTimestamp, processedTimeStamp);
             return (message, messageHeader);
@@ -589,12 +587,12 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             responseChannel ??=typeof(Q).GetCustomAttribute<QueryResponseChannelAttribute>()?.Name;
-            logger?.LogDebug("Attempting a QueryResponse call using PubSub style messaging, querying {Q}, expecting a response of {R} on {ResponseChannel}", typeof(Q), typeof(R), responseChannel);
+            logger?.LogInformation("Attempting a QueryResponse call using PubSub style messaging, querying {Q}, expecting a response of {R} on {ResponseChannel}", typeof(Q), typeof(R), responseChannel);
             ArgumentNullException.ThrowIfNullOrWhiteSpace(responseChannel);
             var replyChannel = await MapChannel(ChannelMapper.MapTypes.QueryResponse, responseChannel!);
-            logger?.LogInformation("QueryResponse reply channel mapped to {ReplyChannel}", replyChannel);
+            logger?.LogDebug("QueryResponse reply channel mapped to {ReplyChannel}", replyChannel);
             var callID = Guid.NewGuid();
-            logger?.LogInformation("Starting Response listener for Query over PubSub waiting on a message with {CallID}", callID);
+            logger?.LogDebug("Starting Response listener for Query over PubSub waiting on a message with {CallID}", callID);
             var (tcs, token) = await QueryResponseHelper.StartResponseListenerAsync(
                 serviceConnection,
                 realTimeout??TimeSpan.FromMinutes(1),
@@ -610,7 +608,7 @@ namespace MQContract.Connections
                 replyChannel,
                 null
             );
-            logger?.LogInformation("Transmitting Query request over PubSub");
+            logger?.LogDebug("Transmitting Query request over PubSub");
             var result = await ExecuteResilliantTransmissionAsync<Q>(
                 async (ct) => await serviceConnection.PublishAsync(msg, cancellationToken: ct),
                 connectionName,
@@ -622,15 +620,15 @@ namespace MQContract.Connections
             {
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
-                logger?.LogInformation("Inbox Query tranmission failed cleaning up resources");
+                logger?.LogDebug("Inbox Query tranmission failed cleaning up resources");
                 activity?.SetStatus(ActivityStatusCode.Error);
                 return new(serviceMessage.ID, new([]), Error: result.Error);
             }
             try
             {
-                logger?.LogInformation("Waiting on Query Response over PubSub");
+                logger?.LogDebug("Waiting on Query Response over PubSub");
                 await tcs.Task.WaitAsync(cancellationToken);
-                logger?.LogInformation("Query Response over PubSub recieved");
+                logger?.LogDebug("Query Response over PubSub recieved");
             }
             finally
             {
@@ -643,7 +641,7 @@ namespace MQContract.Connections
             Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, string? serviceConnectionName, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            logger?.LogDebug("Creating QueryResponse subscription for {Q} answering with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
+            logger?.LogInformation("Creating QueryResponse subscription for {Q} answering with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
             var subscription = new QueryResponseSubscription<Q>(
                 async (message, replyChannel) =>
                 {
@@ -725,61 +723,30 @@ namespace MQContract.Connections
             inboxSemaphore.Release();
             await CloseAsync();
         }
-
-        protected abstract void InternalDispose();
         protected abstract ValueTask InternalDisposeAsync();
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    inboxSemaphore.Wait();
-                    foreach (var key in inboxSubscriptions.Keys)
-                    {
-                        var inboxSubscription = inboxSubscriptions[key];
-                        if (inboxSubscription is IAsyncDisposable asyncSubDisposable)
-                            asyncSubDisposable.DisposeAsync().AsTask().Wait();
-                        else if (inboxSubscription is IDisposable subDisposable)
-                            subDisposable.Dispose();
-                    }
-                    inboxSubscriptions.Clear();
-                    inboxSemaphore.Release();
-                    inboxSemaphore.Dispose();
-                    InternalDispose();
-                }
-                dataLock.Dispose();
-                disposedValue =true;
-            }
-        }
-
-        void IDisposable.Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
-            await inboxSemaphore.WaitAsync();
-            foreach (var key in inboxSubscriptions.Keys)
+            if (!disposedValue)
             {
-                var inboxSubscription = inboxSubscriptions[key];
-                if (inboxSubscription is IAsyncDisposable asyncSubDisposable)
-                    await asyncSubDisposable.DisposeAsync();
-                else if (inboxSubscription is IDisposable subDisposable)
-                    subDisposable.Dispose();
+                disposedValue=true;
+                await inboxSemaphore.WaitAsync();
+                foreach (var key in inboxSubscriptions.Keys)
+                {
+                    var inboxSubscription = inboxSubscriptions[key];
+                    if (inboxSubscription is IAsyncDisposable asyncSubDisposable)
+                        await asyncSubDisposable.DisposeAsync();
+                    else if (inboxSubscription is IDisposable subDisposable)
+                        subDisposable.Dispose();
+                }
+                foreach (var consumerSubscription in consumerSubscriptions)
+                    await consumerSubscription.EndAsync();
+                consumerSubscriptions.Clear();
+                inboxSubscriptions.Clear();
+                inboxSemaphore.Release();
+                inboxSemaphore.Dispose();
+                await InternalDisposeAsync();
             }
-            foreach (var consumerSubscription in consumerSubscriptions)
-                await consumerSubscription.EndAsync();
-            consumerSubscriptions.Clear();
-            inboxSubscriptions.Clear();
-            inboxSemaphore.Release();
-            inboxSemaphore.Dispose();
-            await InternalDisposeAsync();
-            Dispose(false);
             GC.SuppressFinalize(this);
         }
     }

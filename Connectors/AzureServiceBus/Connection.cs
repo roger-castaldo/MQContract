@@ -14,13 +14,19 @@ namespace MQContract.AzureServiceBus
     /// In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
     /// with RequiresSession as true
     /// </remarks>
-    public sealed class Connection(ServiceBusClient client,string? pingableQueue = null) : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection,IPingableMessageServiceConnection, IDisposable
+    public sealed class Connection(ServiceBusClient client,string? pingableQueue = null) 
+        : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection,IPingableMessageServiceConnection, IAsyncDisposable
     {
         private const string INBOX_CHANNEL_NAME = "QueryResponse.Inbox";
         private readonly SemaphoreSlim locker = new(1, 1);
         private readonly Guid InboxSessionID = Guid.NewGuid();
         private readonly ServiceBusSender inboxSender = client.CreateSender(INBOX_CHANNEL_NAME);
         private bool disposedValue;
+
+        /// <summary>
+        /// The supplied service bus client, exposed for additional access if required
+        /// </summary>
+        public ServiceBusClient BusClient => client;
 
         /// <summary>
         /// Maximum supported message body size in bytes
@@ -86,7 +92,7 @@ namespace MQContract.AzureServiceBus
             foreach (var message in messages)
             {
                 if (!messageBatch.TryAddMessage(ConvertMessage(message)))
-                    throw new Exception("The bulk messages are too large for a batch.");
+                    throw new BulkTooLargeException();
             }
             try
             {
@@ -99,7 +105,7 @@ namespace MQContract.AzureServiceBus
             return messages.Select(m => new TransmissionResult(m.ID));
         }
 
-        private async ValueTask<IServiceSubscription> StartServiceSubscriptionAsync(Subscription subscription)
+        private static async ValueTask<IServiceSubscription> StartServiceSubscriptionAsync(Subscription subscription)
             => await subscription.StartAsync();
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
@@ -212,27 +218,17 @@ namespace MQContract.AzureServiceBus
             return new(string.Empty, string.Empty, Stopwatch.GetElapsedTime(start));
         }
 
-        private void Dispose(bool disposing)
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    locker.Wait();
-                    inboxSender.DisposeAsync().AsTask().Wait();
-                    client.DisposeAsync().AsTask().Wait();
-                    locker.Release();
-                    locker.Dispose();
-                }
-                disposedValue=true;
+                disposedValue = true;
+                await locker.WaitAsync();
+                await inboxSender.DisposeAsync();
+                await client.DisposeAsync();
+                locker.Release();
+                locker.Dispose();
             }
-        }
-
-        void IDisposable.Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

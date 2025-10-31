@@ -15,11 +15,15 @@ namespace MQContract.ActiveMQ
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private bool disposedValue;
 
-        private readonly IConnection connection;
         private readonly ISession session;
         private readonly IMessageProducer producer;
         private readonly List<ConsumerInstance> consumerInstances = [];
         private readonly SemaphoreSlim locker = new(1, 1);
+
+        /// <summary>
+        /// Underlying connection used to connection to ActiveMQ.  Exposed here for additional control if required.
+        /// </summary>
+        public IConnection ActiveMQConnection { get; private init; }
 
         /// <summary>
         /// Default constructor for creating instance
@@ -30,9 +34,9 @@ namespace MQContract.ActiveMQ
         public Connection(Uri ConnectUri, string username, string password)
         {
             var connectionFactory = new NMSConnectionFactory(ConnectUri);
-            connection = connectionFactory.CreateConnection(username, password);
-            connection.Start();
-            session = connection.CreateSession();
+            ActiveMQConnection = connectionFactory.CreateConnection(username, password);
+            ActiveMQConnection.Start();
+            session = ActiveMQConnection.CreateSession();
             producer = session.CreateProducer();
         }
 
@@ -121,24 +125,16 @@ namespace MQContract.ActiveMQ
         }
 
         async ValueTask IMessageServiceConnection.CloseAsync()
-            => await connection.StopAsync();
-
-        async ValueTask IAsyncDisposable.DisposeAsync()
-        {
-            await connection.StopAsync().ConfigureAwait(true);
-
-            Dispose(disposing: false);
-            GC.SuppressFinalize(this);
-        }
+            => await ActiveMQConnection.StopAsync();
 
         async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
         {
             try
             {
                 var start = Stopwatch.GetTimestamp();
-                using var sess = await connection.CreateSessionAsync(AcknowledgementMode.AutoAcknowledge);
+                using var sess = await ActiveMQConnection.CreateSessionAsync(AcknowledgementMode.AutoAcknowledge);
                 using var tempQueue = await sess.CreateTemporaryQueueAsync();
-                return new(connection.MetaData.NMSProviderName, connection.MetaData.NMSVersion, Stopwatch.GetElapsedTime(start));
+                return new(ActiveMQConnection.MetaData.NMSProviderName, ActiveMQConnection.MetaData.NMSVersion, Stopwatch.GetElapsedTime(start));
             }
             catch
             {
@@ -146,24 +142,33 @@ namespace MQContract.ActiveMQ
             }
         }
 
-        private void Dispose(bool disposing)
+        private void DisposeComponents()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                    connection.Stop();
-
+                disposedValue=true;
                 producer.Dispose();
                 session.Dispose();
-                connection.Dispose();
-                disposedValue=true;
+                ActiveMQConnection.Dispose();
             }
+        }
+
+        async ValueTask IAsyncDisposable.DisposeAsync()
+        {
+            if (!disposedValue)
+                await ActiveMQConnection.StopAsync().ConfigureAwait(true);
+
+            DisposeComponents();
+            GC.SuppressFinalize(this);
         }
 
         void IDisposable.Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
+            if (!disposedValue)
+            {
+                ActiveMQConnection.Stop();
+                DisposeComponents();
+            }
             GC.SuppressFinalize(this);
         }
     }

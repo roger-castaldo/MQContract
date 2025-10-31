@@ -5,9 +5,10 @@ using MQContract.Interfaces.Service;
 
 namespace MQContract.HiveMQ
 {
-    internal class Subscription(HiveMQClientOptions clientOptions, Action<MQTT5PublishMessage> messageReceived, string channel, string? group) : IServiceSubscription, IDisposable
+    internal class Subscription(HiveMQClientOptions clientOptions, Action<MQTT5PublishMessage> messageReceived, string channel, string? group) : IServiceSubscription, IAsyncDisposable
     {
         private readonly HiveMQClient client = new(CloneOptions(clientOptions, channel));
+        private bool isOpen = false;
 
         private static HiveMQClientOptions CloneOptions(HiveMQClientOptions clientOptions, string channel)
         {
@@ -18,8 +19,6 @@ namespace MQContract.HiveMQ
             return result;
         }
 
-        private bool disposedValue;
-
         private string Topic => $"{(group==null ? "" : $"$share/{group}/")}{channel}";
 
         public async ValueTask EstablishAsync()
@@ -28,33 +27,25 @@ namespace MQContract.HiveMQ
                 => messageReceived(args.PublishMessage);
             var connectResult = await client.ConnectAsync();
             if (connectResult.ReasonCode != HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
-                throw new Exception($"Failed to connect: {connectResult.ReasonString}");
+                throw new ConnectionFailedException(connectResult.ReasonString);
+            isOpen = true;
             _ = await client.SubscribeAsync(Topic, HiveMQtt.MQTT5.Types.QualityOfService.AtLeastOnceDelivery);
         }
 
         async ValueTask IServiceSubscription.EndAsync()
         {
-            await client.UnsubscribeAsync(Topic);
-            await client.DisconnectAsync();
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposedValue)
+            if (isOpen)
             {
-                if (disposing)
-                {
-                    client.Dispose();
-                }
-                disposedValue=true;
+                isOpen = false;
+                await client.UnsubscribeAsync(Topic);
+                await client.DisconnectAsync();
             }
         }
 
-        void IDisposable.Dispose()
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            await ((IServiceSubscription)this).EndAsync();
+            client.Dispose();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace MQContract.ApachePulsar
     {
         private readonly IConsumer<byte[]> consumer = pulsarClient.CreateConsumer<byte[]>(new(group??Guid.NewGuid().ToString(), channel, Schema.ByteArray)
         {
-            SubscriptionType = (string.IsNullOrEmpty(group) ? SubscriptionType.Exclusive : SubscriptionType.Exclusive),
+            SubscriptionType = (string.IsNullOrEmpty(group) ? SubscriptionType.Exclusive : SubscriptionType.Shared),
             MessagePrefetchCount = 1
         });
         private readonly CancellationTokenSource cancelToken = new();

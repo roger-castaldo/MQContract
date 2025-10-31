@@ -26,7 +26,7 @@ namespace MQContract.InMemory
             return ValueTask.CompletedTask;
         }
 
-        public async ValueTask<bool> PublishMessage(InternalServiceMessage message)
+        public async ValueTask<bool> PublishMessageAsync(InternalServiceMessage message,CancellationToken cancellationToken)
         {
             var success = false;
             locker.EnterReadLock();
@@ -34,7 +34,7 @@ namespace MQContract.InMemory
                 index=0;
             if (index<channels.Count)
             {
-                await channels[index].Writer.WriteAsync(message);
+                await channels[index].Writer.WriteAsync(message,cancellationToken);
                 index++;
                 success=true;
             }
@@ -45,10 +45,11 @@ namespace MQContract.InMemory
         internal void Close()
         {
             locker.EnterWriteLock();
-            foreach (var channel in channels)
-                channel.Writer.TryComplete();
+            var channelsToClose = channels.ToArray();
             channels.Clear();
             locker.ExitWriteLock();
+            foreach (var channel in channelsToClose)
+                channel.Writer.TryComplete();
         }
     }
 }

@@ -69,7 +69,7 @@ namespace MQContract.Connections
             }
             return (retry, circuit) switch
             {
-                (not null, not null) => fallbackPolicy!.WrapAsync(retry.WrapAsync(circuit)),
+                (not null, not null) => fallbackPolicy!.WrapAsync(retry!.WrapAsync(circuit)),
                 (not null, null) => fallbackPolicy!.WrapAsync(retry!),
                 _ => circuit!
             };

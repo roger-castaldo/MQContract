@@ -12,14 +12,18 @@ namespace MQContract.ApachePulsar
     /// This is the MessageServiceConnection implemenation for using ApaxhePulsar
     /// </summary>
     /// <param name="pulsarClientBuilder">An instance of a pulsar client builder used to build the underlying client connection</param>
-    public class Connection(IPulsarClientBuilder pulsarClientBuilder) : IPingableMessageServiceConnection, IAsyncDisposable
+    public sealed class Connection(IPulsarClientBuilder pulsarClientBuilder) : IPingableMessageServiceConnection, IAsyncDisposable
     {
         private const string MessageTypeID = "_MessageTypeID";
 
-        private readonly IPulsarClient pulsarClient = pulsarClientBuilder.Build();
         private readonly SemaphoreSlim producerLock = new(1, 1);
         private readonly Dictionary<string, IProducer<byte[]>> producers = new();
         private bool disposed;
+
+        /// <summary>
+        /// The underlying connection, exposed for external usage
+        /// </summary>
+        public IPulsarClient PulsarClient { get; private init; } = pulsarClientBuilder.Build();
 
 
         /// <summary>
@@ -57,7 +61,7 @@ namespace MQContract.ApachePulsar
             await producerLock.WaitAsync();
             if (!producers.TryGetValue(message.Channel, out var producer))
             {
-                producer = pulsarClient.CreateProducer<byte[]>(new(message.Channel, Schema.ByteArray));
+                producer = PulsarClient.CreateProducer<byte[]>(new(message.Channel, Schema.ByteArray));
                 producers.Add(message.Channel, producer);
             }
             (var messageMetaData, var data) = Convert(message);
@@ -86,7 +90,7 @@ namespace MQContract.ApachePulsar
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var subscription = new Subscription(
-                pulsarClient,
+                PulsarClient,
                 messageReceived,
                 errorReceived,
                 channel,
@@ -102,13 +106,13 @@ namespace MQContract.ApachePulsar
             {
                 await producerLock.WaitAsync();
                 var start = Stopwatch.GetTimestamp();
-                var producer = pulsarClient.CreateProducer<byte[]>(new("non-persistent://public/default/heartbeat", Schema.ByteArray));
+                var producer = PulsarClient.CreateProducer<byte[]>(new("non-persistent://public/default/heartbeat", Schema.ByteArray));
 
                 _ = await producer.Send(new(),new byte[0]); // empty payload
 
                 await producer.DisposeAsync();
                 producerLock.Release();
-                return new(pulsarClient.ServiceUrl.ToString(), string.Empty, Stopwatch.GetElapsedTime(start));
+                return new(PulsarClient.ServiceUrl.ToString(), string.Empty, Stopwatch.GetElapsedTime(start));
             }
             catch
             {
@@ -127,7 +131,7 @@ namespace MQContract.ApachePulsar
                 foreach (var p in producers.Values)
                     await p.DisposeAsync();
                 producers.Clear();
-                await pulsarClient.DisposeAsync();
+                await PulsarClient.DisposeAsync();
                 producerLock.Release();
                 producerLock.Dispose();
             }

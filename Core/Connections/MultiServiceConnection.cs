@@ -28,16 +28,10 @@ namespace MQContract.Connections
                 .OfType<IPingableMessageServiceConnection>()
                 .WhenAll(pmc => pmc.PingAsync());
 
-        protected override void InternalDispose()
+        protected override async ValueTask InternalDisposeAsync()
         {
-            base.InternalDispose();
             publishLock.Dispose();
-        }
-
-        protected override ValueTask InternalDisposeAsync()
-        {
-            InternalDispose();
-            return ValueTask.CompletedTask;
+            await base.InternalDisposeAsync();
         }
 
         IMultiServiceContractConnection IMultiServiceContractConnection.RegisterServiceConnection(string serviceConnectionName, IMessageServiceConnection messageServiceConnection)

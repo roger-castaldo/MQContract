@@ -9,6 +9,8 @@ var serviceConnection = new Connection(new Confluent.Kafka.ClientConfig()
     BootstrapServers="localhost:9092"
 });
 
+#pragma warning disable S1075 // URIs should not be hardcoded
+//This is a sample program with a localhost connection so this is necessary
 var schemaRegistryConfig = new SchemaRegistryConfig
 {
     // URL to your Schema Registry (local, dev, or Confluent Cloud)
@@ -18,6 +20,7 @@ var schemaRegistryConfig = new SchemaRegistryConfig
     // BasicAuthCredentialsSource = AuthCredentialsSource.UserInfo,
     // BasicAuthUserInfo = "API_KEY:API_SECRET"
 };
+#pragma warning restore S1075 // URIs should not be hardcoded
 
 using var schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryConfig);
 

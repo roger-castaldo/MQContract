@@ -44,40 +44,47 @@ namespace MQContract.KubeMQ.Subscriptions
                             else
                                 break;
                         }
-                    }
-                    catch (RpcException rpcx)
+                    }catch(Exception e)
                     {
-                        if (active && !cancelToken.IsCancellationRequested)
-                        {
-                            switch (rpcx.StatusCode)
-                            {
-                                case StatusCode.Cancelled:
-                                case StatusCode.PermissionDenied:
-                                case StatusCode.Aborted:
-                                    await EndAsync();
-                                    break;
-                                case StatusCode.Unknown:
-                                case StatusCode.Unavailable:
-                                case StatusCode.DataLoss:
-                                case StatusCode.DeadlineExceeded:
-                                    logger?.LogTrace("RPC Error received on subscription {SubscriptionID}, retrying connection after delay {ReconnectDelay}ms.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, reconnectInterval, rpcx.StatusCode, rpcx.Message);
-                                    break;
-                                default:
-                                    logger?.LogError(rpcx, "RPC Error received on subscription {SubscriptionID}.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, rpcx.StatusCode, rpcx.Message);
-                                    errorReceived(rpcx);
-                                    break;
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        logger?.LogError(e, "Error received on subscription {SubscriptionID}.  Message:{ErrorMessage}", ID, e.Message);
-                        errorReceived(e);
+                        await ProcessErrorAsync(e);
                     }
                     if (active && !cancellationToken.IsCancellationRequested)
                         await Task.Delay(reconnectInterval);
                 }
             });
+        }
+
+        private async Task ProcessErrorAsync(Exception e)
+        {
+            if (e is RpcException rpcx)
+            {
+                if (active && !cancelToken.IsCancellationRequested)
+                {
+                    switch (rpcx.StatusCode)
+                    {
+                        case StatusCode.Cancelled:
+                        case StatusCode.PermissionDenied:
+                        case StatusCode.Aborted:
+                            await EndAsync();
+                            break;
+                        case StatusCode.Unknown:
+                        case StatusCode.Unavailable:
+                        case StatusCode.DataLoss:
+                        case StatusCode.DeadlineExceeded:
+                            logger?.LogTrace("RPC Error received on subscription {SubscriptionID}, retrying connection after delay {ReconnectDelay}ms.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, reconnectInterval, rpcx.StatusCode, rpcx.Message);
+                            break;
+                        default:
+                            logger?.LogError(rpcx, "RPC Error received on subscription {SubscriptionID}.  StatusCode:{StatusCode},Message:{ErrorMessage}", ID, rpcx.StatusCode, rpcx.Message);
+                            errorReceived(rpcx);
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                logger?.LogError(e, "Error received on subscription {SubscriptionID}.  Message:{ErrorMessage}", ID, e.Message);
+                errorReceived(e);
+            }
         }
 
         public async ValueTask EndAsync()
@@ -91,7 +98,9 @@ namespace MQContract.KubeMQ.Subscriptions
                     await client.DisposeAsync();
                     cancelToken.Dispose();
                 }
-                catch { }
+                catch {
+                    //ignoring error here as we are doing some cleanup
+                }
             }
         }
 

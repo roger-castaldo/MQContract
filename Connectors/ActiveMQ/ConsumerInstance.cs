@@ -2,12 +2,14 @@
 
 namespace MQContract.ActiveMQ
 {
-    internal class ConsumerInstance(string channel, string group, IMessageConsumer messageConsumer, Action cleanup)
+    internal sealed class ConsumerInstance(string channel, string group, IMessageConsumer messageConsumer, Action cleanup)
+        : IDisposable
     {
         public string Channel => channel;
         public string Group => group;
 
         private int listenerCount = 1;
+        private bool disposedValue;
 
         public void AddListener() => listenerCount++;
 
@@ -23,9 +25,29 @@ namespace MQContract.ActiveMQ
             }
         }
 
+        private void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    messageConsumer.Dispose();
+                }
+                disposedValue=true;
+            }
+        }
+                
+        ~ConsumerInstance()
+        {
+             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+             Dispose(disposing: false);
+        }
+
         public void Dispose()
         {
-            messageConsumer.Dispose();
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

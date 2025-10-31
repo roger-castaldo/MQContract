@@ -6,6 +6,7 @@
 - [Connection](#T-MQContract-ApachePulsar-Connection 'MQContract.ApachePulsar.Connection')
   - [#ctor(pulsarClientBuilder)](#M-MQContract-ApachePulsar-Connection-#ctor-DotPulsar-Abstractions-IPulsarClientBuilder- 'MQContract.ApachePulsar.Connection.#ctor(DotPulsar.Abstractions.IPulsarClientBuilder)')
   - [MaxMessageBodySize](#P-MQContract-ApachePulsar-Connection-MaxMessageBodySize 'MQContract.ApachePulsar.Connection.MaxMessageBodySize')
+  - [PulsarClient](#P-MQContract-ApachePulsar-Connection-PulsarClient 'MQContract.ApachePulsar.Connection.PulsarClient')
 
 <a name='T-MQContract-ApachePulsar-Connection'></a>
 ## Connection `type`
@@ -43,3 +44,10 @@ This is the MessageServiceConnection implemenation for using ApaxhePulsar
 ##### Summary
 
 Max Message Body Size in bytes, default 5MB
+
+<a name='P-MQContract-ApachePulsar-Connection-PulsarClient'></a>
+### PulsarClient `property`
+
+##### Summary
+
+The underlying connection, exposed for external usage
