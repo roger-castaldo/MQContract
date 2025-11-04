@@ -32,7 +32,6 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Assert
-            Assert.IsNotNull(checkResult);
             Assert.AreEqual(HealthStatus.Healthy, checkResult.Status);
             Assert.AreEqual(Constants.HealthyDescription, checkResult.Description);
             Assert.IsTrue(checkResult.Data.TryGetValue(ServiceName, out var value));
@@ -71,7 +70,6 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Assert
-            Assert.IsNotNull(checkResult);
             Assert.AreEqual(HealthStatus.Unhealthy, checkResult.Status);
             Assert.AreEqual(Constants.UnHealthyDescription, checkResult.Description);
             Assert.IsTrue(checkResult.Data.TryGetValue(ServiceName, out var value));
@@ -103,7 +101,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsNotNull(error);
             Assert.AreEqual("serviceConnectionList", error.ParamName);
-            Assert.IsTrue(error.Message.StartsWith("No Pingable service connections provided, cannot provide health checks"));
+            Assert.StartsWith("No Pingable service connections provided, cannot provide health checks", error.Message);
             #endregion
 
             #region Verify
@@ -133,7 +131,6 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Assert
-            Assert.IsNotNull(checkResult);
             Assert.AreEqual(HealthStatus.Healthy, checkResult.Status);
             Assert.AreEqual(Constants.HealthyDescription, checkResult.Description);
             Assert.IsTrue(checkResult.Data.TryGetValue(ServiceName, out var value));
@@ -183,7 +180,6 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Assert
-            Assert.IsNotNull(checkResult);
             Assert.AreEqual(HealthStatus.Degraded, checkResult.Status);
             Assert.AreEqual(Constants.DegradedDescription, checkResult.Description);
             Assert.IsTrue(checkResult.Data.TryGetValue(ServiceName, out var value));

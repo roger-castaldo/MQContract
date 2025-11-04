@@ -282,7 +282,7 @@ namespace AutomatedTesting
 
             #region Assert
             Assert.IsNotNull(subscription);
-            Assert.AreEqual(1, channels.Count);
+            Assert.HasCount(1, channels);
             Assert.AreEqual(newChannel, channels[0]);
             #endregion
 
@@ -335,7 +335,7 @@ namespace AutomatedTesting
             #region Assert
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, channels.Count);
+            Assert.HasCount(2, channels);
             Assert.AreEqual(newChannel, channels[0]);
             Assert.AreEqual(otherChannel, channels[1]);
             #endregion
@@ -387,7 +387,7 @@ namespace AutomatedTesting
             #region Assert
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, channels.Count);
+            Assert.HasCount(2, channels);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.AreEqual(newChannel, channels[1]);
             #endregion
@@ -440,7 +440,7 @@ namespace AutomatedTesting
             #region Assert
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, channels.Count);
+            Assert.HasCount(2, channels);
             Assert.AreEqual(newChannel, channels[0]);
             Assert.AreEqual(otherChannel, channels[1]);
             #endregion
@@ -492,7 +492,7 @@ namespace AutomatedTesting
             #region Assert
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, channels.Count);
+            Assert.HasCount(2, channels);
             Assert.AreEqual(newChannel, channels[0]);
             Assert.AreEqual(otherChannel, channels[1]);
             #endregion
@@ -814,7 +814,7 @@ namespace AutomatedTesting
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount<string>(channels, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
-            Assert.AreEqual(1, channels.Count);
+            Assert.HasCount(1, channels);
             Assert.AreEqual(newChannel, channels[0]);
             #endregion
 
@@ -871,7 +871,7 @@ namespace AutomatedTesting
             Assert.IsTrue(await Helper.WaitForCount<string>(channels, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, channels.Count);
+            Assert.HasCount(2, channels);
             Assert.AreEqual(newChannel, channels[0]);
             Assert.AreEqual(otherChannel, channels[1]);
             #endregion
@@ -927,7 +927,7 @@ namespace AutomatedTesting
             Assert.IsTrue(await Helper.WaitForCount<string>(channels, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, channels.Count);
+            Assert.HasCount(2, channels);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.AreEqual(newChannel, channels[1]);
             #endregion
@@ -984,7 +984,7 @@ namespace AutomatedTesting
             Assert.IsTrue(await Helper.WaitForCount<string>(channels, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, channels.Count);
+            Assert.HasCount(2, channels);
             Assert.AreEqual(newChannel, channels[0]);
             Assert.AreEqual(otherChannel, channels[1]);
             #endregion
@@ -1040,7 +1040,7 @@ namespace AutomatedTesting
             Assert.IsTrue(await Helper.WaitForCount<string>(channels, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, channels.Count);
+            Assert.HasCount(2, channels);
             Assert.AreEqual(newChannel, channels[0]);
             Assert.AreEqual(otherChannel, channels[1]);
             #endregion

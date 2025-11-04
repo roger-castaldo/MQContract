@@ -12,6 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\Connectors\InMemory\InMemory.csproj" />
 	  <ProjectReference Include="..\Core\Core.csproj" />
 	</ItemGroup>
 

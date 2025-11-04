@@ -78,12 +78,12 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, receivedActions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(1, receivedActions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, serviceMessages);
+            Assert.HasCount(1, errorActions);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
@@ -171,10 +171,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Assert
             Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
-            Assert.AreEqual(1, actions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, errorActions.Count);
+            Assert.HasCount(1, actions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, errorActions);
             Assert.AreEqual(typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name, channels[0]);
             Assert.AreEqual(typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name, groups[0]);
             #endregion
@@ -249,10 +249,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Assert
             Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
-            Assert.AreEqual(1, actions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, errorActions.Count);
+            Assert.HasCount(1, actions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, errorActions);
             Assert.AreEqual(typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name, channels[0]);
             Assert.AreEqual(typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name, groups[0]);
             #endregion
@@ -398,12 +398,12 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, receivedActions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(1, receivedActions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, serviceMessages);
+            Assert.HasCount(1, errorActions);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
@@ -415,7 +415,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.IsNull(result.Error);
             Assert.AreEqual(result.Result, responseMessage);
             Assert.IsTrue(acknowledged);
-            Assert.AreEqual(4, capturedActivities.Count);
+            Assert.HasCount(4, capturedActivities);
             ConnectionHelper.ValidateConsumeActivity<BasicQueryMessage>(
                 serviceMessages[0],
                 capturedActivities[1],

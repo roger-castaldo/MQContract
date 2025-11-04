@@ -74,10 +74,10 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, channels.Count);
+            Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
-            Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.HasCount(1, messages);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -144,10 +144,10 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, channels.Count);
+            Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
-            Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.HasCount(1, messages);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(4, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -220,10 +220,10 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, channels.Count);
+            Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
-            Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.HasCount(1, messages);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -287,10 +287,10 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, channels.Count);
+            Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
-            Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.HasCount(1, messages);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -471,16 +471,16 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, channels.Count);
+            Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
-            Assert.AreEqual(1, messages.Count);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.HasCount(1, messages);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual((withLinking ? 5 : 3), messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.First().Result);
             Assert.IsTrue(acknowledged);
-            Assert.AreEqual(2, capturedActivities.Count);
+            Assert.HasCount(2, capturedActivities);
             ConnectionHelper.ValidatePublishActivity<BasicQueryMessage>(
                  messages[0],
                  capturedActivities[0],

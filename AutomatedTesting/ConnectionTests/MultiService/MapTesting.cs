@@ -44,7 +44,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, messages.Count);
+            Assert.HasCount(1, messages);
             Assert.AreEqual(result.ID, messages[0].ID);
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(serviceName, result.Results.First().ServiceName);
@@ -90,7 +90,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, messages.Count);
+            Assert.HasCount(1, messages);
             Assert.AreEqual(result.ID, messages[0].ID);
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(serviceName, result.Results.First().ServiceName);
@@ -136,7 +136,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, messages.Count);
+            Assert.HasCount(1, messages);
             Assert.AreEqual(result.ID, messages[0].ID);
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(serviceName, result.Results.First().ServiceName);
@@ -184,7 +184,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, messages.Count);
+            Assert.HasCount(1, messages);
             Assert.AreEqual(result.ID, messages[0].ID);
             Assert.AreEqual(1, result.Results.Count());
             Assert.AreEqual(serviceName, result.Results.First().ServiceName);

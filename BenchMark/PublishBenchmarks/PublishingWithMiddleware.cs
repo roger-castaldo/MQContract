@@ -1,7 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQContract;
 using MQContract.Interfaces;
-using MQContract.Interfaces.Service;
 
 namespace BenchMark.PublishBenchmarks
 {

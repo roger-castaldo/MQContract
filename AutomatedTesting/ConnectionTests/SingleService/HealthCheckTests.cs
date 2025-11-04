@@ -28,7 +28,6 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #endregion
 
             #region Assert
-            Assert.IsNotNull(checkResult);
             Assert.AreEqual(HealthStatus.Healthy,checkResult.Status);
             Assert.AreEqual(Constants.HealthyDescription, checkResult.Description);
             Assert.AreEqual(pingResult.Host, checkResult.Data["Host"]);
@@ -62,7 +61,6 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #endregion
 
             #region Assert
-            Assert.IsNotNull(checkResult);
             Assert.AreEqual(HealthStatus.Unhealthy, checkResult.Status);
             Assert.AreEqual(Constants.UnHealthyDescription, checkResult.Description);
             Assert.AreEqual(error, checkResult.Exception);
@@ -89,7 +87,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #region Assert
             Assert.IsNotNull(error);
             Assert.AreEqual("connection", error.ParamName);
-            Assert.IsTrue(error.Message.StartsWith("Service connection is not Pingable"));
+            Assert.StartsWith("Service connection is not Pingable", error.Message);
             #endregion
 
             #region Verify

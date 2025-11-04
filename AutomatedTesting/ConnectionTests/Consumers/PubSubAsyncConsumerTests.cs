@@ -1,13 +1,11 @@
 ﻿using AutomatedTesting.Consumers;
 using AutomatedTesting.Messages;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
 using MQContract.Interfaces.Service;
-using MQContract.Messages;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -78,12 +76,12 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, actions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(1, actions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, serviceMessages);
+            Assert.HasCount(1, errorActions);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
@@ -168,10 +166,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Assert
             Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
-            Assert.AreEqual(1, actions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, errorActions.Count);
+            Assert.HasCount(1, actions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, errorActions);
             Assert.AreEqual(typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name, channels[0]);
             Assert.AreEqual(typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name, groups[0]);
             #endregion
@@ -246,10 +244,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #region Assert
             Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
-            Assert.AreEqual(1, actions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, errorActions.Count);
+            Assert.HasCount(1, actions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, errorActions);
             Assert.AreEqual(typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerMessageChannelAttribute>(false)!.Name, channels[0]);
             Assert.AreEqual(typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerGroupAttribute>(false)!.Name, groups[0]);
             #endregion
@@ -391,12 +389,12 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, actions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(1, actions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, serviceMessages);
+            Assert.HasCount(1, errorActions);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
@@ -405,7 +403,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
             Assert.IsTrue(acknowledged);
-            Assert.AreEqual(2, capturedActivities.Count);
+            Assert.HasCount(2, capturedActivities);
             ConnectionHelper.ValidatePublishActivity<BasicMessage>(
                 publishedMessages[0],
                 capturedActivities[0],
@@ -498,12 +496,12 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, actions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(1, actions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, serviceMessages);
+            Assert.HasCount(1, errorActions);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
@@ -512,7 +510,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
             Assert.IsTrue(acknowledged);
-            Assert.AreEqual(2, capturedActivities.Count);
+            Assert.HasCount(2, capturedActivities);
             ConnectionHelper.ValidatePublishActivity<BasicMessage>(
                 publishedMessages[0],
                 capturedActivities[0],
@@ -617,8 +615,8 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, actions.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
+            Assert.HasCount(1, actions);
+            Assert.HasCount(1, serviceMessages);
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
             {
                 Assert.IsTrue(await Helper.WaitForCount(BasicMessageAsyncConsumer.Messages, 1, TimeSpan.FromMinutes(1)));
@@ -629,7 +627,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             }
             else
             {
-                Assert.AreEqual(0, BasicMessageAsyncConsumer.Messages.Count);
+                Assert.IsEmpty(BasicMessageAsyncConsumer.Messages);
             }
             Assert.AreEqual(acknowledgeDrop, acknowledged);
             #endregion

@@ -11,7 +11,7 @@ namespace AutomatedTesting.Encoders
         public ValueTask<CustomEncoderWithInjectionMessage?> DecodeAsync(Stream stream)
         {
             var message = Encoding.ASCII.GetString(new BinaryReader(stream).ReadBytes((int)stream.Length));
-            Assert.IsTrue(message.StartsWith($"{injectableService.Name}:"));
+            Assert.StartsWith($"{injectableService.Name}:", message);
             return ValueTask.FromResult<CustomEncoderWithInjectionMessage?>(new CustomEncoderWithInjectionMessage(message.Substring($"{injectableService.Name}:".Length)));
         }
 

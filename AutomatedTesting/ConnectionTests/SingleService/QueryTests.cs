@@ -62,11 +62,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -117,11 +117,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual($"Not{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}", messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -174,10 +174,10 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             Assert.AreEqual(messageHeader.Keys.Count(), messages[0].Header.Keys.Count());
@@ -232,11 +232,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(timeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -289,12 +289,12 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(1, messages[0].Header.Keys.Count());
             Assert.AreEqual("true", messages[0].Header[messages[0].Header.Keys.First()]);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(
                 new GZipStream(new MemoryStream(messages[0].Data.ToArray()), CompressionMode.Decompress)
             ));
@@ -357,11 +357,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(Convert.ToBase64String(encodedData), Convert.ToBase64String(messages[0].Data.ToArray()));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -427,10 +427,10 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray().Reverse().ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             Assert.AreEqual(headers.Count, messages[0].Header.Keys.Count());
@@ -484,11 +484,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsFalse(result.IsError);
             Assert.IsNull(result.Error);
             Assert.AreEqual(typeof(TimeoutMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(TimeSpan.FromMilliseconds(typeof(TimeoutMessage).GetCustomAttribute<MessageResponseTimeoutAttribute>(false)?.Value ?? 0), timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.TimeoutMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<TimeoutMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -539,11 +539,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.NamedAndVersionedMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<NamedAndVersionedMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -594,11 +594,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.CustomEncoderMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await new TestMessageEncoder().DecodeAsync(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -651,11 +651,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.CustomEncoderWithInjectionMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage,
                 await new TestMessageEncoderWithInjection(services.GetRequiredService<IInjectableService>()).DecodeAsync(new MemoryStream(messages[0].Data.ToArray()))
             );
@@ -708,10 +708,10 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(Constants.CustomEncryptorMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             var decodedData = await new TestMessageEncryptor().DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorMessage>(decodedData));
             Assert.AreEqual(responseMessage, result.Result);
@@ -765,10 +765,10 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(Constants.CustomEncryptorWithInjectionMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             var decodedData = await new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<CustomEncryptorWithInjectionMessage>(decodedData));
             Assert.AreEqual(responseMessage, result.Result);
@@ -862,7 +862,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Assert
             Assert.IsNotNull(exception);
-            Assert.IsTrue(exception.Message.StartsWith($"message data exceeds maxmium message size (MaxSize:{serviceConnection.Object.MaxMessageBodySize},"));
+            Assert.StartsWith($"message data exceeds maxmium message size (MaxSize:{serviceConnection.Object.MaxMessageBodySize},", exception.Message);
             Assert.AreEqual("message", exception.ParamName);
             #endregion
 
@@ -917,11 +917,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result1.Error);
             Assert.IsFalse(result1.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(2, timeouts.Count);
+            Assert.HasCount(2, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage1, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result1.Result);
 
@@ -933,7 +933,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual(defaultTimeout, timeouts[1]);
             Assert.AreEqual(0, messages[1].Header.Keys.Count());
             Assert.AreEqual(Constants.NoChannelMessageType, messages[1].MessageTypeID);
-            Assert.IsTrue(messages[1].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[1].Data.Length);
             Assert.AreEqual(testMessage2, await JsonSerializer.DeserializeAsync<NoChannelMessage>(new MemoryStream(messages[1].Data.ToArray())));
             Assert.AreEqual(responseMessage, result2.Result);
             #endregion
@@ -984,11 +984,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
             #endregion
@@ -1118,14 +1118,14 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
-            Assert.AreEqual(1, timeouts.Count);
+            Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual((withLinking ? 2 : 0), messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
-            Assert.IsTrue(messages[0].Data.Length > 0);
+            Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(responseMessage, result.Result);
-            Assert.AreEqual(2, capturedActivities.Count);
+            Assert.HasCount(2, capturedActivities);
             ConnectionHelper.ValidatePublishActivity<BasicQueryMessage>(
                 messages[0],
                 capturedActivities[0],

@@ -72,10 +72,10 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, channels.Count);
-            Assert.AreEqual(2, groups.Count);
-            Assert.AreEqual(2, messages.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(2, channels);
+            Assert.HasCount(2, groups);
+            Assert.HasCount(2, messages);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.IsNotNull(groups[1]);
@@ -86,7 +86,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsFalse(result.First().IsError);
             Assert.IsNull(result.First().Error);
             Assert.AreEqual(result.First().Result, responseMessage);
-            Assert.AreEqual(2, errorHandlers.Count);
+            Assert.HasCount(2, errorHandlers);
             Assert.AreEqual(testError, exceptions[0]);
             #endregion
 
@@ -152,14 +152,14 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(error);
-            Assert.AreEqual(2, channels.Count);
-            Assert.AreEqual(2, groups.Count);
-            Assert.AreEqual(1, messages.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(2, channels);
+            Assert.HasCount(2, groups);
+            Assert.HasCount(1, messages);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.IsNotNull(groups[1]);
-            Assert.AreEqual(0, receivedMessages.Count);
+            Assert.IsEmpty(receivedMessages);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.IsInstanceOfType<InvalidQueryResponseMessageReceivedException>(exceptions[0]);
             #endregion
@@ -237,10 +237,10 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, channels.Count);
-            Assert.AreEqual(2, groups.Count);
-            Assert.AreEqual(2, messages.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(2, channels);
+            Assert.HasCount(2, groups);
+            Assert.HasCount(2, messages);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.IsNotNull(groups[1]);
@@ -251,9 +251,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsFalse(result.First().IsError);
             Assert.IsNull(result.First().Error);
             Assert.AreEqual(result.First().Result, responseMessage);
-            Assert.AreEqual(2, errorHandlers.Count);
+            Assert.HasCount(2, errorHandlers);
             Assert.AreEqual(testError, exceptions[0]);
-            Assert.AreEqual(4, capturedActivities.Count);
+            Assert.HasCount(4, capturedActivities);
             ConnectionHelper.ValidateConsumeActivity<BasicQueryMessage>(
                 receivedServiceMessages[0],
                 capturedActivities[1],

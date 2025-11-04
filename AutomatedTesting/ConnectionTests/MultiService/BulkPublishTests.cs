@@ -49,7 +49,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => r.Results.Count()==1));
             Assert.IsTrue(result.SelectMany(r => r.Results).All(r => !r.IsError && Equals(ServiceName, r.ServiceName)));
-            Assert.AreEqual(testMessages.Count(), messages.Count);
+            Assert.HasCount(testMessages.Count(), messages);
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[1].ID);
             Assert.IsTrue(messages.TrueForAll(m =>
@@ -101,7 +101,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => r.Results.Count()==1));
             Assert.IsTrue(result.SelectMany(r => r.Results).All(r => !r.IsError && Equals(ServiceName, r.ServiceName)));
-            Assert.AreEqual(testMessages.Count(), messages.Count);
+            Assert.HasCount(testMessages.Count(), messages);
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[1].ID);
             Assert.IsTrue(messages.TrueForAll(m =>
@@ -153,7 +153,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(2, result.Count());
             Assert.IsTrue(result.All(r => r.Results.Count()==1));
             Assert.IsTrue(result.SelectMany(r => r.Results).All(r => !r.IsError && Equals(ServiceName, r.ServiceName)));
-            Assert.AreEqual(testMessages.Count(), messages.Count);
+            Assert.HasCount(testMessages.Count(), messages);
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[1].ID);
             Assert.IsTrue(messages.TrueForAll(m =>
@@ -205,7 +205,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => r.Results.Count()==1));
             Assert.IsTrue(result.SelectMany(r => r.Results).All(r => !r.IsError && Equals(ServiceName, r.ServiceName)));
-            Assert.AreEqual(1, messages.Count);
+            Assert.HasCount(1, messages);
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ElementAt(0).ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[0].ElementAt(1).ID);
             Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
@@ -261,7 +261,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => r.Results.Count()==1));
             Assert.IsTrue(result.SelectMany(r => r.Results).All(r => !r.IsError && Equals(ServiceName, r.ServiceName)));
-            Assert.AreEqual(testMessages.Count(), messages.Count);
+            Assert.HasCount(testMessages.Count(), messages);
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[1].ID);
             Assert.IsTrue(messages.TrueForAll(m =>
@@ -272,7 +272,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             ));
             Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[1].Data.ToArray())));
-            Assert.AreEqual(1, capturedActivities.Count);
+            Assert.HasCount(1, capturedActivities);
             ConnectionHelper.ValidateBulkPublishActivity<BasicMessage>(
                 messages,
                 capturedActivities[0],
@@ -326,7 +326,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => r.Results.Count()==1));
             Assert.IsTrue(result.SelectMany(r => r.Results).All(r => !r.IsError && Equals(ServiceName, r.ServiceName)));
-            Assert.AreEqual(1, messages.Count);
+            Assert.HasCount(1, messages);
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ElementAt(0).ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[0].ElementAt(1).ID);
             Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
