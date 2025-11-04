@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MQContract.Messages
+﻿namespace MQContract.Messages
 {
     /// <summary>
     /// Houses a set of message filtering calls for a given type.  This particular record can be passed in to pubsub consumers/subscriptions

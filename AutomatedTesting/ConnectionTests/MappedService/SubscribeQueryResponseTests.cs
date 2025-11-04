@@ -76,12 +76,12 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, receivedActions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(1, receivedActions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, serviceMessages);
+            Assert.HasCount(1, errorActions);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
@@ -140,7 +140,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Assert
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, channels.Count);
+            Assert.HasCount(2, channels);
             Assert.AreEqual(channelName, channels[0]);
             Assert.AreEqual(channelName, channels[1]);
             #endregion
@@ -186,7 +186,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Assert
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
-            Assert.AreEqual(2, groups.Count);
+            Assert.HasCount(2, groups);
             Assert.AreEqual(groupName, groups[0]);
             Assert.AreNotEqual(groupName, groups[1]);
             #endregion
@@ -363,12 +363,12 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result1);
-            Assert.AreEqual(1, receivedActions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(2, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(1, receivedActions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(2, serviceMessages);
+            Assert.HasCount(1, errorActions);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
@@ -443,12 +443,12 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsTrue(await Helper.WaitForCount(exceptions, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, receivedActions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(0, messages.Count);
-            Assert.AreEqual(1, errorActions.Count);
+            Assert.HasCount(1, receivedActions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, serviceMessages);
+            Assert.IsEmpty(messages);
+            Assert.HasCount(1, errorActions);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(exception, exceptions[0]);
@@ -659,7 +659,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.IsTrue(result.IsError);
             Assert.IsFalse(string.IsNullOrWhiteSpace(result.Error?.Message));
-            Assert.IsTrue(result.Error!.Message.Contains(typeof(BasicResponseMessage).FullName!));
+            Assert.Contains(typeof(BasicResponseMessage).FullName??"", result.Error!.Message);
             #endregion
 
             #region Verify
@@ -828,12 +828,12 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(subscription);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, receivedActions.Count);
-            Assert.AreEqual(1, channels.Count);
-            Assert.AreEqual(1, groups.Count);
-            Assert.AreEqual(1, serviceMessages.Count);
-            Assert.AreEqual(1, errorActions.Count);
-            Assert.AreEqual(1, exceptions.Count);
+            Assert.HasCount(1, receivedActions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, serviceMessages);
+            Assert.HasCount(1, errorActions);
+            Assert.HasCount(1, exceptions);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
@@ -845,7 +845,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNull(result.Error);
             Assert.AreEqual(result.Result, responseMessage);
             Assert.IsTrue(acknowledged);
-            Assert.AreEqual(4, capturedActivities.Count);
+            Assert.HasCount(4, capturedActivities);
             ConnectionHelper.ValidateConsumeActivity<BasicQueryMessage>(
                 serviceMessages[0],
                 capturedActivities[1],

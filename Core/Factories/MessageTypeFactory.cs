@@ -9,14 +9,12 @@ using MQContract.Interfaces.Messages;
 using MQContract.Messages;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Text.RegularExpressions;
 
 namespace MQContract.Factories
 {
     internal class MessageTypeFactory<T>
-        : IMessageFactory<T>
+        : AConverter<T,T>, IMessageFactory<T>
     {
-        private static Regex RegMetaData => new(@"^(.+)-((\d+\.)*(\d+))$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(200));
 
         private readonly IMessageEncoder? globalMessageEncoder;
         private readonly IMessageTypeEncoder<T>? messageEncoder;
@@ -81,7 +79,7 @@ namespace MQContract.Factories
                 var conv = paths[x];
                 var destType = ExtractGenericArguements(conv.First().GetType())[0];
                 paths.AddRange(
-                    types
+                    [.. types
                     .Where(t => Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType &&
                         iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)
                         && iface.GetGenericArguments()[1] == destType
@@ -90,8 +88,7 @@ namespace MQContract.Factories
                     .Select(t => conv.Prepend((serviceProvider == null ?
                         Activator.CreateInstance(t)! :
                         ActivatorUtilities.CreateInstance(serviceProvider, t)
-                    )))
-                    .ToArray()
+                    )))]
                 );
             }
 
@@ -111,21 +108,6 @@ namespace MQContract.Factories
 
         private static Type[] ExtractGenericArguements(Type t) => t.GetInterfaces().First(iface => iface.IsGenericType && iface.GetGenericTypeDefinition()==typeof(IMessageConverter<,>)).GetGenericArguments();
 
-        private static bool IsMessageTypeMatch(string metaData, Type t)
-        {
-            var match = RegMetaData.Match(metaData);
-            if (match.Success)
-            {
-                if (match.Groups[1].Value==t.GetCustomAttributes<MessageNameAttribute>().Select(mn => mn.Value).FirstOrDefault(Utility.TypeName(t))
-                    && new Version(match.Groups[2].Value)==new Version(t.GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0")))
-                    return true;
-
-            }
-            else
-                throw new InvalidDataException("MetaData is not valid");
-            return false;
-        }
-
         public async ValueTask<ServiceMessage> ConvertMessageAsync(T message, bool ignoreChannel, string? channel, MessageHeader messageHeader)
         {
             if (string.IsNullOrWhiteSpace(channel)&&!ignoreChannel)
@@ -140,7 +122,7 @@ namespace MQContract.Factories
             );
         }
 
-        async ValueTask<T?> IConversionPath<T>.ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
+        protected override async ValueTask<T?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
         {
             if (!IgnoreMessageHeader)
 #pragma warning disable S3236 // Caller information arguments should not be provided explicitly
@@ -150,11 +132,11 @@ namespace MQContract.Factories
                 throw ErrorServiceMessage.DecodeError(message.Data);
             IConversionPath<T>? converter = null;
             T? result;
-            if (IgnoreMessageHeader || IsMessageTypeMatch(message.MessageTypeID, typeof(T)))
+            if (IgnoreMessageHeader || ((IConversionPath<T>)this).IsMatch(message.MessageTypeID))
                 result = await (messageEncoder?.DecodeAsync(new MemoryStream(message.Data.ToArray()))??globalMessageEncoder!.DecodeAsync<T>(new MemoryStream(message.Data.ToArray())));
             else
             {
-                converter = converters.FirstOrDefault(conv => IsMessageTypeMatch(message.MessageTypeID, conv.GetType().GetGenericArguments()[0]));
+                converter = converters.FirstOrDefault(conv => conv.IsMatch(message.MessageTypeID));
                 if (converter==null)
                     throw new InvalidCastException();
                 result = await converter.ConvertMessageAsync(logger, message, dataStream: new MemoryStream(message.Data.ToArray()));

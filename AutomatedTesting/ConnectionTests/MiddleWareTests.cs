@@ -95,7 +95,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Assert
             Assert.IsNotNull(error);
-            Assert.IsTrue(error.Message.Contains(typeof(InvalidMiddleware).ToString()));
+            Assert.Contains(typeof(InvalidMiddleware).ToString(), error.Message);
             #endregion
 
             #region Verify
@@ -407,7 +407,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
-            Assert.AreEqual(messages[0].Channel, expectedChannel);
+            Assert.AreEqual(expectedChannel, messages[0].Channel);
             #endregion
 
             #region Verify

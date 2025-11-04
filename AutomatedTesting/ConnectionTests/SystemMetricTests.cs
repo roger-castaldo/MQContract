@@ -33,28 +33,28 @@ namespace AutomatedTesting.ContractConnectionTests
 
         private static void CheckMeasurement(IReadOnlyList<CollectedMeasurement<long>> readOnlyList, int count, long value)
         {
-            Assert.AreEqual(count, readOnlyList.Count);
+            Assert.HasCount(count, readOnlyList);
             if (count>0)
                 Assert.AreEqual(value, readOnlyList[0].Value);
         }
 
         private static void CheckMeasurement(IReadOnlyList<CollectedMeasurement<double>> readOnlyList, int count, double value)
         {
-            Assert.AreEqual(count, readOnlyList.Count);
+            Assert.HasCount(count, readOnlyList);
             if (count>0)
                 Assert.AreEqual(value, readOnlyList[0].Value);
         }
 
         private static void CheckMeasurementGreaterThan(IReadOnlyList<CollectedMeasurement<long>> readOnlyList, int count, long value)
         {
-            Assert.AreEqual(count, readOnlyList.Count);
-            Assert.IsTrue(value<readOnlyList[0].Value);
+            Assert.HasCount(count, readOnlyList);
+            Assert.IsLessThan(readOnlyList[0].Value, value);
         }
 
         private static void CheckMeasurementGreaterThan(IReadOnlyList<CollectedMeasurement<double>> readOnlyList, int count, double value)
         {
-            Assert.AreEqual(count, readOnlyList.Count);
-            Assert.IsTrue(value<readOnlyList[0].Value);
+            Assert.HasCount(count, readOnlyList);
+            Assert.IsLessThan(readOnlyList[0].Value, value);
         }
 
         private static void AreMeasurementsEquals(IReadOnlyList<CollectedMeasurement<long>> left, IReadOnlyList<CollectedMeasurement<long>> right)

@@ -7,7 +7,7 @@ using MQContract.Interfaces.Messages;
 
 namespace MQContract.Factories
 {
-    internal class ConversionPath<T, V> : IConversionPath<V>
+    internal class ConversionPath<T, V> : AConverter<V,T>
         where T : class
         where V : class
     {
@@ -24,7 +24,7 @@ namespace MQContract.Factories
             messageEncoder = (IMessageTypeEncoder<T>)(serviceProvider!=null ? ActivatorUtilities.CreateInstance(serviceProvider, encoderType) : Activator.CreateInstance(encoderType)!);
         }
 
-        public async ValueTask<V?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream = null)
+        protected override async ValueTask<V?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
         {
             dataStream ??= new MemoryStream(message.Data.ToArray());
             object? result = await (globalMessageEncoder!=null && messageEncoder is JsonEncoder<T> ? globalMessageEncoder.DecodeAsync<T>(dataStream) : messageEncoder.DecodeAsync(dataStream));

@@ -44,7 +44,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, testMessages.Count(), TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
-            Assert.AreEqual(testMessages.Count(), messages.Count);
+            Assert.HasCount(testMessages.Count(), messages);
             Assert.IsTrue(messages.TrueForAll(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
@@ -92,7 +92,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
-            Assert.AreEqual(2, messages.Count);
+            Assert.HasCount(2, messages);
             Assert.IsTrue(messages.TrueForAll(m =>
                 Equals(channelName, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
@@ -139,7 +139,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
-            Assert.AreEqual(2, messages.Count);
+            Assert.HasCount(2, messages);
             Assert.IsTrue(messages.TrueForAll(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
@@ -187,7 +187,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
-            Assert.AreEqual(1, messages.Count);
+            Assert.HasCount(1, messages);
             Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
@@ -239,7 +239,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, testMessages.Count(), TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
-            Assert.AreEqual(testMessages.Count(), messages.Count);
+            Assert.HasCount(testMessages.Count(), messages);
             Assert.IsTrue(messages.TrueForAll(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals((withLinking ? 2 : 0), m.Header.Keys.Count())
@@ -248,7 +248,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             ));
             Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
             Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[1].Data.ToArray())));
-            Assert.AreEqual(1, capturedActivities.Count);
+            Assert.HasCount(1, capturedActivities);
             ConnectionHelper.ValidateBulkPublishActivity<BasicMessage>(
                 messages,
                 capturedActivities[0],
@@ -299,7 +299,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.IsTrue(result.All(r => messages.Any(m => m.Any(m => Equals(r.ID, m.ID)))));
-            Assert.AreEqual(1, messages.Count);
+            Assert.HasCount(1, messages);
             Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
                 Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
                 && Equals((withLinking ? 2 : 0), m.Header.Keys.Count())
