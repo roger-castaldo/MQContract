@@ -62,7 +62,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
@@ -106,7 +106,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: $"Not{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}");
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: $"Not{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}");
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -117,7 +117,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual($"Not{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}", messages[0].Channel);
+            Assert.AreEqual($"Not{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}", messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
@@ -174,7 +174,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
@@ -232,7 +232,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(timeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
@@ -289,7 +289,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(1, messages[0].Header.Keys.Count());
@@ -357,7 +357,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
@@ -427,7 +427,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
@@ -484,9 +484,9 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsFalse(result.IsError);
             Assert.IsNull(result.Error);
-            Assert.AreEqual(typeof(TimeoutMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(TimeoutMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
-            Assert.AreEqual(TimeSpan.FromMilliseconds(typeof(TimeoutMessage).GetCustomAttribute<MessageResponseTimeoutAttribute>(false)?.Value ?? 0), timeouts[0]);
+            Assert.AreEqual(TimeSpan.FromMilliseconds(typeof(TimeoutMessage).GetCustomAttribute<QueryMessageAttribute>(false)?.ResponseTimeout.TotalMilliseconds ?? 0), timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.TimeoutMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -539,7 +539,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
@@ -594,7 +594,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
@@ -651,7 +651,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
@@ -708,7 +708,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(Constants.CustomEncryptorMessageType, messages[0].MessageTypeID);
@@ -765,7 +765,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(Constants.CustomEncryptorWithInjectionMessageType, messages[0].MessageTypeID);
@@ -917,7 +917,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result1.ID);
             Assert.IsNull(result1.Error);
             Assert.IsFalse(result1.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(2, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
@@ -984,7 +984,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
@@ -1202,7 +1202,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(queryResult.ID, result.ID);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
             Assert.AreEqual((withLinking ? 2 : 0), messages[0].Header.Keys.Count());

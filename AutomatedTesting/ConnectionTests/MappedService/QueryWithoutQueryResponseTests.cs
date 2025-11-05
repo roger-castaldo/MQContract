@@ -70,7 +70,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);
@@ -138,7 +138,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);
@@ -212,7 +212,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);
@@ -237,7 +237,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Arrange
             var testMessage = new BasicQueryMessage("testMessage");
             var responseMessage = new BasicResponseMessage("testResponse");
-            var responseChannel = typeof(BasicQueryMessage).GetCustomAttribute<QueryResponseChannelAttribute>()?.Name;
+            var responseChannel = typeof(BasicQueryMessage).GetCustomAttribute<QueryMessageAttribute>()?.ResponseChannel;
             using var ms = new MemoryStream();
             await JsonSerializer.SerializeAsync(ms, responseMessage);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
@@ -277,7 +277,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);
@@ -457,7 +457,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNotNull(result);
             Assert.IsNull(result.Error);
             Assert.IsFalse(result.IsError);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, channels);
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);

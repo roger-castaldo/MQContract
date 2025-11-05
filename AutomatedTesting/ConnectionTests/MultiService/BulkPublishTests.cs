@@ -53,7 +53,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[1].ID);
             Assert.IsTrue(messages.TrueForAll(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
@@ -157,7 +157,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[1].ID);
             Assert.IsTrue(messages.TrueForAll(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
             ));
@@ -209,7 +209,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ElementAt(0).ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[0].ElementAt(1).ID);
             Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
@@ -265,7 +265,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[1].ID);
             Assert.IsTrue(messages.TrueForAll(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals((withLinking ? 2 : 0), m.Header.Keys.Count())
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
@@ -330,7 +330,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(result.ElementAt(0).ID, messages[0].ElementAt(0).ID);
             Assert.AreEqual(result.ElementAt(1).ID, messages[0].ElementAt(1).ID);
             Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals((withLinking ? 2 : 0), m.Header.Keys.Count())
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0

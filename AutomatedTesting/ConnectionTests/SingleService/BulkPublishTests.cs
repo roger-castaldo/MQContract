@@ -46,7 +46,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.HasCount(testMessages.Count(), messages);
             Assert.IsTrue(messages.TrueForAll(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
@@ -141,7 +141,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.HasCount(2, messages);
             Assert.IsTrue(messages.TrueForAll(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
             ));
@@ -189,7 +189,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.HasCount(1, messages);
             Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals(0, m.Header.Keys.Count())
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
@@ -241,7 +241,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(result.All(r => Equals(r, transmissionResult)));
             Assert.HasCount(testMessages.Count(), messages);
             Assert.IsTrue(messages.TrueForAll(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals((withLinking ? 2 : 0), m.Header.Keys.Count())
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
@@ -301,7 +301,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(result.All(r => messages.Any(m => m.Any(m => Equals(r.ID, m.ID)))));
             Assert.HasCount(1, messages);
             Assert.IsTrue(messages.SelectMany(messageSet => messageSet.Select(m => m)).All(m =>
-                Equals(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, m.Channel)
+                Equals(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, m.Channel)
                 && Equals((withLinking ? 2 : 0), m.Header.Keys.Count())
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0

@@ -81,7 +81,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -161,7 +161,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(1, groups);
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -500,7 +500,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(2, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -574,7 +574,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(1, serviceMessages);
             Assert.IsEmpty(messages);
             Assert.HasCount(1, errorActions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(exception, exceptions[0]);
             #endregion
@@ -638,7 +638,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(1, serviceMessages);
             Assert.IsEmpty(messages);
             Assert.HasCount(1, errorActions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.IsInstanceOfType<InvalidCastException>(exceptions[0]);
             #endregion
@@ -710,7 +710,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -779,7 +779,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 return ValueTask.CompletedTask;
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -797,7 +797,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -856,7 +856,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 return ValueTask.CompletedTask;
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<NoChannelMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
+            var result = await contractConnection.PublishAsync<NoChannelMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -874,7 +874,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -933,7 +933,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 return ValueTask.CompletedTask;
             }, (error) => exceptions.Add(error));
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicQueryMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name);
+            var result = await contractConnection.PublishAsync<BasicQueryMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -950,7 +950,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(1, groups);
             Assert.IsEmpty(messages);
             Assert.HasCount(1, errorActions);
-            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(1, exceptions.OfType<InvalidCastException>().Count());
             Assert.Contains(exception, exceptions);
@@ -1034,7 +1034,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());

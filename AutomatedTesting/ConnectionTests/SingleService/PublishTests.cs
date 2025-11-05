@@ -49,7 +49,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -80,7 +80,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: $"Not{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}");
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: $"Not{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}");
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -89,7 +89,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual($"Not{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}", messages[0].Channel);
+            Assert.AreEqual($"Not{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}", messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -131,7 +131,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, JsonSerializer.Deserialize<BasicMessage>(new MemoryStream(messages[0].Data.ToArray())));
@@ -175,7 +175,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(1, messages[0].Header.Keys.Count());
             Assert.AreEqual("true", messages[0].Header[messages[0].Header.Keys.First()]);
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
@@ -315,7 +315,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.NamedAndVersionedMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -355,7 +355,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.CustomEncoderMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -398,7 +398,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.CustomEncoderWithInjectionMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -440,7 +440,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(CustomEncryptorMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(Constants.CustomEncryptorMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             var decodedData = await new TestMessageEncryptor().DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
@@ -482,7 +482,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(CustomEncryptorWithInjectionMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(Constants.CustomEncryptorWithInjectionMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             var decodedData = await new TestMessageEncryptorWithInjection(services.GetRequiredService<IInjectableService>()).DecryptAsync(new MemoryStream(messages[0].Data.ToArray()), messages[0].Header);
@@ -599,7 +599,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result1);
             Assert.AreEqual(transmissionResult, result1);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -658,7 +658,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -711,7 +711,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -763,7 +763,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(2, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -815,7 +815,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
             Assert.AreEqual(transmissionResult, result);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(0, messages[0].Header.Keys.Count());
             Assert.AreEqual(Constants.BasicMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);

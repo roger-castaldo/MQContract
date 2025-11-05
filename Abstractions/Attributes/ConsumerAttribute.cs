@@ -7,11 +7,10 @@
     /// </summary>
     /// <param name="name">The name of the Channel to be used for receving messages to this consumer</param>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class ConsumerMessageChannelAttribute(string name) : Attribute
+    public class ConsumerAttribute(string? channel=null,string? group=null,bool ignoreMessageTypeHeader=false) : Attribute
     {
-        /// <summary>
-        /// The name of the channel specified for this Consumer to listen to
-        /// </summary>
-        public string Name => name;
+        public string? Channel => channel;
+        public string? Group => group;
+        public bool IgnoreMessageTypeHeader => ignoreMessageTypeHeader;
     }
 }

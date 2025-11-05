@@ -21,12 +21,13 @@ namespace MQContract.Connections
             string? channel, string? group, bool ignoreMessageHeader, string consumerName, Type consumerType, CancellationToken cancellationToken)
         {
             ISubscription subscription;
+            var consumerAttribute = consumerType.GetCustomAttribute<ConsumerAttribute>();
             try
             {
                 subscription = await createSubscription(
-                    channel??consumerType.GetCustomAttribute<ConsumerMessageChannelAttribute>()?.Name,
-                    group??consumerType.GetCustomAttribute<ConsumerGroupAttribute>()?.Name,
-                    ignoreMessageHeader||(consumerType.GetCustomAttribute<ConsumerIgnoreMessageHeaderAttribute>()?.IgnoreHeader??false)
+                    channel??consumerAttribute?.Channel,
+                    group??consumerAttribute?.Group,
+                    ignoreMessageHeader||(consumerAttribute?.IgnoreMessageTypeHeader??false)
                 );
             }
             catch (Exception err)

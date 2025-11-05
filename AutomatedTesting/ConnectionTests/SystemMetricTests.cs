@@ -20,7 +20,7 @@ namespace AutomatedTesting.ContractConnectionTests
             if (channel!=null)
                 template = $"channels.{channel}";
             else if (messageType!=null)
-                template = $"types.{messageType.GetCustomAttributes<MessageNameAttribute>().Select(mn => mn.Value).FirstOrDefault(messageType.Name)}.{messageType.GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0").Replace('.', '_')}";
+                template = $"types.{messageType.GetCustomAttribute<MessageAttribute>()?.TypeName??messageType.Name}.{(messageType.GetCustomAttribute<MessageAttribute>()?.TypeVersion.ToString()??"0.0.0.0").Replace('.', '_')}";
             return (
                 new MetricCollector<long>(owningMeter, $"{MeterName}.{template}.sent.count"),
                 new MetricCollector<long>(owningMeter, $"{MeterName}.{template}.sent.bytes"),

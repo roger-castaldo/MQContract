@@ -2,8 +2,6 @@
 
 namespace AutomatedTesting.Messages
 {
-    [MessageChannel("BasicQueryMessage")]
-    [QueryResponseType(typeof(BasicResponseMessage))]
-    [QueryResponseChannel("BasicQueryResponse")]
+    [QueryMessage(channel: "BasicQueryMessage",responseType:typeof(BasicResponseMessage),responseChannel: "BasicQueryResponse")]
     public record BasicQueryMessage(string TypeName) { }
 }

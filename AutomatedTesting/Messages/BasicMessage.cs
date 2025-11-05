@@ -2,6 +2,6 @@
 
 namespace AutomatedTesting.Messages
 {
-    [MessageChannel("BasicMessage")]
+    [Message(channel: "BasicMessage")]
     public record BasicMessage(string Name);
 }

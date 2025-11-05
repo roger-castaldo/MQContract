@@ -73,7 +73,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.HasCount(2, groups);
             Assert.HasCount(2, messages);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.IsNotNull(groups[1]);
             Assert.AreEqual(receivedMessages[0].ID, messages[0].ID);
@@ -151,7 +151,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.HasCount(2, groups);
             Assert.HasCount(1, messages);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.IsNotNull(groups[1]);
             Assert.IsEmpty(receivedMessages);
@@ -235,7 +235,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.HasCount(2, groups);
             Assert.HasCount(2, messages);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.IsNotNull(groups[1]);
             Assert.AreEqual(receivedMessages[0].ID, messages[0].ID);

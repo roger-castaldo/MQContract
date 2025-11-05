@@ -14,7 +14,7 @@ namespace AutomatedTesting
         public const string NoChannelMessageType = "NoChannelMessage-0.0.0.0";
         public const string BasicQueryMessageType = "BasicQueryMessage-0.0.0.0";
         public const string TimeoutMessageType = "TimeoutMessage-0.0.0.0";
-        public readonly static string NamedAndVersionedMessageType = $"{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageNameAttribute>(false)?.Value}-{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageVersionAttribute>(false)?.Version}";
+        public readonly static string NamedAndVersionedMessageType = $"{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.TypeName}-{typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.TypeVersion}";
         public const string HealthyDescription = "MQContract service connection available";
         public const string UnHealthyDescription = "MQContract service connection unavailable";
         public const string DegradedDescription = "1 or more service connection(s) are unavailable";

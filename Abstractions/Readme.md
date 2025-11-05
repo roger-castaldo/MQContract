@@ -8,15 +8,8 @@
   - [Error](#P-MQContract-Messages-ChildTransmissionResult-Error 'MQContract.Messages.ChildTransmissionResult.Error')
   - [IsError](#P-MQContract-Messages-ChildTransmissionResult-IsError 'MQContract.Messages.ChildTransmissionResult.IsError')
   - [ServiceName](#P-MQContract-Messages-ChildTransmissionResult-ServiceName 'MQContract.Messages.ChildTransmissionResult.ServiceName')
-- [ConsumerGroupAttribute](#T-MQContract-Attributes-ConsumerGroupAttribute 'MQContract.Attributes.ConsumerGroupAttribute')
-  - [#ctor(name)](#M-MQContract-Attributes-ConsumerGroupAttribute-#ctor-System-String- 'MQContract.Attributes.ConsumerGroupAttribute.#ctor(System.String)')
-  - [Name](#P-MQContract-Attributes-ConsumerGroupAttribute-Name 'MQContract.Attributes.ConsumerGroupAttribute.Name')
-- [ConsumerIgnoreMessageHeaderAttribute](#T-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute 'MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute')
-  - [#ctor(ignoreHeader)](#M-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute-#ctor-System-Boolean- 'MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute.#ctor(System.Boolean)')
-  - [IgnoreHeader](#P-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute-IgnoreHeader 'MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute.IgnoreHeader')
-- [ConsumerMessageChannelAttribute](#T-MQContract-Attributes-ConsumerMessageChannelAttribute 'MQContract.Attributes.ConsumerMessageChannelAttribute')
-  - [#ctor(name)](#M-MQContract-Attributes-ConsumerMessageChannelAttribute-#ctor-System-String- 'MQContract.Attributes.ConsumerMessageChannelAttribute.#ctor(System.String)')
-  - [Name](#P-MQContract-Attributes-ConsumerMessageChannelAttribute-Name 'MQContract.Attributes.ConsumerMessageChannelAttribute.Name')
+- [ConsumerAttribute](#T-MQContract-Attributes-ConsumerAttribute 'MQContract.Attributes.ConsumerAttribute')
+  - [#ctor(name)](#M-MQContract-Attributes-ConsumerAttribute-#ctor-System-String,System-String,System-Boolean- 'MQContract.Attributes.ConsumerAttribute.#ctor(System.String,System.String,System.Boolean)')
 - [ErrorMessage](#T-MQContract-Messages-ErrorMessage 'MQContract.Messages.ErrorMessage')
   - [#ctor(exception,isFatal)](#M-MQContract-Messages-ErrorMessage-#ctor-System-Exception,System-Boolean- 'MQContract.Messages.ErrorMessage.#ctor(System.Exception,System.Boolean)')
   - [Exception](#P-MQContract-Messages-ErrorMessage-Exception 'MQContract.Messages.ErrorMessage.Exception')
@@ -171,9 +164,11 @@
 - [ISpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.ISpecificTypeMiddleware`1')
 - [ISubscription](#T-MQContract-Interfaces-ISubscription 'MQContract.Interfaces.ISubscription')
   - [EndAsync()](#M-MQContract-Interfaces-ISubscription-EndAsync 'MQContract.Interfaces.ISubscription.EndAsync')
-- [MessageChannelAttribute](#T-MQContract-Attributes-MessageChannelAttribute 'MQContract.Attributes.MessageChannelAttribute')
-  - [#ctor(name)](#M-MQContract-Attributes-MessageChannelAttribute-#ctor-System-String- 'MQContract.Attributes.MessageChannelAttribute.#ctor(System.String)')
-  - [Name](#P-MQContract-Attributes-MessageChannelAttribute-Name 'MQContract.Attributes.MessageChannelAttribute.Name')
+- [MessageAttribute](#T-MQContract-Attributes-MessageAttribute 'MQContract.Attributes.MessageAttribute')
+  - [#ctor(channel,typeName,typeVersion)](#M-MQContract-Attributes-MessageAttribute-#ctor-System-String,System-String,System-String- 'MQContract.Attributes.MessageAttribute.#ctor(System.String,System.String,System.String)')
+  - [Channel](#P-MQContract-Attributes-MessageAttribute-Channel 'MQContract.Attributes.MessageAttribute.Channel')
+  - [TypeName](#P-MQContract-Attributes-MessageAttribute-TypeName 'MQContract.Attributes.MessageAttribute.TypeName')
+  - [TypeVersion](#P-MQContract-Attributes-MessageAttribute-TypeVersion 'MQContract.Attributes.MessageAttribute.TypeVersion')
 - [MessageFilterResult](#T-MQContract-MessageFilterResult 'MQContract.MessageFilterResult')
   - [Allow](#F-MQContract-MessageFilterResult-Allow 'MQContract.MessageFilterResult.Allow')
   - [DropAndAcknowledge](#F-MQContract-MessageFilterResult-DropAndAcknowledge 'MQContract.MessageFilterResult.DropAndAcknowledge')
@@ -189,16 +184,6 @@
   - [#ctor(originalHeader,appendedHeader)](#M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,MQContract-Messages-MessageHeader- 'MQContract.Messages.MessageHeader.#ctor(MQContract.Messages.MessageHeader,MQContract.Messages.MessageHeader)')
   - [Item](#P-MQContract-Messages-MessageHeader-Item-System-String- 'MQContract.Messages.MessageHeader.Item(System.String)')
   - [Keys](#P-MQContract-Messages-MessageHeader-Keys 'MQContract.Messages.MessageHeader.Keys')
-- [MessageNameAttribute](#T-MQContract-Attributes-MessageNameAttribute 'MQContract.Attributes.MessageNameAttribute')
-  - [#ctor(value)](#M-MQContract-Attributes-MessageNameAttribute-#ctor-System-String- 'MQContract.Attributes.MessageNameAttribute.#ctor(System.String)')
-  - [Value](#P-MQContract-Attributes-MessageNameAttribute-Value 'MQContract.Attributes.MessageNameAttribute.Value')
-- [MessageResponseTimeoutAttribute](#T-MQContract-Attributes-MessageResponseTimeoutAttribute 'MQContract.Attributes.MessageResponseTimeoutAttribute')
-  - [#ctor(value)](#M-MQContract-Attributes-MessageResponseTimeoutAttribute-#ctor-System-Int32- 'MQContract.Attributes.MessageResponseTimeoutAttribute.#ctor(System.Int32)')
-  - [TimeSpanValue](#P-MQContract-Attributes-MessageResponseTimeoutAttribute-TimeSpanValue 'MQContract.Attributes.MessageResponseTimeoutAttribute.TimeSpanValue')
-  - [Value](#P-MQContract-Attributes-MessageResponseTimeoutAttribute-Value 'MQContract.Attributes.MessageResponseTimeoutAttribute.Value')
-- [MessageVersionAttribute](#T-MQContract-Attributes-MessageVersionAttribute 'MQContract.Attributes.MessageVersionAttribute')
-  - [#ctor(version)](#M-MQContract-Attributes-MessageVersionAttribute-#ctor-System-String- 'MQContract.Attributes.MessageVersionAttribute.#ctor(System.String)')
-  - [Version](#P-MQContract-Attributes-MessageVersionAttribute-Version 'MQContract.Attributes.MessageVersionAttribute.Version')
 - [MultiTransmissionResult](#T-MQContract-Messages-MultiTransmissionResult 'MQContract.Messages.MultiTransmissionResult')
   - [#ctor(ID,Results)](#M-MQContract-Messages-MultiTransmissionResult-#ctor-System-String,System-Collections-Generic-IEnumerable{MQContract-Messages-ChildTransmissionResult}- 'MQContract.Messages.MultiTransmissionResult.#ctor(System.String,System.Collections.Generic.IEnumerable{MQContract.Messages.ChildTransmissionResult})')
   - [HasError](#P-MQContract-Messages-MultiTransmissionResult-HasError 'MQContract.Messages.MultiTransmissionResult.HasError')
@@ -211,16 +196,12 @@
   - [Host](#P-MQContract-Messages-PingResult-Host 'MQContract.Messages.PingResult.Host')
   - [ResponseTime](#P-MQContract-Messages-PingResult-ResponseTime 'MQContract.Messages.PingResult.ResponseTime')
   - [Version](#P-MQContract-Messages-PingResult-Version 'MQContract.Messages.PingResult.Version')
-- [QueryResponseChannelAttribute](#T-MQContract-Attributes-QueryResponseChannelAttribute 'MQContract.Attributes.QueryResponseChannelAttribute')
-  - [#ctor(name)](#M-MQContract-Attributes-QueryResponseChannelAttribute-#ctor-System-String- 'MQContract.Attributes.QueryResponseChannelAttribute.#ctor(System.String)')
-  - [Name](#P-MQContract-Attributes-QueryResponseChannelAttribute-Name 'MQContract.Attributes.QueryResponseChannelAttribute.Name')
+- [QueryMessageAttribute](#T-MQContract-Attributes-QueryMessageAttribute 'MQContract.Attributes.QueryMessageAttribute')
+  - [#ctor(name)](#M-MQContract-Attributes-QueryMessageAttribute-#ctor-System-String,System-String,System-String,System-String,System-Int32,System-Type- 'MQContract.Attributes.QueryMessageAttribute.#ctor(System.String,System.String,System.String,System.String,System.Int32,System.Type)')
 - [QueryResponseMessage\`1](#T-MQContract-Messages-QueryResponseMessage`1 'MQContract.Messages.QueryResponseMessage`1')
   - [#ctor(Message,Headers)](#M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-Dictionary{System-String,System-String}- 'MQContract.Messages.QueryResponseMessage`1.#ctor(`0,System.Collections.Generic.Dictionary{System.String,System.String})')
   - [Headers](#P-MQContract-Messages-QueryResponseMessage`1-Headers 'MQContract.Messages.QueryResponseMessage`1.Headers')
   - [Message](#P-MQContract-Messages-QueryResponseMessage`1-Message 'MQContract.Messages.QueryResponseMessage`1.Message')
-- [QueryResponseTypeAttribute](#T-MQContract-Attributes-QueryResponseTypeAttribute 'MQContract.Attributes.QueryResponseTypeAttribute')
-  - [#ctor(responseType)](#M-MQContract-Attributes-QueryResponseTypeAttribute-#ctor-System-Type- 'MQContract.Attributes.QueryResponseTypeAttribute.#ctor(System.Type)')
-  - [ResponseType](#P-MQContract-Attributes-QueryResponseTypeAttribute-ResponseType 'MQContract.Attributes.QueryResponseTypeAttribute.ResponseType')
 - [QueryResult\`1](#T-MQContract-Messages-QueryResult`1 'MQContract.Messages.QueryResult`1')
   - [#ctor(ID,Header,Result,Error)](#M-MQContract-Messages-QueryResult`1-#ctor-System-String,MQContract-Messages-MessageHeader,`0,MQContract-Messages-ErrorMessage- 'MQContract.Messages.QueryResult`1.#ctor(System.String,MQContract.Messages.MessageHeader,`0,MQContract.Messages.ErrorMessage)')
   - [Header](#P-MQContract-Messages-QueryResult`1-Header 'MQContract.Messages.QueryResult`1.Header')
@@ -312,88 +293,8 @@ Flag to indicate if the result is an error
 
 The unique name of the underlying service that was used to transmit
 
-<a name='T-MQContract-Attributes-ConsumerGroupAttribute'></a>
-## ConsumerGroupAttribute `type`
-
-##### Namespace
-
-MQContract.Attributes
-
-##### Summary
-
-Use this attribute to specify the GroupName that this Consumer will use when registering 
-to supply to the underlying subscription.  This can be overriden in the registration call by passing 
-a value for the group input.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| name | [T:MQContract.Attributes.ConsumerGroupAttribute](#T-T-MQContract-Attributes-ConsumerGroupAttribute 'T:MQContract.Attributes.ConsumerGroupAttribute') | The name of the Group to identify this Consumer and it's underlying subscription |
-
-<a name='M-MQContract-Attributes-ConsumerGroupAttribute-#ctor-System-String-'></a>
-### #ctor(name) `constructor`
-
-##### Summary
-
-Use this attribute to specify the GroupName that this Consumer will use when registering 
-to supply to the underlying subscription.  This can be overriden in the registration call by passing 
-a value for the group input.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| name | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the Group to identify this Consumer and it's underlying subscription |
-
-<a name='P-MQContract-Attributes-ConsumerGroupAttribute-Name'></a>
-### Name `property`
-
-##### Summary
-
-The name of the Group specified for this Consumer toi be part of
-
-<a name='T-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute'></a>
-## ConsumerIgnoreMessageHeaderAttribute `type`
-
-##### Namespace
-
-MQContract.Attributes
-
-##### Summary
-
-Use this attribute to specify the if this consumer should ignore the message header as part of it's
-underlying subscription.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| ignoreHeader | [T:MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute](#T-T-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute 'T:MQContract.Attributes.ConsumerIgnoreMessageHeaderAttribute') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
-
-<a name='M-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute-#ctor-System-Boolean-'></a>
-### #ctor(ignoreHeader) `constructor`
-
-##### Summary
-
-Use this attribute to specify the if this consumer should ignore the message header as part of it's
-underlying subscription.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| ignoreHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class |
-
-<a name='P-MQContract-Attributes-ConsumerIgnoreMessageHeaderAttribute-IgnoreHeader'></a>
-### IgnoreHeader `property`
-
-##### Summary
-
-Indicates whether the underlying subscript should ignore the message header
-
-<a name='T-MQContract-Attributes-ConsumerMessageChannelAttribute'></a>
-## ConsumerMessageChannelAttribute `type`
+<a name='T-MQContract-Attributes-ConsumerAttribute'></a>
+## ConsumerAttribute `type`
 
 ##### Namespace
 
@@ -409,9 +310,9 @@ and can be overriden by passing a channel value when registering the consumer.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| name | [T:MQContract.Attributes.ConsumerMessageChannelAttribute](#T-T-MQContract-Attributes-ConsumerMessageChannelAttribute 'T:MQContract.Attributes.ConsumerMessageChannelAttribute') | The name of the Channel to be used for receving messages to this consumer |
+| name | [T:MQContract.Attributes.ConsumerAttribute](#T-T-MQContract-Attributes-ConsumerAttribute 'T:MQContract.Attributes.ConsumerAttribute') | The name of the Channel to be used for receving messages to this consumer |
 
-<a name='M-MQContract-Attributes-ConsumerMessageChannelAttribute-#ctor-System-String-'></a>
+<a name='M-MQContract-Attributes-ConsumerAttribute-#ctor-System-String,System-String,System-Boolean-'></a>
 ### #ctor(name) `constructor`
 
 ##### Summary
@@ -425,13 +326,6 @@ and can be overriden by passing a channel value when registering the consumer.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | name | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the Channel to be used for receving messages to this consumer |
-
-<a name='P-MQContract-Attributes-ConsumerMessageChannelAttribute-Name'></a>
-### Name `property`
-
-##### Summary
-
-The name of the channel specified for this Consumer to listen to
 
 <a name='T-MQContract-Messages-ErrorMessage'></a>
 ## ErrorMessage `type`
@@ -3014,8 +2908,8 @@ A task that is ending the subscription and closing off the resources for it
 
 This method has no parameters.
 
-<a name='T-MQContract-Attributes-MessageChannelAttribute'></a>
-## MessageChannelAttribute `type`
+<a name='T-MQContract-Attributes-MessageAttribute'></a>
+## MessageAttribute `type`
 
 ##### Namespace
 
@@ -3031,14 +2925,14 @@ be specified, either using the attribute or by specifying in the input.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| name | [T:MQContract.Attributes.MessageChannelAttribute](#T-T-MQContract-Attributes-MessageChannelAttribute 'T:MQContract.Attributes.MessageChannelAttribute') | The name of the Channel to be used for transmitting this message class. |
+| channel | [T:MQContract.Attributes.MessageAttribute](#T-T-MQContract-Attributes-MessageAttribute 'T:MQContract.Attributes.MessageAttribute') | The channel to be used |
 
 ##### Remarks
 
 
 
-<a name='M-MQContract-Attributes-MessageChannelAttribute-#ctor-System-String-'></a>
-### #ctor(name) `constructor`
+<a name='M-MQContract-Attributes-MessageAttribute-#ctor-System-String,System-String,System-String-'></a>
+### #ctor(channel,typeName,typeVersion) `constructor`
 
 ##### Summary
 
@@ -3050,18 +2944,34 @@ be specified, either using the attribute or by specifying in the input.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| name | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the Channel to be used for transmitting this message class. |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to be used |
+| typeName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message type to use |
+| typeVersion | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message version to use |
 
 ##### Remarks
 
 
 
-<a name='P-MQContract-Attributes-MessageChannelAttribute-Name'></a>
-### Name `property`
+<a name='P-MQContract-Attributes-MessageAttribute-Channel'></a>
+### Channel `property`
 
 ##### Summary
 
-The name of the channel specified
+The Channel specified
+
+<a name='P-MQContract-Attributes-MessageAttribute-TypeName'></a>
+### TypeName `property`
+
+##### Summary
+
+The name of the message type used when transmitting
+
+<a name='P-MQContract-Attributes-MessageAttribute-TypeVersion'></a>
+### TypeVersion `property`
+
+##### Summary
+
+The version number to tag this message with during transmission
 
 <a name='T-MQContract-MessageFilterResult'></a>
 ## MessageFilterResult `type`
@@ -3249,166 +3159,6 @@ The value for the given key or null if not found
 
 A list of the available keys in the header
 
-<a name='T-MQContract-Attributes-MessageNameAttribute'></a>
-## MessageNameAttribute `type`
-
-##### Namespace
-
-MQContract.Attributes
-
-##### Summary
-
-Used to specify the name of the message type inside the system.  
-Default is to use the class name, however, this can be used to 
-override that and allow for different versions of a message to 
-have the same name withing the tranmission system.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| value | [T:MQContract.Attributes.MessageNameAttribute](#T-T-MQContract-Attributes-MessageNameAttribute 'T:MQContract.Attributes.MessageNameAttribute') | The name to use for the class when transmitting |
-
-##### Remarks
-
-
-
-<a name='M-MQContract-Attributes-MessageNameAttribute-#ctor-System-String-'></a>
-### #ctor(value) `constructor`
-
-##### Summary
-
-Used to specify the name of the message type inside the system.  
-Default is to use the class name, however, this can be used to 
-override that and allow for different versions of a message to 
-have the same name withing the tranmission system.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| value | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name to use for the class when transmitting |
-
-##### Remarks
-
-
-
-<a name='P-MQContract-Attributes-MessageNameAttribute-Value'></a>
-### Value `property`
-
-##### Summary
-
-The name of the class used when transmitting
-
-<a name='T-MQContract-Attributes-MessageResponseTimeoutAttribute'></a>
-## MessageResponseTimeoutAttribute `type`
-
-##### Namespace
-
-MQContract.Attributes
-
-##### Summary
-
-Use this attribute to specify the timeout (in milliseconds) for a response 
-from an RPC call for the specific class that this is attached to.  This can 
-be overridden by supplying a timeout value when making an RPC call.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| value | [T:MQContract.Attributes.MessageResponseTimeoutAttribute](#T-T-MQContract-Attributes-MessageResponseTimeoutAttribute 'T:MQContract.Attributes.MessageResponseTimeoutAttribute') | The number of milliseconds for an RPC call response to return |
-
-##### Remarks
-
-
-
-<a name='M-MQContract-Attributes-MessageResponseTimeoutAttribute-#ctor-System-Int32-'></a>
-### #ctor(value) `constructor`
-
-##### Summary
-
-Use this attribute to specify the timeout (in milliseconds) for a response 
-from an RPC call for the specific class that this is attached to.  This can 
-be overridden by supplying a timeout value when making an RPC call.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| value | [System.Int32](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Int32 'System.Int32') | The number of milliseconds for an RPC call response to return |
-
-##### Remarks
-
-
-
-<a name='P-MQContract-Attributes-MessageResponseTimeoutAttribute-TimeSpanValue'></a>
-### TimeSpanValue `property`
-
-##### Summary
-
-The converted TimeSpan value from the supplied milliseconds value in the constructor
-
-<a name='P-MQContract-Attributes-MessageResponseTimeoutAttribute-Value'></a>
-### Value `property`
-
-##### Summary
-
-The number of milliseconds for the timeout to trigger for this RPC call class
-
-<a name='T-MQContract-Attributes-MessageVersionAttribute'></a>
-## MessageVersionAttribute `type`
-
-##### Namespace
-
-MQContract.Attributes
-
-##### Summary
-
-Used to tag the version number of a specific message class.
-By default all messages are tagged as version 0.0.0.0.
-By using this tag, combined with the MessageName you can create multiple
-versions of the same message and if you create converters for those versions
-it allows you to not necessarily update code for call handling immediately.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| version | [T:MQContract.Attributes.MessageVersionAttribute](#T-T-MQContract-Attributes-MessageVersionAttribute 'T:MQContract.Attributes.MessageVersionAttribute') | The version number to tag this message class during transmission |
-
-##### Remarks
-
-
-
-<a name='M-MQContract-Attributes-MessageVersionAttribute-#ctor-System-String-'></a>
-### #ctor(version) `constructor`
-
-##### Summary
-
-Used to tag the version number of a specific message class.
-By default all messages are tagged as version 0.0.0.0.
-By using this tag, combined with the MessageName you can create multiple
-versions of the same message and if you create converters for those versions
-it allows you to not necessarily update code for call handling immediately.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| version | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The version number to tag this message class during transmission |
-
-##### Remarks
-
-
-
-<a name='P-MQContract-Attributes-MessageVersionAttribute-Version'></a>
-### Version `property`
-
-##### Summary
-
-The version number to tag this class with during transmission
-
 <a name='T-MQContract-Messages-MultiTransmissionResult'></a>
 ## MultiTransmissionResult `type`
 
@@ -3536,8 +3286,8 @@ How long it took for the server to respond
 
 The version of the service running, if provided
 
-<a name='T-MQContract-Attributes-QueryResponseChannelAttribute'></a>
-## QueryResponseChannelAttribute `type`
+<a name='T-MQContract-Attributes-QueryMessageAttribute'></a>
+## QueryMessageAttribute `type`
 
 ##### Namespace
 
@@ -3552,9 +3302,9 @@ IMPORTANT:  This particular attribute and the response channel argument are only
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| name | [T:MQContract.Attributes.QueryResponseChannelAttribute](#T-T-MQContract-Attributes-QueryResponseChannelAttribute 'T:MQContract.Attributes.QueryResponseChannelAttribute') | The name of the channel to use for responses |
+| name | [T:MQContract.Attributes.QueryMessageAttribute](#T-T-MQContract-Attributes-QueryMessageAttribute 'T:MQContract.Attributes.QueryMessageAttribute') | The name of the channel to use for responses |
 
-<a name='M-MQContract-Attributes-QueryResponseChannelAttribute-#ctor-System-String-'></a>
+<a name='M-MQContract-Attributes-QueryMessageAttribute-#ctor-System-String,System-String,System-String,System-String,System-Int32,System-Type-'></a>
 ### #ctor(name) `constructor`
 
 ##### Summary
@@ -3567,13 +3317,6 @@ IMPORTANT:  This particular attribute and the response channel argument are only
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | name | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel to use for responses |
-
-<a name='P-MQContract-Attributes-QueryResponseChannelAttribute-Name'></a>
-### Name `property`
-
-##### Summary
-
-The Name of the response channel
 
 <a name='T-MQContract-Messages-QueryResponseMessage`1'></a>
 ## QueryResponseMessage\`1 `type`
@@ -3631,51 +3374,6 @@ The headers to attach to the response
 ##### Summary
 
 The message to respond back with
-
-<a name='T-MQContract-Attributes-QueryResponseTypeAttribute'></a>
-## QueryResponseTypeAttribute `type`
-
-##### Namespace
-
-MQContract.Attributes
-
-##### Summary
-
-Used to allow the specification of a response type without supplying it to the contract calls
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| responseType | [T:MQContract.Attributes.QueryResponseTypeAttribute](#T-T-MQContract-Attributes-QueryResponseTypeAttribute 'T:MQContract.Attributes.QueryResponseTypeAttribute') | The type of class that should be expected for a response |
-
-##### Remarks
-
-Default constructor
-
-<a name='M-MQContract-Attributes-QueryResponseTypeAttribute-#ctor-System-Type-'></a>
-### #ctor(responseType) `constructor`
-
-##### Summary
-
-Used to allow the specification of a response type without supplying it to the contract calls
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| responseType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of class that should be expected for a response |
-
-##### Remarks
-
-Default constructor
-
-<a name='P-MQContract-Attributes-QueryResponseTypeAttribute-ResponseType'></a>
-### ResponseType `property`
-
-##### Summary
-
-The type of class that should be expected for a Response when not specified
 
 <a name='T-MQContract-Messages-QueryResult`1'></a>
 ## QueryResult\`1 `type`

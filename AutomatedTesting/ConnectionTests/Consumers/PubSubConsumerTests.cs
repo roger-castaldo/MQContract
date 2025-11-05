@@ -81,7 +81,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -130,7 +130,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
-                mappedChannel??typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
+                mappedChannel??typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                 mappedGroup,
                 It.IsAny<CancellationToken>()), Times.Once);
             #endregion
@@ -169,7 +169,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.HasCount(1, channels);
             Assert.HasCount(1, groups);
             Assert.HasCount(1, errorActions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             #endregion
 
@@ -208,7 +208,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
-                mappedChannel??typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
+                mappedChannel??typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                 mappedGroup,
                 It.IsAny<CancellationToken>()), Times.Once);
             #endregion
@@ -247,7 +247,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.HasCount(1, channels);
             Assert.HasCount(1, groups);
             Assert.HasCount(1, errorActions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             #endregion
 
@@ -286,7 +286,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
-                mappedChannel??typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)!.Name,
+                mappedChannel??typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                 mappedGroup,
                 It.IsAny<CancellationToken>()), Times.Once);
             #endregion
@@ -384,7 +384,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -474,7 +474,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());

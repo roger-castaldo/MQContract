@@ -2,6 +2,6 @@
 
 namespace AutomatedTesting.Messages
 {
-    [MessageChannel("CustomEncoder")]
+    [Message(channel: "CustomEncoder")]
     public record CustomEncoderMessage(string TestName) { }
 }

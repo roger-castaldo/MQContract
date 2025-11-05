@@ -26,9 +26,9 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.TypeName}-Modded";
             var mapper = new ChannelMapper()
-                .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel);
+                .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!, newChannel);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object, channelMapper: mapper);
             #endregion
@@ -66,12 +66,12 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
-                .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, (originalChannel) =>
+                .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!, (originalChannel) =>
                 {
-                    if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
+                    if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel))
                         return ValueTask.FromResult(newChannel);
                     return ValueTask.FromResult(originalChannel);
                 });
@@ -116,8 +116,8 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddPublishMap(
                 (channelName) => Equals(channelName, otherChannel)
@@ -143,7 +143,7 @@ namespace AutomatedTesting
             Assert.AreEqual(transmissionResult, result1);
             Assert.IsNotNull(result2);
             Assert.AreEqual(transmissionResult, result2);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(newChannel, messages[1].Channel);
             #endregion
 
@@ -166,12 +166,12 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddDefaultPublishMap((originalChannel) =>
                 {
-                    if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
+                    if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel))
                         return ValueTask.FromResult(newChannel);
                     return ValueTask.FromResult(originalChannel);
                 });
@@ -216,10 +216,10 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
-                .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel)
+                .AddPublishMap(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!, newChannel)
                 .AddDefaultPublishMap((originalChannel) =>
                 {
                     return ValueTask.FromResult(originalChannel);
@@ -267,9 +267,9 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
             var mapper = new ChannelMapper()
-                .AddPublishSubscriptionMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel);
+                .AddPublishSubscriptionMap(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!, newChannel);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object, channelMapper: mapper);
             #endregion
@@ -307,14 +307,14 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddPublishSubscriptionMap(
-                typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!,
+                typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!,
                 (originalChannel) =>
                 {
-                    if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
+                    if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel))
                         return ValueTask.FromResult(newChannel);
                     return ValueTask.FromResult(originalChannel);
                 });
@@ -361,8 +361,8 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddPublishSubscriptionMap(
                 (channelName) => Equals(channelName, otherChannel),
@@ -388,7 +388,7 @@ namespace AutomatedTesting
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
             Assert.HasCount(2, channels);
-            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.AreEqual(newChannel, channels[1]);
             #endregion
 
@@ -413,13 +413,13 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddDefaultPublishSubscriptionMap(
                 (originalChannel) =>
                 {
-                    if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
+                    if (Equals(originalChannel, typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel))
                         return ValueTask.FromResult(newChannel);
                     return ValueTask.FromResult(originalChannel);
                 });
@@ -466,10 +466,10 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
-                .AddPublishSubscriptionMap(typeof(BasicMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel)
+                .AddPublishSubscriptionMap(typeof(BasicMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!, newChannel)
                 .AddDefaultPublishSubscriptionMap(
                 (originalChannel) =>
                 {
@@ -525,9 +525,9 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
             var mapper = new ChannelMapper()
-                .AddQueryMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel);
+                .AddQueryMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!, newChannel);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object, channelMapper: mapper);
             #endregion
@@ -576,13 +576,13 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
-                .AddQueryMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!,
+                .AddQueryMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!,
                 (originalChannel) =>
                 {
-                    if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
+                    if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel))
                         return ValueTask.FromResult(newChannel);
                     return ValueTask.FromResult(originalChannel);
                 });
@@ -634,8 +634,8 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddQueryMap((channelName) => Equals(channelName, otherChannel)
                 , (originalChannel) =>
@@ -658,7 +658,7 @@ namespace AutomatedTesting
             Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 2, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result1);
             Assert.IsNotNull(result2);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, messages[0].Channel);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.AreEqual(newChannel, messages[1].Channel);
             #endregion
 
@@ -690,12 +690,12 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddDefaultQueryMap((originalChannel) =>
                 {
-                    if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
+                    if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel))
                         return ValueTask.FromResult(newChannel);
                     return ValueTask.FromResult(originalChannel);
                 });
@@ -747,10 +747,10 @@ namespace AutomatedTesting
             serviceConnection.Setup(x => x.DefaultTimeout)
                 .Returns(defaultTimeout);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
-                .AddQueryMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel)
+                .AddQueryMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!, newChannel)
                 .AddDefaultQueryMap((originalChannel) =>
                 {
                     return ValueTask.FromResult(originalChannel);
@@ -797,9 +797,9 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
             var mapper = new ChannelMapper()
-                .AddQuerySubscriptionMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel);
+                .AddQuerySubscriptionMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!, newChannel);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object, channelMapper: mapper);
             #endregion
@@ -840,14 +840,14 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddQuerySubscriptionMap(
-                typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!,
+                typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!,
                 (originalChannel) =>
                 {
-                    if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
+                    if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel))
                         return ValueTask.FromResult(newChannel);
                     return ValueTask.FromResult(originalChannel);
                 });
@@ -898,8 +898,8 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddQuerySubscriptionMap(
                 (channelName) => Equals(channelName, otherChannel),
@@ -928,7 +928,7 @@ namespace AutomatedTesting
             Assert.IsNotNull(subscription1);
             Assert.IsNotNull(subscription2);
             Assert.HasCount(2, channels);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.AreEqual(newChannel, channels[1]);
             #endregion
 
@@ -954,13 +954,13 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
                 .AddDefaultQuerySubscriptionMap(
                 (originalChannel) =>
                 {
-                    if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name))
+                    if (Equals(originalChannel, typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel))
                         return ValueTask.FromResult(newChannel);
                     return ValueTask.FromResult(originalChannel);
                 });
@@ -1011,10 +1011,10 @@ namespace AutomatedTesting
                 It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
-            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-Modded";
-            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name}-OtherChannel";
+            var newChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-Modded";
+            var otherChannel = $"{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}-OtherChannel";
             var mapper = new ChannelMapper()
-                .AddQuerySubscriptionMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name!, newChannel)
+                .AddQuerySubscriptionMap(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel!, newChannel)
                 .AddDefaultQuerySubscriptionMap(
                 (originalChannel) =>
                 {

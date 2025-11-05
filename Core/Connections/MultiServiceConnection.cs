@@ -172,7 +172,7 @@ namespace MQContract.Connections
             using var scope = SetScope();
             Logger?.LogDebug("Attempting to get response type for QueryResponse for {Q} on {Channel} with {ResponseChannel}", typeof(Q), channel, responseChannel);
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
-            var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
+            var responseType = (typeof(Q).GetCustomAttribute<QueryMessageAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
             Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {Q} on {Channel} with {ResponseChannel}", responseType, typeof(Q), channel, responseChannel);
             var methodInfo = QueryMethod.MakeGenericMethod(typeof(Q), responseType!);

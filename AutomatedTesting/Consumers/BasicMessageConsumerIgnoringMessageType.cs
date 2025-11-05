@@ -5,7 +5,7 @@ using MQContract.Interfaces.Consumers;
 
 namespace AutomatedTesting.Consumers
 {
-    [ConsumerIgnoreMessageHeader(true)]
+    [Consumer(ignoreMessageTypeHeader: true)]
     internal class BasicMessageConsumerIgnoringMessageType(List<IReceivedMessage<BasicMessage>> messages, List<Exception> errors) : IPubSubConsumer<BasicMessage>
     {
         public BasicMessageConsumerIgnoringMessageType()

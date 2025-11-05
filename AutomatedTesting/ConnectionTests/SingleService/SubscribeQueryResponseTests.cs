@@ -81,7 +81,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -405,7 +405,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.HasCount(2, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
@@ -485,7 +485,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.HasCount(1, serviceMessages);
             Assert.IsEmpty(messages);
             Assert.HasCount(1, errorActions);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(exception, exceptions[0]);
             Assert.IsTrue(result.IsError);
@@ -778,7 +778,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.HasCount(1, serviceMessages);
             Assert.HasCount(1, errorActions);
             Assert.HasCount(1, exceptions);
-            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageChannelAttribute>(false)?.Name, channels[0]);
+            Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
             Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
