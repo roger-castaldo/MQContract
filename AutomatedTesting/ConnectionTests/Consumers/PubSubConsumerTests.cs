@@ -64,14 +64,13 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, IPubSubConsumer<BasicMessage>>(mockConsumer.Object);
+            contractConnection = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, IPubSubConsumer<BasicMessage>>(mockConsumer.Object);
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
@@ -121,11 +120,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, IPubSubConsumer<BasicMessage>>(mockConsumer.Object, channel: mappedChannel, group: mappedGroup);
+            _ = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, IPubSubConsumer<BasicMessage>>(mockConsumer.Object, channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
+            
             #endregion
 
             #region Verify
@@ -159,11 +158,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumer>();
+            _ = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumer>();
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
             Assert.HasCount(1, actions);
             Assert.HasCount(1, channels);
@@ -199,11 +197,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumer>(channel: mappedChannel, group: mappedGroup);
+            _ = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumer>(channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
+
             #endregion
 
             #region Verify
@@ -237,11 +235,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync(typeof(BasicMessageConsumer));
+            _ = await contractConnection.RegisterPubSubConsumerAsync(typeof(BasicMessageConsumer));
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
             Assert.HasCount(1, actions);
             Assert.HasCount(1, channels);
@@ -277,11 +274,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync(typeof(BasicMessageConsumer), channel: mappedChannel, group: mappedGroup);
+            _ = await contractConnection.RegisterPubSubConsumerAsync(typeof(BasicMessageConsumer), channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
+            
             #endregion
 
             #region Verify
@@ -367,14 +364,13 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumerIgnoringMessageType>(new BasicMessageConsumerIgnoringMessageType(messages, exceptions));
+            contractConnection = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumerIgnoringMessageType>(new BasicMessageConsumerIgnoringMessageType(messages, exceptions));
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
@@ -457,14 +453,13 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, IPubSubConsumer<BasicMessage>>(mockConsumer.Object);
+            contractConnection = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, IPubSubConsumer<BasicMessage>>(mockConsumer.Object);
             var result = await contractConnection.PublishAsync<BasicMessage>(message);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
@@ -558,7 +553,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumer>(messageFilters: new(
+            contractConnection = await contractConnection.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumer>(messageFilters: new(
                 HeaderFilter: (header) =>
                     ValueTask.FromResult<MessageFilterResult>((Equals(header[headerKey], checkValue), acknowledgeDrop) switch
                     {
@@ -583,7 +578,6 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
             Assert.HasCount(1, actions);

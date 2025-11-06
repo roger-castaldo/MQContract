@@ -141,4 +141,14 @@
         internal InvalidMiddlewareException(Type middlewareType)
             : base($"The type {middlewareType} does not implement any of the available middleware interfaces") { }
     }
+
+    /// <summary>
+    /// Thrown when the registration of a consumer failes
+    /// </summary>
+    public sealed class ConsumerRegistrationFailedException
+        : Exception
+    {
+        internal ConsumerRegistrationFailedException(string consumerName, Type consumerType, Exception exception)
+            : base($"Failed to register a {consumerName} of type {consumerType}", exception) { }
+    }
 }

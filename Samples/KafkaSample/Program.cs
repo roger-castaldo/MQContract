@@ -1,7 +1,16 @@
 ﻿using Confluent.SchemaRegistry;
 using Messages;
+using Microsoft.Extensions.Caching.Memory;
 using MQContract.Kafka;
 using MQContract.Kafka.Middleware;
+
+var cacheOptions = new MemoryCacheOptions
+{
+    SizeLimit = 1024 // optional
+};
+
+using var cache = new MemoryCache(cacheOptions);
+
 
 var serviceConnection = new Connection(new Confluent.Kafka.ClientConfig()
 {
@@ -27,6 +36,7 @@ using var schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryCo
 await SampleExecution.ExecuteSample(serviceConnection, "Kafka", middlewares: [
     new SchemaValidationMiddleware(
         schemaRegistryClient,
-        mapMessageSchemaName:(messageType,messageChannel,messageTypeId)=>ValueTask.FromResult<string>($"{messageChannel}-{messageTypeId}")
+        mapMessageSchemaName:(messageType,messageChannel,messageTypeId)=>ValueTask.FromResult<string>($"{messageChannel}-{messageTypeId}"),
+        cache: cache
     )
 ]);

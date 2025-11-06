@@ -10,7 +10,7 @@
     /// Type
     /// Default 
     /// </remarks>
-    public interface IResilientContractConnection<CC> : IConsumerContractConnection
+    public interface IResilientContractConnection<CC> : IConsumerContractConnection<CC>
         where CC : IBaseContractConnection
     {
         /// <summary>

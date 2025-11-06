@@ -8,7 +8,7 @@ namespace MQContract.Interfaces
     /// This also defines the extended resillience functionality to allow for a resillience policy to be set at the connection level
     /// </summary>
     /// <typeparam name="CC">The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining.</typeparam>
-    public interface IMappableContractConnection<CC> : IConsumerContractConnection
+    public interface IMappableContractConnection<CC> : IConsumerContractConnection<CC>
         where CC : IBaseContractConnection
     {
         /// <summary>

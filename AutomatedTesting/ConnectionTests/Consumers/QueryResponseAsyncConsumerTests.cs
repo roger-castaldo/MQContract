@@ -67,14 +67,13 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>(mockAsyncConsumer.Object);
+            contractConnection = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>(mockAsyncConsumer.Object);
             var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);
@@ -127,11 +126,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>(mockAsyncConsumer.Object, channel: mappedChannel, group: mappedGroup);
+            _ = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>(mockAsyncConsumer.Object, channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
+
             #endregion
 
             #region Verify
@@ -165,11 +164,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryAsyncConsumer>();
+            contractConnection = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryAsyncConsumer>();
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
             Assert.HasCount(1, actions);
             Assert.HasCount(1, channels);
@@ -205,11 +203,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryAsyncConsumer>(channel: mappedChannel, group: mappedGroup);
+            _ = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryAsyncConsumer>(channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
+            
             #endregion
 
             #region Verify
@@ -243,11 +241,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseAsyncConsumerAsync(typeof(BasicQueryAsyncConsumer));
+            _ = await contractConnection.RegisterQueryResponseAsyncConsumerAsync(typeof(BasicQueryAsyncConsumer));
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             await contractConnection.CloseAsync();
             Assert.HasCount(1, actions);
             Assert.HasCount(1, channels);
@@ -283,11 +280,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseAsyncConsumerAsync(typeof(BasicQueryAsyncConsumer), channel: mappedChannel, group: mappedGroup);
+            _ = await contractConnection.RegisterQueryResponseAsyncConsumerAsync(typeof(BasicQueryAsyncConsumer), channel: mappedChannel, group: mappedGroup);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
+            
             #endregion
 
             #region Verify
@@ -387,14 +384,13 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>(mockAsyncConsumer.Object);
+            contractConnection = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>(mockAsyncConsumer.Object);
             var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             await contractConnection.CloseAsync();
             Assert.IsNotNull(result);

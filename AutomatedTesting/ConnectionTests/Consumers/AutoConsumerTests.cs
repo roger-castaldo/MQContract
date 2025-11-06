@@ -30,11 +30,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly);
+            await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly);
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             await contractConnection.DisposeAsync();
             #endregion
 
@@ -76,11 +75,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.AutoRegisterAllConsumersAsync();
+            await contractConnection.AutoRegisterAllConsumersAsync();
             #endregion
 
             #region Assert
-            Assert.IsTrue(registrationResult);
             await contractConnection.DisposeAsync();
             #endregion
 
@@ -133,11 +131,12 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly);
+            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly));
             #endregion
 
             #region Assert
-            Assert.IsFalse(registrationResult);
+            Assert.AreEqual("Failed to register a PubSubConsumer of type AutomatedTesting.Consumers.BasicMessageConsumer", exception.Message);
+            Assert.IsInstanceOfType<SubscriptionFailedException>(exception.InnerException);
             #endregion
 
             #region Verify
@@ -177,11 +176,12 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly);
+            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async ()=>await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly));
             #endregion
 
             #region Assert
-            Assert.IsFalse(registrationResult);
+            Assert.AreEqual("Failed to register a PubSubAsyncConsumer of type AutomatedTesting.Consumers.BasicMessageAsyncConsumer", exception.Message);
+            Assert.IsInstanceOfType<SubscriptionFailedException>(exception.InnerException);
             #endregion
 
             #region Verify
@@ -222,11 +222,12 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly);
+            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly));
             #endregion
 
             #region Assert
-            Assert.IsFalse(registrationResult);
+            Assert.AreEqual("Failed to register a QueryResponseConsumer of type AutomatedTesting.Consumers.BasicQueryConsumer", exception.Message);
+            Assert.IsInstanceOfType<SubscriptionFailedException>(exception.InnerException);
             #endregion
 
             #region Verify
@@ -266,11 +267,12 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var registrationResult = await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly);
+            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly));
             #endregion
 
             #region Assert
-            Assert.IsFalse(registrationResult);
+            Assert.AreEqual("Failed to register a QueryResponseAsyncConsumer of type AutomatedTesting.Consumers.BasicQueryAsyncConsumer", exception.Message);
+            Assert.IsInstanceOfType<SubscriptionFailedException>(exception.InnerException);
             #endregion
 
             #region Verify
