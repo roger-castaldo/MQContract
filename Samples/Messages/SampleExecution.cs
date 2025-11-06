@@ -1,4 +1,5 @@
 ﻿using MQContract;
+using MQContract.Extensions;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Middleware;
 using MQContract.Interfaces.Service;

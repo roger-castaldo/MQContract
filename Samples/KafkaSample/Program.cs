@@ -4,10 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using MQContract.Kafka;
 using MQContract.Kafka.Middleware;
 
-var cacheOptions = new MemoryCacheOptions
-{
-    SizeLimit = 1024 // optional
-};
+var cacheOptions = new MemoryCacheOptions();
 
 using var cache = new MemoryCache(cacheOptions);
 
