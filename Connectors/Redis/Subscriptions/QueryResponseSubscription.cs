@@ -15,7 +15,7 @@ namespace MQContract.Redis.Subscriptions
                  );
             var result = await messageReceived(message);
             await Database.StreamDeleteAsync(Channel, [streamEntry.Id]);
-            await Database.StringSetAsync(responseChannel, Connection.EncodeMessage(result), expiry: timeout);
+            await Database.StringSetAsync(responseChannel, Connection.EncodeMessage(result), expiry: (timeout == null ? Expiration.Default : new Expiration(DateTime.UtcNow.Add(timeout.Value))));
         }
     }
 }

@@ -36,11 +36,7 @@ namespace MQContract.NATS.Subscriptions
         public async ValueTask EndAsync()
         {
             if (!CancelTokenSource.IsCancellationRequested)
-            {
-                System.Diagnostics.Debug.WriteLine("Calling Cancel Async inside NATS subscription...");
                 await CancelTokenSource.CancelAsync();
-                System.Diagnostics.Debug.WriteLine("COmpleted Cancel Async inside NATS subscription");
-            }
         }
 
         protected virtual void Dispose(bool disposing)

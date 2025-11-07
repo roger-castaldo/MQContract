@@ -1,5 +1,4 @@
 ﻿using MQContract;
-using MQContract.Extensions;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Middleware;
 using MQContract.Interfaces.Service;
@@ -43,7 +42,6 @@ namespace Messages
                 (greeting) =>
                 {
                     Console.WriteLine($"Greeting received for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.ReceivedTimestamp}]");
-                    System.Diagnostics.Debug.WriteLine($"Time to convert message: {greeting.ProcessedTimestamp.Subtract(greeting.ReceivedTimestamp).TotalMilliseconds}ms");
                     return new(
                         $"Welcome {greeting.Message.FirstName} {greeting.Message.LastName} to the {serviceName} sample"
                     );

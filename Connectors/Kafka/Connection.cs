@@ -57,7 +57,6 @@ namespace MQContract.Kafka
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine($"Publishing {message.ID}@{message.Channel}");
                 var result = await producer.ProduceAsync(message.Channel, new Message<string, byte[]>()
                 {
                     Key=message.ID,
@@ -83,7 +82,6 @@ namespace MQContract.Kafka
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var isReply = regReplyGroup.IsMatch(group??string.Empty);
-            System.Diagnostics.Debug.WriteLine($"Building consumer {group}@{channel}");
             var builder = new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
             {
                 GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
@@ -94,20 +92,17 @@ namespace MQContract.Kafka
                     partitions.Select(partition =>
                     {
                         var watermark = c.QueryWatermarkOffsets(partition, TimeSpan.FromSeconds(5));
-                        System.Diagnostics.Debug.WriteLine($"Watermark for {group}@{channel}-{partition.Partition.Value} = {watermark.High},{watermark.Low}");
                         return new TopicPartitionOffset(partition, ((watermark.High-watermark.Low) >= 1 ? new Offset(watermark.High-1) : Offset.Beginning));
                     })
                     .ToArray()
                 );
             var consumer = builder.Build();
-            System.Diagnostics.Debug.WriteLine($"Subscribing consumer {group}@{channel}");
             consumer.Subscribe(channel);
             var subscription = new PublishSubscription(
                 consumer,
                 messageReceived,
                 errorReceived,
                 channel);
-            System.Diagnostics.Debug.WriteLine($"Starting subscription {group}@{channel}");
             subscription.Start();
             return ValueTask.FromResult<IServiceSubscription?>(subscription);
         }
