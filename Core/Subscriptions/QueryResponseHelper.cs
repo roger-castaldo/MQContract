@@ -49,8 +49,10 @@ namespace MQContract.Subscriptions
                     if (!result.Task.IsCompleted)
                     {
                         var headers = StripHeaders(message, out var queryClientID, out var replyID, out _);
+                        System.Diagnostics.Debug.WriteLine($"Checking message {replyID}@{queryClientID}");
                         if (Equals(queryClientID, identifier) && Equals(replyID, callID))
                         {
+                            System.Diagnostics.Debug.WriteLine($"Triggering message complete {replyID}@{queryClientID}");
                             if (message.Acknowledge!=null)
                                 await message.Acknowledge();
                             result.TrySetResult(new(
@@ -65,10 +67,11 @@ namespace MQContract.Subscriptions
                 error => { },
                 replyChannel,
                 cancellationToken: token.Token,
-                group: identifier.ToString()
-            )??throw new QueryExecutionFailedException();
+                group: $"reply-{identifier}"
+            ).ConfigureAwait(false)??throw new QueryExecutionFailedException();
             token.Token.Register(async () =>
             {
+                System.Diagnostics.Debug.WriteLine($"Query Token cancellation called");
                 await consumer.EndAsync();
                 await reg.DisposeAsync();
                 if (!result.Task.IsCompleted)

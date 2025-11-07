@@ -4,6 +4,7 @@ using MQContract.Kafka.Subscriptions;
 using MQContract.Messages;
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MQContract.Kafka
 {
@@ -56,6 +57,7 @@ namespace MQContract.Kafka
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"Publishing {message.ID}@{message.Channel}");
                 var result = await producer.ProduceAsync(message.Channel, new Message<string, byte[]>()
                 {
                     Key=message.ID,
@@ -76,19 +78,38 @@ namespace MQContract.Kafka
             }
         }
 
-        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        private static readonly Regex regReplyGroup = new Regex(@"^reply-[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$", RegexOptions.Compiled|RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+
+        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
+            var isReply = regReplyGroup.IsMatch(group??string.Empty);
+            System.Diagnostics.Debug.WriteLine($"Building consumer {group}@{channel}");
+            var builder = new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
+            {
+                GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
+                AutoOffsetReset = (isReply ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest)
+            });
+            if (isReply)
+                builder.SetPartitionsAssignedHandler((c, partitions) =>
+                    partitions.Select(partition =>
+                    {
+                        var watermark = c.QueryWatermarkOffsets(partition, TimeSpan.FromSeconds(5));
+                        System.Diagnostics.Debug.WriteLine($"Watermark for {group}@{channel}-{partition.Partition.Value} = {watermark.High},{watermark.Low}");
+                        return new TopicPartitionOffset(partition, ((watermark.High-watermark.Low) >= 1 ? new Offset(watermark.High-1) : Offset.Beginning));
+                    })
+                    .ToArray()
+                );
+            var consumer = builder.Build();
+            System.Diagnostics.Debug.WriteLine($"Subscribing consumer {group}@{channel}");
+            consumer.Subscribe(channel);
             var subscription = new PublishSubscription(
-                new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
-                {
-                    GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
-                    AutoOffsetReset = AutoOffsetReset.Earliest
-                }).Build(),
+                consumer,
                 messageReceived,
                 errorReceived,
                 channel);
-            await subscription.Run();
-            return subscription;
+            System.Diagnostics.Debug.WriteLine($"Starting subscription {group}@{channel}");
+            subscription.Start();
+            return ValueTask.FromResult<IServiceSubscription?>(subscription);
         }
 
         ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()

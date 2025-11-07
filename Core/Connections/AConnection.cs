@@ -608,6 +608,7 @@ namespace MQContract.Connections
                 null
             );
             logger?.LogDebug("Transmitting Query request over PubSub");
+            System.Diagnostics.Debug.WriteLine($"Publishing query message {callID}@{replyChannel} to {serviceMessage.Channel}");
             var result = await ExecuteResilliantTransmissionAsync<Q>(
                 async (ct) => await serviceConnection.PublishAsync(msg, cancellationToken: ct),
                 connectionName,
