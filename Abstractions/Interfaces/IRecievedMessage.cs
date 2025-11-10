@@ -6,8 +6,8 @@ namespace MQContract.Interfaces
     /// <summary>
     /// An interface for describing a Message received on a Subscription to be passed into the appropriate callback
     /// </summary>
-    /// <typeparam name="T">The class type of the underlying message</typeparam>
-    public interface IReceivedMessage<out T>
+    /// <typeparam name="TMessage">The class type of the underlying message</typeparam>
+    public interface IReceivedMessage<out TMessage>
     {
         /// <summary>
         /// The unique ID of the received message that was specified on the transmission side
@@ -16,7 +16,7 @@ namespace MQContract.Interfaces
         /// <summary>
         /// The message that was transmitted
         /// </summary>
-        T Message { get; }
+        TMessage Message { get; }
         /// <summary>
         /// The headers that were supplied with the message
         /// </summary>
