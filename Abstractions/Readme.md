@@ -943,7 +943,7 @@ A subscription instance that can be ended when desired
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message to listen for |
+| TMessage | The type of message to listen for |
 
 <a name='M-MQContract-Interfaces-IBaseContractConnection-SubscribeAsync``1-System-Action{MQContract-Interfaces-IReceivedMessage{``0}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken-'></a>
 ### SubscribeAsync\`\`1(messageReceived,errorReceived,channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
@@ -972,7 +972,7 @@ A subscription instance that can be ended when desired
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message to listen for |
+| TMessage | The type of message to listen for |
 
 <a name='M-MQContract-Interfaces-IBaseContractConnection-SubscribeQueryAsyncResponseAsync``2-System-Func{MQContract-Interfaces-IReceivedMessage{``0},System-Threading-Tasks-ValueTask{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
 ### SubscribeQueryAsyncResponseAsync\`\`2(messageReceived,errorReceived,channel,group,ignoreMessageHeader,cancellationToken) `method`
@@ -1000,8 +1000,8 @@ A subscription instance that can be ended when desired
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to listen for |
-| R | The type of message to respond with |
+| TQuery | The type of message to listen for |
+| TQueryResponse | The type of message to respond with |
 
 <a name='M-MQContract-Interfaces-IBaseContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IReceivedMessage{``0},MQContract-Messages-QueryResponseMessage{``1}},System-Action{System-Exception},System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
 ### SubscribeQueryResponseAsync\`\`2(messageReceived,errorReceived,channel,group,ignoreMessageHeader,cancellationToken) `method`
@@ -1029,8 +1029,8 @@ A subscription instance that can be ended when desired
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to listen for |
-| R | The type of message to respond with |
+| TQuery | The type of message to listen for |
+| TQueryResponse | The type of message to respond with |
 
 <a name='T-MQContract-Interfaces-Middleware-IBeforeDecodeMiddleware'></a>
 ## IBeforeDecodeMiddleware `type`
@@ -1238,7 +1238,7 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| T | The Message type |
+| TMessage | The Message type |
 | TConsumer | The type that implements PubSubAsyncConsumer<T> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterPubSubAsyncConsumerAsync``2-System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken-'></a>
@@ -1266,7 +1266,7 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| T | The Message type |
+| TMessage | The Message type |
 | TConsumer | The type that implements PubSubAsyncConsumer<T> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterPubSubConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
@@ -1316,7 +1316,7 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| T | The Message type |
+| TMessage | The Message type |
 | TConsumer | The type that implements IPubSubConsumer<T> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterPubSubConsumerAsync``2-System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken-'></a>
@@ -1344,7 +1344,7 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| T | The Message type |
+| TMessage | The Message type |
 | TConsumer | The type that implements IPubSubConsumer<T> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterQueryResponseAsyncConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
@@ -1393,8 +1393,8 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to listen for |
-| R | The type of message to respond with |
+| TQuery | The type of message to listen for |
+| TQueryResponse | The type of message to respond with |
 | TConsumer | The type that implements IQueryResponseAsyncConsumer<Q,R> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterQueryResponseAsyncConsumerAsync``3-System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
@@ -1421,8 +1421,8 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to listen for |
-| R | The type of message to respond with |
+| TQuery | The type of message to listen for |
+| TQueryResponse | The type of message to respond with |
 | TConsumer | The type that implements IQueryResponseAsyncConsumer<Q,R> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterQueryResponseConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
@@ -1471,8 +1471,8 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to listen for |
-| R | The type of message to respond with |
+| TQuery | The type of message to listen for |
+| TQueryResponse | The type of message to respond with |
 | TConsumer | The type that implements IQueryResponseConsumer<Q,R> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterQueryResponseConsumerAsync``3-System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
@@ -1499,8 +1499,8 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to listen for |
-| R | The type of message to respond with |
+| TQuery | The type of message to listen for |
+| TQueryResponse | The type of message to respond with |
 | TConsumer | The type that implements IQueryResponseConsumer<Q,R> |
 
 <a name='T-MQContract-Interfaces-Middleware-IContext'></a>
@@ -1572,7 +1572,7 @@ A result indicating the tranmission results
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message to send |
+| TMessage | The type of message to send |
 
 <a name='M-MQContract-Interfaces-IContractConnection-PingAsync'></a>
 ### PingAsync() `method`
@@ -1613,7 +1613,7 @@ A result indicating the tranmission results
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message to send |
+| TMessage | The type of message to send |
 
 <a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
@@ -1643,7 +1643,7 @@ only used when the underlying connection does not support a QueryResponse style 
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to send for the query |
+| TQuery | The type of message to send for the query |
 
 <a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`2(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
@@ -1672,8 +1672,8 @@ only used when the underlying connection does not support a QueryResponse style 
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to send for the query |
-| R | The type of message to expect back for the response |
+| TQuery | The type of message to send for the query |
+| TQueryResponse | The type of message to expect back for the response |
 
 <a name='T-MQContract-Interfaces-IContractMetric'></a>
 ## IContractMetric `type`
@@ -1860,7 +1860,7 @@ This also defines the extended resillience functionality to allow for a resillie
 
 | Name | Description |
 | ---- | ----------- |
-| CC | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
+| TContractConnection | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
 
 <a name='M-MQContract-Interfaces-IMappableContractConnection`1-RegisterResiliencePolicy-System-String,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}-'></a>
 ### RegisterResiliencePolicy(serviceConnectionName,retryPolicy,circuitBreakPolicy) `method`
@@ -1928,7 +1928,7 @@ Register a resiliency policy that will apply to any message transmission of mess
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message to associate this policy to |
+| TMessage | The type of message to associate this policy to |
 
 <a name='M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-Func{System-ValueTuple{System-String,System-Type,MQContract-Messages-MessageHeader},System-Boolean},System-String,MQContract-Interfaces-Service-IMessageServiceConnection-'></a>
 ### RegisterServiceConnection(checkCallback,serviceConnectionName,messageServiceConnection) `method`
@@ -2029,7 +2029,7 @@ Register a service connection for a given message type
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message that the service connection should be used for |
+| TMessage | The type of message that the service connection should be used for |
 
 <a name='T-MQContract-Interfaces-IMappedContractConnection'></a>
 ## IMappedContractConnection `type`
@@ -2345,7 +2345,7 @@ Houses the metric pieces for a given contract connection
 
 | Name | Description |
 | ---- | ----------- |
-| CC | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
+| TContractConnection | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
 
 <a name='M-MQContract-Interfaces-IMetricContractConnection`1-AddMetrics-System-Diagnostics-Metrics-Meter,System-Boolean-'></a>
 ### AddMetrics(meter,useInternal) `method`
@@ -2479,7 +2479,7 @@ A record of the current metric snapshot or null if not available
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message to look for |
+| TMessage | The type of message to look for |
 
 <a name='T-MQContract-Interfaces-Middleware-IMiddleware'></a>
 ## IMiddleware `type`
@@ -2507,7 +2507,7 @@ Houses the middleware pieces for a given contract connection
 
 | Name | Description |
 | ---- | ----------- |
-| CC | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
+| TContractConnection | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
 
 <a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware-System-Type-'></a>
 ### RegisterMiddleware(middleware) `method`
@@ -2579,7 +2579,7 @@ This method has no parameters.
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware |
+| TMiddleware | The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware |
 
 <a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1-System-Func{``0}-'></a>
 ### RegisterMiddleware\`\`1(constructInstance) `method`
@@ -2602,7 +2602,7 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware |
+| TMiddleware | The type of middle ware to register, it must implement IBeforeDecodeMiddleware or IBeforeEncodeMiddleware or IAfterDecodeMiddleware or IAfterEncodeMiddleware |
 
 <a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1-System-Func{MQContract-Interfaces-Middleware-ISpecificTypeMiddleware{``0}}-'></a>
 ### RegisterMiddleware\`\`1(constructInstance) `method`
@@ -2625,7 +2625,7 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| M | The message type that this middleware is specifically called for |
+| TMessage | The message type that this middleware is specifically called for |
 
 <a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``1-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware{``0}-'></a>
 ### RegisterMiddleware\`\`1(instance) `method`
@@ -2648,7 +2648,7 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| M | The message type that this middleware is specifically called for |
+| TMessage | The message type that this middleware is specifically called for |
 
 <a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``2'></a>
 ### RegisterMiddleware\`\`2() `method`
@@ -2669,8 +2669,8 @@ This method has no parameters.
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of middle ware to register, it must implement IBeforeEncodeSpecificTypeMiddleware<M> or IAfterDecodeSpecificTypeMiddleware<M> |
-| M | The message type that this middleware is specifically called for |
+| TMiddleware | The type of middle ware to register, it must implement IBeforeEncodeSpecificTypeMiddleware<M> or IAfterDecodeSpecificTypeMiddleware<M> |
+| TMessage | The message type that this middleware is specifically called for |
 
 <a name='M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddleware``2-System-Func{``0}-'></a>
 ### RegisterMiddleware\`\`2(constructInstance) `method`
@@ -2693,8 +2693,8 @@ The Contract Connection instance to allow chaining calls
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of middle ware to register, it must implement IBeforeEncodeSpecificTypeMiddleware<M> or IAfterDecodeSpecificTypeMiddleware<M> |
-| M | The message type that this middleware is specifically called for |
+| TMiddleware | The type of middle ware to register, it must implement IBeforeEncodeSpecificTypeMiddleware<M> or IAfterDecodeSpecificTypeMiddleware<M> |
+| TMessage | The message type that this middleware is specifically called for |
 
 <a name='T-MQContract-Interfaces-IMultiServiceContractConnection'></a>
 ## IMultiServiceContractConnection `type`
@@ -2731,7 +2731,7 @@ A result indicating the tranmission results
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message to send |
+| TMessage | The type of message to send |
 
 <a name='M-MQContract-Interfaces-IMultiServiceContractConnection-PingAsync'></a>
 ### PingAsync() `method`
@@ -2772,7 +2772,7 @@ A result indicating the tranmission results
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message to send |
+| TMessage | The type of message to send |
 
 <a name='M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
@@ -2802,7 +2802,7 @@ only used when the underlying connection does not support a QueryResponse style 
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to send for the query |
+| TQuery | The type of message to send for the query |
 
 <a name='M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`2(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
@@ -2831,8 +2831,8 @@ only used when the underlying connection does not support a QueryResponse style 
 
 | Name | Description |
 | ---- | ----------- |
-| Q | The type of message to send for the query |
-| R | The type of message to expect back for the response |
+| TQuery | The type of message to send for the query |
+| TQueryResponse | The type of message to expect back for the response |
 
 <a name='M-MQContract-Interfaces-IMultiServiceContractConnection-RegisterServiceConnection-System-String,MQContract-Interfaces-Service-IMessageServiceConnection-'></a>
 ### RegisterServiceConnection(serviceConnectionName,messageServiceConnection) `method`
@@ -3092,7 +3092,7 @@ An interface for describing a Message received on a Subscription to be passed in
 
 | Name | Description |
 | ---- | ----------- |
-| T | The class type of the underlying message |
+| TMessage | The class type of the underlying message |
 
 <a name='P-MQContract-Interfaces-IReceivedMessage`1-Activity'></a>
 ### Activity `property`
@@ -3151,7 +3151,7 @@ This interface represents the Resiliency extensions for the ContractConnection
 
 | Name | Description |
 | ---- | ----------- |
-| CC | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
+| TContractConnection | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
 
 ##### Remarks
 
@@ -3223,7 +3223,7 @@ Register a resiliency policy that will apply to any message transmission of mess
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message to associate this policy to |
+| TMessage | The type of message to associate this policy to |
 
 <a name='T-MQContract-Interfaces-Service-IServiceSubscription'></a>
 ## IServiceSubscription `type`
@@ -3407,7 +3407,7 @@ to implement some pre-callback message filtering when receiving messages
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message that the subscription and filter represents |
+| TMessage | The type of message that the subscription and filter represents |
 
 <a name='M-MQContract-Messages-MessageFilters`1-#ctor-System-Func{MQContract-Messages-MessageHeader,System-Threading-Tasks-ValueTask{MQContract-MessageFilterResult}},System-Func{`0,MQContract-Messages-MessageHeader,System-Threading-Tasks-ValueTask{MQContract-MessageFilterResult}}-'></a>
 ### #ctor(HeaderFilter,MessageFilter) `constructor`
@@ -3428,7 +3428,7 @@ to implement some pre-callback message filtering when receiving messages
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message that the subscription and filter represents |
+| TMessage | The type of message that the subscription and filter represents |
 
 <a name='P-MQContract-Messages-MessageFilters`1-HeaderFilter'></a>
 ### HeaderFilter `property`
@@ -3719,7 +3719,7 @@ Houses the Query Response Message to be sent back from a query call
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message contained in the response |
+| TQueryResponse | The type of message contained in the response |
 
 <a name='M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-Dictionary{System-String,System-String}-'></a>
 ### #ctor(Message,Headers) `constructor`
@@ -3739,7 +3739,7 @@ Houses the Query Response Message to be sent back from a query call
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message contained in the response |
+| TQueryResponse | The type of message contained in the response |
 
 <a name='P-MQContract-Messages-QueryResponseMessage`1-Headers'></a>
 ### Headers `property`
@@ -3776,7 +3776,7 @@ Houses the result from a Query call into the system
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message in the response |
+| TQueryResponse | The type of message in the response |
 
 <a name='M-MQContract-Messages-QueryResult`1-#ctor-System-String,MQContract-Messages-MessageHeader,`0,MQContract-Messages-ErrorMessage-'></a>
 ### #ctor(ID,Header,Result,Error) `constructor`
@@ -3798,7 +3798,7 @@ Houses the result from a Query call into the system
 
 | Name | Description |
 | ---- | ----------- |
-| T | The type of message in the response |
+| TQueryResponse | The type of message in the response |
 
 <a name='P-MQContract-Messages-QueryResult`1-Header'></a>
 ### Header `property`
