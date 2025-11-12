@@ -102,9 +102,10 @@ namespace MQContract.Interfaces
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        ValueTask<TContractConnection> RegisterQueryResponseConsumerAsync<TQuery, TQueryResponse, TConsumer>(TConsumer consumer, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<TContractConnection> RegisterQueryResponseConsumerAsync<TQuery, TQueryResponse, TConsumer>(TConsumer consumer, string? channel = null, string? group = null, bool ignoreMessageHeader = false, MessageFilters<TQuery>? messageFilters = null, CancellationToken cancellationToken = new CancellationToken())
             where TConsumer : IQueryResponseConsumer<TQuery, TQueryResponse>;
         /// <summary>
         /// Called to register a QueryResponseConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it. 
@@ -115,9 +116,10 @@ namespace MQContract.Interfaces
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        ValueTask<TContractConnection> RegisterQueryResponseConsumerAsync<TQuery, TQueryResponse, TConsumer>(string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<TContractConnection> RegisterQueryResponseConsumerAsync<TQuery, TQueryResponse, TConsumer>(string? channel = null, string? group = null, bool ignoreMessageHeader = false, MessageFilters<TQuery>? messageFilters = null, CancellationToken cancellationToken = new CancellationToken())
             where TConsumer : IQueryResponseConsumer<TQuery, TQueryResponse>;
         /// <summary>
         /// Called to register a QueryResponseConsumer into the contract connection. 
@@ -139,9 +141,10 @@ namespace MQContract.Interfaces
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        ValueTask<TContractConnection> RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, TConsumer>(TConsumer consumer, string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<TContractConnection> RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, TConsumer>(TConsumer consumer, string? channel = null, string? group = null, bool ignoreMessageHeader = false, MessageFilters<TQuery>? messageFilters = null, CancellationToken cancellationToken = new CancellationToken())
             where TConsumer : IQueryResponseAsyncConsumer<TQuery, TQueryResponse>;
         /// <summary>
         /// Called to register a QueryResponseAsyncConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it. 
@@ -152,9 +155,10 @@ namespace MQContract.Interfaces
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        ValueTask<TContractConnection> RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, TConsumer>(string? channel = null, string? group = null, bool ignoreMessageHeader = false, CancellationToken cancellationToken = new CancellationToken())
+        ValueTask<TContractConnection> RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, TConsumer>(string? channel = null, string? group = null, bool ignoreMessageHeader = false, MessageFilters<TQuery>? messageFilters = null, CancellationToken cancellationToken = new CancellationToken())
             where TConsumer : IQueryResponseAsyncConsumer<TQuery, TQueryResponse>;
         /// <summary>
         /// Called to register a QueryResponseAsyncConsumer into the contract connection. 

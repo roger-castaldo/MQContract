@@ -212,6 +212,7 @@ namespace MQContract.Extensions
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseConsumerAsync<TContractConnection, TQuery, TQueryResponse, TConsumer>(
@@ -220,6 +221,7 @@ namespace MQContract.Extensions
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
+            MessageFilters<TQuery>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
         where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
@@ -227,7 +229,7 @@ namespace MQContract.Extensions
         {
             var connection = await connectionTask.ConfigureAwait(false);
             await connection.RegisterQueryResponseConsumerAsync<TQuery, TQueryResponse, TConsumer>(
-                consumer, channel, group, ignoreMessageHeader, cancellationToken
+                consumer, channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
             return connection;
@@ -243,6 +245,7 @@ namespace MQContract.Extensions
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseConsumerAsync<TContractConnection, TQuery, TQueryResponse, TConsumer>(
@@ -250,6 +253,7 @@ namespace MQContract.Extensions
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
+            MessageFilters<TQuery>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
         where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
@@ -257,7 +261,7 @@ namespace MQContract.Extensions
         {
             var connection = await connectionTask.ConfigureAwait(false);
             await connection.RegisterQueryResponseConsumerAsync<TQuery, TQueryResponse, TConsumer>(
-                channel, group, ignoreMessageHeader, cancellationToken
+                channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
             return connection;
@@ -305,6 +309,7 @@ namespace MQContract.Extensions
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseAsyncConsumerAsync<TContractConnection, TQuery, TQueryResponse, TConsumer>(
@@ -313,6 +318,7 @@ namespace MQContract.Extensions
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
+            MessageFilters<TQuery>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
         where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
@@ -320,7 +326,7 @@ namespace MQContract.Extensions
         {
             var connection = await connectionTask.ConfigureAwait(false);
             await connection.RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, TConsumer>(
-                consumer, channel, group, ignoreMessageHeader, cancellationToken
+                consumer, channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
             return connection;
@@ -336,6 +342,7 @@ namespace MQContract.Extensions
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
+        /// <param name="messageFilters">Provides any filtering options for this subscription to filter out messages prior to action calls if desired</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseAsyncConsumerAsync<TContractConnection, TQuery, TQueryResponse, TConsumer>(
@@ -343,6 +350,7 @@ namespace MQContract.Extensions
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
+            MessageFilters<TQuery>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
         where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
@@ -350,7 +358,7 @@ namespace MQContract.Extensions
         {
             var connection = await connectionTask.ConfigureAwait(false);
             await connection.RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, TConsumer>(
-                channel, group, ignoreMessageHeader, cancellationToken
+                channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
             return connection;

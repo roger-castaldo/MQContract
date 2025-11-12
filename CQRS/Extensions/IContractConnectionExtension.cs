@@ -1,10 +1,5 @@
 ﻿using MQContract.CQRS.Interfaces;
 using MQContract.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MQContract.CQRS.Extensions
 {

@@ -3,6 +3,8 @@ using MQContract.CQRS.Interfaces;
 using MQContract.CQRS.Interfaces.Command;
 using MQContract.CQRS.Interfaces.Query;
 using MQContract.Interfaces;
+using MQContract.Interfaces.Consumers;
+using MQContract.Messages;
 
 namespace MQContract.CQRS
 {
@@ -118,11 +120,27 @@ namespace MQContract.CQRS
             return result.Result;
         }
 
+        private MessageFilters<TMessage>? ExtractMessageFilters<TMessage,TProcessor>(TProcessor processor)
+            where TProcessor : IProcessor
+            where TMessage : ICommand
+        {
+            Func<MessageHeader, ValueTask<MessageFilterResult>>? headerFilter = null;
+            Func<TMessage, MessageHeader, ValueTask<MessageFilterResult>>? messageFilter = null;
+            if (processor is IContextFilteredProcessor contextFilteredProcessor)
+                headerFilter = (header) => contextFilteredProcessor.Filter(new Context(header));
+            if (processor is IFilteredCommandProcessor<TMessage> commandFilteredProcessor)
+                messageFilter = (message, header) => commandFilteredProcessor.Filter(message, new Context(header));
+            if (headerFilter!=null || messageFilter!=null)
+                return new(headerFilter, messageFilter);
+            return null;
+        }
+
         async ValueTask<ICQRSConnection> ICQRSConnection.RegisterCommandProcessorAsync<TCommand>(ICommandProcessor<TCommand> processor, string? group)
         {
             _ = await ((IConsumerContractConnection<IBaseContractConnection>)contractConnection).RegisterPubSubAsyncConsumerAsync<TCommand,CommandConsumer<TCommand>>(
                 new CommandConsumer<TCommand>(processor,this),
-                group:group
+                group:group,
+                messageFilters: ExtractMessageFilters<TCommand, ICommandProcessor<TCommand>>(processor)
             );
             return this;
         }
@@ -131,16 +149,27 @@ namespace MQContract.CQRS
         {
             _ = await ((IConsumerContractConnection<IBaseContractConnection>)contractConnection).RegisterQueryResponseAsyncConsumerAsync<TCommand, TCommandResult, CommandResponseConsumer<TCommand, TCommandResult>>(
                 new CommandResponseConsumer<TCommand, TCommandResult>(processor,this),
-                group:group
+                group:group,
+                messageFilters: ExtractMessageFilters<TCommand, ICommandProcessor<TCommand,TCommandResult>>(processor)
             );
             return this;
         }
 
         async ValueTask<ICQRSConnection> ICQRSConnection.RegisterQueryProcessorAsync<TQuery, TQueryResponse>(IQueryProcessor<TQuery, TQueryResponse> processor, string? group)
         {
+            MessageFilters<TQuery> messageFilters = null;
+            Func<MessageHeader, ValueTask<MessageFilterResult>>? headerFilter = null;
+            Func<TQuery, MessageHeader, ValueTask<MessageFilterResult>>? messageFilter = null;
+            if (processor is IContextFilteredProcessor contextFilteredProcessor)
+                headerFilter = (header) => contextFilteredProcessor.Filter(new Context(header));
+            if (processor is IFilteredQueryProcessor<TQuery,TQueryResponse> queryFilteredProcessor)
+                messageFilter = (message, header) => queryFilteredProcessor.Filter(message, new Context(header));
+            if (headerFilter!=null || messageFilter!=null)
+                messageFilters = new(headerFilter, messageFilter);
             _ = await((IConsumerContractConnection<IBaseContractConnection>)contractConnection).RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, QueryResponseConsumer<TQuery, TQueryResponse>>(
                 new QueryResponseConsumer<TQuery, TQueryResponse>(processor, this),
-                group: group
+                group: group,
+                messageFilters: messageFilters
             );
             return this;
         }
