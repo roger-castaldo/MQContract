@@ -189,12 +189,6 @@ namespace MQContract.Connections
             (var messageResult,var headerResult)= await AfterMessageDecodeAsync<T>(context, taskMessage!, message.ID, messageHeader, message.ReceivedTimestamp, DateTime.Now);
             return DecodeServiceMessageResult<T>.ProduceResult(messageResult, headerResult);
         }
-
-        protected async ValueTask<(T message, MessageHeader header)> DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes mapType, IMessageFactory<T> messageFactory, ReceivedServiceMessage message, Activity? activity)
-        {
-            var decodedResult = await DecodeServiceMessageAsync<T>(mapType, messageFactory, message, activity, null);
-            return (decodedResult.Message!,decodedResult.Header!);
-        }
         #endregion
 
         #region OTEL
@@ -242,44 +236,44 @@ namespace MQContract.Connections
         #endregion
 
         #region Subscriptions
-        protected abstract ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, bool synchronous, CancellationToken cancellationToken);
+        protected abstract ValueTask<ISubscription> CreateSubscriptionAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, bool synchronous, CancellationToken cancellationToken);
 
-        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, CancellationToken cancellationToken)
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            logger?.LogDebug("Creating PubSub subscription for message type {T} on channel {Channel} in group {Group}", typeof(T), channel, group);
-            return CreateSubscriptionAsync<T>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, messageFilters, false, cancellationToken);
+            logger?.LogDebug("Creating PubSub subscription for message type {T} on channel {Channel} in group {Group}", typeof(TMessage), channel, group);
+            return CreateSubscriptionAsync<TMessage>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, messageFilters, false, cancellationToken);
         }
 
-        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<T>(Action<IReceivedMessage<T>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, CancellationToken cancellationToken)
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<TMessage>(Action<IReceivedMessage<TMessage>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            logger?.LogDebug("Creating PubSub subscription for message type {T} on channel {Channel} in group {Group}", typeof(T), channel, group);
-            return CreateSubscriptionAsync<T>((msg) =>
+            logger?.LogDebug("Creating PubSub subscription for message type {T} on channel {Channel} in group {Group}", typeof(TMessage), channel, group);
+            return CreateSubscriptionAsync<TMessage>((msg) =>
             {
                 messageReceived(msg);
                 return ValueTask.CompletedTask;
             },
             errorReceived, channel, group, ignoreMessageHeader, messageFilters, true, cancellationToken);
         }
-        protected abstract ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken);
+        protected abstract ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, MessageFilters<TQuery>? messageFilter, CancellationToken cancellationToken);
 
-        ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryAsyncResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryAsyncResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            logger?.LogDebug("Creating QueryResponse subscription for message query {Q} and response {R} on channel {Channel} in group {Group}", typeof(Q), typeof(R), channel, group);
-            return ProduceSubscribeQueryResponseAsync<Q, R>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, false, cancellationToken);
+            logger?.LogDebug("Creating QueryResponse subscription for message query {Q} and response {R} on channel {Channel} in group {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
+            return ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, false, messageFilters, cancellationToken);
         }
 
-        ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, QueryResponseMessage<R>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, QueryResponseMessage<TQueryResponse>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            logger?.LogDebug("Creating QueryResponse subscription for message query {Q} and response {R} on channel {Channel} in group {Group}", typeof(Q), typeof(R), channel, group);
-            return ProduceSubscribeQueryResponseAsync<Q, R>((msg) =>
+            logger?.LogDebug("Creating QueryResponse subscription for message query {Q} and response {R} on channel {Channel} in group {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
+            return ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>((msg) =>
             {
                 var result = messageReceived(msg);
                 return ValueTask.FromResult(result);
-            }, errorReceived, channel, group, ignoreMessageHeader, true, cancellationToken);
+            }, errorReceived, channel, group, ignoreMessageHeader, true, messageFilters, cancellationToken);
         }
         #endregion
 
@@ -475,24 +469,25 @@ namespace MQContract.Connections
             }
             return (tcs.Task.Result, null);
         }
-        protected async ValueTask<QueryResult<R>> ProduceResultAsync<R>(ServiceQueryResult queryResult, IMessageServiceConnection serviceConnection, string? serviceConnectionName, string responseChannel = "")
+        protected async ValueTask<QueryResult<TQueryResult>> ProduceResultAsync<TQueryResult>(ServiceQueryResult queryResult, IMessageServiceConnection serviceConnection, string? serviceConnectionName, string responseChannel = "")
         {
             using var scope = SetScope(queryResult.ID);
-            logger?.LogDebug("Attempting to produce a Query Result of {R} from the Service Message of the type {MessageTypeID}", typeof(R), queryResult.MessageTypeID);
-            QueryResult<R> result;
+            logger?.LogDebug("Attempting to produce a Query Result of {R} from the Service Message of the type {MessageTypeID}", typeof(TQueryResult), queryResult.MessageTypeID);
+            QueryResult<TQueryResult> result;
             using var activity = StartActivity(Constants.ConsumeQueryResponseActivityName, messageHeader: queryResult.Header, serviceConnection: serviceConnection, connectionName: serviceConnectionName);
             try
             {
-                (var resultMessage, var messageHeader) = await DecodeServiceMessageAsync<R>(
+                var decodeResult = await DecodeServiceMessageAsync<TQueryResult>(
                     ChannelMapper.MapTypes.QueryResponse, 
-                    GetMessageFactory<R>(true), 
+                    GetMessageFactory<TQueryResult>(true), 
                     new(queryResult.ID, queryResult.MessageTypeID, responseChannel, queryResult.Header, queryResult.Data), 
-                    activity
+                    activity,
+                    null
                 );
-                result = new QueryResult<R>(
+                result = new QueryResult<TQueryResult>(
                     queryResult.ID,
-                    messageHeader,
-                    Result: resultMessage
+                    decodeResult.Header!,
+                    Result: decodeResult.Message
                 );
             }
             catch (QueryResponseException qre)
@@ -507,7 +502,7 @@ namespace MQContract.Connections
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "An error occured attempting to convert the Service Message of the type {MessageTypeID} to the Query Result of {R}", queryResult.MessageTypeID, typeof(R));
+                logger?.LogError(ex, "An error occured attempting to convert the Service Message of the type {MessageTypeID} to the Query Result of {R}", queryResult.MessageTypeID, typeof(TQueryResult));
                 result = new(
                     queryResult.ID,
                     queryResult.Header,
@@ -636,24 +631,24 @@ namespace MQContract.Connections
             }
             return await ProduceResultAsync<R>(tcs.Task.Result, serviceConnection, connectionName, responseChannel: responseChannel);
         }
-        protected async ValueTask<ISubscription> CreateSubscriptionAsync<Q, R>(IMessageFactory<Q> queryMessageFactory, IMessageFactory<R> responseMessageFactory, IMessageServiceConnection serviceConnection,
-            Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, string? serviceConnectionName, CancellationToken cancellationToken)
+        protected async ValueTask<ISubscription> CreateSubscriptionAsync<TQuery, TQueryResponse>(IMessageFactory<TQuery> queryMessageFactory, IMessageFactory<TQueryResponse> responseMessageFactory, IMessageServiceConnection serviceConnection,
+            Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, string? serviceConnectionName, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            logger?.LogInformation("Creating QueryResponse subscription for {Q} answering with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
-            var subscription = new QueryResponseSubscription<Q>(
+            logger?.LogInformation("Creating QueryResponse subscription for {Q} answering with {R} on {Channel} in {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
+            var subscription = new QueryResponseSubscription<TQuery>(
                 async (message, replyChannel) =>
                 {
                     using var consumeActivity = StartActivity(Constants.ConsumeQueryActivityName, messageHeader: message.Header, serviceConnection: serviceConnection, connectionName: serviceConnectionName);
-                    Q? taskMessage;
-                    MessageHeader? messageHeader;
+                    DecodeServiceMessageResult<TQuery> decodedResult;
                     try
                     {
-                        (taskMessage, messageHeader) = await DecodeServiceMessageAsync<Q>(
+                        decodedResult = await DecodeServiceMessageAsync<TQuery>(
                             ChannelMapper.MapTypes.QuerySubscription,
                             queryMessageFactory,
                             message,
-                            consumeActivity
+                            consumeActivity,
+                            messageFilters
                         );
                     }
                     catch
@@ -662,33 +657,37 @@ namespace MQContract.Connections
                         throw;
                     }
                     consumeActivity?.SetStatus(ActivityStatusCode.Ok);
-                    var result = await messageReceived(new ReceivedMessage<Q>(message.ID, taskMessage!, messageHeader, message.ReceivedTimestamp, DateTime.Now, consumeActivity));
-                    using var responseActivity = StartActivity(
-                        Constants.ProduceQueryResponseActivityName, 
-                        serviceConnection:serviceConnection, 
-                        connectionName:serviceConnectionName, 
-                        current:consumeActivity
-                    );
-                    try
+                    if (Equals(decodedResult.FilterResult, MessageFilterResult.Allow))
                     {
-                        var response = await ProduceServiceMessageAsync<R>(
-                            ChannelMapper.MapTypes.QueryResponse,
-                            responseMessageFactory,
-                            result.Message,
-                            true,
-                            responseActivity,
-                            maxMessageSize: serviceConnection.MaxMessageBodySize,
-                            channel: replyChannel,
-                            messageHeader: new(result.Headers)
+                        var result = await messageReceived(new ReceivedMessage<TQuery>(message.ID, decodedResult.Message!, decodedResult.Header!, message.ReceivedTimestamp, DateTime.Now, consumeActivity));
+                        using var responseActivity = StartActivity(
+                            Constants.ProduceQueryResponseActivityName,
+                            serviceConnection: serviceConnection,
+                            connectionName: serviceConnectionName,
+                            current: consumeActivity
                         );
-                        responseActivity?.SetStatus(ActivityStatusCode.Ok);
-                        return (response, responseActivity);
+                        try
+                        {
+                            var response = await ProduceServiceMessageAsync<TQueryResponse>(
+                                ChannelMapper.MapTypes.QueryResponse,
+                                responseMessageFactory,
+                                result.Message,
+                                true,
+                                responseActivity,
+                                maxMessageSize: serviceConnection.MaxMessageBodySize,
+                                channel: replyChannel,
+                                messageHeader: new(result.Headers)
+                            );
+                            responseActivity?.SetStatus(ActivityStatusCode.Ok);
+                            return (response, responseActivity, decodedResult.FilterResult);
+                        }
+                        catch
+                        {
+                            responseActivity?.SetStatus(ActivityStatusCode.Error);
+                            throw;
+                        }
                     }
-                    catch
-                    {
-                        responseActivity?.SetStatus(ActivityStatusCode.Error);
-                        throw;
-                    }
+                    return (null, consumeActivity, decodedResult.FilterResult);
                 },
                 errorReceived,
                 (originalChannel) => MapChannel(ChannelMapper.MapTypes.QuerySubscription, originalChannel),

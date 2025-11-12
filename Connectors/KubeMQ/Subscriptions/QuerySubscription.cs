@@ -7,7 +7,7 @@ using MQContract.Messages;
 namespace MQContract.KubeMQ.Subscriptions
 {
     internal class QuerySubscription(ConnectionOptions options, KubeClient client,
-        Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived,
+        Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived,
         string channel, string group, CancellationToken cancellationToken)
         : SubscriptionBase<Request>(options.Logger, options.ReconnectInterval, client, errorReceived, cancellationToken)
     {

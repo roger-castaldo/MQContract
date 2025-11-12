@@ -247,11 +247,12 @@ namespace MQContract.ZeroMQ
             return new(message.ID, await PublishMessageAsync(MessageMapper.Map(message, correlationID, inboxAddress), cancellationToken));
         }
 
-        ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
                 async (msg) => {
                     var response = await messageReceived(msg.message);
-                    SendMessageToDestination(MessageMapper.Map(response, msg.message.CorrelationID, msg.responseAddress, INBOX_CHANNEL), msg.responseAddress!);
+                    if (response!=null)
+                        SendMessageToDestination(MessageMapper.Map(response, msg.message.CorrelationID, msg.responseAddress, INBOX_CHANNEL), msg.responseAddress!);
                 },
                 channel
             ));

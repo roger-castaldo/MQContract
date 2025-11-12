@@ -235,6 +235,7 @@ namespace MQContract.Connections
                     group,
                     ignoreMessageHeader,
                     true,
+                    null, 
                     cancellationToken
                 ),
                 channel,
@@ -283,6 +284,7 @@ namespace MQContract.Connections
                     group,
                     ignoreMessageHeader,
                     true,
+                    null, 
                     cancellationToken
                 ),
                 channel,

@@ -20,6 +20,6 @@ namespace MQContract.Interfaces.Service
         /// <param name="group">The group to bind a consumer to</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A service subscription object</returns>
-        ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group = null, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<IServiceSubscription?> SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group = null, CancellationToken cancellationToken = new CancellationToken());
     }
 }

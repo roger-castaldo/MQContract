@@ -166,7 +166,7 @@ namespace MQContract.HiveMQ
             return new(message.ID);
         }
 
-        async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var result = new Subscription(
                 clientOptions,
@@ -175,7 +175,8 @@ namespace MQContract.HiveMQ
                     try
                     {
                         var result = await messageReceived(ConvertMessage(msg, out var responseID));
-                        _ = await Client.PublishAsync(ConvertMessage(result, responseID: new Guid(responseID!), respondToTopic: msg.ResponseTopic), cancellationToken);
+                        if (result!=null)
+                            _ = await Client.PublishAsync(ConvertMessage(result!, responseID: new Guid(responseID!), respondToTopic: msg.ResponseTopic), cancellationToken);
                     }
                     catch (Exception e)
                     {
