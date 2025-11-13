@@ -1,4 +1,5 @@
 ﻿using MQContract.CQRS.Interfaces;
+using MQContract.CQRS.Interfaces.Query;
 using MQContract.Interfaces;
 using System.Diagnostics;
 
@@ -21,6 +22,7 @@ namespace MQContract.CQRS.Contexts
             receivedMessage.Activity?.AddTag("mqcontract.cqrs.correlationid", context.CorrelationId);
             receivedMessage.Activity?.AddTag("mqcontract.cqrs.messageid", context.MessageId);
             receivedMessage.Activity?.AddTag("mqcontract.cqrs.causationid", context.CausationId);
+            receivedMessage.Activity?.AddTag("mqcontract.cqrs.type", (receivedMessage.Message is IQuery ? "query" : "command"));
         }
 
         internal CancellationTokenSource CancellationTokenSource => cancellationTokenSource;
