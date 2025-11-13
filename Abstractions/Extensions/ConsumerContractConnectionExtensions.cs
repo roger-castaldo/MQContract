@@ -25,7 +25,7 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterPubSubConsumerAsync<TContractConnection, TMessage, TConsumer>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             TConsumer consumer,
             string? channel = null,
             string? group = null,
@@ -33,7 +33,7 @@ namespace MQContract.Extensions
             MessageFilters<TMessage>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         where TConsumer : IPubSubConsumer<TMessage>
         {
             var connection = await connectionTask.ConfigureAwait(false);
@@ -41,7 +41,7 @@ namespace MQContract.Extensions
                 consumer, channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         /// <summary>
         /// Called to register a PubSubConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it. 
@@ -57,14 +57,14 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterPubSubConsumerAsync<TContractConnection, TMessage, TConsumer>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
             MessageFilters<TMessage>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         where TConsumer : IPubSubConsumer<TMessage>
         {
             var connection = await connectionTask.ConfigureAwait(false);
@@ -72,7 +72,7 @@ namespace MQContract.Extensions
                 channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         /// <summary>
         /// Called to register a PubSubConsumer into the contract connection. 
@@ -86,21 +86,21 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterPubSubConsumerAsync<TContractConnection>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             Type consumerType,
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         {
             var connection = await connectionTask.ConfigureAwait(false);
             await connection.RegisterPubSubConsumerAsync(
                 consumerType, channel, group, ignoreMessageHeader, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         #endregion
 
@@ -120,7 +120,7 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterPubSubAsyncConsumerAsync<TContractConnection, TMessage, TConsumer>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             TConsumer consumer,
             string? channel = null,
             string? group = null,
@@ -128,7 +128,7 @@ namespace MQContract.Extensions
             MessageFilters<TMessage>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         where TConsumer : IPubSubAsyncConsumer<TMessage>
         {
             var connection = await connectionTask.ConfigureAwait(false);
@@ -136,7 +136,7 @@ namespace MQContract.Extensions
                 consumer, channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         /// <summary>
         /// Called to register a PubSubAsyncConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it. 
@@ -152,14 +152,14 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterPubSubAsyncConsumerAsync<TContractConnection, TMessage, TConsumer>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
             MessageFilters<TMessage>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         where TConsumer : IPubSubAsyncConsumer<TMessage>
         {
             var connection = await connectionTask.ConfigureAwait(false);
@@ -167,7 +167,7 @@ namespace MQContract.Extensions
                 channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         /// <summary>
         /// Called to register a PubSubAsyncConsumer into the contract connection. 
@@ -181,21 +181,21 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterPubSubAsyncConsumerAsync<TContractConnection>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             Type consumerType,
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         {
             var connection = await connectionTask.ConfigureAwait(false);
             await connection.RegisterPubSubAsyncConsumerAsync(
                 consumerType, channel, group, ignoreMessageHeader, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         #endregion
 
@@ -216,7 +216,7 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseConsumerAsync<TContractConnection, TQuery, TQueryResponse, TConsumer>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             TConsumer consumer,
             string? channel = null,
             string? group = null,
@@ -224,7 +224,7 @@ namespace MQContract.Extensions
             MessageFilters<TQuery>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         where TConsumer : IQueryResponseConsumer<TQuery, TQueryResponse>
         {
             var connection = await connectionTask.ConfigureAwait(false);
@@ -232,7 +232,7 @@ namespace MQContract.Extensions
                 consumer, channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         /// <summary>
         /// Called to register a QueryResponseConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it. 
@@ -249,14 +249,14 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseConsumerAsync<TContractConnection, TQuery, TQueryResponse, TConsumer>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
             MessageFilters<TQuery>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         where TConsumer : IQueryResponseConsumer<TQuery, TQueryResponse>
         {
             var connection = await connectionTask.ConfigureAwait(false);
@@ -264,7 +264,7 @@ namespace MQContract.Extensions
                 channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         /// <summary>
         /// Called to register a QueryResponseConsumer into the contract connection. 
@@ -278,21 +278,21 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseConsumerAsync<TContractConnection>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             Type consumerType,
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         {
             var connection = await connectionTask.ConfigureAwait(false);
             await connection.RegisterQueryResponseConsumerAsync(
                 consumerType, channel, group, ignoreMessageHeader, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         #endregion
 
@@ -313,7 +313,7 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseAsyncConsumerAsync<TContractConnection, TQuery, TQueryResponse, TConsumer>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             TConsumer consumer,
             string? channel = null,
             string? group = null,
@@ -321,7 +321,7 @@ namespace MQContract.Extensions
             MessageFilters<TQuery>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         where TConsumer : IQueryResponseAsyncConsumer<TQuery, TQueryResponse>
         {
             var connection = await connectionTask.ConfigureAwait(false);
@@ -329,7 +329,7 @@ namespace MQContract.Extensions
                 consumer, channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         /// <summary>
         /// Called to register a QueryResponseAsyncConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it. 
@@ -346,14 +346,14 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseAsyncConsumerAsync<TContractConnection, TQuery, TQueryResponse, TConsumer>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
             MessageFilters<TQuery>? messageFilters = null,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         where TConsumer : IQueryResponseAsyncConsumer<TQuery, TQueryResponse>
         {
             var connection = await connectionTask.ConfigureAwait(false);
@@ -361,7 +361,7 @@ namespace MQContract.Extensions
                 channel, group, ignoreMessageHeader, messageFilters, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         /// <summary>
         /// Called to register a QueryResponseAsyncConsumer into the contract connection. 
@@ -375,21 +375,21 @@ namespace MQContract.Extensions
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
         public static async ValueTask<TContractConnection> RegisterQueryResponseAsyncConsumerAsync<TContractConnection>(
-            this ValueTask<TContractConnection> connectionTask,
+            this ValueTask<IConsumerContractConnection<TContractConnection>> connectionTask,
             Type consumerType,
             string? channel = null,
             string? group = null,
             bool ignoreMessageHeader = false,
             CancellationToken cancellationToken = default
         )
-        where TContractConnection : IBaseContractConnection, IConsumerContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
         {
             var connection = await connectionTask.ConfigureAwait(false);
             await connection.RegisterQueryResponseAsyncConsumerAsync(
                 consumerType, channel, group, ignoreMessageHeader, cancellationToken
             ).ConfigureAwait(false);
 
-            return connection;
+            return (TContractConnection)connection;
         }
         #endregion
     }

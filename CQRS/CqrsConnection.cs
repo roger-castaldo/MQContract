@@ -3,7 +3,6 @@ using MQContract.CQRS.Interfaces;
 using MQContract.CQRS.Interfaces.Command;
 using MQContract.CQRS.Interfaces.Query;
 using MQContract.Interfaces;
-using MQContract.Interfaces.Consumers;
 using MQContract.Messages;
 
 namespace MQContract.CQRS
