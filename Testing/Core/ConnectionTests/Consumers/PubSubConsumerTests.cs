@@ -1,13 +1,11 @@
 ﻿using AutomatedTesting.Consumers;
 using AutomatedTesting.Messages;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
 using MQContract.Interfaces.Service;
-using System;
 using System.Diagnostics;
 using System.Reflection;
 

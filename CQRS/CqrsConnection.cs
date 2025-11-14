@@ -9,17 +9,9 @@ namespace MQContract.CQRS
 {
     internal sealed class CqrsConnection : ICQRSConnection,IAsyncDisposable
     {
-        private sealed record InvocationInstance(Guid MessageId,Guid CorrelationId, Guid? CausationId, CancellationTokenSource CancellationTokenSource)
-        {
-            public bool IsMatch(CancellationRequest request)
-                => Equals(CorrelationId, request.CorrelationId)
-                && (Equals(MessageId, request.MessageId) || Equals(CausationId, request.MessageId));
-        }
-
         private readonly List<InvocationInstance> invocationInstances = new();
         private readonly SemaphoreSlim lockSlim = new(1);
         private readonly IContractConnection contractConnection;
-        private readonly ISubscription? cancelationTokenSubscription;
         private readonly string? cancelationTokenChannel;
         private bool disposedValue;
 
@@ -28,31 +20,12 @@ namespace MQContract.CQRS
             this.contractConnection = contractConnection;
             this.cancelationTokenChannel = cancelationTokenChannel;
             if (!string.IsNullOrWhiteSpace(cancelationTokenChannel)) {
-                var task = contractConnection.SubscribeAsync<CancellationRequest>(
-                    async (message) =>
-                    {
-                        await lockSlim.WaitAsync();
-                        foreach (var instance in invocationInstances.Where(inst => inst.IsMatch(message.Message)).ToArray())
-                        {
-                            try
-                            {
-                                if (!instance.CancellationTokenSource.IsCancellationRequested)
-                                    instance.CancellationTokenSource.Cancel();
-                            }
-                            catch {
-                                //no exception catch needed
-                            }
-                            invocationInstances.Remove(instance);
-                        }
-                        lockSlim.Release();
-                    },
-                    (error) => { },
+                var task = ((IConsumerContractConnection<IBaseContractConnection>)contractConnection).RegisterPubSubAsyncConsumerAsync<CancellationRequest,CancellationRequestConsumer>(
+                    new CancellationRequestConsumer(lockSlim, invocationInstances),
                     channel: cancelationTokenChannel
                 ).AsTask();
                 task.Wait();
-                cancelationTokenSubscription = task.Result;
-            }else
-                cancelationTokenSubscription = null;
+            }
         }
 
         public CancellationTokenSource RegisterInvocation(Context context)
@@ -178,8 +151,6 @@ namespace MQContract.CQRS
             if (!disposedValue)
             {
                 disposedValue=true;
-                await (cancelationTokenSubscription?.EndAsync()??ValueTask.CompletedTask);
-                await (cancelationTokenSubscription?.DisposeAsync()??ValueTask.CompletedTask);
                 await lockSlim.WaitAsync();
                 invocationInstances.Clear();
                 lockSlim.Release();

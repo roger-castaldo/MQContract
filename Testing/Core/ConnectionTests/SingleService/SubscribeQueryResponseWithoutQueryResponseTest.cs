@@ -1,5 +1,4 @@
 ﻿using AutomatedTesting.Messages;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
