@@ -60,7 +60,8 @@ namespace MQContract.Subscriptions
                                         serviceMessage.MessageTypeID,
                                         serviceMessage.Channel,
                                         QueryResponseHelper.StripHeaders(serviceMessage, out var queryClientID, out var replyID, out var replyChannel),
-                                        serviceMessage.Data
+                                        serviceMessage.Data,
+                                        serviceMessage.Acknowledge
                                     ),
                                     replyChannel!
                                 );

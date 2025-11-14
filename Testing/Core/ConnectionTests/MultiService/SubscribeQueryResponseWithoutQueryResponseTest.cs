@@ -281,5 +281,125 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceSubscription.Verify(x => x.EndAsync(), Times.Exactly(2));
             #endregion
         }
+
+        [TestMethod]
+        [DataRow("headerValue", "differentHeaderValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "messageValue", true)]
+        [DataRow("headerValue", "differentHeaderValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "messageValue", false)]
+        [DataRow("headerValue", "headerValue", "messageHeaderValue", "differentMessageHeaderValue", "messageValue", "messageValue", true)]
+        [DataRow("headerValue", "headerValue", "messageHeaderValue", "differentMessageHeaderValue", "messageValue", "messageValue", false)]
+        [DataRow("headerValue", "headerValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "differentMessageValue", true)]
+        [DataRow("headerValue", "headerValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "differentMessageValue", false)]
+        [DataRow("headerValue", "headerValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "messageValue", true)]
+        public async Task TestSubscribeAsyncWithFiltering(string headerValue, string checkValue, string messageHeaderValue, string messageHeaderCheckValue,
+            string messageValue, string messageCheckValue, bool acknowledgeDrop)
+        {
+            #region Arrange
+            var headerKey = "testHeader";
+            var messageHeaderKey = "testMessageHeader";
+            var acknowledged = false;
+
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            var serviceSubObject = serviceSubscription.Object;
+
+            var actions = new List<Action<ReceivedServiceMessage>>();
+            var channels = new List<string>();
+            var serviceMessages = new List<ServiceMessage>();
+
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            serviceConnection.Setup(x => x.SubscribeAsync(
+                Capture.In(actions),
+                It.IsAny<Action<Exception>>(), Capture.In<string>(channels),
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubObject);
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
+                {
+                    serviceMessages.Add(message);
+                    var idx = channels.IndexOf(message.Channel);
+                    if (idx != -1)
+                        actions[idx](Helper.ProduceReceivedServiceMessage(message, acknowledge: () =>
+                        {
+                            acknowledged=true;
+                            return ValueTask.CompletedTask;
+                        }));
+                    return ValueTask.FromResult(new TransmissionResult(message.ID));
+                });
+
+            var contractConnection = ContractConnection.MultiServiceInstance()
+                .RegisterServiceConnection(ServiceName, serviceConnection.Object);
+
+            var message = new BasicQueryMessage(messageValue);
+            var responseMessage = new BasicResponseMessage(messageValue);
+            #endregion
+
+            #region Act
+            var messages = new List<IReceivedMessage<BasicQueryMessage>>();
+            var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
+            {
+                messages.Add(msg);
+                return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
+            }, (error) => { },
+            messageFilters: new(
+                HeaderFilter: (header) =>
+                    ValueTask.FromResult<MessageFilterResult>((Equals(header[headerKey], checkValue), acknowledgeDrop) switch
+                    {
+                        (true, _) => MessageFilterResult.Allow,
+                        (false, false) => MessageFilterResult.DropAndDontAcknowledge,
+                        (false, true) => MessageFilterResult.DropAndAcknowledge
+                    }),
+                MessageFilter: (serviceMessage, header) =>
+                    ValueTask.FromResult<MessageFilterResult>((Equals(header[messageHeaderKey], messageHeaderCheckValue), Equals(serviceMessage.TypeName, messageCheckValue), acknowledgeDrop) switch
+                    {
+                        (true, true, _) => MessageFilterResult.Allow,
+                        (false, _, false) => MessageFilterResult.DropAndDontAcknowledge,
+                        (false, _, true) => MessageFilterResult.DropAndAcknowledge,
+                        (_, false, false) => MessageFilterResult.DropAndDontAcknowledge,
+                        (_, false, true) => MessageFilterResult.DropAndAcknowledge,
+                    })
+            ));
+            IEnumerable<QueryResult<object>> result = [];
+            Exception? error = null;
+            var messageHeader = new MessageHeader([
+                new KeyValuePair<string,string>(headerKey,headerValue),
+                new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
+            ]);
+            if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
+                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500));
+            else
+                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500)));
+            #endregion
+
+            #region Assert
+            var publishCount = 1;
+            Assert.IsNotNull(subscription);
+            Assert.HasCount(2, actions);
+            if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
+            {
+                publishCount=2;
+                Assert.HasCount(2, serviceMessages);
+                Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+                Assert.IsNotEmpty(result);
+                Assert.IsNull(error);
+                Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
+                Assert.AreEqual(serviceMessages[0].Header.Keys.Count()-3, messages[0].Headers.Keys.Count());
+                Assert.AreEqual(message, messages[0].Message);
+            }
+            else
+            {
+                Assert.HasCount(1, serviceMessages);
+                Assert.IsEmpty(result);
+                Assert.IsNotNull(error);
+                Assert.IsInstanceOfType<QueryTimeoutException>(error);
+                Assert.IsEmpty(messages);
+            }
+            Assert.AreEqual(acknowledgeDrop, acknowledged);
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(publishCount));
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(),
+               It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            #endregion
+        }
     }
 }
