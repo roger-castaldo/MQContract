@@ -24,7 +24,6 @@ namespace MQContract.CQRS.Extensions
 
         public static async ValueTask<ICQRSConnection> RegisterQueryProcessorAsync<TQuery, TQueryResponse>(this ValueTask<ICQRSConnection> cqrsConnectionTask, IQueryProcessor<TQuery, TQueryResponse> processor, string? group = null)
             where TQuery : IQuery
-            where TQueryResponse : IQueryResponse
         {
             var result = await cqrsConnectionTask.ConfigureAwait(false);
             return await result.RegisterQueryProcessorAsync<TQuery, TQueryResponse>(processor, group)

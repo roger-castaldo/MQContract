@@ -13,6 +13,12 @@ namespace MQContract.CQRS
         }
     }
 
+    public class CommandTimeoutException : Exception
+    {
+        internal CommandTimeoutException(Exception innerException)
+            : base("Command request timed out", innerException) { }
+    }
+
     public class QueryCallException : Exception
     {
         public ErrorMessage Error { get; private init; }

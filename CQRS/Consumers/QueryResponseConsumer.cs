@@ -9,7 +9,6 @@ namespace MQContract.CQRS.Consumers
     internal class QueryResponseConsumer<TQuery, TQueryResponse>(IQueryProcessor<TQuery, TQueryResponse> queryProcessor, CqrsConnection connection)
         : IQueryResponseAsyncConsumer<TQuery, TQueryResponse>
         where TQuery : IQuery
-        where TQueryResponse : IQueryResponse
     {
         void IBaseConsumer.ErrorRecieved(Exception error)
             => queryProcessor.ErrorRecieved(error);

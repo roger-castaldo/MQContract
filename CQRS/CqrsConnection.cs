@@ -2,6 +2,7 @@
 using MQContract.CQRS.Interfaces;
 using MQContract.CQRS.Interfaces.Command;
 using MQContract.CQRS.Interfaces.Query;
+using MQContract.CQRS.Registrars;
 using MQContract.Interfaces;
 using MQContract.Messages;
 
@@ -13,19 +14,35 @@ namespace MQContract.CQRS
         private readonly SemaphoreSlim lockSlim = new(1);
         private readonly IContractConnection contractConnection;
         private readonly string? cancelationTokenChannel;
+        private readonly IProcessorRegistrar processorRegistrar;
         private bool disposedValue;
 
         public CqrsConnection(IContractConnection contractConnection,string? cancelationTokenChannel = null)
         {
+            Task? task = null;
+            if (contractConnection is IContractedConnection contractedConnection)
+            {
+                if (!string.IsNullOrWhiteSpace(cancelationTokenChannel))
+                    task = contractedConnection.RegisterPubSubAsyncConsumerAsync<CancellationRequest, CancellationRequestConsumer>(
+                        new CancellationRequestConsumer(lockSlim, invocationInstances),
+                        channel: cancelationTokenChannel
+                    ).AsTask();
+                processorRegistrar = new ContractedConnectionRegistrar(contractedConnection);
+            }
+            else if (contractConnection is IMappedContractConnection mappedContractConnection)
+            {
+                if (!string.IsNullOrWhiteSpace(cancelationTokenChannel))
+                    task = mappedContractConnection.RegisterPubSubAsyncConsumerAsync<CancellationRequest, CancellationRequestConsumer>(
+                        new CancellationRequestConsumer(lockSlim, invocationInstances),
+                        channel: cancelationTokenChannel
+                    ).AsTask();
+                processorRegistrar = new MappedConnectionRegistrar(mappedContractConnection);
+            }
+            else
+                throw new Exception();
             this.contractConnection = contractConnection;
             this.cancelationTokenChannel = cancelationTokenChannel;
-            if (!string.IsNullOrWhiteSpace(cancelationTokenChannel)) {
-                var task = ((IConsumerContractConnection<IBaseContractConnection>)contractConnection).RegisterPubSubAsyncConsumerAsync<CancellationRequest,CancellationRequestConsumer>(
-                    new CancellationRequestConsumer(lockSlim, invocationInstances),
-                    channel: cancelationTokenChannel
-                ).AsTask();
-                task.Wait();
-            }
+            task?.Wait();
         }
 
         public CancellationTokenSource RegisterInvocation(Context context)
@@ -74,25 +91,32 @@ namespace MQContract.CQRS
                 throw new CommandCallException(result.Error!);
         }
 
-        async ValueTask<TCommandResult?> ICQRSConnection.ExecuteCommandAsync<TCommand, TCommandResult>(TCommand command, Context? context, CancellationToken cancellationToken) where TCommandResult : default
+        async ValueTask<TCommandResult?> ICQRSConnection.ExecuteCommandAsync<TCommand, TCommandResult>(TCommand command, Context? context, TimeSpan? timeout, CancellationToken cancellationToken) where TCommandResult : default
         {
             context = SetupContext(context, cancellationToken);
-            var result = await contractConnection.QueryAsync<TCommand,TCommandResult>(command, messageHeader: context.AsMessageHeader(), cancellationToken: cancellationToken);
+            try
+            {
+                var result = await contractConnection.QueryAsync<TCommand, TCommandResult>(command, messageHeader: context.AsMessageHeader(), timeout: timeout, cancellationToken: cancellationToken);
+                if (result.IsError)
+                    throw new CommandCallException(result.Error!);
+                return result.Result;
+            }
+            catch (TimeoutException ex)
+            {
+                throw new CommandTimeoutException(ex);
+            }
+        }
+
+        async ValueTask<TQueryResponse?> ICQRSConnection.ExecuteQueryAsync<TQuery, TQueryResponse>(TQuery query, Context? context, TimeSpan? timeout, CancellationToken cancellationToken) where TQueryResponse : default
+        {
+            context = SetupContext(context, cancellationToken);
+            var result = await contractConnection.QueryAsync<TQuery, TQueryResponse>(query, messageHeader: context.AsMessageHeader(), timeout: timeout, cancellationToken: cancellationToken);
             if (result.IsError)
-                throw new CommandCallException(result.Error!);
+                throw new QueryCallException(result.Error!);
             return result.Result;
         }
 
-        async ValueTask<TQueryResponse?> ICQRSConnection.ExecuteQueryAsync<TQuery, TQueryResponse>(TQuery query, Context? context, CancellationToken cancellationToken) where TQueryResponse : default
-        {
-            context = SetupContext(context, cancellationToken);
-            var result = await contractConnection.QueryAsync<TQuery, TQueryResponse>(query, messageHeader: context.AsMessageHeader(), cancellationToken: cancellationToken);
-            if (result.IsError)
-                throw new CommandCallException(result.Error!);
-            return result.Result;
-        }
-
-        private MessageFilters<TMessage>? ExtractMessageFilters<TMessage,TProcessor>(TProcessor processor)
+        private static MessageFilters<TMessage>? ExtractMessageFilters<TMessage,TProcessor>(TProcessor processor)
             where TProcessor : IProcessor
             where TMessage : ICommand
         {
@@ -109,27 +133,27 @@ namespace MQContract.CQRS
 
         async ValueTask<ICQRSConnection> ICQRSConnection.RegisterCommandProcessorAsync<TCommand>(ICommandProcessor<TCommand> processor, string? group)
         {
-            _ = await ((IConsumerContractConnection<IBaseContractConnection>)contractConnection).RegisterPubSubAsyncConsumerAsync<TCommand,CommandConsumer<TCommand>>(
-                new CommandConsumer<TCommand>(processor,this),
-                group:group,
-                messageFilters: ExtractMessageFilters<TCommand, ICommandProcessor<TCommand>>(processor)
-            );
+            await processorRegistrar.RegisterCommandProcessorAsync<TCommand>(
+                    new CommandConsumer<TCommand>(processor,this),
+                    group:group,
+                    messageFilters: CqrsConnection.ExtractMessageFilters<TCommand, ICommandProcessor<TCommand>>(processor)
+                );
             return this;
         }
 
         async ValueTask<ICQRSConnection> ICQRSConnection.RegisterCommandProcessorAsync<TCommand, TCommandResult>(ICommandProcessor<TCommand, TCommandResult> processor, string? group)
         {
-            _ = await ((IConsumerContractConnection<IBaseContractConnection>)contractConnection).RegisterQueryResponseAsyncConsumerAsync<TCommand, TCommandResult, CommandResponseConsumer<TCommand, TCommandResult>>(
+            await processorRegistrar.RegisterCommandProcessorAsync<TCommand, TCommandResult>(
                 new CommandResponseConsumer<TCommand, TCommandResult>(processor,this),
                 group:group,
-                messageFilters: ExtractMessageFilters<TCommand, ICommandProcessor<TCommand,TCommandResult>>(processor)
+                messageFilters: CqrsConnection.ExtractMessageFilters<TCommand, ICommandProcessor<TCommand, TCommandResult>>(processor)
             );
             return this;
         }
 
         async ValueTask<ICQRSConnection> ICQRSConnection.RegisterQueryProcessorAsync<TQuery, TQueryResponse>(IQueryProcessor<TQuery, TQueryResponse> processor, string? group)
         {
-            MessageFilters<TQuery> messageFilters = null;
+            MessageFilters<TQuery>? messageFilters = null;
             Func<MessageHeader, ValueTask<MessageFilterResult>>? headerFilter = null;
             Func<TQuery, MessageHeader, ValueTask<MessageFilterResult>>? messageFilter = null;
             if (processor is IContextFilteredProcessor contextFilteredProcessor)
@@ -138,7 +162,7 @@ namespace MQContract.CQRS
                 messageFilter = (message, header) => queryFilteredProcessor.Filter(message, new Context(header));
             if (headerFilter!=null || messageFilter!=null)
                 messageFilters = new(headerFilter, messageFilter);
-            _ = await((IConsumerContractConnection<IBaseContractConnection>)contractConnection).RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, QueryResponseConsumer<TQuery, TQueryResponse>>(
+            await processorRegistrar.RegisterQueryProcessorAsync<TQuery, TQueryResponse>(
                 new QueryResponseConsumer<TQuery, TQueryResponse>(processor, this),
                 group: group,
                 messageFilters: messageFilters

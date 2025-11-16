@@ -28,6 +28,7 @@ namespace MQContract.CQRS.Contexts
         internal CancellationTokenSource CancellationTokenSource => cancellationTokenSource;
 
         string? IInvocationContext.this[string key] { get => context[key]; set => context[key] = value; }
+        IEnumerable<string> IInvocationContext.Keys => context.Keys;
 
         Guid IInvocationContext.MessageId => context.MessageId;
 
@@ -43,10 +44,10 @@ namespace MQContract.CQRS.Contexts
             => connection.ExecuteCommandAsync<TCommand>(command, context.CloneToChild(), cancellationTokenSource.Token);
 
         ValueTask<TCommandResult?> IInvocationContext.ExecuteCommandAsync<TCommand, TCommandResult>(TCommand command) where TCommandResult : default
-            => connection.ExecuteCommandAsync<TCommand, TCommandResult>(command, context.CloneToChild(), cancellationTokenSource.Token);
+            => connection.ExecuteCommandAsync<TCommand, TCommandResult>(command, context.CloneToChild(), cancellationToken: cancellationTokenSource.Token);
 
         ValueTask<TQueryResponse?> IInvocationContext.ExecuteQueryAsync<TQuery, TQueryResponse>(TQuery query) where TQueryResponse : default
-            => connection.ExecuteQueryAsync<TQuery, TQueryResponse>(query, context.CloneToChild(), cancellationTokenSource.Token);
+            => connection.ExecuteQueryAsync<TQuery, TQueryResponse>(query, context.CloneToChild(), cancellationToken: cancellationTokenSource.Token);
 
         ValueTask IAsyncDisposable.DisposeAsync()
         {

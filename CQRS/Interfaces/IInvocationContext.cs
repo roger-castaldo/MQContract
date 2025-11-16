@@ -10,6 +10,7 @@ namespace MQContract.CQRS.Interfaces
         Guid CorrelationId { get; }
         Guid? CausationId { get; }
         string? this[string key] { get; set; }
+        IEnumerable<string> Keys { get; }
         Activity? Activity { get; }
 
         ValueTask ExecuteCommandAsync<TCommand>(TCommand command)
@@ -18,7 +19,6 @@ namespace MQContract.CQRS.Interfaces
             where TCommand : ICommand<TCommandResult>;
 
         ValueTask<TQueryResponse?> ExecuteQueryAsync<TQuery, TQueryResponse>(TQuery query)
-            where TQuery : IQuery
-            where TQueryResponse : IQueryResponse;
+            where TQuery : IQuery;
     }
 }

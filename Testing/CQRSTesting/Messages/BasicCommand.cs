@@ -1,8 +1,10 @@
-﻿using MQContract.CQRS.Interfaces.Command;
+﻿using MQContract.CQRS.Attributes;
+using MQContract.CQRS.Interfaces.Command;
 
 namespace CQRSTesting.Messages
 {
-    public record BasicCommand : ICommand
+    [Command("BasicCommand")]
+    public record BasicCommand(string Name) : ICommand
     {
     }
 }

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CQRSTesting.Messages
+﻿namespace CQRSTesting.Messages
 {
-    public class BasicCommandResponse 
+    public record BasicCommandResponse(string Name)
     {
     }
 }

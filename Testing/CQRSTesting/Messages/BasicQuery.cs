@@ -1,13 +1,10 @@
-﻿using MQContract.CQRS.Interfaces.Query;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MQContract.CQRS.Attributes;
+using MQContract.CQRS.Interfaces.Query;
 
 namespace CQRSTesting.Messages
 {
-    public record BasicQuery : IQuery
+    [Query("BasicQuery")]
+    public record BasicQuery(string Name) : IQuery
     {
     }
 }

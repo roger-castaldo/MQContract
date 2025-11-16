@@ -62,7 +62,7 @@
     /// <summary>
     /// Thrown when a query call times out waiting for the response
     /// </summary>
-    public class QueryTimeoutException : Exception
+    public class QueryTimeoutException : TimeoutException
     {
         internal QueryTimeoutException()
             : base("Query Response request timed out") { }

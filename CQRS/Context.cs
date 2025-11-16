@@ -40,6 +40,11 @@ namespace MQContract.CQRS
             }
         }
 
+        public IEnumerable<string> Keys
+            => properties.Keys
+            .Concat(messageHeader.Keys)
+            .Where(k => !Equals(k, MessageIdHeaderKey) && !Equals(k, CorrelationIdHeaderKey) && !Equals(k, CausationIdHeaderKey));
+
         public Guid MessageId => Guid.Parse(this[MessageIdHeaderKey]!);
         public Guid CorrelationId => Guid.Parse(this[CorrelationIdHeaderKey]!);
         public Guid? CausationId => (string.IsNullOrWhiteSpace(this[CausationIdHeaderKey]) ? null : Guid.Parse(this[CausationIdHeaderKey]!));
