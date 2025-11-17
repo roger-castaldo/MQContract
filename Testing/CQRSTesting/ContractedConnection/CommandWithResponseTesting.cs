@@ -8,7 +8,7 @@ using MQContract.CQRS.Interfaces.Command;
 using MQContract.Interfaces;
 using MQContract.Messages;
 
-namespace CQRSTesting
+namespace CQRSTesting.ContractedConnection
 {
     [TestClass]
     public class CommandWithResponseTesting
@@ -31,7 +31,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(false);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterCommandProcessorAsync<BasicResponseCommand,BasicCommandResponse>(mockCommandProcessor.Object);
 
@@ -72,7 +72,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(false);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterCommandProcessorAsync<BasicResponseCommand, BasicCommandResponse>(mockCommandProcessor.Object, group: groupName);
 
@@ -90,7 +90,7 @@ namespace CQRSTesting
             Assert.HasCount(1, receivedContexts);
             Assert.AreEqual(command, receivedContexts[0].Command);
             Assert.HasCount(1, receivedContexts[0].Keys);
-            Assert.AreEqual(context.CausationId, receivedContexts[0].CausationId);
+            Assert.IsNull(receivedContexts[0].CausationId);
             Assert.AreEqual(context.CorrelationId, receivedContexts[0].CorrelationId);
             Assert.AreEqual(context.MessageId, receivedContexts[0].MessageId);
             Assert.AreEqual(context[context.Keys.First()], receivedContexts[0][receivedContexts[0].Keys.First()]);
@@ -123,7 +123,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(false);
             var cqrsConnection = await contractConnection.CreateCQRSConnection("cancelCalls")
                 .RegisterCommandProcessorAsync<BasicResponseCommand, BasicCommandResponse>(mockCommandProcessor.Object, group:groupName);
 
@@ -173,7 +173,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(false);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterCommandProcessorAsync<BasicResponseCommand, BasicCommandResponse>(mockCommandProcessor.Object, group: groupName)
                 .RegisterCommandProcessorAsync<BasicResponseCommand, BasicCommandResponse>(mockCommandProcessor.Object, group: groupName);
@@ -191,7 +191,7 @@ namespace CQRSTesting
             Assert.HasCount(2, receivedContexts);
             Assert.AreEqual(command, receivedContexts[0].Command);
             Assert.HasCount(1, receivedContexts[0].Keys);
-            Assert.AreEqual(context.CausationId, receivedContexts[0].CausationId);
+            Assert.IsNull(receivedContexts[0].CausationId);
             Assert.AreEqual(context.CorrelationId, receivedContexts[0].CorrelationId);
             Assert.AreEqual(context.MessageId, receivedContexts[0].MessageId);
             Assert.HasCount(1, receivedContexts[1].Keys);
@@ -241,7 +241,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(false);
             var cqrsConnection = await contractConnection.CreateCQRSConnection("cancelCalls")
                 .RegisterCommandProcessorAsync<BasicResponseCommand, BasicCommandResponse>(mockCommandProcessor.Object, group: groupName)
                 .RegisterCommandProcessorAsync<BasicResponseCommand, BasicCommandResponse>(mockCommandProcessor.Object, group: groupName);
@@ -316,7 +316,7 @@ namespace CQRSTesting
                         return ValueTask.FromResult(result);
                     });
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(false);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterCommandProcessorAsync<BasicResponseCommand, BasicCommandResponse>(mockCommandProcessor.Object);
 
@@ -324,14 +324,16 @@ namespace CQRSTesting
             var context = new Context();
             context[headerKey] = headerValue;
             context[messageHeaderKey] = messageHeaderValue;
+
+            BasicCommandResponse? result = null;
+            Exception? error = null;
             #endregion
 
             #region Act
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                _ = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context);
+                result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context);
             else
-                _ = Assert.ThrowsAsync<CommandTimeoutException>(async () => await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context));
-            await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+                error = await Assert.ThrowsAsync<CommandTimeoutException>(async () => await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context, timeout: TimeSpan.FromMilliseconds(500)));
             #endregion
 
             #region Assert
@@ -341,12 +343,18 @@ namespace CQRSTesting
                 Assert.HasCount(1, receivedCommands);
                 Assert.AreEqual(command, receivedCommands[0]);
                 Assert.IsFalse(dropped);
+                Assert.IsNull(error);
+                Assert.IsNotNull(result);
+                Assert.AreEqual(command.Name, result.Name);
                 mockCommandProcessor.Verify(x => x.ProcessCommandAsync(It.IsAny<ICommandInvocationContext<BasicResponseCommand>>(), It.IsAny<CancellationToken>()), Times.Once);
             }
             else
             {
                 Assert.IsEmpty(receivedCommands);
                 Assert.IsTrue(dropped);
+                Assert.IsNotNull(error);
+                Assert.IsInstanceOfType<CommandTimeoutException>(error);
+                Assert.IsNull(result);
                 mockCommandProcessor.Verify(x => x.ProcessCommandAsync(It.IsAny<ICommandInvocationContext<BasicResponseCommand>>(), It.IsAny<CancellationToken>()), Times.Never);
             }
             #endregion

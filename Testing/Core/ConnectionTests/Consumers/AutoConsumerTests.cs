@@ -23,7 +23,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
@@ -45,10 +45,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Channel!,
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                     null, It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Channel!,
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()), Times.Once);
@@ -68,7 +68,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             serviceConnection.Setup(x => x.SubscribeAsync(It.IsAny<Action<ReceivedServiceMessage>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object);
@@ -90,10 +90,10 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Channel!,
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                     null, It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Channel!,
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()), Times.Once);
@@ -117,11 +117,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                     null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Channel!,
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()))
@@ -162,11 +162,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((IServiceSubscription?)null);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                     null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Channel!,
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()))
@@ -208,11 +208,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                     null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((IServiceSubscription?)null);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Channel!,
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()))
@@ -231,7 +231,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                     null, It.IsAny<CancellationToken>()), Times.Once);
             #endregion
@@ -253,11 +253,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                     typeof(BasicMessageAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)!.Channel!,
                     null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
-            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Setup(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Channel!,
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()))
@@ -276,7 +276,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Verify
-            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage>>>(), It.IsAny<Action<Exception>>(),
+            serviceConnection.Verify(x => x.SubscribeQueryAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>>>(), It.IsAny<Action<Exception>>(),
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Channel!,
                     typeof(BasicQueryAsyncConsumer).GetCustomAttribute<ConsumerAttribute>(false)!.Group!,
                     It.IsAny<CancellationToken>()), Times.Once);

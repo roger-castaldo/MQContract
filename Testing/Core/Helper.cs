@@ -21,8 +21,8 @@ namespace AutomatedTesting
         public static ReceivedServiceMessage ProduceReceivedServiceMessage(ServiceMessage message, string? messageTypeID = null, Func<ValueTask>? acknowledge = null)
             => new(message.ID, messageTypeID??message.MessageTypeID, message.Channel, message.Header, message.Data, acknowledge);
 
-        public static ServiceQueryResult ProduceQueryResult(ServiceMessage message)
-            => new(message.ID, message.Header, message.MessageTypeID, message.Data);
+        public static ServiceQueryResult ProduceQueryResult(ServiceMessage? message)
+            => new(message?.ID??string.Empty, message?.Header??new([]), message?.MessageTypeID??string.Empty, message?.Data?? Array.Empty<byte>());
 
         private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(5);
 

@@ -421,7 +421,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .ReturnsAsync((Stream source, MessageHeader headers) =>
                 {
                     var buff = new byte[source.Length];
-                    source.Read(buff, 0, buff.Length);
+                    _ = source.Read(buff, 0, buff.Length);
                     return new MemoryStream(buff.Reverse().ToArray());
                 });
 

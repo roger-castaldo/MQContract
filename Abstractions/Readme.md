@@ -9,7 +9,10 @@
   - [IsError](#P-MQContract-Messages-ChildTransmissionResult-IsError 'MQContract.Messages.ChildTransmissionResult.IsError')
   - [ServiceName](#P-MQContract-Messages-ChildTransmissionResult-ServiceName 'MQContract.Messages.ChildTransmissionResult.ServiceName')
 - [ConsumerAttribute](#T-MQContract-Attributes-ConsumerAttribute 'MQContract.Attributes.ConsumerAttribute')
-  - [#ctor(name)](#M-MQContract-Attributes-ConsumerAttribute-#ctor-System-String,System-String,System-Boolean- 'MQContract.Attributes.ConsumerAttribute.#ctor(System.String,System.String,System.Boolean)')
+  - [#ctor(channel,group,ignoreMessageTypeHeader)](#M-MQContract-Attributes-ConsumerAttribute-#ctor-System-String,System-String,System-Boolean- 'MQContract.Attributes.ConsumerAttribute.#ctor(System.String,System.String,System.Boolean)')
+  - [Channel](#P-MQContract-Attributes-ConsumerAttribute-Channel 'MQContract.Attributes.ConsumerAttribute.Channel')
+  - [Group](#P-MQContract-Attributes-ConsumerAttribute-Group 'MQContract.Attributes.ConsumerAttribute.Group')
+  - [IgnoreMessageTypeHeader](#P-MQContract-Attributes-ConsumerAttribute-IgnoreMessageTypeHeader 'MQContract.Attributes.ConsumerAttribute.IgnoreMessageTypeHeader')
 - [ConsumerContractConnectionExtensions](#T-MQContract-Extensions-ConsumerContractConnectionExtensions 'MQContract.Extensions.ConsumerContractConnectionExtensions')
   - [RegisterPubSubAsyncConsumerAsync\`\`1(connectionTask,consumerType,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Extensions-ConsumerContractConnectionExtensions-RegisterPubSubAsyncConsumerAsync``1-System-Threading-Tasks-ValueTask{MQContract-Interfaces-IConsumerContractConnection{``0}},System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Extensions.ConsumerContractConnectionExtensions.RegisterPubSubAsyncConsumerAsync``1(System.Threading.Tasks.ValueTask{MQContract.Interfaces.IConsumerContractConnection{``0}},System.Type,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
   - [RegisterPubSubAsyncConsumerAsync\`\`3(connectionTask,consumer,channel,group,ignoreMessageHeader,messageFilters,cancellationToken)](#M-MQContract-Extensions-ConsumerContractConnectionExtensions-RegisterPubSubAsyncConsumerAsync``3-System-Threading-Tasks-ValueTask{MQContract-Interfaces-IConsumerContractConnection{``0}},``2,System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``1},System-Threading-CancellationToken- 'MQContract.Extensions.ConsumerContractConnectionExtensions.RegisterPubSubAsyncConsumerAsync``3(System.Threading.Tasks.ValueTask{MQContract.Interfaces.IConsumerContractConnection{``0}},``2,System.String,System.String,System.Boolean,MQContract.Messages.MessageFilters{``1},System.Threading.CancellationToken)')
@@ -89,6 +92,8 @@
   - [Data](#P-MQContract-Interfaces-Messages-IEncodedMessage-Data 'MQContract.Interfaces.Messages.IEncodedMessage.Data')
   - [Header](#P-MQContract-Interfaces-Messages-IEncodedMessage-Header 'MQContract.Interfaces.Messages.IEncodedMessage.Header')
   - [MessageTypeID](#P-MQContract-Interfaces-Messages-IEncodedMessage-MessageTypeID 'MQContract.Interfaces.Messages.IEncodedMessage.MessageTypeID')
+- [IHeaderFilteredConsumer](#T-MQContract-Interfaces-Consumers-IHeaderFilteredConsumer 'MQContract.Interfaces.Consumers.IHeaderFilteredConsumer')
+  - [Filter](#P-MQContract-Interfaces-Consumers-IHeaderFilteredConsumer-Filter 'MQContract.Interfaces.Consumers.IHeaderFilteredConsumer.Filter')
 - [IInboxQueryableMessageServiceConnection](#T-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection')
   - [EstablishInboxSubscriptionAsync(messageReceived,cancellationToken)](#M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-EstablishInboxSubscriptionAsync-System-Action{MQContract-Messages-ReceivedInboxServiceMessage},System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(System.Action{MQContract.Messages.ReceivedInboxServiceMessage},System.Threading.CancellationToken)')
   - [QueryAsync(message,correlationID,cancellationToken)](#M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-QueryAsync-MQContract-Messages-ServiceMessage,System-Guid,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection.QueryAsync(MQContract.Messages.ServiceMessage,System.Guid,System.Threading.CancellationToken)')
@@ -111,6 +116,8 @@
 - [IMessageEncryptor](#T-MQContract-Interfaces-Encrypting-IMessageEncryptor 'MQContract.Interfaces.Encrypting.IMessageEncryptor')
   - [DecryptAsync(stream,headers)](#M-MQContract-Interfaces-Encrypting-IMessageEncryptor-DecryptAsync-System-IO-Stream,MQContract-Messages-MessageHeader- 'MQContract.Interfaces.Encrypting.IMessageEncryptor.DecryptAsync(System.IO.Stream,MQContract.Messages.MessageHeader)')
   - [EncryptAsync(data)](#M-MQContract-Interfaces-Encrypting-IMessageEncryptor-EncryptAsync-System-Byte[]- 'MQContract.Interfaces.Encrypting.IMessageEncryptor.EncryptAsync(System.Byte[])')
+- [IMessageFilteredConsumer\`1](#T-MQContract-Interfaces-Consumers-IMessageFilteredConsumer`1 'MQContract.Interfaces.Consumers.IMessageFilteredConsumer`1')
+  - [Filter](#P-MQContract-Interfaces-Consumers-IMessageFilteredConsumer`1-Filter 'MQContract.Interfaces.Consumers.IMessageFilteredConsumer`1.Filter')
 - [IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection')
   - [MaxMessageBodySize](#P-MQContract-Interfaces-Service-IMessageServiceConnection-MaxMessageBodySize 'MQContract.Interfaces.Service.IMessageServiceConnection.MaxMessageBodySize')
   - [CloseAsync()](#M-MQContract-Interfaces-Service-IMessageServiceConnection-CloseAsync 'MQContract.Interfaces.Service.IMessageServiceConnection.CloseAsync')
@@ -210,7 +217,10 @@
   - [ResponseTime](#P-MQContract-Messages-PingResult-ResponseTime 'MQContract.Messages.PingResult.ResponseTime')
   - [Version](#P-MQContract-Messages-PingResult-Version 'MQContract.Messages.PingResult.Version')
 - [QueryMessageAttribute](#T-MQContract-Attributes-QueryMessageAttribute 'MQContract.Attributes.QueryMessageAttribute')
-  - [#ctor(name)](#M-MQContract-Attributes-QueryMessageAttribute-#ctor-System-String,System-String,System-String,System-String,System-Int32,System-Type- 'MQContract.Attributes.QueryMessageAttribute.#ctor(System.String,System.String,System.String,System.String,System.Int32,System.Type)')
+  - [#ctor(channel,typeName,typeVersion,responseChannel,responseTimeoutMilliseconds,responseType)](#M-MQContract-Attributes-QueryMessageAttribute-#ctor-System-String,System-String,System-String,System-String,System-Int32,System-Type- 'MQContract.Attributes.QueryMessageAttribute.#ctor(System.String,System.String,System.String,System.String,System.Int32,System.Type)')
+  - [ResponseChannel](#P-MQContract-Attributes-QueryMessageAttribute-ResponseChannel 'MQContract.Attributes.QueryMessageAttribute.ResponseChannel')
+  - [ResponseTimeout](#P-MQContract-Attributes-QueryMessageAttribute-ResponseTimeout 'MQContract.Attributes.QueryMessageAttribute.ResponseTimeout')
+  - [ResponseType](#P-MQContract-Attributes-QueryMessageAttribute-ResponseType 'MQContract.Attributes.QueryMessageAttribute.ResponseType')
 - [QueryResponseMessage\`1](#T-MQContract-Messages-QueryResponseMessage`1 'MQContract.Messages.QueryResponseMessage`1')
   - [#ctor(Message,Headers)](#M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-Dictionary{System-String,System-String}- 'MQContract.Messages.QueryResponseMessage`1.#ctor(`0,System.Collections.Generic.Dictionary{System.String,System.String})')
   - [Headers](#P-MQContract-Messages-QueryResponseMessage`1-Headers 'MQContract.Messages.QueryResponseMessage`1.Headers')
@@ -315,30 +325,51 @@ MQContract.Attributes
 
 ##### Summary
 
-Use this attribute to specify the Channel name used for receiving messages by this consumer class.
-This would technically override the channel set by the Message class defined for the consumer,
-and can be overriden by passing a channel value when registering the consumer.
+Use this attribute to define the Channel, Group and/or IngoreMessageTypeHeader flag
+for a given Consumer
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| name | [T:MQContract.Attributes.ConsumerAttribute](#T-T-MQContract-Attributes-ConsumerAttribute 'T:MQContract.Attributes.ConsumerAttribute') | The name of the Channel to be used for receving messages to this consumer |
+| channel | [T:MQContract.Attributes.ConsumerAttribute](#T-T-MQContract-Attributes-ConsumerAttribute 'T:MQContract.Attributes.ConsumerAttribute') | The channel the consumer will listen on |
 
 <a name='M-MQContract-Attributes-ConsumerAttribute-#ctor-System-String,System-String,System-Boolean-'></a>
-### #ctor(name) `constructor`
+### #ctor(channel,group,ignoreMessageTypeHeader) `constructor`
 
 ##### Summary
 
-Use this attribute to specify the Channel name used for receiving messages by this consumer class.
-This would technically override the channel set by the Message class defined for the consumer,
-and can be overriden by passing a channel value when registering the consumer.
+Use this attribute to define the Channel, Group and/or IngoreMessageTypeHeader flag
+for a given Consumer
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| name | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the Channel to be used for receving messages to this consumer |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel the consumer will listen on |
+| group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The group the consumer will register as |
+| ignoreMessageTypeHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | A falg to indicate if ignoring the message type is desired |
+
+<a name='P-MQContract-Attributes-ConsumerAttribute-Channel'></a>
+### Channel `property`
+
+##### Summary
+
+The channel to register the consumer on
+
+<a name='P-MQContract-Attributes-ConsumerAttribute-Group'></a>
+### Group `property`
+
+##### Summary
+
+The group to register the consumer to
+
+<a name='P-MQContract-Attributes-ConsumerAttribute-IgnoreMessageTypeHeader'></a>
+### IgnoreMessageTypeHeader `property`
+
+##### Summary
+
+Indicates if the message type should be ignored
 
 <a name='T-MQContract-Extensions-ConsumerContractConnectionExtensions'></a>
 ## ConsumerContractConnectionExtensions `type`
@@ -1805,6 +1836,24 @@ The header for the given message
 
 The message type id to transmit across
 
+<a name='T-MQContract-Interfaces-Consumers-IHeaderFilteredConsumer'></a>
+## IHeaderFilteredConsumer `type`
+
+##### Namespace
+
+MQContract.Interfaces.Consumers
+
+##### Summary
+
+Used to define a consumer that will filter out given messages using a header filter
+
+<a name='P-MQContract-Interfaces-Consumers-IHeaderFilteredConsumer-Filter'></a>
+### Filter `property`
+
+##### Summary
+
+The filter callback to be invoked that will be supplied the current headers and expect back a filter type
+
 <a name='T-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection'></a>
 ## IInboxQueryableMessageServiceConnection `type`
 
@@ -2195,6 +2244,31 @@ An encrypted byte array of the message body and any headers that might be needed
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | data | [System.Byte[]](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Byte[] 'System.Byte[]') | The original unencrypted body data |
+
+<a name='T-MQContract-Interfaces-Consumers-IMessageFilteredConsumer`1'></a>
+## IMessageFilteredConsumer\`1 `type`
+
+##### Namespace
+
+MQContract.Interfaces.Consumers
+
+##### Summary
+
+Used to define a consumer that will filter out messages of a given message type
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message the filter understands |
+
+<a name='P-MQContract-Interfaces-Consumers-IMessageFilteredConsumer`1-Filter'></a>
+### Filter `property`
+
+##### Summary
+
+Provides the filter callback that will be supplied the message headers and current message 
+and expects back a filter instruction
 
 <a name='T-MQContract-Interfaces-Service-IMessageServiceConnection'></a>
 ## IMessageServiceConnection `type`
@@ -3307,9 +3381,8 @@ MQContract.Attributes
 
 ##### Summary
 
-Use this attribute to specify the Channel name used for transmitting this message class.
-This can be overidden by specifying the channel on the method calls, but a value must 
-be specified, either using the attribute or by specifying in the input.
+Use this attribute to specify the Channel, TypeName and or Type Version of the 
+Message being defined
 
 ##### Parameters
 
@@ -3326,9 +3399,8 @@ be specified, either using the attribute or by specifying in the input.
 
 ##### Summary
 
-Use this attribute to specify the Channel name used for transmitting this message class.
-This can be overidden by specifying the channel on the method calls, but a value must 
-be specified, either using the attribute or by specifying in the input.
+Use this attribute to specify the Channel, TypeName and or Type Version of the 
+Message being defined
 
 ##### Parameters
 
@@ -3685,28 +3757,58 @@ MQContract.Attributes
 
 ##### Summary
 
-Used to allow the specification of a response channel to be used without supplying it to the contract calls.  
-IMPORTANT:  This particular attribute and the response channel argument are only used when the underlying connection does not support QueryResponse messaging.
+Use this attribute to specify the Channel, TypeName, TypeVersion, ResponseChannel, DefaultTimeout and/or ResponseType 
+of the given query call.
+IMPORTANT:  The response channel value should either be specified here or on a given query call when the underlying service connection does not support 
+either QueryResponse or Inbox style messaging
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| name | [T:MQContract.Attributes.QueryMessageAttribute](#T-T-MQContract-Attributes-QueryMessageAttribute 'T:MQContract.Attributes.QueryMessageAttribute') | The name of the channel to use for responses |
+| channel | [T:MQContract.Attributes.QueryMessageAttribute](#T-T-MQContract-Attributes-QueryMessageAttribute 'T:MQContract.Attributes.QueryMessageAttribute') | The channel to be used |
 
 <a name='M-MQContract-Attributes-QueryMessageAttribute-#ctor-System-String,System-String,System-String,System-String,System-Int32,System-Type-'></a>
-### #ctor(name) `constructor`
+### #ctor(channel,typeName,typeVersion,responseChannel,responseTimeoutMilliseconds,responseType) `constructor`
 
 ##### Summary
 
-Used to allow the specification of a response channel to be used without supplying it to the contract calls.  
-IMPORTANT:  This particular attribute and the response channel argument are only used when the underlying connection does not support QueryResponse messaging.
+Use this attribute to specify the Channel, TypeName, TypeVersion, ResponseChannel, DefaultTimeout and/or ResponseType 
+of the given query call.
+IMPORTANT:  The response channel value should either be specified here or on a given query call when the underlying service connection does not support 
+either QueryResponse or Inbox style messaging
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| name | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel to use for responses |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to be used |
+| typeName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The query type to use |
+| typeVersion | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The query type version to use |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The responce channel to be used when an underlying service connection does not support QueryResponse or Inbox |
+| responseTimeoutMilliseconds | [System.Int32](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Int32 'System.Int32') | The query response timeout to default to |
+| responseType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The expected response type for the query |
+
+<a name='P-MQContract-Attributes-QueryMessageAttribute-ResponseChannel'></a>
+### ResponseChannel `property`
+
+##### Summary
+
+The Response Channel defined for the given query
+
+<a name='P-MQContract-Attributes-QueryMessageAttribute-ResponseTimeout'></a>
+### ResponseTimeout `property`
+
+##### Summary
+
+The Response Timeout defined for the given query
+
+<a name='P-MQContract-Attributes-QueryMessageAttribute-ResponseType'></a>
+### ResponseType `property`
+
+##### Summary
+
+The Response Type defined for the given query
 
 <a name='T-MQContract-Messages-QueryResponseMessage`1'></a>
 ## QueryResponseMessage\`1 `type`

@@ -43,11 +43,11 @@ namespace MQContract.CQRS.Contexts
         ValueTask IInvocationContext.ExecuteCommandAsync<TCommand>(TCommand command)
             => connection.ExecuteCommandAsync<TCommand>(command, context.CloneToChild(), cancellationTokenSource.Token);
 
-        ValueTask<TCommandResult?> IInvocationContext.ExecuteCommandAsync<TCommand, TCommandResult>(TCommand command) where TCommandResult : default
-            => connection.ExecuteCommandAsync<TCommand, TCommandResult>(command, context.CloneToChild(), cancellationToken: cancellationTokenSource.Token);
+        ValueTask<TCommandResult?> IInvocationContext.ExecuteCommandAsync<TCommand, TCommandResult>(TCommand command, TimeSpan? timeout) where TCommandResult : default
+            => connection.ExecuteCommandAsync<TCommand, TCommandResult>(command, context.CloneToChild(), timeout: timeout, cancellationToken: cancellationTokenSource.Token);
 
-        ValueTask<TQueryResponse?> IInvocationContext.ExecuteQueryAsync<TQuery, TQueryResponse>(TQuery query) where TQueryResponse : default
-            => connection.ExecuteQueryAsync<TQuery, TQueryResponse>(query, context.CloneToChild(), cancellationToken: cancellationTokenSource.Token);
+        ValueTask<TQueryResponse?> IInvocationContext.ExecuteQueryAsync<TQuery, TQueryResponse>(TQuery query, TimeSpan? timeout) where TQueryResponse : default
+            => connection.ExecuteQueryAsync<TQuery, TQueryResponse>(query, context.CloneToChild(), timeout: timeout, cancellationToken: cancellationTokenSource.Token);
 
         ValueTask IAsyncDisposable.DisposeAsync()
         {

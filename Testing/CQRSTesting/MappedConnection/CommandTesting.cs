@@ -8,7 +8,7 @@ using MQContract.CQRS.Interfaces.Command;
 using MQContract.Interfaces;
 using MQContract.Messages;
 
-namespace CQRSTesting
+namespace CQRSTesting.MappedConnection
 {
     [TestClass]
     public class CommandTesting
@@ -29,7 +29,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterCommandProcessorAsync<BasicCommand>(mockCommandProcessor.Object);
 
@@ -68,7 +68,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterCommandProcessorAsync<BasicCommand>(mockCommandProcessor.Object);
 
@@ -86,7 +86,7 @@ namespace CQRSTesting
             Assert.HasCount(1, receivedContexts);
             Assert.AreEqual(command, receivedContexts[0].Command);
             Assert.HasCount(1, receivedContexts[0].Keys);
-            Assert.AreEqual(context.CausationId,receivedContexts[0].CausationId);
+            Assert.IsNull(receivedContexts[0].CausationId);
             Assert.AreEqual(context.CorrelationId,receivedContexts[0].CorrelationId);
             Assert.AreEqual(context.MessageId,receivedContexts[0].MessageId);
             Assert.AreEqual(context[context.Keys.First()], receivedContexts[0][receivedContexts[0].Keys.First()]);
@@ -116,7 +116,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection("cancelCalls")
                 .RegisterCommandProcessorAsync<BasicCommand>(mockCommandProcessor.Object);
 
@@ -164,7 +164,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterCommandProcessorAsync<BasicCommand>(mockCommandProcessor.Object);
 
@@ -181,7 +181,7 @@ namespace CQRSTesting
             Assert.HasCount(2, receivedContexts);
             Assert.AreEqual(command, receivedContexts[0].Command);
             Assert.HasCount(1, receivedContexts[0].Keys);
-            Assert.AreEqual(context.CausationId, receivedContexts[0].CausationId);
+            Assert.IsNull(receivedContexts[0].CausationId);
             Assert.AreEqual(context.CorrelationId, receivedContexts[0].CorrelationId);
             Assert.AreEqual(context.MessageId, receivedContexts[0].MessageId);
             Assert.HasCount(1, receivedContexts[1].Keys);
@@ -228,7 +228,7 @@ namespace CQRSTesting
                 });
             mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection("cancelCalls")
                 .RegisterCommandProcessorAsync<BasicCommand>(mockCommandProcessor.Object);
 
@@ -301,7 +301,7 @@ namespace CQRSTesting
                         return ValueTask.FromResult(result);
                     });
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterCommandProcessorAsync<BasicCommand>(mockCommandProcessor.Object);
 
@@ -344,7 +344,7 @@ namespace CQRSTesting
             #region Arrange
             var exception = new Exception(Helper.GenerateRandomString());
 
-            var mockContractConnection = new Mock<IContractedConnection>();
+            var mockContractConnection = new Mock<IMappedContractConnection>();
 
             mockContractConnection.Setup(x => x.PublishAsync<BasicCommand>(It.IsAny<BasicCommand>(), It.IsAny<string>(), It.IsAny<MessageHeader>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult<TransmissionResult>(new(Helper.GenerateRandomString(10), Error: new(exception, false))));

@@ -8,7 +8,7 @@ using MQContract.Messages;
 
 namespace MQContract.CQRS
 {
-    internal sealed class CqrsConnection : ICQRSConnection,IAsyncDisposable
+    internal sealed class CqrsConnection : ICQRSConnection
     {
         private readonly List<InvocationInstance> invocationInstances = new();
         private readonly SemaphoreSlim lockSlim = new(1);
@@ -39,7 +39,7 @@ namespace MQContract.CQRS
                 processorRegistrar = new MappedConnectionRegistrar(mappedContractConnection);
             }
             else
-                throw new Exception();
+                throw new InvalidConnectionException(contractConnection.GetType());
             this.contractConnection = contractConnection;
             this.cancelationTokenChannel = cancelationTokenChannel;
             task?.Wait();
@@ -177,7 +177,6 @@ namespace MQContract.CQRS
                 disposedValue=true;
                 await lockSlim.WaitAsync();
                 invocationInstances.Clear();
-                lockSlim.Release();
                 lockSlim.Dispose();
                 await contractConnection.DisposeAsync();
             }

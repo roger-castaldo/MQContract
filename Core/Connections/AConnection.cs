@@ -401,7 +401,14 @@ namespace MQContract.Connections
                 inboxSubscription = await inboxMessageServiceConnection.EstablishInboxSubscriptionAsync(
                     async (message) =>
                     {
-                        await inboxSemaphore.WaitAsync();
+                        try
+                        {
+                            await inboxSemaphore.WaitAsync();
+                        }
+                        catch
+                        {
+                            return;
+                        }
                         if (message.Acknowledge!=null)
                             await message.Acknowledge();
                         using var scope = SetScope(message.ID);
@@ -745,7 +752,6 @@ namespace MQContract.Connections
                     await consumerSubscription.EndAsync();
                 consumerSubscriptions.Clear();
                 inboxSubscriptions.Clear();
-                inboxSemaphore.Release();
                 inboxSemaphore.Dispose();
                 await InternalDisposeAsync();
             }

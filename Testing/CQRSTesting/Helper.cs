@@ -14,8 +14,10 @@ namespace CQRSTesting
 
         public static string GenerateRandomString()
             => RandomNumberGenerator.GetString(ValidCharacters, RandomNumberGenerator.GetInt32(5, 250));
-        public static IContractConnection ProduceConnection()
-            =>ContractConnection.Instance(new Connection());
+        public static IContractConnection ProduceConnection(bool mapped)
+            => (mapped 
+            ? ContractConnection.MappedServiceInstance().RegisterServiceConnection((pars)=>true,"default",new Connection()) 
+            : ContractConnection.Instance(new Connection()));
 
         private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(5);
 

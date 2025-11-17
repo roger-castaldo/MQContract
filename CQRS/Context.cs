@@ -2,6 +2,11 @@
 
 namespace MQContract.CQRS
 {
+    /// <summary>
+    /// Houses the given transmission context for a command or query.  This is used to pass on additional 
+    /// string properties between calls as well as houses the unique identifiers that can be used to link
+    /// chained commands/queries
+    /// </summary>
     public sealed record Context
     {
         private const string MessageIdHeaderKey = "_messageId";
@@ -10,6 +15,9 @@ namespace MQContract.CQRS
         private readonly MessageHeader messageHeader;
         private readonly Dictionary<string, string?> properties = [];
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public Context()
         {
             messageHeader = new([
@@ -25,6 +33,11 @@ namespace MQContract.CQRS
                 properties.Add(MessageIdHeaderKey, Guid.NewGuid().ToString());
         }
 
+        /// <summary>
+        /// Used to add/remove values in the context
+        /// </summary>
+        /// <param name="key">The key for the value to access</param>
+        /// <returns>The value that is currently assigned to the provided key or null if missing</returns>
         public string? this[string key]
         {
             get
@@ -40,14 +53,23 @@ namespace MQContract.CQRS
             }
         }
 
+        /// <summary>
+        /// The list of the available keys
+        /// </summary>
         public IEnumerable<string> Keys
             => properties.Keys
             .Concat(messageHeader.Keys)
             .Where(k => !Equals(k, MessageIdHeaderKey) && !Equals(k, CorrelationIdHeaderKey) && !Equals(k, CausationIdHeaderKey));
 
+        /// <summary>
+        /// The unique identifier for the given message
+        /// </summary>
         public Guid MessageId => Guid.Parse(this[MessageIdHeaderKey]!);
+        /// <summary>
+        /// The unique identifier for the given message chain
+        /// </summary>
         public Guid CorrelationId => Guid.Parse(this[CorrelationIdHeaderKey]!);
-        public Guid? CausationId => (string.IsNullOrWhiteSpace(this[CausationIdHeaderKey]) ? null : Guid.Parse(this[CausationIdHeaderKey]!));
+        internal Guid? CausationId => (string.IsNullOrWhiteSpace(this[CausationIdHeaderKey]) ? null : Guid.Parse(this[CausationIdHeaderKey]!));
 
         internal Context CloneToChild()
             => new(new MessageHeader(messageHeader, new Dictionary<string, string?>(

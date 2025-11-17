@@ -1,9 +1,8 @@
 ﻿namespace MQContract.Attributes
 {
     /// <summary>
-    /// Use this attribute to specify the Channel name used for transmitting this message class.
-    /// This can be overidden by specifying the channel on the method calls, but a value must 
-    /// be specified, either using the attribute or by specifying in the input.
+    /// Use this attribute to specify the Channel, TypeName and or Type Version of the 
+    /// Message being defined
     /// </summary>
     /// <remarks>
     /// 

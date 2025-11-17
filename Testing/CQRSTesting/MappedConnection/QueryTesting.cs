@@ -9,7 +9,7 @@ using MQContract.Interfaces;
 using MQContract.Messages;
 
 
-namespace CQRSTesting
+namespace CQRSTesting.MappedConnection
 {
     [TestClass]
     public class QueryTesting
@@ -32,7 +32,7 @@ namespace CQRSTesting
                 });
             mockQueryProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object);
 
@@ -73,7 +73,7 @@ namespace CQRSTesting
                 });
             mockQueryProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object, group: groupName);
 
@@ -91,7 +91,7 @@ namespace CQRSTesting
             Assert.HasCount(1, receivedContexts);
             Assert.AreEqual(command, receivedContexts[0].Query);
             Assert.HasCount(1, receivedContexts[0].Keys);
-            Assert.AreEqual(context.CausationId, receivedContexts[0].CausationId);
+            Assert.IsNull(receivedContexts[0].CausationId);
             Assert.AreEqual(context.CorrelationId, receivedContexts[0].CorrelationId);
             Assert.AreEqual(context.MessageId, receivedContexts[0].MessageId);
             Assert.AreEqual(context[context.Keys.First()], receivedContexts[0][receivedContexts[0].Keys.First()]);
@@ -124,7 +124,7 @@ namespace CQRSTesting
                 });
             mockQueryProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection("cancelCalls")
                 .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object, group: groupName);
 
@@ -174,7 +174,7 @@ namespace CQRSTesting
                 });
             mockQueryProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object, group: groupName)
                 .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object, group: groupName);
@@ -192,7 +192,7 @@ namespace CQRSTesting
             Assert.HasCount(2, receivedContexts);
             Assert.AreEqual(command, receivedContexts[0].Query);
             Assert.HasCount(1, receivedContexts[0].Keys);
-            Assert.AreEqual(context.CausationId, receivedContexts[0].CausationId);
+            Assert.IsNull(receivedContexts[0].CausationId);
             Assert.AreEqual(context.CorrelationId, receivedContexts[0].CorrelationId);
             Assert.AreEqual(context.MessageId, receivedContexts[0].MessageId);
             Assert.HasCount(1, receivedContexts[1].Keys);
@@ -242,7 +242,7 @@ namespace CQRSTesting
                 });
             mockQueryProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection("cancelCalls")
                 .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object, group: groupName)
                 .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object, group: groupName);
@@ -317,7 +317,7 @@ namespace CQRSTesting
                         return ValueTask.FromResult(result);
                     });
 
-            await using var contractConnection = Helper.ProduceConnection();
+            await using var contractConnection = Helper.ProduceConnection(true);
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object);
 
@@ -325,14 +325,16 @@ namespace CQRSTesting
             var context = new Context();
             context[headerKey] = headerValue;
             context[messageHeaderKey] = messageHeaderValue;
+
+            BasicQueryResponse? result = null;
+            Exception? error = null;
             #endregion
 
             #region Act
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                _ = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context);
+                result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context);
             else
-                _ = Assert.ThrowsAsync<QueryTimeoutException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context));
-            await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+                error = await Assert.ThrowsAsync<QueryTimeoutException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context, timeout: TimeSpan.FromMilliseconds(500)));
             #endregion
 
             #region Assert
@@ -342,12 +344,18 @@ namespace CQRSTesting
                 Assert.HasCount(1, receivedQuerys);
                 Assert.AreEqual(command, receivedQuerys[0]);
                 Assert.IsFalse(dropped);
+                Assert.IsNull(error);
+                Assert.IsNotNull(result);
+                Assert.AreEqual(command.Name, result.Name);
                 mockQueryProcessor.Verify(x => x.ProcessQueryAsync(It.IsAny<IQueryInvocationContext<BasicQuery>>(), It.IsAny<CancellationToken>()), Times.Once);
             }
             else
             {
                 Assert.IsEmpty(receivedQuerys);
                 Assert.IsTrue(dropped);
+                Assert.IsNotNull(error);
+                Assert.IsInstanceOfType<QueryTimeoutException>(error);
+                Assert.IsNull(result);
                 mockQueryProcessor.Verify(x => x.ProcessQueryAsync(It.IsAny<IQueryInvocationContext<BasicQuery>>(), It.IsAny<CancellationToken>()), Times.Never);
             }
             #endregion
@@ -363,7 +371,7 @@ namespace CQRSTesting
             #region Arrange
             var exception = new Exception(Helper.GenerateRandomString());
 
-            var mockContractConnection = new Mock<IContractedConnection>();
+            var mockContractConnection = new Mock<IMappedContractConnection>();
 
             mockContractConnection.Setup(x => x.QueryAsync<BasicQuery, BasicQueryResponse>(It.IsAny<BasicQuery>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(),
                 It.IsAny<MessageHeader>(), It.IsAny<CancellationToken>()))
