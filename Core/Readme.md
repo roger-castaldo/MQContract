@@ -24,6 +24,7 @@
   - [AddQuerySubscriptionMap(originalChannel,newChannel)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-String,System-String- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.String,System.String)')
   - [AddQuerySubscriptionMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.String,System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
   - [AddQuerySubscriptionMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
+- [ConsumerRegistrationFailedException](#T-MQContract-ConsumerRegistrationFailedException 'MQContract.ConsumerRegistrationFailedException')
 - [ContractConnection](#T-MQContract-ContractConnection 'MQContract.ContractConnection')
   - [Instance(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-Instance-MQContract-Interfaces-Service-IMessageServiceConnection,MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.Instance(MQContract.Interfaces.Service.IMessageServiceConnection,MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
   - [MappedServiceInstance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-MappedServiceInstance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.MappedServiceInstance(MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
@@ -409,6 +410,17 @@ The current instance of the Channel Mapper
 | ---- | ---- | ----------- |
 | isMatch | [System.Func{System.String,System.Boolean}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Boolean}') | A callback that will return true if the supplied function will mape that channel |
 | mapFunction | [System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}}') | A function to be called with the channel supplied expecting a mapped channel name |
+
+<a name='T-MQContract-ConsumerRegistrationFailedException'></a>
+## ConsumerRegistrationFailedException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown when the registration of a consumer failes
 
 <a name='T-MQContract-ContractConnection'></a>
 ## ContractConnection `type`

@@ -5,7 +5,7 @@ namespace MQContract.Interfaces.Middleware
     /// <summary>
     /// This interface represents a Middleware to execute Before a specific message type is encoded
     /// </summary>
-    public interface IBeforeEncodeSpecificTypeMiddleware<T> : ISpecificTypeMiddleware<T>
+    public interface IBeforeEncodeSpecificTypeMiddleware<TMessage> : ISpecificTypeMiddleware<TMessage>
     {
         /// <summary>
         /// This is the method invoked as part of the Middle Ware processing during message encoding
@@ -15,6 +15,6 @@ namespace MQContract.Interfaces.Middleware
         /// <param name="channel">The channel this message was requested to transmit to</param>
         /// <param name="messageHeader">The message headers being supplied</param>
         /// <returns>The message, channel and header to allow for changes if desired</returns>
-        ValueTask<(T message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync(IContext context, T message, string? channel, MessageHeader messageHeader);
+        ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync(IContext context, TMessage message, string? channel, MessageHeader messageHeader);
     }
 }

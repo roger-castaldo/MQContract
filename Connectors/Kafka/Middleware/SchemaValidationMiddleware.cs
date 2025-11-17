@@ -1,4 +1,5 @@
 ﻿using Confluent.SchemaRegistry;
+using Microsoft.Extensions.Caching.Memory;
 using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using NJsonSchema;
@@ -12,6 +13,7 @@ namespace MQContract.Kafka.Middleware
     /// attach schema information to each message
     /// </summary>
     /// <param name="schemaRegistryClient">A schema registry client used to validate messages</param>
+    /// <param name="cache">A memory cache to be used to cache resolved schemas if desired</param>
     /// <param name="failOnMissingSchema">Indicates if the message should fail when no schema is available</param>
     /// <param name="autoRegisterSchema">Indicates if the system should attempt to register a schema when one is not found on the publish side</param>
     /// <param name="registerSchemaType">The default schema registration type to use when registering a schema</param>
@@ -19,6 +21,7 @@ namespace MQContract.Kafka.Middleware
     /// <param name="extractSchemaAsync">An alternative call to generate the schema for a given message type, otherwise NJsonSchema will be used</param>
     /// <param name="validateSchemaAsync">An alternative call to validate the schema and the incoming message content, otherwise it will default through NJsonSchema</param>
     public class SchemaValidationMiddleware(ISchemaRegistryClient schemaRegistryClient,
+        IMemoryCache? cache = null,
         bool failOnMissingSchema=true,
         bool autoRegisterSchema=true,
         Confluent.SchemaRegistry.SchemaType registerSchemaType = Confluent.SchemaRegistry.SchemaType.Json,
@@ -69,9 +72,31 @@ namespace MQContract.Kafka.Middleware
             $"{typeof(IEnumerable<bool>).Name}-0.0.0.0"
         ];
 
+        private sealed record CachedSchema(int Id,Schema Schema);
+
+        private readonly MemoryCacheEntryOptions cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5),
+            SlidingExpiration = TimeSpan.FromMinutes(5)
+        };
+
+        private void CacheSchema(string schemaName, int schemaId, Schema schema)
+        {
+            cache?.Set(schemaName, new CachedSchema(schemaId, schema), cacheOptions);
+            cache?.Set($"SchemaById_{schemaId}",new CachedSchema(schemaId, schema), cacheOptions);
+        }
+
         private async Task LoadAndCheckSchemaAsync(int schemaId, string messageTypeID, ReadOnlyMemory<byte> data)
         {
-            var schema = await schemaRegistryClient.GetSchemaAsync(schemaId);
+            Schema? schema;
+            if ((cache?.TryGetValue($"SchemaById_{schemaId}", out CachedSchema? cached)??false))
+                schema = cached!.Schema;
+            else
+            {
+                schema = await schemaRegistryClient.GetSchemaAsync(schemaId);
+                if (schema!=null)
+                    CacheSchema(messageTypeID, schemaId, schema);
+            }
             if (schema == null && failOnMissingSchema)
                 throw new MissingSchemaException(messageTypeID);
             else if (schema!=null && !(await ValidateSchemaAsync(schema, new MemoryStream(data.ToArray()))))
@@ -82,17 +107,14 @@ namespace MQContract.Kafka.Middleware
         {
             if (!IgnoredMessageTypes.Contains(message.MessageTypeID))
             {
-                int? schemaId;
-                var schehmaName = (mapMessageSchemaName==null ? message.MessageTypeID : await mapMessageSchemaName(messageType, message.Channel, message.MessageTypeID));
-                try
-                {
-                    schemaId = (await schemaRegistryClient.GetLatestSchemaAsync(schehmaName))?.Id;
-                }
-                catch {
-                    schemaId=null;
-                }
+                var schemaName = (mapMessageSchemaName==null ? message.MessageTypeID : await mapMessageSchemaName(messageType, message.Channel, message.MessageTypeID));
+                int? schemaId = await GetSchemaIdFromCacheAsync(schemaName);
                 if (schemaId==null && autoRegisterSchema)
-                        schemaId = await schemaRegistryClient.RegisterSchemaAsync(schehmaName, new Schema(await ExtractSchemaAsync(messageType), registerSchemaType));
+                {
+                    var builtSchema = new Schema(await ExtractSchemaAsync(messageType), registerSchemaType);
+                    schemaId = await schemaRegistryClient.RegisterSchemaAsync(schemaName, builtSchema);
+                    CacheSchema(schemaName, schemaId.Value, builtSchema);
+                }
                 else if (schemaId!=null)
                     await LoadAndCheckSchemaAsync(schemaId.Value, message.MessageTypeID, message.Data);
                 if (schemaId==null && failOnMissingSchema)
@@ -113,6 +135,30 @@ namespace MQContract.Kafka.Middleware
                 }
             }
             return message;
+        }
+
+        private async ValueTask<int?> GetSchemaIdFromCacheAsync(string schemaName)
+        {
+            int? schemaId = null;
+            if (cache?.TryGetValue(schemaName, out CachedSchema? cachedSchema)??false)
+                schemaId = cachedSchema!.Id;
+            else
+            {
+                try
+                {
+                    var schemaResult = await schemaRegistryClient.GetLatestSchemaAsync(schemaName);
+                    if (schemaResult!=null)
+                    {
+                        schemaId = schemaResult.Id;
+                        CacheSchema(schemaName, schemaId.Value, schemaResult.Schema);
+                    }
+                }
+                catch
+                {
+                    schemaId=null;
+                }
+            }
+            return schemaId;
         }
 
         private async ValueTask<string> ExtractSchemaAsync(Type messageType)

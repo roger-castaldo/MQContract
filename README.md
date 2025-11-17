@@ -35,3 +35,4 @@ Below is a sample performance benchmarking to indicate how small the effect is o
 	* [ZeroMQ](/Connectors/ZeroMQ/Readme.md)
 * [OpenTelemetry](/OpenTelemetry.md)
 * [Resiliency](/Resiliency.md)
+* [CQRS](/CQRS/Readme.md)

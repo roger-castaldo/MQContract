@@ -10,17 +10,17 @@
         /// <summary>
         /// Called to encode a message into a byte array
         /// </summary>
-        /// <typeparam name="T">The type of message being encoded</typeparam>
+        /// <typeparam name="TMessage">The type of message being encoded</typeparam>
         /// <param name="message">The message being encoded</param>
         /// <returns>A byte array of the message in it's encoded form that will be transmitted</returns>
-        ValueTask<byte[]> EncodeAsync<T>(T message);
+        ValueTask<byte[]> EncodeAsync<TMessage>(TMessage message);
 
         /// <summary>
         /// Called to decode a message from a byte array
         /// </summary>
-        /// <typeparam name="T">The type of message being decoded</typeparam>
+        /// <typeparam name="TMessage">The type of message being decoded</typeparam>
         /// <param name="stream">A stream representing the byte array data that was transmitted as the message body in KubeMQ</param>
         /// <returns>Null when fails or the value of T that was encoded inside the stream</returns>
-        ValueTask<T?> DecodeAsync<T>(Stream stream);
+        ValueTask<TMessage?> DecodeAsync<TMessage>(Stream stream);
     }
 }

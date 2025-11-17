@@ -17,27 +17,28 @@ namespace MQContract.Connections
         where CC : IBaseContractConnection
     {
         private const string ConsumerClassNameKey = $"{OpenTelemetryMiddleware.KeyBase}.consumerclass";
-        private async ValueTask<bool> RegisterSubscription(Func<string?, string?, bool, ValueTask<ISubscription>> createSubscription,
+        private async ValueTask<CC> RegisterSubscription(Func<string?, string?, bool, ValueTask<ISubscription>> createSubscription,
             string? channel, string? group, bool ignoreMessageHeader, string consumerName, Type consumerType, CancellationToken cancellationToken)
         {
             ISubscription subscription;
+            var consumerAttribute = consumerType.GetCustomAttribute<ConsumerAttribute>();
             try
             {
                 subscription = await createSubscription(
-                    channel??consumerType.GetCustomAttribute<ConsumerMessageChannelAttribute>()?.Name,
-                    group??consumerType.GetCustomAttribute<ConsumerGroupAttribute>()?.Name,
-                    ignoreMessageHeader||(consumerType.GetCustomAttribute<ConsumerIgnoreMessageHeaderAttribute>()?.IgnoreHeader??false)
+                    channel??consumerAttribute?.Channel,
+                    group??consumerAttribute?.Group,
+                    ignoreMessageHeader||(consumerAttribute?.IgnoreMessageTypeHeader??false)
                 );
             }
             catch (Exception err)
             {
                 logger?.LogError(err, "An error occured attempting to register a {ConsumerName} of type {ConsumerType}", consumerName, consumerType);
-                return false;
+                throw new ConsumerRegistrationFailedException(consumerName,consumerType,err);
             }
             await inboxSemaphore.WaitAsync(cancellationToken);
             consumerSubscriptions.Add(subscription);
             inboxSemaphore.Release();
-            return true;
+            return (CC)(IBaseContractConnection)this;
         }
 
 
@@ -50,7 +51,7 @@ namespace MQContract.Connections
         private static Type[] LoadableTypes => [typeof(IPubSubConsumer<>), typeof(IPubSubAsyncConsumer<>),
                     typeof(IQueryResponseConsumer<,>),typeof(IQueryResponseAsyncConsumer<,>)];
 
-        private async Task<bool> LoadConsumersForAssemblyAsync(Assembly assembly, CancellationToken cancellationToken)
+        private async Task LoadConsumersForAssemblyAsync(Assembly assembly, CancellationToken cancellationToken)
         {
             var process = false;
             await inboxSemaphore.WaitAsync(cancellationToken);
@@ -82,56 +83,57 @@ namespace MQContract.Connections
                     })
                     .Where(pair => pair.InterfaceType!=null)
                     .ToArray();
-                var pubSubResults = (await Task.WhenAll(
+                _ = await Task.WhenAll(
                         loadablePairs
                         .Where(consumerPair => Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IPubSubConsumer<>)))
-                        .Select(consumerPair => ((IConsumerContractConnection)this).RegisterPubSubConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
-                    )).ToArray();
-                var asyncPubSubResults = (await Task.WhenAll(
+                        .Select(consumerPair => ((IConsumerContractConnection<CC>)this).RegisterPubSubConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
+                    );
+                _ = await Task.WhenAll(
                         loadablePairs
                         .Where(consumerPair => Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IPubSubAsyncConsumer<>)))
-                        .Select(consumerPair => ((IConsumerContractConnection)this).RegisterPubSubAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
-                    )).ToArray();
-                var queryResponseResults = (await Task.WhenAll(
+                        .Select(consumerPair => ((IConsumerContractConnection<CC>)this).RegisterPubSubAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
+                    );
+                _ = await Task.WhenAll(
                         loadablePairs
                         .Where(consumerPair => Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IQueryResponseConsumer<,>)))
-                        .Select(consumerPair => ((IConsumerContractConnection)this).RegisterQueryResponseConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
-                    )).ToArray();
-                var asyncQueryResponseResults = (await Task.WhenAll(
+                        .Select(consumerPair => ((IConsumerContractConnection<CC>)this).RegisterQueryResponseConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
+                    );
+                _ = await Task.WhenAll(
                         loadablePairs
                         .Where(consumerPair => Equals(consumerPair.InterfaceType?.GetGenericTypeDefinition(), typeof(IQueryResponseAsyncConsumer<,>)))
-                        .Select(consumerPair => ((IConsumerContractConnection)this).RegisterQueryResponseAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
-                    )).ToArray();
-                return Array.TrueForAll(pubSubResults,r => r)
-                    && Array.TrueForAll(asyncPubSubResults, r => r)
-                    && Array.TrueForAll(queryResponseResults,r => r)
-                    && Array.TrueForAll(asyncQueryResponseResults,r => r);
+                        .Select(consumerPair => ((IConsumerContractConnection<CC>)this).RegisterQueryResponseAsyncConsumerAsync(consumerPair.ConsumerType, cancellationToken: cancellationToken).AsTask())
+                    );
             }
-            return true;
         }
 
-        async ValueTask<bool> IConsumerContractConnection.AutoRegisterAllConsumersAsync(Assembly? assembly, CancellationToken cancellationToken)
+        async ValueTask IConsumerContractConnection<CC>.AutoRegisterAllConsumersAsync(Assembly? assembly, CancellationToken cancellationToken)
         {
             if (assembly!=null)
-                return await LoadConsumersForAssemblyAsync(assembly!, cancellationToken);
+                await LoadConsumersForAssemblyAsync(assembly!, cancellationToken);
             else
-            {
-                foreach (var asm in AssemblyLoadContext.Default.Assemblies)
-                {
-                    if (!(await LoadConsumersForAssemblyAsync(asm, cancellationToken)))
-                        return false;
-                }
-                return true;
-            }
+                await Task.WhenAll(AssemblyLoadContext.Default.Assemblies.Select(asm => LoadConsumersForAssemblyAsync(asm, cancellationToken)));
         }
 
         private IHealthCheck? healthCheck;
         protected abstract ConnectionHealthCheck? ProduceConnectionHealthCheck();
         IHealthCheck? IBaseContractConnection.HealthCheck => healthCheck??=ProduceConnectionHealthCheck();
 
+        private static MessageFilters<TMessage>? ExtractFilter<TMessage,TConsumer>(TConsumer consumer)
+        {
+            Func<MessageHeader, ValueTask<MessageFilterResult>>? headerFilter=null;
+            Func<TMessage, MessageHeader, ValueTask<MessageFilterResult>>? messageFilter=null;
+            if (consumer is IHeaderFilteredConsumer headerFilteredConsumer)
+                headerFilter = headerFilteredConsumer.Filter;
+            if (consumer is IMessageFilteredConsumer<TMessage> messageFilteredConsumer)
+                messageFilter = messageFilteredConsumer.Filter;
+            if (headerFilter!=null || messageFilter!=null)
+                return new(headerFilter, messageFilter);
+            return null;
+        }
+
         #region PubSubConsumer
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync<T, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, CancellationToken cancellationToken)
-            => RegisterSubscription((channel, group, ignoreMessageHeader) => CreateSubscriptionAsync<T>(
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterPubSubConsumerAsync<TMessage, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
+            => RegisterSubscription((channel, group, ignoreMessageHeader) => CreateSubscriptionAsync<TMessage>(
                     (message) =>
                     {
                         message.Activity?.AddTag(ConsumerClassNameKey, consumer.GetType().Name);
@@ -142,7 +144,7 @@ namespace MQContract.Connections
                     channel,
                     group,
                     ignoreMessageHeader,
-                    messageFilters,
+                    messageFilters??AConnection<CC>.ExtractFilter<TMessage, TConsumer>(consumer),
                     true,
                     cancellationToken
                 ),
@@ -154,8 +156,8 @@ namespace MQContract.Connections
                 cancellationToken
             );
 
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync<T, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, CancellationToken cancellationToken)
-            => ((IConsumerContractConnection)this).RegisterPubSubConsumerAsync<T, TConsumer>(
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterPubSubConsumerAsync<TMessage, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
+            => ((IConsumerContractConnection<CC>)this).RegisterPubSubConsumerAsync<TMessage, TConsumer>(
                 (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
                 channel,
                 group,
@@ -164,13 +166,13 @@ namespace MQContract.Connections
                 cancellationToken: cancellationToken
             );
 
-        private static readonly MethodInfo RegisterPubSubConsumerMethod = typeof(IConsumerContractConnection).GetMethods()
+        private static readonly MethodInfo RegisterPubSubConsumerMethod = typeof(IConsumerContractConnection<CC>).GetMethods()
             .First(method => Equals(method.Name, "RegisterPubSubConsumerAsync") && method.GetGenericArguments().Length==2 && method.GetParameters().Length==6);
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterPubSubConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IPubSubConsumer<>));
             var methodInfo = RegisterPubSubConsumerMethod.MakeGenericMethod(ifaceType.GetGenericArguments()[0], consumerType);
-            return (ValueTask<bool>)methodInfo!.Invoke(this, [
+            return (ValueTask<CC>)methodInfo!.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
                 channel,
                 group,
@@ -183,8 +185,8 @@ namespace MQContract.Connections
         #endregion
 
         #region PubSubAsyncConsumer
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync<T, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, CancellationToken cancellationToken)
-            => RegisterSubscription((channel, group, ignoreMessageHeader) => CreateSubscriptionAsync<T>(
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterPubSubAsyncConsumerAsync<TMessage, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
+            => RegisterSubscription((channel, group, ignoreMessageHeader) => CreateSubscriptionAsync<TMessage>(
                     (message) =>
                     {
                         message.Activity?.AddTag(ConsumerClassNameKey, consumer.GetType().Name);
@@ -194,7 +196,7 @@ namespace MQContract.Connections
                     channel,
                     group,
                     ignoreMessageHeader,
-                    messageFilters,
+                    messageFilters??AConnection<CC>.ExtractFilter<TMessage, TConsumer>(consumer),
                     true,
                     cancellationToken
                 ),
@@ -206,8 +208,8 @@ namespace MQContract.Connections
                 cancellationToken
             );
 
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync<T, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, CancellationToken cancellationToken)
-            => ((IConsumerContractConnection)this).RegisterPubSubAsyncConsumerAsync<T, TConsumer>(
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterPubSubAsyncConsumerAsync<TMessage, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
+            => ((IConsumerContractConnection<CC>)this).RegisterPubSubAsyncConsumerAsync<TMessage, TConsumer>(
                 (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
                 channel,
                 group,
@@ -216,13 +218,13 @@ namespace MQContract.Connections
                 cancellationToken: cancellationToken
             );
 
-        private static readonly MethodInfo RegisterPubSubAsyncConsumerMethod = typeof(IConsumerContractConnection).GetMethods()
+        private static readonly MethodInfo RegisterPubSubAsyncConsumerMethod = typeof(IConsumerContractConnection<CC>).GetMethods()
             .First(method => Equals(method.Name, "RegisterPubSubAsyncConsumerAsync") && method.GetGenericArguments().Length==2 && method.GetParameters().Length==6);
-        ValueTask<bool> IConsumerContractConnection.RegisterPubSubAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterPubSubAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IPubSubAsyncConsumer<>));
             var methodInfo = RegisterPubSubAsyncConsumerMethod.MakeGenericMethod(ifaceType.GetGenericArguments()[0], consumerType);
-            return (ValueTask<bool>)methodInfo.Invoke(this, [
+            return (ValueTask<CC>)methodInfo.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
                 channel,
                 group,
@@ -234,8 +236,8 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponseConsumer
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync<Q, R, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<Q, R>(
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterQueryResponseConsumerAsync<TQuery, TQueryResponse, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
+            => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(
                     (message) =>
                     {
                         message.Activity?.AddTag(ConsumerClassNameKey, consumer.GetType().Name);
@@ -246,6 +248,7 @@ namespace MQContract.Connections
                     group,
                     ignoreMessageHeader,
                     true,
+                    messageFilters??AConnection<CC>.ExtractFilter<TQuery, TConsumer>(consumer),
                     cancellationToken
                 ),
                 channel,
@@ -256,34 +259,36 @@ namespace MQContract.Connections
                 cancellationToken
              );
 
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync<Q, R, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => ((IConsumerContractConnection)this).RegisterQueryResponseConsumerAsync<Q, R, TConsumer>(
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterQueryResponseConsumerAsync<TQuery, TQueryResponse, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
+            => ((IConsumerContractConnection<CC>)this).RegisterQueryResponseConsumerAsync<TQuery, TQueryResponse, TConsumer>(
                 (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
                 channel,
                 group,
                 ignoreMessageHeader,
+                messageFilters,
                 cancellationToken
             );
 
-        private static readonly MethodInfo RegisterQueryResponseConsumerMethod = typeof(IConsumerContractConnection).GetMethods()
-            .First(method => Equals(method.Name, "RegisterQueryResponseConsumerAsync") && method.GetGenericArguments().Length==3 && method.GetParameters().Length==5);
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        private static readonly MethodInfo RegisterQueryResponseConsumerMethod = typeof(IConsumerContractConnection<CC>).GetMethods()
+            .First(method => Equals(method.Name, "RegisterQueryResponseConsumerAsync") && method.GetGenericArguments().Length==3 && method.GetParameters().Length==6);
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterQueryResponseConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IQueryResponseConsumer<,>));
             var methodInfo = RegisterQueryResponseConsumerMethod.MakeGenericMethod(ifaceType.GetGenericArguments()[0], ifaceType.GetGenericArguments()[1], consumerType);
-            return (ValueTask<bool>)methodInfo.Invoke(this, [
+            return (ValueTask<CC>)methodInfo.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
                 channel,
                 group,
                 ignoreMessageHeader,
+                null,
                 cancellationToken
             ])!;
         }
         #endregion
 
         #region QueryResponseAsyncConsumer
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync<Q, R, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<Q, R>(
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, TConsumer>(TConsumer consumer, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
+            => RegisterSubscription((channel, group, ignoreMessageHeader) => ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(
                     (message) =>
                     {
                         message.Activity?.AddTag(ConsumerClassNameKey, consumer.GetType().Name);
@@ -294,6 +299,7 @@ namespace MQContract.Connections
                     group,
                     ignoreMessageHeader,
                     true,
+                    messageFilters??AConnection<CC>.ExtractFilter<TQuery, TConsumer>(consumer),
                     cancellationToken
                 ),
                 channel,
@@ -304,26 +310,28 @@ namespace MQContract.Connections
                 cancellationToken
             );
 
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync<Q, R, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
-            => ((IConsumerContractConnection)this).RegisterQueryResponseAsyncConsumerAsync<Q, R, TConsumer>(
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, TConsumer>(string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
+            => ((IConsumerContractConnection<CC>)this).RegisterQueryResponseAsyncConsumerAsync<TQuery, TQueryResponse, TConsumer>(
                 (serviceProvider==null ? Activator.CreateInstance<TConsumer>() : ActivatorUtilities.CreateInstance<TConsumer>(serviceProvider)),
                 channel,
                 group,
                 ignoreMessageHeader,
+                messageFilters,
                 cancellationToken
             );
 
-        private static readonly MethodInfo RegisterQueryResponseAsyncConsumerMethod = typeof(IConsumerContractConnection).GetMethods()
-            .First(method => Equals(method.Name, "RegisterQueryResponseAsyncConsumerAsync") && method.GetGenericArguments().Length==3 && method.GetParameters().Length==5);
-        ValueTask<bool> IConsumerContractConnection.RegisterQueryResponseAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
+        private static readonly MethodInfo RegisterQueryResponseAsyncConsumerMethod = typeof(IConsumerContractConnection<CC>).GetMethods()
+            .First(method => Equals(method.Name, "RegisterQueryResponseAsyncConsumerAsync") && method.GetGenericArguments().Length==3 && method.GetParameters().Length==6);
+        ValueTask<CC> IConsumerContractConnection<CC>.RegisterQueryResponseAsyncConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
         {
             var ifaceType = GetConsumerInterfaceType(consumerType, typeof(IQueryResponseAsyncConsumer<,>));
             var methodInfo = RegisterQueryResponseAsyncConsumerMethod.MakeGenericMethod(ifaceType.GetGenericArguments()[0], ifaceType.GetGenericArguments()[1], consumerType);
-            return (ValueTask<bool>)methodInfo.Invoke(this, [
+            return (ValueTask<CC>)methodInfo.Invoke(this, [
                 (serviceProvider==null ? Activator.CreateInstance(consumerType) : ActivatorUtilities.CreateInstance(serviceProvider,consumerType)),
                 channel,
                 group,
                 ignoreMessageHeader,
+                null,
                 cancellationToken
             ])!;
         }

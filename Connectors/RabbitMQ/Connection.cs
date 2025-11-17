@@ -254,22 +254,25 @@ namespace MQContract.RabbitMQ
             return result;
         }
 
-        async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         => await ProduceSubscriptionAsync(channel, group,
                 async (@event, model, acknowledge) =>
                 {
                     var result = await messageReceived(ConvertMessage(@event, channel, acknowledge, out var messageID));
-                    (var props, var data) = ConvertMessage(result, messageID);
-                    await semaphore.WaitAsync(cancellationToken);
-                    try
+                    if (result!=null)
                     {
-                        await this.channel.BasicPublishAsync<BasicProperties>(InboxExchange, @event.BasicProperties.ReplyTo!, true, props, data);
+                        (var props, var data) = ConvertMessage(result!, messageID);
+                        await semaphore.WaitAsync(cancellationToken);
+                        try
+                        {
+                            await this.channel.BasicPublishAsync<BasicProperties>(InboxExchange, @event.BasicProperties.ReplyTo!, true, props, data);
+                        }
+                        catch (Exception e)
+                        {
+                            errorReceived(e);
+                        }
+                        semaphore.Release();
                     }
-                    catch (Exception e)
-                    {
-                        errorReceived(e);
-                    }
-                    semaphore.Release();
                 },
                 errorReceived
             );

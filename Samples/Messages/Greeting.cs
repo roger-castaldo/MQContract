@@ -2,10 +2,6 @@
 
 namespace Messages
 {
-    [MessageChannel("Greeting")]
-    [MessageName("Nametag")]
-    [MessageVersion("1.0.0.0")]
-    [QueryResponseType(typeof(string))]
-    [QueryResponseChannel("Greeting.Response")]
+    [QueryMessage(channel: "Greeting",typeName:"Nametag",typeVersion:"1.0.0.0",responseType:typeof(string),responseChannel:"Greeting.Response")]
     public record Greeting(string FirstName, string LastName) { }
 }

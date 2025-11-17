@@ -101,14 +101,14 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        async ValueTask<QueryResult<R>> IContractConnection.QueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        async ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);
+            Logger?.LogDebug("Executing QueryResponse of {TQuery}, expecting {TQueryResponse} on {Channel} with {ResponseChannel}", typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
             using var activity = StartActivity(Constants.PublishQueryActivityName, serviceConnection: serviceConnection);
-            var serviceMessage = await ProduceServiceMessageAsync<Q>(
+            var serviceMessage = await ProduceServiceMessageAsync<TQuery>(
                 ChannelMapper.MapTypes.Query, 
-                GetMessageFactory<Q>(), 
+                GetMessageFactory<TQuery>(), 
                 message, 
                 false, 
                 activity, 
@@ -116,25 +116,25 @@ namespace MQContract.Connections
                 channel: channel, 
                 messageHeader: messageHeader
             );
-            return await ExecuteQueryAsync<Q, R>(serviceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken);
+            return await ExecuteQueryAsync<TQuery, TQueryResponse>(serviceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken);
         }
 
         private static readonly MethodInfo fullGenericQueryAsync = typeof(IContractConnection).GetMethods().First(m => Equals(m.Name, nameof(IContractConnection.QueryAsync))
             && m.GetGenericArguments().Length==2);
 
-        async ValueTask<QueryResult<object>> IContractConnection.QueryAsync<Q>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader,
+        async ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader,
             CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebug("Attempting to get response type for QueryResponse for {Q} on {Channel} with {ResponseChannel}", typeof(Q), channel, responseChannel);
+            Logger?.LogDebug("Attempting to get response type for QueryResponse for {TQuery} on {Channel} with {ResponseChannel}", typeof(TQuery), channel, responseChannel);
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
-            var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
+            var responseType = (typeof(TQuery).GetCustomAttribute<QueryMessageAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(TQuery));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
-            Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {Q} on {Channel} with {ResponseChannel}", responseType, typeof(Q), channel, responseChannel);
+            Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {TQuery} on {Channel} with {ResponseChannel}", responseType, typeof(TQuery), channel, responseChannel);
             try
             {
                 return Utility.ConvertResultFromObject(await Utility.InvokeMethodAsync(
-                    fullGenericQueryAsync.MakeGenericMethod(typeof(Q), responseType!),
+                    fullGenericQueryAsync.MakeGenericMethod(typeof(TQuery), responseType!),
                     this,
                     [
                         message,
@@ -152,13 +152,13 @@ namespace MQContract.Connections
             }
         }
 
-        protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
+        protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, MessageFilters<TQuery>? messageFilter, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebug("Producing QueryResponse Subscription for {Q} responding with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
-            var queryMessageFactory = GetMessageFactory<Q>(ignoreMessageHeader);
-            var responseMessageFactory = GetMessageFactory<R>();
-            return await CreateSubscriptionAsync<Q, R>(
+            Logger?.LogDebug("Producing QueryResponse Subscription for {TQuery} responding with {TQueryResponse} on {Channel} in {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
+            var queryMessageFactory = GetMessageFactory<TQuery>(ignoreMessageHeader);
+            var responseMessageFactory = GetMessageFactory<TQueryResponse>();
+            return await CreateSubscriptionAsync<TQuery, TQueryResponse>(
                 queryMessageFactory, 
                 responseMessageFactory, 
                 serviceConnection, 
@@ -168,6 +168,7 @@ namespace MQContract.Connections
                 group, 
                 synchronous, 
                 null, 
+                messageFilter,
                 cancellationToken
             );
         }

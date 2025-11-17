@@ -9,22 +9,17 @@ namespace MQContract.Kafka.Subscriptions
         private bool disposedValue;
         protected readonly CancellationTokenSource cancelToken = new();
 
-        public Task Run()
+        public void Start()
         {
-            var resultSource = new TaskCompletionSource();
-            consumer.Subscribe(channel);
             Task.Run(() =>
             {
-                Task.Run(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(500));
-                    resultSource.TrySetResult();
-                });
                 while (!cancelToken.IsCancellationRequested)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Waiting to consume message from {channel}");
                     try
                     {
                         var msg = consumer.Consume(cancellationToken: cancelToken.Token);
+                        System.Diagnostics.Debug.WriteLine($"Consuming message {msg.Offset} from {channel}");
                         var headers = Connection.ExtractHeaders(msg.Message.Headers, out var messageTypeID);
                         messageReceived(new ReceivedServiceMessage(
                             msg.Message.Key??string.Empty,
@@ -34,7 +29,8 @@ namespace MQContract.Kafka.Subscriptions
                             msg.Message.Value
                         ));
                     }
-                    catch (OperationCanceledException) { 
+                    catch (OperationCanceledException)
+                    {
                         //dropped this exception as it can occur when the consumption is stopped
                     }
                     catch (Exception ex)
@@ -44,7 +40,6 @@ namespace MQContract.Kafka.Subscriptions
                 }
                 consumer.Close();
             });
-            return resultSource.Task;
         }
 
         public async ValueTask EndAsync()

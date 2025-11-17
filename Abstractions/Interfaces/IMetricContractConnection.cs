@@ -5,9 +5,9 @@ namespace MQContract.Interfaces
     /// <summary>
     /// Houses the metric pieces for a given contract connection
     /// </summary>
-    /// <typeparam name="CC">The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining.</typeparam>
-    public interface IMetricContractConnection<CC> : IMiddlewareContractConnection<CC>
-        where CC : IBaseContractConnection
+    /// <typeparam name="TContractConnection">The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining.</typeparam>
+    public interface IMetricContractConnection<TContractConnection> : IMiddlewareContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
     {
         /// <summary>
         /// Called to enable Open Telemetry capabilities within the Contract Connection which will include passing activity information across the messages
@@ -15,7 +15,7 @@ namespace MQContract.Interfaces
         /// <param name="activitySource">Used to override the Activity Source name if desired, otherwise it will default to MQContract</param>
         /// <param name="linkActivitiesAcrossSystems">Setting this to true will automatically include headers in the messages to allow for linking the calling activity on one service to the activity on the receiver</param>
         /// <returns>The Contract Connection instance to allow chaining calls</returns>
-        CC EnableOpenTelemetry(string activitySource = "MQContract", bool linkActivitiesAcrossSystems = true);
+        TContractConnection EnableOpenTelemetry(string activitySource = "MQContract", bool linkActivitiesAcrossSystems = true);
         /// <summary>
         /// Called to activate the metrics tracking middleware for this connection instance
         /// </summary>
@@ -43,7 +43,7 @@ namespace MQContract.Interfaces
         /// mqcontract.channels.{Channel}.encodingduration = milliseconds to encode messages for a given channel (Histogram&lt;double&gt;)
         /// mqcontract.channels.{Channel}.decodingduration = milliseconds to decode messages for a given channel (Histogram&lt;double&gt;)
         /// </remarks>
-        CC AddMetrics(Meter? meter, bool useInternal);
+        TContractConnection AddMetrics(Meter? meter, bool useInternal);
         /// <summary>
         /// Called to get a snapshot of the current global metrics.  Will return null if internal metrics are not enabled.
         /// </summary>
@@ -60,11 +60,11 @@ namespace MQContract.Interfaces
         /// <summary>
         /// Called to get a snapshot of the metrics for a given message type.  Will return null if internal metrics are not enabled.
         /// </summary>
-        /// <typeparam name="T">The type of message to look for</typeparam>
+        /// <typeparam name="TMessage">The type of message to look for</typeparam>
         /// <param name="sent">true when the sent metrics are desired, false when received are desired</param>
         /// <returns>A record of the current metric snapshot or null if not available</returns>
-        IContractMetric? GetSnapshot<T>(bool sent)
-            where T : class;
+        IContractMetric? GetSnapshot<TMessage>(bool sent)
+            where TMessage : class;
         /// <summary>
         /// Called to get a snapshot of the metrics for a given message channel.  Will return null if internal metrics are not enabled.
         /// </summary>

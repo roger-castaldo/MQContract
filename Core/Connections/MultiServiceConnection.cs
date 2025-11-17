@@ -44,14 +44,14 @@ namespace MQContract.Connections
             return new(connectionName, result.Error);
         }
 
-        async ValueTask<MultiTransmissionResult> IMultiServiceContractConnection.PublishAsync<T>(T message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        async ValueTask<MultiTransmissionResult> IMultiServiceContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebug("Publishing message {T} on {Channel}", typeof(T), channel);
+            Logger?.LogDebug("Publishing message {TMessage} on {Channel}", typeof(TMessage), channel);
             using var activity = StartActivity(Constants.PublishActivityName);
-            var serviceMessage = await ProduceServiceMessageAsync<T>(
+            var serviceMessage = await ProduceServiceMessageAsync<TMessage>(
                 ChannelMapper.MapTypes.Publish, 
-                GetMessageFactory<T>(), 
+                GetMessageFactory<TMessage>(), 
                 message, 
                 false, 
                 activity,
@@ -59,13 +59,13 @@ namespace MQContract.Connections
                 channel: channel, 
                 messageHeader: messageHeader
             );
-            var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(T), serviceMessage.Header);
+            var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(TMessage), serviceMessage.Header);
             await publishLock.WaitAsync(cancellationToken);
             var results = await connections
                 .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () =>
                 {
                     OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                    var result = await ExecuteResilliantTransmissionAsync<T>(
+                    var result = await ExecuteResilliantTransmissionAsync<TMessage>(
                         (ct) => c.MessageServiceConnection.PublishAsync(
                             serviceMessage,
                             ct
@@ -83,17 +83,17 @@ namespace MQContract.Connections
             return new(serviceMessage.ID, results);
         }
 
-        async ValueTask<IEnumerable<MultiTransmissionResult>> IMultiServiceContractConnection.BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
+        async ValueTask<IEnumerable<MultiTransmissionResult>> IMultiServiceContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebug("Bulk Publishing messages {T} on {Channel}", typeof(T), channel);
+            Logger?.LogDebug("Bulk Publishing messages {TMessage} on {Channel}", typeof(TMessage), channel);
             using var activity = StartActivity(Constants.BulkPublishActivityName);
             activity?.SetTag(Constants.BulkPublishCountTag, messages.Count());
             var serviceMessages = await
             messages.WhenAll(m =>
-                    ProduceServiceMessageAsync<T>(
+                    ProduceServiceMessageAsync<TMessage>(
                         ChannelMapper.MapTypes.Publish, 
-                        GetMessageFactory<T>(), 
+                        GetMessageFactory<TMessage>(), 
                         m.message, 
                         false, 
                         activity, 
@@ -102,12 +102,12 @@ namespace MQContract.Connections
                         messageHeader: m.messageHeader
                     )
             );
-            var connections = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(T), serviceMessages.First().Header);
+            var connections = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(TMessage), serviceMessages.First().Header);
             await publishLock.WaitAsync(cancellationToken);
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
                 OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                var result = await BulkPublishAsync<T>(serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
+                var result = await BulkPublishAsync<TMessage>(serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
             publishLock.Release();
@@ -119,12 +119,12 @@ namespace MQContract.Connections
                 .Select(grp => new MultiTransmissionResult(grp.Key, grp.SelectMany(g => g.Results)));
         }
 
-        protected override async ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, bool synchronous, CancellationToken cancellationToken)
+        protected override async ValueTask<ISubscription> CreateSubscriptionAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, bool synchronous, CancellationToken cancellationToken)
         {
-            var messageFactory = GetMessageFactory<T>(ignoreMessageHeader);
-            (var connections, channel) = await GetConnectionsAsync<T>(channel, ChannelMapper.MapTypes.PublishSubscription);
+            var messageFactory = GetMessageFactory<TMessage>(ignoreMessageHeader);
+            (var connections, channel) = await GetConnectionsAsync<TMessage>(channel, ChannelMapper.MapTypes.PublishSubscription);
             return new SubscriptionCollection(await connections.WhenAll(conn =>
-                CreateSubscriptionAsync<T>(
+                CreateSubscriptionAsync<TMessage>(
                     messageFactory,
                     conn.MessageServiceConnection,
                     messageReceived,
@@ -141,14 +141,14 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        async ValueTask<IEnumerable<QueryResult<R>>> IMultiServiceContractConnection.QueryAsync<Q, R>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        async ValueTask<IEnumerable<QueryResult<TQueryResponse>>> IMultiServiceContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebug("Executing QueryResponse of {Q}, expecting {R} on {Channel} with {ResponseChannel}", typeof(Q), typeof(R), channel, responseChannel);
+            Logger?.LogDebug("Executing QueryResponse of {TQuery}, expecting {TQueryResponse} on {Channel} with {ResponseChannel}", typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
             using var activity = StartActivity(Constants.PublishQueryActivityName);
-            var serviceMessage = await ProduceServiceMessageAsync<Q>(
+            var serviceMessage = await ProduceServiceMessageAsync<TQuery>(
                 ChannelMapper.MapTypes.Query, 
-                GetMessageFactory<Q>(), 
+                GetMessageFactory<TQuery>(), 
                 message, 
                 false, 
                 activity, 
@@ -156,26 +156,26 @@ namespace MQContract.Connections
                 channel: channel, 
                 messageHeader: messageHeader
             );
-            var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(Q), serviceMessage.Header);
+            var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(TQuery), serviceMessage.Header);
             return await connections
                 .WhenAll(conn =>
                 {
                     OpenTelemetryMiddleware.AssignConnectionType(activity, conn.MessageServiceConnection, conn.ServiceConnectionName);
-                    return ExecuteQueryAsync<Q, R>(conn.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: conn.ServiceConnectionName, cancellationToken: cancellationToken);
+                    return ExecuteQueryAsync<TQuery, TQueryResponse>(conn.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: conn.ServiceConnectionName, cancellationToken: cancellationToken);
                 });
         }
 
         private static readonly MethodInfo QueryMethod = typeof(IMultiServiceContractConnection).GetMethods()
             .First(method => Equals(method.Name, nameof(IMultiServiceContractConnection.QueryAsync)) && method.GetGenericArguments().Length==2);
-        async ValueTask<IEnumerable<QueryResult<object>>> IMultiServiceContractConnection.QueryAsync<Q>(Q message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        async ValueTask<IEnumerable<QueryResult<object>>> IMultiServiceContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebug("Attempting to get response type for QueryResponse for {Q} on {Channel} with {ResponseChannel}", typeof(Q), channel, responseChannel);
+            Logger?.LogDebug("Attempting to get response type for QueryResponse for {TQuery} on {Channel} with {ResponseChannel}", typeof(TQuery), channel, responseChannel);
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
-            var responseType = (typeof(Q).GetCustomAttribute<QueryResponseTypeAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(Q));
+            var responseType = (typeof(TQuery).GetCustomAttribute<QueryMessageAttribute>(false)?.ResponseType)??throw new UnknownResponseTypeException("ResponseType", typeof(TQuery));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
-            Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {Q} on {Channel} with {ResponseChannel}", responseType, typeof(Q), channel, responseChannel);
-            var methodInfo = QueryMethod.MakeGenericMethod(typeof(Q), responseType!);
+            Logger?.LogInformation("Obtained {ResponseType} for QueryResponse for {TQuery} on {Channel} with {ResponseChannel}", responseType, typeof(TQuery), channel, responseChannel);
+            var methodInfo = QueryMethod.MakeGenericMethod(typeof(TQuery), responseType!);
             IEnumerable<object> results;
             try
             {
@@ -199,16 +199,16 @@ namespace MQContract.Connections
             return results.Select(o => Utility.ConvertResultFromObject(o)!);
         }
 
-        protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<Q, R>(Func<IReceivedMessage<Q>, ValueTask<QueryResponseMessage<R>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, CancellationToken cancellationToken)
+        protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, MessageFilters<TQuery>? messageFilter, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebug("Producing QueryResponse Subscription for {Q} responding with {R} on {Channel} in {Group}", typeof(Q), typeof(R), channel, group);
-            var queryMessageFactory = GetMessageFactory<Q>(ignoreMessageHeader);
-            var responseMessageFactory = GetMessageFactory<R>();
-            (var connections, channel) = await GetConnectionsAsync<Q>(channel, ChannelMapper.MapTypes.QuerySubscription);
+            Logger?.LogDebug("Producing QueryResponse Subscription for {TQuery} responding with {TQueryResponse} on {Channel} in {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
+            var queryMessageFactory = GetMessageFactory<TQuery>(ignoreMessageHeader);
+            var responseMessageFactory = GetMessageFactory<TQueryResponse>();
+            (var connections, channel) = await GetConnectionsAsync<TQuery>(channel, ChannelMapper.MapTypes.QuerySubscription);
             return new SubscriptionCollection(await connections
                 .WhenAll(conn =>
-                    CreateSubscriptionAsync<Q, R>(
+                    CreateSubscriptionAsync<TQuery, TQueryResponse>(
                        queryMessageFactory,
                        responseMessageFactory,
                        conn.MessageServiceConnection,
@@ -218,6 +218,7 @@ namespace MQContract.Connections
                        group,
                        synchronous,
                        conn.ServiceConnectionName,
+                       messageFilter,
                        cancellationToken
                     )
                )

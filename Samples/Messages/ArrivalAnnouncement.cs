@@ -2,6 +2,6 @@
 
 namespace Messages
 {
-    [MessageChannel("Arrivals")]
+    [Message(channel: "Arrivals")]
     public record ArrivalAnnouncement(string FirstName, string LastName) { }
 }

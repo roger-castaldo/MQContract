@@ -166,7 +166,7 @@ namespace MQContract.AzureServiceBus
             return new(message.ID);
         }
 
-        async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => await StartServiceSubscriptionAsync(new Subscription(
                 client,
                 async (msg, acknowledge) =>
@@ -181,20 +181,22 @@ namespace MQContract.AzureServiceBus
                         result.Data,
                         result.Acknowledge
                     ));
-
-                    var responseMessage = ConvertMessage(response);
-                    responseMessage.SessionId = msg.ReplyTo;
-                    responseMessage.ReplyToSessionId = msg.ReplyToSessionId;
-                    await locker.WaitAsync();
-                    try
+                    if (response!=null)
                     {
-                        await inboxSender.SendMessageAsync(responseMessage, cancellationToken);
+                        var responseMessage = ConvertMessage(response!);
+                        responseMessage.SessionId = msg.ReplyTo;
+                        responseMessage.ReplyToSessionId = msg.ReplyToSessionId;
+                        await locker.WaitAsync();
+                        try
+                        {
+                            await inboxSender.SendMessageAsync(responseMessage, cancellationToken);
+                        }
+                        catch (Exception e)
+                        {
+                            errorReceived(e);
+                        }
+                        locker.Release();
                     }
-                    catch (Exception e)
-                    {
-                        errorReceived(e);
-                    }
-                    locker.Release();
                 },
                 (error) => errorReceived(error),
                 channel,

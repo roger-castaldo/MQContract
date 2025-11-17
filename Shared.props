@@ -1,6 +1,10 @@
 <Project>
 	<PropertyGroup>
-		<VersionPrefix>2.11</VersionPrefix>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Company>$(AssemblyName)</Company>
+		<VersionPrefix>3.0</VersionPrefix>
 		<PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>

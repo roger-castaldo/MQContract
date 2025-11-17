@@ -65,8 +65,8 @@ namespace MQContract.Subscriptions
                 error => { },
                 replyChannel,
                 cancellationToken: token.Token,
-                group: identifier.ToString()
-            )??throw new QueryExecutionFailedException();
+                group: $"reply-{identifier}"
+            ).ConfigureAwait(false)??throw new QueryExecutionFailedException();
             token.Token.Register(async () =>
             {
                 await consumer.EndAsync();

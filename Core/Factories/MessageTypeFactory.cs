@@ -23,7 +23,7 @@ namespace MQContract.Factories
 
         private readonly string messageName = Utility.MessageTypeName<T>();
         private readonly string messageVersion = Utility.MessageVersionString<T>();
-        public string? MessageChannel => typeof(T).GetCustomAttributes<MessageChannelAttribute>().Select(mc => mc.Name).FirstOrDefault();
+        public string? MessageChannel => typeof(T).GetCustomAttribute<MessageAttribute>()?.Channel;
 
         public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider, bool ignoreMessageHeader)
         {

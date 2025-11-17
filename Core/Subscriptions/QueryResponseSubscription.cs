@@ -7,7 +7,7 @@ using System.Diagnostics;
 namespace MQContract.Subscriptions
 {
     internal sealed class QueryResponseSubscription<T>(
-        Func<ReceivedServiceMessage, string, ValueTask<(ServiceMessage serviceMessage, Activity? activity)>> processMessage,
+        Func<ReceivedServiceMessage, string, ValueTask<(ServiceMessage? serviceMessage, Activity? activity, MessageFilterResult filterResult)>> processMessage,
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null,
@@ -60,12 +60,16 @@ namespace MQContract.Subscriptions
                                         serviceMessage.MessageTypeID,
                                         serviceMessage.Channel,
                                         QueryResponseHelper.StripHeaders(serviceMessage, out var queryClientID, out var replyID, out var replyChannel),
-                                        serviceMessage.Data
+                                        serviceMessage.Data,
+                                        serviceMessage.Acknowledge
                                     ),
                                     replyChannel!
                                 );
-                                var res = await connection.PublishAsync(QueryResponseHelper.EncodeMessage(resultMessage, queryClientID, replyID, null, replyChannel), cancellationToken);
-                                OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, resultMessage, res, connection, serviceConnectionName);
+                                if (resultMessage!=null)
+                                {
+                                    var res = await connection.PublishAsync(QueryResponseHelper.EncodeMessage(resultMessage!, queryClientID, replyID, null, replyChannel), cancellationToken);
+                                    OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, resultMessage!, res, connection, serviceConnectionName);
+                                }
                             }
                         },
                         error => errorReceived(error),
@@ -84,7 +88,7 @@ namespace MQContract.Subscriptions
             }
         }
 
-        private async ValueTask<(ServiceMessage response, Activity? activity)> ProcessServiceMessageAsync(ReceivedServiceMessage message, string replyChannel)
+        private async ValueTask<(ServiceMessage? response, Activity? activity)> ProcessServiceMessageAsync(ReceivedServiceMessage message, string replyChannel)
         {
             using var scope = SetScope();
             if (Synchronous && !(token?.IsCancellationRequested ?? false))
@@ -96,12 +100,13 @@ namespace MQContract.Subscriptions
             Exception? error = null;
             ServiceMessage? response = null;
             Activity? activity = null;
+            MessageFilterResult filterResult = MessageFilterResult.Allow;
 
             try
             {
                 Logger?.LogDebug("Processing service message with ID: {MessageID}", message.ID);
-                (response, activity) = await processMessage(message, replyChannel);
-                if (message.Acknowledge != null)
+                (response, activity,filterResult) = await processMessage(message, replyChannel);
+                if (message.Acknowledge != null && !Equals(filterResult, MessageFilterResult.DropAndDontAcknowledge))
                 {
                     Logger?.LogDebug("Acknowledging service message with ID: {MessageID}", message.ID);
                     await message.Acknowledge();
@@ -127,7 +132,7 @@ namespace MQContract.Subscriptions
             }
 
             Logger?.LogInformation("Returning valid service response for message with ID: {MessageID}", message.ID);
-            return (response ?? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()), activity);
+            return (response ?? (Equals(filterResult,MessageFilterResult.Allow) ? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()) : null), activity);
         }
 
         protected override void InternalDispose()

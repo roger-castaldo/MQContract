@@ -10,7 +10,7 @@ namespace MQContract
             => MessageTypeName(typeof(T));
 
         internal static string MessageTypeName(Type messageType)
-            => messageType.GetCustomAttributes<MessageNameAttribute>().Select(mn => mn.Value).FirstOrDefault(TypeName(messageType));
+            => messageType.GetCustomAttribute<MessageAttribute>()?.TypeName??TypeName(messageType);
 
         internal static string TypeName<T>()
             => TypeName(typeof(T));
@@ -27,7 +27,7 @@ namespace MQContract
             => MessageVersionString(typeof(T));
 
         internal static string MessageVersionString(Type messageType)
-            => messageType.GetCustomAttributes<MessageVersionAttribute>().Select(mc => mc.Version.ToString()).FirstOrDefault("0.0.0.0");
+            => messageType.GetCustomAttribute<MessageAttribute>()?.TypeVersion.ToString()??"0.0.0.0";
 
         internal static async ValueTask<object?> InvokeMethodAsync(MethodInfo method, object container, object?[]? parameters)
         {
@@ -37,11 +37,11 @@ namespace MQContract
         }
 
         internal async static ValueTask<string> GetChannelAsync<T>(Func<string, ValueTask<string>> mapChannel, string? channel = null)
-            => await mapChannel(channel??typeof(T).GetCustomAttribute<MessageChannelAttribute>(false)?.Name??throw new MessageChannelNullException());
+            => await mapChannel(channel??typeof(T).GetCustomAttribute<MessageAttribute>(false)?.Channel??throw new MessageChannelNullException());
 
         internal static string GetChannel<T>(Func<string, ValueTask<string>> mapChannel, string? channel = null)
         {
-            var chan = channel??typeof(T).GetCustomAttribute<MessageChannelAttribute>(false)?.Name??throw new MessageChannelNullException();
+            var chan = channel??typeof(T).GetCustomAttribute<MessageAttribute>(false)?.Channel??throw new MessageChannelNullException();
             var tsk = mapChannel(chan).AsTask();
             tsk.Wait();
             return tsk.Result;
