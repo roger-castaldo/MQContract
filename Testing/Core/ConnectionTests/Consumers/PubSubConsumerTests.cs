@@ -701,7 +701,8 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             }
             else
             {
-                Assert.IsEmpty(BasicMessageConsumer.Messages);
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                Assert.IsEmpty(messages);
             }
             Assert.AreEqual(acknowledgeDrop, acknowledged);
             #endregion
