@@ -144,15 +144,7 @@ namespace MQContract.Connections
                     channel,
                     group,
                     ignoreMessageHeader,
-
-<<<<<<< TODO: Unmerged change from project 'Core (net10.0)', Before:
-                    messageFilters??ExtractFilter<TMessage,TConsumer>(consumer),
-                    true,
-=======
                     messageFilters??AConnection<CC>.ExtractFilter<TMessage, TConsumer>(consumer),
-                    true,
->>>>>>> After
-                    messageFilters??ExtractFilter<TMessage, TConsumer>(consumer),
                     true,
                     cancellationToken
                 ),
@@ -204,15 +196,7 @@ namespace MQContract.Connections
                     channel,
                     group,
                     ignoreMessageHeader,
-
-<<<<<<< TODO: Unmerged change from project 'Core (net10.0)', Before:
-                    messageFilters??ExtractFilter<TMessage,TConsumer>(consumer),
-                    true,
-=======
                     messageFilters??AConnection<CC>.ExtractFilter<TMessage, TConsumer>(consumer),
-                    true,
->>>>>>> After
-                    messageFilters??ExtractFilter<TMessage, TConsumer>(consumer),
                     true,
                     cancellationToken
                 ),
