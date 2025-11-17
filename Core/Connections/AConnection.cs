@@ -459,11 +459,15 @@ namespace MQContract.Connections
             {
                 await tcs.Task.WaitAsync(cancellationToken);
             }
+            catch (TaskCanceledException tce)
+            {
+                return (null, new(tce, true));
+            }
             finally
             {
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
-                await inboxSemaphore.WaitAsync(cancellationToken);
+                await inboxSemaphore.WaitAsync(CancellationToken.None);
                 inboxResponses.Remove(messageID);
                 inboxSemaphore.Release();
             }
