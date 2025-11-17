@@ -368,5 +368,62 @@ namespace CQRSTesting.ContractedConnection
             mockContractConnection.Verify(x => x.PublishAsync<BasicCommand>(command, null, It.IsNotNull<MessageHeader>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
+        [TestMethod]
+        public async Task TestCommandWithTelemetry()
+        {
+            #region Arrange
+            (var listener, _, var sourceName) = Helper.SetupTelemetry();
+            var isSecondCallHeader = "isSecondCall";
+            var receivedContexts = new List<ICommandInvocationContext<BasicCommand>>();
+
+            var command = new BasicCommand(Helper.GenerateRandomString());
+            var secondCommand = new BasicCommand(Helper.GenerateRandomString());
+
+            var mockCommandProcessor = new Mock<ICommandProcessor<BasicCommand>>();
+
+            mockCommandProcessor.Setup(x => x.ProcessCommandAsync(It.IsAny<ICommandInvocationContext<BasicCommand>>(), It.IsAny<CancellationToken>()))
+                .Returns(async (ICommandInvocationContext<BasicCommand> context, CancellationToken cancellationToken) =>
+                {
+                    receivedContexts.Add(context);
+                    if (string.IsNullOrEmpty(context[isSecondCallHeader]))
+                    {
+                        context[isSecondCallHeader] = "true";
+                        await context.ExecuteCommandAsync(secondCommand);
+                    }
+                });
+            mockCommandProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
+
+            await using var contractConnection = Helper.ProduceConnection(false);
+            ((IContractedConnection)contractConnection).EnableOpenTelemetry(activitySource: sourceName);
+            var cqrsConnection = await contractConnection.CreateCQRSConnection()
+                .RegisterCommandProcessorAsync<BasicCommand>(mockCommandProcessor.Object);
+
+
+            var context = new Context();
+            #endregion
+
+            #region Act
+            await cqrsConnection.ExecuteCommandAsync<BasicCommand>(command, context: context);
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(receivedContexts, 2, TimeSpan.FromMinutes(1)));
+            Assert.HasCount(2, receivedContexts);
+            Assert.AreEqual(receivedContexts[0].CorrelationId, receivedContexts[0].Activity?.GetTagItem(Constants.CorrelationIdTag));
+            Assert.AreEqual(receivedContexts[0].MessageId, receivedContexts[0].Activity?.GetTagItem(Constants.MessageIdTag));
+            Assert.AreEqual(receivedContexts[0].CausationId, receivedContexts[0].Activity?.GetTagItem(Constants.CausationIdTag));
+            Assert.AreEqual("command", receivedContexts[0].Activity?.GetTagItem(Constants.TypeTag));
+            Assert.AreEqual(receivedContexts[1].CorrelationId, receivedContexts[1].Activity?.GetTagItem(Constants.CorrelationIdTag));
+            Assert.AreEqual(receivedContexts[1].MessageId, receivedContexts[1].Activity?.GetTagItem(Constants.MessageIdTag));
+            Assert.AreEqual(receivedContexts[1].CausationId, receivedContexts[1].Activity?.GetTagItem(Constants.CausationIdTag));
+            Assert.AreEqual("command", receivedContexts[1].Activity?.GetTagItem(Constants.TypeTag));
+            #endregion
+
+            #region Verify
+            mockCommandProcessor.Verify(x => x.ProcessCommandAsync(It.IsAny<ICommandInvocationContext<BasicCommand>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            mockCommandProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.Never);
+            #endregion
+        }
     }
 }

@@ -396,5 +396,64 @@ namespace CQRSTesting.MappedConnection
             mockContractConnection.Verify(x => x.QueryAsync<BasicQuery, BasicQueryResponse>(command, null, null, null, It.IsNotNull<MessageHeader>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
+        [TestMethod]
+        public async Task TestQueryWithTelemetry()
+        {
+            #region Arrange
+            (var listener, _, var sourceName) = Helper.SetupTelemetry();
+            var isSecondCallHeader = "isSecondCall";
+            var receivedContexts = new List<IQueryInvocationContext<BasicQuery>>();
+
+            var command = new BasicQuery(Helper.GenerateRandomString());
+            var secondQuery = new BasicQuery(Helper.GenerateRandomString());
+
+            var mockQueryProcessor = new Mock<IQueryProcessor<BasicQuery, BasicQueryResponse>>();
+
+            mockQueryProcessor.Setup(x => x.ProcessQueryAsync(It.IsAny<IQueryInvocationContext<BasicQuery>>(), It.IsAny<CancellationToken>()))
+                .Returns(async (IQueryInvocationContext<BasicQuery> context, CancellationToken cancellationToken) =>
+                {
+                    receivedContexts.Add(context);
+                    if (string.IsNullOrEmpty(context[isSecondCallHeader]))
+                    {
+                        context[isSecondCallHeader] = "true";
+                        return (await context.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(secondQuery))!;
+                    }
+                    return new BasicQueryResponse(context.Query.Name);
+                });
+            mockQueryProcessor.Setup(x => x.ErrorRecieved(It.IsAny<Exception>()));
+
+            await using var contractConnection = Helper.ProduceConnection(true);
+            ((IMappedContractConnection)contractConnection).EnableOpenTelemetry(activitySource: sourceName);
+            var cqrsConnection = await contractConnection.CreateCQRSConnection()
+                .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object, group: groupName)
+                .RegisterQueryProcessorAsync<BasicQuery, BasicQueryResponse>(mockQueryProcessor.Object, group: groupName);
+
+
+            var context = new Context();
+            #endregion
+
+            #region Act
+            var result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context);
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(receivedContexts, 2, TimeSpan.FromMinutes(1)));
+            Assert.HasCount(2, receivedContexts);
+            Assert.AreEqual(receivedContexts[0].CorrelationId, receivedContexts[0].Activity?.GetTagItem(Constants.CorrelationIdTag));
+            Assert.AreEqual(receivedContexts[0].MessageId, receivedContexts[0].Activity?.GetTagItem(Constants.MessageIdTag));
+            Assert.AreEqual(receivedContexts[0].CausationId, receivedContexts[0].Activity?.GetTagItem(Constants.CausationIdTag));
+            Assert.AreEqual("query", receivedContexts[0].Activity?.GetTagItem(Constants.TypeTag));
+            Assert.AreEqual(receivedContexts[1].CorrelationId, receivedContexts[1].Activity?.GetTagItem(Constants.CorrelationIdTag));
+            Assert.AreEqual(receivedContexts[1].MessageId, receivedContexts[1].Activity?.GetTagItem(Constants.MessageIdTag));
+            Assert.AreEqual(receivedContexts[1].CausationId, receivedContexts[1].Activity?.GetTagItem(Constants.CausationIdTag));
+            Assert.AreEqual("query", receivedContexts[1].Activity?.GetTagItem(Constants.TypeTag));
+            #endregion
+
+            #region Verify
+            mockQueryProcessor.Verify(x => x.ProcessQueryAsync(It.IsAny<IQueryInvocationContext<BasicQuery>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            mockQueryProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.Never);
+            #endregion
+        }
     }
 }

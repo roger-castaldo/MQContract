@@ -1,6 +1,7 @@
 ﻿using MQContract;
 using MQContract.InMemory;
 using MQContract.Interfaces;
+using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace CQRSTesting
@@ -31,6 +32,22 @@ namespace CQRSTesting
             });
             task.Start();
             return (await Task.WhenAny(task, Task.Delay(maxTime))) == task || values.Count()>=count;
+        }
+
+        public static (ActivityListener listener, List<Activity> capturedActivities, string sourceName) SetupTelemetry()
+        {
+            var sourceName = Helper.GenerateRandomString(20);
+            var capturedActivities = new List<Activity>();
+
+            var listener = new ActivityListener()
+            {
+                ShouldListenTo = source => source.Name == sourceName,
+                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+                ActivityStarted = activity => capturedActivities.Add(activity),
+                ActivityStopped = _ => { }
+            };
+            ActivitySource.AddActivityListener(listener);
+            return (listener, capturedActivities, sourceName);
         }
     }
 }

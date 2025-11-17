@@ -750,6 +750,14 @@ A ValueTask to allow for async execution
 | ---- | ----------- |
 | TCommand | The type of command to execute |
 
+##### Remarks
+
+Tags: 
+    mqcontract.cqrs.correlationid = CorrelationId
+    mqcontract.cqrs.messageid = MessageId
+    mqcontract.cqrs.causationid = CausationId
+    mqcontract.cqrs.type = CQRS type (query or command)
+
 <a name='M-MQContract-CQRS-Interfaces-IInvocationContext-ExecuteCommandAsync``2-``0,System-Nullable{System-TimeSpan}-'></a>
 ### ExecuteCommandAsync\`\`2(command,timeout) `method`
 

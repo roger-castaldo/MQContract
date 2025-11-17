@@ -41,6 +41,13 @@ namespace MQContract.CQRS.Interfaces
         /// <typeparam name="TCommand">The type of command to execute</typeparam>
         /// <param name="command">The command to execute</param>
         /// <returns>A ValueTask to allow for async execution</returns>
+        /// <remarks>
+        /// Tags: 
+        ///     mqcontract.cqrs.correlationid = CorrelationId
+        ///     mqcontract.cqrs.messageid = MessageId
+        ///     mqcontract.cqrs.causationid = CausationId
+        ///     mqcontract.cqrs.type = CQRS type (query or command)
+        /// </remarks>
         ValueTask ExecuteCommandAsync<TCommand>(TCommand command)
             where TCommand : ICommand;
         /// <summary>
