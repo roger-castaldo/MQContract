@@ -4,7 +4,7 @@
     /// Represents a given execution context for a command
     /// </summary>
     /// <typeparam name="TCommand">The type of command housed within this context</typeparam>
-    public interface ICommandInvocationContext<TCommand> : IInvocationContext
+    public interface ICommandInvocationContext<out TCommand> : IInvocationContext
         where TCommand : ICommand
     {
         /// <summary>

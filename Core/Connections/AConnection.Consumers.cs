@@ -118,7 +118,7 @@ namespace MQContract.Connections
         protected abstract ConnectionHealthCheck? ProduceConnectionHealthCheck();
         IHealthCheck? IBaseContractConnection.HealthCheck => healthCheck??=ProduceConnectionHealthCheck();
 
-        private MessageFilters<TMessage>? ExtractFilter<TMessage,TConsumer>(TConsumer consumer)
+        private static MessageFilters<TMessage>? ExtractFilter<TMessage,TConsumer>(TConsumer consumer)
         {
             Func<MessageHeader, ValueTask<MessageFilterResult>>? headerFilter=null;
             Func<TMessage, MessageHeader, ValueTask<MessageFilterResult>>? messageFilter=null;
@@ -144,7 +144,15 @@ namespace MQContract.Connections
                     channel,
                     group,
                     ignoreMessageHeader,
+
+<<<<<<< TODO: Unmerged change from project 'Core (net10.0)', Before:
                     messageFilters??ExtractFilter<TMessage,TConsumer>(consumer),
+                    true,
+=======
+                    messageFilters??AConnection<CC>.ExtractFilter<TMessage, TConsumer>(consumer),
+                    true,
+>>>>>>> After
+                    messageFilters??ExtractFilter<TMessage, TConsumer>(consumer),
                     true,
                     cancellationToken
                 ),
@@ -196,7 +204,15 @@ namespace MQContract.Connections
                     channel,
                     group,
                     ignoreMessageHeader,
+
+<<<<<<< TODO: Unmerged change from project 'Core (net10.0)', Before:
                     messageFilters??ExtractFilter<TMessage,TConsumer>(consumer),
+                    true,
+=======
+                    messageFilters??AConnection<CC>.ExtractFilter<TMessage, TConsumer>(consumer),
+                    true,
+>>>>>>> After
+                    messageFilters??ExtractFilter<TMessage, TConsumer>(consumer),
                     true,
                     cancellationToken
                 ),
@@ -248,7 +264,7 @@ namespace MQContract.Connections
                     group,
                     ignoreMessageHeader,
                     true,
-                    messageFilters??ExtractFilter<TQuery, TConsumer>(consumer),
+                    messageFilters??AConnection<CC>.ExtractFilter<TQuery, TConsumer>(consumer),
                     cancellationToken
                 ),
                 channel,
@@ -299,7 +315,7 @@ namespace MQContract.Connections
                     group,
                     ignoreMessageHeader,
                     true,
-                    messageFilters??ExtractFilter<TQuery, TConsumer>(consumer),
+                    messageFilters??AConnection<CC>.ExtractFilter<TQuery, TConsumer>(consumer),
                     cancellationToken
                 ),
                 channel,

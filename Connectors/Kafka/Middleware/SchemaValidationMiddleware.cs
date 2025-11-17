@@ -107,26 +107,8 @@ namespace MQContract.Kafka.Middleware
         {
             if (!IgnoredMessageTypes.Contains(message.MessageTypeID))
             {
-                int? schemaId=null;
                 var schemaName = (mapMessageSchemaName==null ? message.MessageTypeID : await mapMessageSchemaName(messageType, message.Channel, message.MessageTypeID));
-                if (cache?.TryGetValue(schemaName, out CachedSchema? cachedSchema)??false)
-                    schemaId = cachedSchema!.Id;
-                else
-                {
-                    try
-                    {
-                        var schemaResult = await schemaRegistryClient.GetLatestSchemaAsync(schemaName);
-                        if (schemaResult!=null)
-                        {
-                            schemaId = schemaResult.Id;
-                            CacheSchema(schemaName, schemaId.Value,schemaResult.Schema);
-                        }
-                    }
-                    catch
-                    {
-                        schemaId=null;
-                    }
-                }
+                int? schemaId = await GetSchemaIdFromCacheAsync(schemaName);
                 if (schemaId==null && autoRegisterSchema)
                 {
                     var builtSchema = new Schema(await ExtractSchemaAsync(messageType), registerSchemaType);
@@ -153,6 +135,30 @@ namespace MQContract.Kafka.Middleware
                 }
             }
             return message;
+        }
+
+        private async ValueTask<int?> GetSchemaIdFromCacheAsync(string schemaName)
+        {
+            int? schemaId = null;
+            if (cache?.TryGetValue(schemaName, out CachedSchema? cachedSchema)??false)
+                schemaId = cachedSchema!.Id;
+            else
+            {
+                try
+                {
+                    var schemaResult = await schemaRegistryClient.GetLatestSchemaAsync(schemaName);
+                    if (schemaResult!=null)
+                    {
+                        schemaId = schemaResult.Id;
+                        CacheSchema(schemaName, schemaId.Value, schemaResult.Schema);
+                    }
+                }
+                catch
+                {
+                    schemaId=null;
+                }
+            }
+            return schemaId;
         }
 
         private async ValueTask<string> ExtractSchemaAsync(Type messageType)

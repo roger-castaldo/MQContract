@@ -16,7 +16,7 @@ namespace MQContract.CQRS.Consumers
                 try
                 {
                     if (!instance.CancellationTokenSource.IsCancellationRequested)
-                        instance.CancellationTokenSource.Cancel();
+                        await instance.CancellationTokenSource.CancelAsync();
                 }
                 catch
                 {
