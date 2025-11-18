@@ -11,6 +11,7 @@ using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using MQContract.Middleware;
 using MQContract.Subscriptions;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Reflection;
@@ -34,28 +35,19 @@ namespace MQContract.Connections
         private readonly SemaphoreSlim inboxSemaphore = new(1, 1);
         private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
         private readonly Dictionary<string, IServiceSubscription> inboxSubscriptions = [];
-        private IEnumerable<IMessageTypeFactory> typeFactories = [];
+        private ConcurrentDictionary<(Type messageType,bool ignoreMessageHeader), IMessageTypeFactory> typeFactories = [];
         private readonly List<ISubscription> consumerSubscriptions = [];
         protected ILogger? Logger => logger;
         protected IDisposable? SetScope(string? messageID = null) => logger?.BeginScope<string>($"Connection[{indentifier}]{(messageID==null ? "" : $"|Message[{messageID}]")}");
 
-        protected IMessageFactory<T> GetMessageFactory<T>(bool ignoreMessageHeader = false)
+        protected IMessageFactory<TMessage> GetMessageFactory<TMessage>(bool ignoreMessageHeader = false)
         {
-            using var scope = SetScope();
-            logger?.LogInformation("Obtaining message factory for {Type}", typeof(T));
-            dataLock.Wait();
-            var result = (IMessageFactory<T>?)typeFactories.FirstOrDefault(fact => fact.GetType().GetGenericArguments()[0] == typeof(T));
-            dataLock.Release();
-            if (result == null)
+            if (!typeFactories.TryGetValue((typeof(TMessage),ignoreMessageHeader),out var result))
             {
-                logger?.LogInformation("Cached message factory for {Type} was not found, establishing a new instance and caching it", typeof(T));
-                result = new MessageTypeFactory<T>(defaultMessageEncoder, serviceProvider, ignoreMessageHeader);
-                dataLock.Wait();
-                if (!typeFactories.Any(fact => fact.GetType().GetGenericArguments()[0] == typeof(T) && fact.IgnoreMessageHeader == ignoreMessageHeader))
-                    typeFactories = typeFactories.Concat([result]);
-                dataLock.Release();
+                result = new MessageTypeFactory<TMessage>(defaultMessageEncoder, serviceProvider, ignoreMessageHeader);
+                typeFactories.TryAdd((typeof(TMessage), ignoreMessageHeader), result);
             }
-            return result;
+            return (IMessageFactory<TMessage>)result;
         }
 
         protected ValueTask<string> MapChannel(ChannelMapper.MapTypes mapType, string originalChannel)
