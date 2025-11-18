@@ -29,10 +29,11 @@
 		</PackageReference>
 	</ItemGroup>
 	
-	<ItemGroup>
-		<None Update="Readme.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-	</ItemGroup>
+	<PropertyGroup>
+        <PackageReadmeFile>Readme.md</PackageReadmeFile>
+      </PropertyGroup>
+
+      <ItemGroup>
+        <None Include="Readme.md" Pack="true" PackagePath="\" />
+      </ItemGroup>
 </Project>
