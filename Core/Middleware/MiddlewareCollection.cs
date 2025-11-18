@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Middleware;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace MQContract.Middleware
@@ -21,21 +22,13 @@ namespace MQContract.Middleware
             Post
         };
 
-        private readonly ReaderWriterLockSlim dataLock = new();
-        private readonly List<object> collection = [];
-        private readonly Dictionary<Type, Dictionary<InjectionPositions, List<object>>> injectableItems = [];
+        private readonly ConcurrentBag<object> collection = [];
+        private readonly ConcurrentDictionary<(Type middlewareType,InjectionPositions position), IEnumerable<object>> injectableItems = [];
         private readonly ILogger? logger;
 
         public MiddlewareCollection(ILogger? logger,ChannelMapper? channelMapper,IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
         {
             this.logger=logger;
-            foreach (var type in validMiddlewareTypes.Where(t=>!t.IsGenericTypeDefinition))
-            {
-                var directions = new Dictionary<InjectionPositions, List<object>>();
-                foreach (var position in Enum.GetValues<InjectionPositions>())
-                    directions.Add(position, []);
-                injectableItems.Add(type, directions);  
-            }
             collection.Add(new ChannelMappingMiddleware(channelMapper));
             var compressionMiddleware = new CompressionMiddleware();
             RegisterInjectionMiddleware<IAfterEncodeMiddleware>(compressionMiddleware, InjectionPositions.Post);
@@ -50,52 +43,39 @@ namespace MQContract.Middleware
             if (!Array.Exists(element.GetType().GetInterfaces(), (i) => validMiddlewareTypes.Contains((i.IsGenericType ? i.GetGenericTypeDefinition() : i))))
                 throw new InvalidMiddlewareException(element.GetType());
             logger?.LogDebug("Registering middleware of type {Type}", element.GetType());
-            dataLock.EnterWriteLock();
             collection.Add(element);
-            dataLock.ExitWriteLock();
         }
 
-        public void RegisterInjectionMiddleware<T>(T middleware,InjectionPositions position)
-            where T : IMiddleware
+        public void RegisterInjectionMiddleware<TMiddleware>(TMiddleware middleware,InjectionPositions position)
+            where TMiddleware : IMiddleware
         {
-            dataLock.EnterWriteLock();
-            var list = injectableItems[typeof(T)][position];
-            list.Add(middleware);
-            injectableItems[typeof(T)].Remove(position);
-            injectableItems[typeof(T)].Add(position,
-                [.. list
-                .Select((item, index) => new {Item=item,OriginalIndex=index})
-                .OrderBy(x=>x.Item.GetType().GetCustomAttribute<MiddlewareInjectionOrderAttribute<T>>()?.GetIndex(position)??0)
-                .ThenBy(x=>x.OriginalIndex)
-                .Select(x=>x.Item)]
-            );
-            dataLock.ExitWriteLock();
+            if (!injectableItems.TryGetValue((typeof(TMiddleware), position), out IEnumerable<object>? list))
+            {
+                list = [];
+                injectableItems.TryAdd((typeof(TMiddleware), position), list);
+            }
+            injectableItems.TryUpdate((typeof(TMiddleware), position),
+                [.. list.Append(middleware)
+                    .Select((item, index) => new {Item=item,OriginalIndex=index})
+                    .OrderBy(x=>x.Item.GetType().GetCustomAttribute<MiddlewareInjectionOrderAttribute<TMiddleware>>()?.GetIndex(position)??0)
+                    .ThenBy(x=>x.OriginalIndex)
+                    .Select(x=>x.Item)
+                ]
+                , list);
         }
 
-        public (IEnumerable<G> genericHandlers, IEnumerable<S> specificHandlers) GetHandlers<G, S>()
-        {
-            dataLock.EnterReadLock();
-            var genericHandlers = GetHandlers<G>(false);
-            var specificHandlers = collection.OfType<S>().ToArray();
-            dataLock.ExitReadLock();
-            return (genericHandlers, specificHandlers);
-        }
+        public (IEnumerable<TGenericHandler> genericHandlers, IEnumerable<TSpecificHandler> specificHandlers) GetHandlers<TGenericHandler, TSpecificHandler>()
+            => (GetHandlers<TGenericHandler>(), collection.OfType<TSpecificHandler>().ToArray());
 
-        private IEnumerable<G> GetHandlers<G>(bool withLock)
+        public IEnumerable<THandler> GetHandlers<THandler>()
         {
-            if (withLock)
-                dataLock.EnterReadLock();
-            IEnumerable<G> genericHandlers = [
-                .. injectableItems[typeof(G)][InjectionPositions.Pre].OfType<G>().ToArray(),
-                .. collection.OfType<G>().ToArray(),
-                .. injectableItems[typeof(G)][InjectionPositions.Post].OfType<G>().ToArray()
+            injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Pre), out var preItems);
+            injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Post), out var postItems);
+            return [
+                .. (preItems??[]).OfType<THandler>().ToArray(),
+                .. collection.OfType<THandler>().ToArray(),
+                .. (postItems??[]).OfType<THandler>().ToArray()
             ];
-            if (withLock)
-                dataLock.ExitReadLock();
-            return genericHandlers;
         }
-
-        public IEnumerable<G> GetHandlers<G>()
-            => GetHandlers<G>(true);
     }
 }
