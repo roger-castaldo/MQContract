@@ -19,9 +19,7 @@ using System.Reflection;
 
 namespace MQContract.Connections
 {
-#pragma warning disable S3881 // "IDisposable" should be implemented correctly
     internal abstract partial class AConnection<CC>(IMessageEncoder? defaultMessageEncoder = null,
-#pragma warning restore S3881 // "IDisposable" should be implemented correctly
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,
@@ -32,11 +30,10 @@ namespace MQContract.Connections
         private bool disposedValue;
         protected readonly Guid indentifier = Guid.NewGuid();
         private readonly MiddlewareCollection middleware = new(logger,channelMapper, defaultMessageEncryptor, serviceProvider);
-        private readonly SemaphoreSlim inboxSemaphore = new(1, 1);
-        private readonly Dictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
-        private readonly Dictionary<string, IServiceSubscription> inboxSubscriptions = [];
-        private ConcurrentDictionary<(Type messageType,bool ignoreMessageHeader), IMessageTypeFactory> typeFactories = [];
-        private readonly List<ISubscription> consumerSubscriptions = [];
+        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
+        private readonly ConcurrentDictionary<string, IServiceSubscription> inboxSubscriptions = [];
+        private readonly ConcurrentDictionary<(Type messageType,bool ignoreMessageHeader), IMessageTypeFactory> typeFactories = [];
+        private readonly ConcurrentBag<ISubscription> consumerSubscriptions = [];
         protected ILogger? Logger => logger;
         protected IDisposable? SetScope(string? messageID = null) => logger?.BeginScope<string>($"Connection[{indentifier}]{(messageID==null ? "" : $"|Message[{messageID}]")}");
 
@@ -340,10 +337,8 @@ namespace MQContract.Connections
             return result;
         }
 
-#pragma warning disable S4136 // Method overloads should be grouped together
         protected async ValueTask<ISubscription> CreateSubscriptionAsync<T>(IMessageFactory<T> messageFactory, IMessageServiceConnection serviceConnection, Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, 
             string? channel, string? group, bool synchronous, string? serviceConnectionName, MessageFilters<T>? messageFilters, CancellationToken cancellationToken)
-#pragma warning restore S4136 // Method overloads should be grouped together
         {
             using var scope = SetScope();
             logger?.LogDebugChecked("Creating PubSub Subscription for {T} on {Channel} in {Group}.", typeof(T), channel, group);
@@ -386,21 +381,12 @@ namespace MQContract.Connections
             logger?.LogDebugChecked("Establishing an instance of Inbox Message style handling for a QueryResponse call on {ConnectionName}", connectionName);
             var messageID = Guid.NewGuid();
             logger?.LogInformationChecked("Setting up Inbox Message listener with {CorrelationID}", messageID);
-            await inboxSemaphore.WaitAsync(cancellationToken);
             if (!inboxSubscriptions.TryGetValue(connectionName??"DEFAULT", out var inboxSubscription))
             {
                 logger?.LogDebugChecked("Establishing new Inbox Subscription for {ConnectionName}", connectionName);
                 inboxSubscription = await inboxMessageServiceConnection.EstablishInboxSubscriptionAsync(
                     async (message) =>
                     {
-                        try
-                        {
-                            await inboxSemaphore.WaitAsync();
-                        }
-                        catch
-                        {
-                            return;
-                        }
                         if (message.Acknowledge!=null)
                             await message.Acknowledge();
                         using var scope = SetScope(message.ID);
@@ -414,15 +400,13 @@ namespace MQContract.Connections
                                 message.Data
                             ));
                         }
-                        inboxSemaphore.Release();
                     },
                     cancellationToken
                 );
-                inboxSubscriptions.Add(connectionName ?? "DEFAULT", inboxSubscription);
+                inboxSubscriptions.TryAdd(connectionName ?? "DEFAULT", inboxSubscription);
             }
             var tcs = new TaskCompletionSource<ServiceQueryResult>();
-            inboxResponses.Add(messageID, tcs);
-            inboxSemaphore.Release();
+            inboxResponses.TryAdd(messageID, tcs);
             using var token = new CancellationTokenSource();
             var reg = cancellationToken.Register(() => token.Cancel());
             token.Token.Register(async () =>
@@ -449,9 +433,7 @@ namespace MQContract.Connections
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
                 logger?.LogInformationChecked("Inbox Query tranmission failed cleaning up resources");
-                await inboxSemaphore.WaitAsync(cancellationToken);
-                inboxResponses.Remove(messageID);
-                inboxSemaphore.Release();
+                inboxResponses.TryRemove(messageID, out _);
                 return (null, result.Error);
             }
             try
@@ -466,9 +448,7 @@ namespace MQContract.Connections
             {
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
-                await inboxSemaphore.WaitAsync(CancellationToken.None);
-                inboxResponses.Remove(messageID);
-                inboxSemaphore.Release();
+                inboxResponses.TryRemove(messageID, out _);
             }
             return (tcs.Task.Result, null);
         }
@@ -505,7 +485,7 @@ namespace MQContract.Connections
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "An error occured attempting to convert the Service Message of the type {MessageTypeID} to the Query Result of {R}", queryResult.MessageTypeID, typeof(TQueryResult));
+                logger?.LogErrorChecked(ex, "An error occured attempting to convert the Service Message of the type {MessageTypeID} to the Query Result of {R}", queryResult.MessageTypeID, typeof(TQueryResult));
                 result = new(
                     queryResult.ID,
                     queryResult.Header,
@@ -711,17 +691,11 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             logger?.LogDebugChecked("Closing contract connection");
-            await inboxSemaphore.WaitAsync();
             logger?.LogInformationChecked("Closing all open inbox subscriptions");
-            foreach (var key in inboxSubscriptions.Keys)
-            {
-                var inboxSubscription = inboxSubscriptions[key];
-                await inboxSubscription.EndAsync();
-            }
-            foreach (var consumerSubscription in consumerSubscriptions)
-                await consumerSubscription.EndAsync();
-            consumerSubscriptions.Clear();
-            inboxSemaphore.Release();
+            await Task.WhenAll([
+                .. inboxSubscriptions.Values.Select(sub => sub.EndAsync().AsTask()),
+                .. consumerSubscriptions.Select(sub=>sub.EndAsync().AsTask())
+            ]);
             await CloseAsync();
         }
         protected abstract ValueTask InternalDisposeAsync();
@@ -731,20 +705,22 @@ namespace MQContract.Connections
             if (!disposedValue)
             {
                 disposedValue=true;
-                await inboxSemaphore.WaitAsync();
-                foreach (var key in inboxSubscriptions.Keys)
-                {
-                    var inboxSubscription = inboxSubscriptions[key];
-                    if (inboxSubscription is IAsyncDisposable asyncSubDisposable)
-                        await asyncSubDisposable.DisposeAsync();
-                    else if (inboxSubscription is IDisposable subDisposable)
-                        subDisposable.Dispose();
-                }
-                foreach (var consumerSubscription in consumerSubscriptions)
-                    await consumerSubscription.EndAsync();
+                await Task.WhenAll([
+                    .. inboxSubscriptions.Values.Select(async(sub) => {
+                        if (sub is IAsyncDisposable asyncDisposable)
+                            await asyncDisposable.DisposeAsync();
+                        else if (sub is IDisposable disposable)
+                            disposable.Dispose();
+                    }),
+                    .. consumerSubscriptions.Select(async(sub)=>{
+                        if (sub is IAsyncDisposable asyncDisposable)
+                            await asyncDisposable.DisposeAsync();
+                        else if (sub is IDisposable disposable)
+                            disposable.Dispose();
+                    })
+                ]);
                 consumerSubscriptions.Clear();
                 inboxSubscriptions.Clear();
-                inboxSemaphore.Dispose();
                 await InternalDisposeAsync();
             }
             GC.SuppressFinalize(this);

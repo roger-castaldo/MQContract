@@ -6,6 +6,7 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
 using MQContract.Messages;
 using MQContract.Middleware;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.Loader;
 
@@ -35,9 +36,7 @@ namespace MQContract.Connections
                 logger?.LogError(err, "An error occured attempting to register a {ConsumerName} of type {ConsumerType}", consumerName, consumerType);
                 throw new ConsumerRegistrationFailedException(consumerName,consumerType,err);
             }
-            await inboxSemaphore.WaitAsync(cancellationToken);
             consumerSubscriptions.Add(subscription);
-            inboxSemaphore.Release();
             return (CC)(IBaseContractConnection)this;
         }
 
@@ -46,23 +45,16 @@ namespace MQContract.Connections
             => Array.Find(consumerType.GetInterfaces(), t => t.IsGenericType && t.GetGenericTypeDefinition() == interfaceType)
                 ??throw new InvalidConsumerTypeException(consumerType, interfaceType);
 
-        private readonly List<Assembly> loadedAssemblies = [];
+        private readonly ConcurrentBag<Assembly> loadedAssemblies = [];
 
         private static Type[] LoadableTypes => [typeof(IPubSubConsumer<>), typeof(IPubSubAsyncConsumer<>),
                     typeof(IQueryResponseConsumer<,>),typeof(IQueryResponseAsyncConsumer<,>)];
 
         private async Task LoadConsumersForAssemblyAsync(Assembly assembly, CancellationToken cancellationToken)
         {
-            var process = false;
-            await inboxSemaphore.WaitAsync(cancellationToken);
             if (!loadedAssemblies.Contains(assembly))
             {
-                process=true;
                 loadedAssemblies.Add(assembly);
-            }
-            inboxSemaphore.Release();
-            if (process)
-            {
                 Type[] types = [];
                 try
                 {

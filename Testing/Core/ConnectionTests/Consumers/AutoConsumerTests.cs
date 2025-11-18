@@ -34,6 +34,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Assert
+            await contractConnection.CloseAsync();
             await contractConnection.DisposeAsync();
             #endregion
 
@@ -79,6 +80,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Assert
+            await contractConnection.CloseAsync();
             await contractConnection.DisposeAsync();
             #endregion
 
