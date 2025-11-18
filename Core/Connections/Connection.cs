@@ -41,9 +41,9 @@ namespace MQContract.Connections
         }
 
         #region PubSub
-        protected override ValueTask<ISubscription> CreateSubscriptionAsync<T>(Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<T>? messageFilters, bool synchronous, CancellationToken cancellationToken)
-            => CreateSubscriptionAsync<T>(
-                GetMessageFactory<T>(ignoreMessageHeader),
+        protected override ValueTask<ISubscription> CreateSubscriptionAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, bool synchronous, CancellationToken cancellationToken)
+            => CreateSubscriptionAsync<TMessage>(
+                GetMessageFactory<TMessage>(ignoreMessageHeader),
                 serviceConnection,
                 messageReceived,
                 errorReceived,
@@ -55,14 +55,14 @@ namespace MQContract.Connections
                 cancellationToken
             );
 
-        async ValueTask<TransmissionResult> IContractConnection.PublishAsync<T>(T message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        async ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Publishing message {T} on {Channel}", typeof(T), channel);
+            Logger?.LogDebugChecked("Publishing message {T} on {Channel}", typeof(TMessage), channel);
             using var activity = StartActivity(Constants.PublishActivityName, serviceConnection: serviceConnection);
-            var serviceMessage = await ProduceServiceMessageAsync<T>(
+            var serviceMessage = await ProduceServiceMessageAsync<TMessage>(
                 ChannelMapper.MapTypes.Publish, 
-                GetMessageFactory<T>(), 
+                GetMessageFactory<TMessage>(), 
                 message, 
                 false, 
                 activity, 
@@ -70,20 +70,20 @@ namespace MQContract.Connections
                 channel: channel, 
                 messageHeader: messageHeader
             );
-            return await PublishMessageAsync<T>(publishLock, serviceMessage, serviceConnection, activity, null, cancellationToken);
+            return await PublishMessageAsync<TMessage>(publishLock, serviceMessage, serviceConnection, activity, null, cancellationToken);
         }
 
-        async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<T>(IEnumerable<(T message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
+        async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Bulk Publishing messages {T} on {Channel}", typeof(T), channel);
+            Logger?.LogDebugChecked("Bulk Publishing messages {T} on {Channel}", typeof(TMessage), channel);
             using var activity = StartActivity(Constants.BulkPublishActivityName, serviceConnection:serviceConnection);
             activity?.SetTag(Constants.BulkPublishCountTag, messages.Count());
             var serviceMessages = await
                 messages.WhenAll(m =>
-                    ProduceServiceMessageAsync<T>(
+                    ProduceServiceMessageAsync<TMessage>(
                         ChannelMapper.MapTypes.Publish, 
-                        GetMessageFactory<T>(), 
+                        GetMessageFactory<TMessage>(), 
                         m.message, 
                         false, 
                         activity, 
@@ -92,9 +92,7 @@ namespace MQContract.Connections
                         messageHeader: m.messageHeader
                     )
                 );
-            await publishLock.WaitAsync(cancellationToken);
-            var result = await BulkPublishAsync<T>(serviceMessages, serviceConnection, activity, cancellationToken);
-            publishLock.Release();
+            var result = await BulkPublishAsync<TMessage>(publishLock, serviceMessages, serviceConnection, activity, cancellationToken);
             activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;

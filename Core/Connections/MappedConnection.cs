@@ -124,9 +124,7 @@ namespace MQContract.Connections
                 );
             var serviceConnection = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(TMessage), serviceMessages.First().Header);
             OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
-            await publishLock.WaitAsync(cancellationToken);
-            var result = await BulkPublishAsync<TMessage>(serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken, connectionName: serviceConnection.ServiceConnectionName);
-            publishLock.Release();
+            var result = await BulkPublishAsync<TMessage>(publishLock, serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken, connectionName: serviceConnection.ServiceConnectionName);
             activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;

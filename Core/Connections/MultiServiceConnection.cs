@@ -21,20 +21,15 @@ namespace MQContract.Connections
         AMappableConnection<IMultiServiceContractConnection>(defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, logger, channelMapper),
         IMultiServiceContractConnection
     {
-        private readonly SemaphoreSlim publishLock = new(1, 1);
-
         async ValueTask<IEnumerable<PingResult>> IMultiServiceContractConnection.PingAsync()
             => await FullList
                 .Select(ss => ss.MessageServiceConnection)
                 .OfType<IPingableMessageServiceConnection>()
                 .WhenAll(pmc => pmc.PingAsync());
 
-        protected override async ValueTask InternalDisposeAsync()
-        {
-            publishLock.Dispose();
-            await base.InternalDisposeAsync();
-        }
-
+        protected override ValueTask InternalDisposeAsync()
+            => base.InternalDisposeAsync();
+            
         IMultiServiceContractConnection IMultiServiceContractConnection.RegisterServiceConnection(string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
             => RegisterServiceConnection(pars => true, serviceConnectionName, messageServiceConnection);
 
@@ -61,24 +56,13 @@ namespace MQContract.Connections
                 messageHeader: messageHeader
             );
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(TMessage), serviceMessage.Header);
-            await publishLock.WaitAsync(cancellationToken);
             var results = await connections
                 .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () =>
                 {
                     OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                    var result = await ExecuteResilliantTransmissionAsync<TMessage>(
-                        (ct) => c.MessageServiceConnection.PublishAsync(
-                            serviceMessage,
-                            ct
-                        ),
-                        c.ServiceConnectionName,
-                        serviceMessage.Channel,
-                        cancellationToken
-                    );
-                    OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, serviceMessage, result, c.MessageServiceConnection, c.ServiceConnectionName);
+                    var result = await PublishMessageAsync<TMessage>(c.PublishLock, serviceMessage, c.MessageServiceConnection, activity, c.ServiceConnectionName, cancellationToken);
                     return result;
                 }));
-            publishLock.Release();
             activity?.SetStatus(results.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return new(serviceMessage.ID, results);
@@ -104,14 +88,12 @@ namespace MQContract.Connections
                     )
             );
             var connections = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(TMessage), serviceMessages.First().Header);
-            await publishLock.WaitAsync(cancellationToken);
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
                 OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                var result = await BulkPublishAsync<TMessage>(serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
+                var result = await BulkPublishAsync<TMessage>(c.PublishLock, serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
-            publishLock.Release();
             activity?.SetStatus(Array.Exists(transmissionResults, mtr => mtr.Any(r => r.HasError)) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return transmissionResults

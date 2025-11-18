@@ -267,10 +267,10 @@ namespace MQContract.Connections
         #endregion
 
         #region PubSub
-        protected async ValueTask<TransmissionResult> PublishMessageAsync<T>(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
+        protected async ValueTask<TransmissionResult> PublishMessageAsync<TMessage>(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
         {
             await publishLock.WaitAsync(cancellationToken);
-            var result = await ExecuteResilliantTransmissionAsync<T>(
+            var result = await ExecuteResilliantTransmissionAsync<TMessage>(
                 (ct) => serviceConnection.PublishAsync(
                     serviceMessage,
                     ct
@@ -285,15 +285,16 @@ namespace MQContract.Connections
             activity?.Stop();
             return result;
         }
-        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<T>(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken, string? connectionName = null)
+        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<TMessage>(SemaphoreSlim publishLock, IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken, string? connectionName = null)
         {
             IEnumerable<TransmissionResult> result;
+            await publishLock.WaitAsync(cancellationToken);
             using var scope = SetScope();
             logger?.LogDebugChecked("Executing bulk publish");
             if (serviceConnection is IBulkPublishableMessageServiceConnection bulkPublishableMessageServiceConnection)
             {
                 logger?.LogInformationChecked("Executing bulk publish against a service connection that supports bulk publish");
-                result = await ExecuteResilliantTransmissionAsync<T>(
+                result = await ExecuteResilliantTransmissionAsync<TMessage>(
                     bulkPublishableMessageServiceConnection.BulkPublishAsync,
                     connectionName,
                     serviceMessages,
@@ -316,7 +317,7 @@ namespace MQContract.Connections
                 result = await serviceMessages
                     .WhenAll(async message =>
                     {
-                        var result = await ExecuteResilliantTransmissionAsync<T>(
+                        var result = await ExecuteResilliantTransmissionAsync<TMessage>(
                             (ct) => serviceConnection.PublishAsync(
                                 message,
                                 ct
@@ -334,6 +335,7 @@ namespace MQContract.Connections
                         return result;
                     });
             }
+            publishLock.Release();
             return result;
         }
 
