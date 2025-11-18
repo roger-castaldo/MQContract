@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MQContract.Extensions;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Middleware;
 using System.Collections.Concurrent;
@@ -42,7 +43,7 @@ namespace MQContract.Middleware
         {
             if (!Array.Exists(element.GetType().GetInterfaces(), (i) => validMiddlewareTypes.Contains((i.IsGenericType ? i.GetGenericTypeDefinition() : i))))
                 throw new InvalidMiddlewareException(element.GetType());
-            logger?.LogDebug("Registering middleware of type {Type}", element.GetType());
+            logger?.LogDebugChecked("Registering middleware of type {Type}", element.GetType());
             collection.Add(element);
         }
 

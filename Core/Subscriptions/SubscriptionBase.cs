@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MQContract.Extensions;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
 using System.Diagnostics.CodeAnalysis;
@@ -25,7 +26,7 @@ namespace MQContract.Subscriptions
         {
             if (serviceSubscription!=null)
             {
-                logger?.LogInformation("Calling subscription {ID} end async", ID);
+                logger?.LogInformationChecked("Calling subscription {ID} end async", ID);
                 await serviceSubscription.EndAsync();
                 serviceSubscription=null;
             }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MQContract.Extensions;
 using MQContract.Messages;
 using Polly;
 using Polly.CircuitBreaker;
@@ -48,7 +49,7 @@ namespace MQContract.Connections
                             fallbackAction: (delegateResult, context, cancellationToken) =>
                             {
                                 foreach (var result in delegateResult.Result.Where(r => r.IsError))
-                                    logger?.LogDebug("Retry fallback has been triggered for {MessageID}", result.ID);
+                                    logger?.LogDebugChecked("Retry fallback has been triggered for {MessageID}", result.ID);
                                 return Task.FromResult(WrapInstance<T>(ResilienceTypes.Retry, delegateResult.Result));
                             },
                             onFallbackAsync: (delegateResult, cancellationToken) =>
