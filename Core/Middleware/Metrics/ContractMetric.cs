@@ -32,5 +32,15 @@ namespace MQContract.Middleware.Metrics
             MessageConversionMin = TimeSpan.FromTicks(Math.Min(MessageConversionMin.Ticks, encodingDuration.Ticks));
             MessageConversionMax = TimeSpan.FromTicks(Math.Max(MessageConversionMax.Ticks, encodingDuration.Ticks));
         }
+
+        private sealed record ReadonlyContractMetric(ulong Messages, ulong MessageBytes, ulong MessageBytesAverage, ulong MessageBytesMin, ulong MessageBytesMax,
+        TimeSpan MessageConversionDuration, TimeSpan MessageConversionAverage, TimeSpan MessageConversionMin, TimeSpan MessageConversionMax
+        )
+        : IContractMetric
+        { }
+
+        public IContractMetric ToReadonly()
+            => new ReadonlyContractMetric(Messages, MessageBytes, MessageBytesAverage, MessageBytesMin, MessageBytesMax, 
+                MessageConversionDuration, MessageConversionAverage, MessageConversionMin, MessageConversionMax);
     }
 }

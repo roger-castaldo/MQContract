@@ -1,53 +1,46 @@
-﻿using System.Threading.Channels;
+﻿using System.Collections.Concurrent;
+using System.Threading.Channels;
 
 namespace MQContract.InMemory
 {
-    internal class MessageGroup(string group, Action<MessageGroup> removeMe)
+    internal class MessageGroup(Action removeMe)
     {
-        private readonly ReaderWriterLockSlim locker = new();
-        private readonly List<Channel<InternalServiceMessage>> channels = [];
+        private readonly ConcurrentDictionary<Guid, Channel<InternalServiceMessage>> channels = [];
         private int index = 0;
-        public string Group => group;
 
-        public Channel<InternalServiceMessage> Register()
+        public (Guid id, Channel<InternalServiceMessage> channel) Register()
         {
+            var id = Guid.NewGuid();
             var result = Channel.CreateUnbounded<InternalServiceMessage>(new UnboundedChannelOptions() { SingleReader=true, SingleWriter=true });
-            channels.Add(result);
-            return result;
+            channels.TryAdd(id, result);
+            return (id, result);
         }
 
-        public ValueTask UnregisterAsync(Channel<InternalServiceMessage> channel)
+        public void Unregister(Guid id)
         {
-            locker.EnterWriteLock();
-            channels.Remove(channel);
-            if (channels.Count == 0)
-                removeMe(this);
-            locker.ExitWriteLock();
-            return ValueTask.CompletedTask;
+            channels.TryRemove(id, out _);
+            if (channels.IsEmpty)
+                removeMe();
         }
 
         public async ValueTask<bool> PublishMessageAsync(InternalServiceMessage message,CancellationToken cancellationToken)
         {
             var success = false;
-            locker.EnterReadLock();
             if (index>=channels.Count)
                 index=0;
             if (index<channels.Count)
             {
-                await channels[index].Writer.WriteAsync(message,cancellationToken);
+                var key = channels.Keys.ElementAt(index);
+                await channels[key].Writer.WriteAsync(message,cancellationToken);
                 index++;
                 success=true;
             }
-            locker.ExitReadLock();
             return success;
         }
 
         internal void Close()
         {
-            locker.EnterWriteLock();
-            var channelsToClose = channels.ToArray();
-            channels.Clear();
-            locker.ExitWriteLock();
+            var channelsToClose = channels.Values.ToArray();
             foreach (var channel in channelsToClose)
                 channel.Writer.TryComplete();
         }
