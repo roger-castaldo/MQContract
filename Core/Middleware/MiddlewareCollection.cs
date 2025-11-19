@@ -25,6 +25,7 @@ namespace MQContract.Middleware
 
         private readonly ConcurrentBag<object> collection = [];
         private readonly ConcurrentDictionary<(Type middlewareType,InjectionPositions position), IEnumerable<object>> injectableItems = [];
+        private readonly ConcurrentDictionary<Type, object> cache = [];
         private readonly ILogger? logger;
 
         public MiddlewareCollection(ILogger? logger,ChannelMapper? channelMapper,IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
@@ -45,6 +46,7 @@ namespace MQContract.Middleware
                 throw new InvalidMiddlewareException(element.GetType());
             logger?.LogDebugChecked("Registering middleware of type {Type}", element.GetType());
             collection.Add(element);
+            cache.Clear();
         }
 
         public void RegisterInjectionMiddleware<TMiddleware>(TMiddleware middleware,InjectionPositions position)
@@ -63,6 +65,7 @@ namespace MQContract.Middleware
                     .Select(x=>x.Item)
                 ]
                 , list);
+            cache.Clear();
         }
 
         public (IEnumerable<TGenericHandler> genericHandlers, IEnumerable<TSpecificHandler> specificHandlers) GetHandlers<TGenericHandler, TSpecificHandler>()
@@ -70,13 +73,19 @@ namespace MQContract.Middleware
 
         public IEnumerable<THandler> GetHandlers<THandler>()
         {
-            injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Pre), out var preItems);
-            injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Post), out var postItems);
-            return [
-                .. (preItems??[]).OfType<THandler>().ToArray(),
-                .. collection.OfType<THandler>().ToArray(),
-                .. (postItems??[]).OfType<THandler>().ToArray()
-            ];
+            if (!cache.TryGetValue(typeof(THandler), out var handlers))
+            {
+                injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Pre), out var preItems);
+                injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Post), out var postItems);
+                IEnumerable<THandler> enumHandlers = [
+                    .. (preItems?? []).OfType<THandler>(),
+                    .. collection.OfType<THandler>(),
+                    .. (postItems ?? []).OfType<THandler>()
+                ];
+                cache.TryAdd(typeof(THandler), enumHandlers);
+                return enumHandlers;
+            }
+            return (IEnumerable<THandler>)handlers;
         }
     }
 }
