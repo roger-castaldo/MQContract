@@ -12,7 +12,7 @@ namespace BenchMark.PublishBenchmarks
     {
         public const string ChannelName = "sample";
         private const string MessageContent = "The quick brown fox";
-        private const int ExecutionCount = 100;
+        private const int ExecutionCount = 250;
         private IMessageServiceConnection? serviceConnection;
         private IContractConnection? contractConnection;
         private Announcement? announcement;

@@ -7,7 +7,6 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Messages;
 using MQContract.Messages;
-using System.Reflection;
 using System.Runtime.Loader;
 
 namespace MQContract.Factories
@@ -23,7 +22,7 @@ namespace MQContract.Factories
 
         private readonly string messageName = Utility.MessageTypeName<TMessage>();
         private readonly string messageVersion = Utility.MessageVersionString<TMessage>();
-        public string? MessageChannel { get; private init; } = typeof(TMessage).GetCustomAttribute<MessageAttribute>()?.Channel;
+        public string? MessageChannel { get; private init; } = Utility.GetCustomAttribute<TMessage, MessageAttribute>()?.Channel;
 
         public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider, bool ignoreMessageHeader)
         {

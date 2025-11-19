@@ -58,7 +58,7 @@ namespace MQContract.Middleware
             injectableItems.TryUpdate((typeof(TMiddleware), position),
                 [.. list.Append(middleware)
                     .Select((item, index) => new {Item=item,OriginalIndex=index})
-                    .OrderBy(x=>x.Item.GetType().GetCustomAttribute<MiddlewareInjectionOrderAttribute<TMiddleware>>()?.GetIndex(position)??0)
+                    .OrderBy(x=>Utility.GetCustomAttribute<MiddlewareInjectionOrderAttribute<TMiddleware>>(x.Item.GetType())?.GetIndex(position)??0)
                     .ThenBy(x=>x.OriginalIndex)
                     .Select(x=>x.Item)
                 ]

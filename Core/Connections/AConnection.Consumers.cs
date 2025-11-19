@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
 using MQContract.Attributes;
 using MQContract.Extensions;
 using MQContract.Interfaces;
@@ -23,7 +22,7 @@ namespace MQContract.Connections
             string? channel, string? group, bool ignoreMessageHeader, string consumerName, Type consumerType, CancellationToken cancellationToken)
         {
             ISubscription subscription;
-            var consumerAttribute = consumerType.GetCustomAttribute<ConsumerAttribute>();
+            var consumerAttribute = Utility.GetCustomAttribute<ConsumerAttribute>(consumerType);
             try
             {
                 subscription = await createSubscription(

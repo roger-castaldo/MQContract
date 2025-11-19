@@ -6,17 +6,17 @@ using System.Reflection;
 
 namespace MQContract.Factories
 {
-    internal abstract class AConverter<T,M>
-        : IConversionPath<T>
+    internal abstract class AConverter<TMeessageType,TSourceMessageType>
+        : IConversionPath<TMeessageType>
     {
-        private readonly string messageTypeName = $"{typeof(M).GetCustomAttribute<MessageAttribute>()?.TypeName??Utility.TypeName<M>()}-{typeof(M).GetCustomAttribute<MessageAttribute>()?.TypeVersion.ToString()??"0.0.0.0"}";
+        private readonly string messageTypeName = $"{Utility.GetCustomAttribute<TSourceMessageType,MessageAttribute>()?.TypeName??Utility.TypeName<TSourceMessageType>()}-{typeof(TSourceMessageType).GetCustomAttribute<MessageAttribute>()?.TypeVersion.ToString()??"0.0.0.0"}";
 
-        protected abstract ValueTask<T?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream);
+        protected abstract ValueTask<TMeessageType?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream);
 
-        ValueTask<T?> IConversionPath<T>.ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
+        ValueTask<TMeessageType?> IConversionPath<TMeessageType>.ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
             => ConvertMessageAsync(logger, message, dataStream);
 
-        bool IConversionPath<T>.IsMatch(string metaData)
+        bool IConversionPath<TMeessageType>.IsMatch(string metaData)
             => messageTypeName.Equals(metaData, StringComparison.InvariantCulture);
     }
 }
