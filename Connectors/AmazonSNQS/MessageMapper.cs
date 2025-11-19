@@ -60,7 +60,7 @@ namespace MQContract.AmazonSNQS
             var doc = JsonDocument.Parse(message.Body);
             if (!doc.RootElement.TryGetProperty("Message", out var contentElement))
                 throw new InvalidQueueMessageException();
-            using var ms = new MemoryStream(Convert.FromBase64String(contentElement.GetString()!));
+            using var ms = new MemoryStream(Convert.FromBase64String(contentElement.GetString()!),false);
             using var br = new BinaryReader(ms);
             var messageID = ReadString(br)!;
             var messageTypeID = ReadString(br)!;

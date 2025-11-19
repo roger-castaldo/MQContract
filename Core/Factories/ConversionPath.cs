@@ -27,7 +27,7 @@ namespace MQContract.Factories
 
         protected override async ValueTask<V?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
         {
-            dataStream ??= new MemoryStream(message.Data.ToArray());
+            dataStream ??= new MemoryStream(message.Data.ToArray(),0,message.Data.Length,false,true);
             object? result = await (globalMessageEncoder!=null && messageEncoder is JsonEncoder<T> ? globalMessageEncoder.DecodeAsync<T>(dataStream) : messageEncoder.DecodeAsync(dataStream));
             foreach (var converter in path)
             {

@@ -99,7 +99,7 @@ namespace MQContract.Kafka.Middleware
             }
             if (schema == null && failOnMissingSchema)
                 throw new MissingSchemaException(messageTypeID);
-            else if (schema!=null && !(await ValidateSchemaAsync(schema, new MemoryStream(data.ToArray()))))
+            else if (schema!=null && !(await ValidateSchemaAsync(schema, new MemoryStream(data.ToArray(),0,data.Length,false,true))))
                 throw new SchemaValidationFailedException(schemaId, messageTypeID);
         }
 

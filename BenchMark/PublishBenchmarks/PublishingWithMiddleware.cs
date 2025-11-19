@@ -7,7 +7,7 @@ namespace BenchMark.PublishBenchmarks
     [MemoryDiagnoser]
     public class PublishingWithMiddleware
     {
-        [Params("", "Metrics", "OTEL")]
+        [Params("", "Metrics", "OTEL", "Resilience")]
         public string Middleware { get; set; } = string.Empty;
 
         public const string ChannelName = "sample";
@@ -25,6 +25,12 @@ namespace BenchMark.PublishBenchmarks
                     break;
                 case "OTEL":
                     contractConnection.EnableOpenTelemetry();
+                    break;
+                case "Resilience":
+                    contractConnection.RegisterResiliencePolicy(
+                        retryPolicy: (3, (int cnt) => TimeSpan.FromMilliseconds(100)),
+                        circuitBreakPolicy: (3, TimeSpan.FromSeconds(1))
+                    );
                     break;
                 default:
                     break;

@@ -35,11 +35,12 @@ namespace MQContract.Middleware
         {
             if (messageTypeID.StartsWith("C-") || bool.Parse(messageHeader[CompressedHeader]??"false"))
             {
-                using var ms = new MemoryStream(data.ToArray());
+                using var ms = new MemoryStream(data.ToArray(),0,data.Length,false,true);
                 using var zip = new GZipStream(ms, CompressionMode.Decompress);
                 using var resultStream = new MemoryStream();
                 await zip.CopyToAsync(resultStream);
-                return (messageHeader, resultStream.ToArray());
+                resultStream.TryGetBuffer(out ArraySegment<byte> buffer);
+                return (messageHeader, buffer.AsMemory(0, (int)resultStream.Length));
             }
             return (messageHeader, data);
         }

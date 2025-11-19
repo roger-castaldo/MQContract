@@ -1,4 +1,5 @@
 ﻿using MQContract.Interfaces.Encoding;
+using System.Text;
 
 namespace MQContract.Defaults
 {
@@ -6,17 +7,16 @@ namespace MQContract.Defaults
     {
         async ValueTask<string?> IMessageTypeEncoder<string>.DecodeAsync(Stream stream)
         {
-            using var reader = new StreamReader(stream);
+            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: 8192, leaveOpen: true);
             return await reader.ReadToEndAsync();
         }
 
-        async ValueTask<byte[]> IMessageTypeEncoder<string>.EncodeAsync(string message)
+        ValueTask<byte[]> IMessageTypeEncoder<string>.EncodeAsync(string message)
         {
-            using var ms = new MemoryStream();
-            using var writer = new StreamWriter(ms);
-            await writer.WriteAsync(message);
-            await writer.FlushAsync();
-            return ms.ToArray();
+            int byteCount = Encoding.UTF8.GetByteCount(message);
+            byte[] bytes = new byte[byteCount];
+            Encoding.UTF8.GetBytes(message.AsSpan(), bytes.AsSpan());
+            return ValueTask.FromResult<byte[]>(bytes);
         }
     }
 }

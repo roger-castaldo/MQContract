@@ -51,7 +51,7 @@ namespace MQContract.ZeroMQ
 
         public static (ReceivedInboxServiceMessage recievedMessage,string? inboxAddress) Map(byte[] data)
         {
-            using var ms = new MemoryStream(data);
+            using var ms = new MemoryStream(data,0,data.Length,false,true);
             using var br = new BinaryReader(ms);
             var id = ReadString(br)!;
             var channel = ReadString(br)!;
