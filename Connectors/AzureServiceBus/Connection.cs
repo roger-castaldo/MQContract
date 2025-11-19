@@ -18,7 +18,6 @@ namespace MQContract.AzureServiceBus
         : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection,IPingableMessageServiceConnection, IAsyncDisposable
     {
         private const string INBOX_CHANNEL_NAME = "QueryResponse.Inbox";
-        private readonly SemaphoreSlim locker = new(1, 1);
         private readonly Guid InboxSessionID = Guid.NewGuid();
         private readonly ServiceBusSender inboxSender = client.CreateSender(INBOX_CHANNEL_NAME);
         private bool disposedValue;
@@ -37,10 +36,7 @@ namespace MQContract.AzureServiceBus
 
         async ValueTask IMessageServiceConnection.CloseAsync()
         {
-            await locker.WaitAsync();
             await client.DisposeAsync();
-            locker.Release();
-            locker.Dispose();
         }
 
         private static ServiceBusMessage ConvertMessage(ServiceMessage message)
@@ -186,7 +182,6 @@ namespace MQContract.AzureServiceBus
                         var responseMessage = ConvertMessage(response!);
                         responseMessage.SessionId = msg.ReplyTo;
                         responseMessage.ReplyToSessionId = msg.ReplyToSessionId;
-                        await locker.WaitAsync();
                         try
                         {
                             await inboxSender.SendMessageAsync(responseMessage, cancellationToken);
@@ -195,7 +190,6 @@ namespace MQContract.AzureServiceBus
                         {
                             errorReceived(e);
                         }
-                        locker.Release();
                     }
                 },
                 (error) => errorReceived(error),
@@ -225,11 +219,8 @@ namespace MQContract.AzureServiceBus
             if (!disposedValue)
             {
                 disposedValue = true;
-                await locker.WaitAsync();
                 await inboxSender.DisposeAsync();
                 await client.DisposeAsync();
-                locker.Release();
-                locker.Dispose();
             }
         }
     }
