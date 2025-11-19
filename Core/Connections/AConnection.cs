@@ -477,7 +477,7 @@ namespace MQContract.Connections
             }
             catch (QueryResponseException qre)
             {
-                logger?.LogError(qre, "A query response exception occured");
+                logger?.LogErrorChecked(qre, "A query response exception occured");
                 result = new(
                     queryResult.ID,
                     queryResult.Header,

@@ -49,12 +49,15 @@ namespace MQContract.NATS
             await NatsConnection.ConnectAsync();
             if (NatsConnection.ConnectionState == NatsConnectionState.Open)
             {
-                var responseTime = await NatsConnection.PingAsync();
-                logger?.LogInformation("Established connection to [Host:{Address}, Version:{Version}, ResponseTime:{ResponseTime}]",
-                    NatsConnection.ServerInfo?.Host,
-                    NatsConnection.ServerInfo?.Version,
-                    responseTime
-                );
+                if (logger?.IsEnabled(LogLevel.Information)??false)
+                {
+                    var responseTime = await NatsConnection.PingAsync();
+                    logger?.LogInformation("Established connection to [Host:{Address}, Version:{Version}, ResponseTime:{ResponseTime}]",
+                        NatsConnection.ServerInfo?.Host,
+                        NatsConnection.ServerInfo?.Version,
+                        responseTime
+                    );
+                }
             }
             else
                 throw new UnableToConnectException();

@@ -54,7 +54,7 @@ namespace MQContract.Connections
                             },
                             onFallbackAsync: (delegateResult, cancellationToken) =>
                             {
-                                logger?.LogError(delegateResult.Exception, "Failed to fallback");
+                                logger?.LogErrorChecked(delegateResult.Exception, "Failed to fallback");
                                 return Task.CompletedTask;
                             }
                         );
