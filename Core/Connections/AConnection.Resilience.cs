@@ -5,9 +5,9 @@ using System.Collections.Concurrent;
 namespace MQContract.Connections
 {
 #pragma warning disable S3881 // "IDisposable" should be implemented correctly
-    internal abstract partial class AConnection<CC> : IMetricContractConnection<CC>
+    internal abstract partial class AConnection<TContractConnection> : IMetricContractConnection<TContractConnection>
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
-        where CC : IBaseContractConnection
+        where TContractConnection : IBaseContractConnection
     {
         private readonly ConcurrentDictionary<Tuple<string?, object?>, ResiliencePolicy> resilliancePolicies = [];
 
@@ -20,57 +20,57 @@ namespace MQContract.Connections
             return new(logger, retryPolicy, circuitBreakPolicy);
         }
 
-        protected CC AddPolicy(string? connectionName, object? key, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        protected TContractConnection AddPolicy(string? connectionName, object? key, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
         {
             resilliancePolicies.TryAdd(new(connectionName, key), BuildPolicy(retryPolicy, circuitBreakPolicy));
-            return (CC)(IBaseContractConnection)this;
+            return (TContractConnection)(IBaseContractConnection)this;
         }
 
-        CC IResilientContractConnection<CC>.RegisterResiliencePolicy((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        TContractConnection IResilientContractConnection<TContractConnection>.RegisterResiliencePolicy((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(null, null, retryPolicy, circuitBreakPolicy);
 
-        CC IResilientContractConnection<CC>.RegisterResiliencePolicy<T>((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
-            => AddPolicy(null, typeof(T), retryPolicy, circuitBreakPolicy);
+        TContractConnection IResilientContractConnection<TContractConnection>.RegisterResiliencePolicy<TMessage>((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+            => AddPolicy(null, typeof(TMessage), retryPolicy, circuitBreakPolicy);
 
-        CC IResilientContractConnection<CC>.RegisterResiliencePolicy(Type messageType, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        TContractConnection IResilientContractConnection<TContractConnection>.RegisterResiliencePolicy(Type messageType, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(null, messageType, retryPolicy, circuitBreakPolicy);
 
-        CC IResilientContractConnection<CC>.RegisterResiliencePolicy(string messageChannel, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        TContractConnection IResilientContractConnection<TContractConnection>.RegisterResiliencePolicy(string messageChannel, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(null, messageChannel, retryPolicy, circuitBreakPolicy);
 
-        private ResiliencePolicy? GetResilliancePolicy<T>(string? connectionName, string channel)
+        private ResiliencePolicy? GetResilliancePolicy<TMessage>(string? connectionName, string channel)
         {
             ResiliencePolicy? policy = null;
             if (connectionName!=null
                 &&!resilliancePolicies.TryGetValue(new(connectionName, channel), out policy)
-                && !resilliancePolicies.TryGetValue(new(connectionName, typeof(T)), out policy))
+                && !resilliancePolicies.TryGetValue(new(connectionName, typeof(TMessage)), out policy))
                 resilliancePolicies.TryGetValue(new(connectionName, null), out policy);
             if (policy==null
                 && !resilliancePolicies.TryGetValue(new(null, channel), out policy)
-                && !resilliancePolicies.TryGetValue(new(null, typeof(T)), out policy))
+                && !resilliancePolicies.TryGetValue(new(null, typeof(TMessage)), out policy))
                 resilliancePolicies.TryGetValue(new(null, null), out policy);
             return policy;
         }
 
-        protected async ValueTask<TransmissionResult> ExecuteResilliantTransmissionAsync<T>(Func<CancellationToken, ValueTask<TransmissionResult>> func, string? connectionName, string channel, CancellationToken cancellationToken)
+        protected async ValueTask<TransmissionResult> ExecuteResilliantTransmissionAsync<TMessage>(Func<CancellationToken, ValueTask<TransmissionResult>> func, string? connectionName, string channel, CancellationToken cancellationToken)
         {
-            var policy = GetResilliancePolicy<T>(connectionName, channel);
+            var policy = GetResilliancePolicy<TMessage>(connectionName, channel);
             if (policy==null)
                 return await func(cancellationToken);
             return await policy.ExecuteResilliantTransmissionAsync(func, cancellationToken);
         }
 
-        protected async ValueTask<QueryResult<R>> ExecuteResilliantTransmissionAsync<Q, R>(Func<CancellationToken, ValueTask<QueryResult<R>>> func, string? connectionName, string channel, CancellationToken cancellationToken)
+        protected async ValueTask<QueryResult<TQueryResponse>> ExecuteResilliantTransmissionAsync<TQuery, TQueryResponse>(Func<CancellationToken, ValueTask<QueryResult<TQueryResponse>>> func, string? connectionName, string channel, CancellationToken cancellationToken)
         {
-            var policy = GetResilliancePolicy<Q>(connectionName, channel);
+            var policy = GetResilliancePolicy<TQuery>(connectionName, channel);
             if (policy==null)
                 return await func(cancellationToken);
-            return await policy.ExecuteResilliantTransmissionAsync<R>(func, cancellationToken);
+            return await policy.ExecuteResilliantTransmissionAsync<TQueryResponse>(func, cancellationToken);
         }
 
-        protected async ValueTask<IEnumerable<TransmissionResult>> ExecuteResilliantTransmissionAsync<T>(Func<IEnumerable<ServiceMessage>, CancellationToken, ValueTask<IEnumerable<TransmissionResult>>> func, string? connectionName, IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+        protected async ValueTask<IEnumerable<TransmissionResult>> ExecuteResilliantTransmissionAsync<TMessage>(Func<IEnumerable<ServiceMessage>, CancellationToken, ValueTask<IEnumerable<TransmissionResult>>> func, string? connectionName, IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
         {
-            var policy = GetResilliancePolicy<T>(connectionName, messages.First().Channel);
+            var policy = GetResilliancePolicy<TMessage>(connectionName, messages.First().Channel);
             if (policy == null)
                 return await func(messages, cancellationToken);
             return await policy.ExecuteResilliantTransmissionAsync(func, messages, cancellationToken);

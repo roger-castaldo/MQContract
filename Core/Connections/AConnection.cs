@@ -18,13 +18,13 @@ using System.Diagnostics.Metrics;
 
 namespace MQContract.Connections
 {
-    internal abstract partial class AConnection<CC>(IMessageEncoder? defaultMessageEncoder = null,
+    internal abstract partial class AConnection<TContractConnection>(IMessageEncoder? defaultMessageEncoder = null,
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,
         ChannelMapper? channelMapper = null)
-        : IMetricContractConnection<CC>
-        where CC : IBaseContractConnection
+        : IMetricContractConnection<TContractConnection>
+        where TContractConnection : IBaseContractConnection
     {
         private bool disposedValue;
         protected readonly Guid indentifier = Guid.NewGuid();
@@ -51,41 +51,41 @@ namespace MQContract.Connections
 
         #region Middleware
 
-        private CC RegisterMiddlewareInstance(object element)
+        private TContractConnection RegisterMiddlewareInstance(object element)
         {
             using var scope = SetScope();
             middleware.RegisterMiddlewareInstance(element);
-            return (CC)(IBaseContractConnection)this;
+            return (TContractConnection)(IBaseContractConnection)this;
         }
 
-        private CC RegisterMiddlewareType(Type type)
+        private TContractConnection RegisterMiddlewareType(Type type)
             => RegisterMiddlewareInstance((serviceProvider == null ? Activator.CreateInstance(type) : ActivatorUtilities.CreateInstance(serviceProvider, type))!);
 
-        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<T>()
+        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<T>()
             => RegisterMiddlewareType(typeof(T));
 
-        CC IMiddlewareContractConnection<CC>.RegisterMiddleware(Type middleware)
+        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware(Type middleware)
             => RegisterMiddlewareType(middleware);
 
-        CC IMiddlewareContractConnection<CC>.RegisterMiddleware(IMiddleware instance)
+        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware(IMiddleware instance)
             => RegisterMiddlewareInstance(instance);
 
-        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<T>(Func<T> constructInstance)
+        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<T>(Func<T> constructInstance)
             => RegisterMiddlewareInstance(constructInstance());
 
-        CC IMiddlewareContractConnection<CC>.RegisterMiddleware(Func<IMiddleware> constructInstance)
+        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware(Func<IMiddleware> constructInstance)
             => RegisterMiddlewareInstance(constructInstance());
 
-        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<M>(Func<ISpecificTypeMiddleware<M>> constructInstance)
+        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<M>(Func<ISpecificTypeMiddleware<M>> constructInstance)
             => RegisterMiddlewareInstance(constructInstance());
 
-        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<M>(ISpecificTypeMiddleware<M> instance)
+        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<M>(ISpecificTypeMiddleware<M> instance)
             => RegisterMiddlewareInstance(instance);
 
-        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<T, M>()
+        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<T, M>()
             => RegisterMiddlewareType(typeof(T));
 
-        CC IMiddlewareContractConnection<CC>.RegisterMiddleware<T, M>(Func<T> constructInstance)
+        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<T, M>(Func<T> constructInstance)
             => RegisterMiddlewareInstance(constructInstance());
 
         private async ValueTask<(T message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
@@ -182,14 +182,14 @@ namespace MQContract.Connections
         #region OTEL
         private OpenTelemetryMiddleware? openTelemetryMiddleware;
 
-        CC IMetricContractConnection<CC>.EnableOpenTelemetry(string activitySource, bool linkActivitiesAcrossSystems)
+        TContractConnection IMetricContractConnection<TContractConnection>.EnableOpenTelemetry(string activitySource, bool linkActivitiesAcrossSystems)
         {
             openTelemetryMiddleware = new(activitySource, linkActivitiesAcrossSystems);
             middleware.RegisterInjectionMiddleware<IBeforeEncodeMiddleware>(openTelemetryMiddleware, MiddlewareCollection.InjectionPositions.Pre);
             middleware.RegisterInjectionMiddleware<IAfterEncodeMiddleware>(openTelemetryMiddleware, MiddlewareCollection.InjectionPositions.Post);
             middleware.RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(openTelemetryMiddleware, MiddlewareCollection.InjectionPositions.Pre);
             middleware.RegisterInjectionMiddleware<IAfterDecodeMiddleware>(openTelemetryMiddleware, MiddlewareCollection.InjectionPositions.Post);
-            return (CC)(IBaseContractConnection)this;
+            return (TContractConnection)(IBaseContractConnection)this;
         }
 
 
@@ -201,7 +201,7 @@ namespace MQContract.Connections
 
         private MetricsMiddleware? metricsMiddleware;
 
-        CC IMetricContractConnection<CC>.AddMetrics(Meter? meter, bool useInternal)
+        TContractConnection IMetricContractConnection<TContractConnection>.AddMetrics(Meter? meter, bool useInternal)
         {
             using var scope = SetScope();
             logger?.LogDebugChecked("Enabling metrics on service connection with {Meter} and {UseInternal}", meter, useInternal);
@@ -210,16 +210,16 @@ namespace MQContract.Connections
             middleware.RegisterInjectionMiddleware<IAfterEncodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Post);
             middleware.RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Pre);
             middleware.RegisterInjectionMiddleware<IAfterDecodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Post);
-            return (CC)(IBaseContractConnection)this;
+            return (TContractConnection)(IBaseContractConnection)this;
         }
 
-        IContractMetric? IMetricContractConnection<CC>.GetSnapshot(bool sent)
+        IContractMetric? IMetricContractConnection<TContractConnection>.GetSnapshot(bool sent)
             => metricsMiddleware?.GetSnapshot(sent);
-        IContractMetric? IMetricContractConnection<CC>.GetSnapshot(Type messageType, bool sent)
+        IContractMetric? IMetricContractConnection<TContractConnection>.GetSnapshot(Type messageType, bool sent)
             => metricsMiddleware?.GetSnapshot(messageType, sent);
-        IContractMetric? IMetricContractConnection<CC>.GetSnapshot<T>(bool sent)
+        IContractMetric? IMetricContractConnection<TContractConnection>.GetSnapshot<T>(bool sent)
             => metricsMiddleware?.GetSnapshot(typeof(T), sent);
-        IContractMetric? IMetricContractConnection<CC>.GetSnapshot(string channel, bool sent)
+        IContractMetric? IMetricContractConnection<TContractConnection>.GetSnapshot(string channel, bool sent)
             => metricsMiddleware?.GetSnapshot(channel, sent);
         #endregion
 
