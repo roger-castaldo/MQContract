@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQContract.Defaults;
+using MQContract.Extensions;
 using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Messages;
