@@ -2,12 +2,9 @@
 
 namespace MQContract.ActiveMQ
 {
-    internal sealed class ConsumerInstance(string channel, string group, IMessageConsumer messageConsumer, Action cleanup)
+    internal sealed class ConsumerInstance(IMessageConsumer messageConsumer, Action cleanup)
         : IDisposable
     {
-        public string Channel => channel;
-        public string Group => group;
-
         private int listenerCount = 1;
         private bool disposedValue;
 

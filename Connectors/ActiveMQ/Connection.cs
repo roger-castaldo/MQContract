@@ -3,6 +3,7 @@ using Apache.NMS.Util;
 using MQContract.ActiveMQ.Subscriptions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace MQContract.ActiveMQ
@@ -17,8 +18,8 @@ namespace MQContract.ActiveMQ
 
         private readonly ISession session;
         private readonly IMessageProducer producer;
-        private readonly List<ConsumerInstance> consumerInstances = [];
-        private readonly SemaphoreSlim locker = new(1, 1);
+        private readonly ConcurrentDictionary<(string channel,string group),ConsumerInstance> consumerInstances = [];
+        private readonly ConcurrentDictionary<string, ITopic> topicMap = [];
 
         /// <summary>
         /// Underlying connection used to connection to ActiveMQ.  Exposed here for additional control if required.
@@ -75,11 +76,21 @@ namespace MQContract.ActiveMQ
             );
         }
 
+        private ITopic GetTopic(string channel)
+        {
+            if (!topicMap.TryGetValue(channel, out var topic))
+            {
+                topic = SessionUtil.GetTopic(session, channel);
+                topicMap.TryAdd(channel, topic);
+            }
+            return topic;
+        }
+
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
             try
             {
-                await producer.SendAsync(SessionUtil.GetTopic(session, message.Channel), await ProduceMessage(message));
+                await producer.SendAsync(GetTopic(message.Channel), await ProduceMessage(message));
                 return new TransmissionResult(message.ID);
             }
             catch (Exception ex)
@@ -96,20 +107,13 @@ namespace MQContract.ActiveMQ
 
         private async ValueTask<ConsumerInstance> CreateInstance(string channel, string group)
         {
-            await locker.WaitAsync();
-            var result = consumerInstances.Find(x => Equals(x.Channel, channel) && Equals(x.Group, group));
-            locker.Release();
-            if (result==null)
+            if (!consumerInstances.TryGetValue((channel, group), out var result))
             {
-                await locker.WaitAsync();
-                result = new(channel, group, await session.CreateSharedConsumerAsync(SessionUtil.GetTopic(session, channel), group), () =>
+                result = new(await session.CreateSharedConsumerAsync(GetTopic(channel), group), () =>
                 {
-                    locker.Wait();
-                    consumerInstances.RemoveAll(x => Equals(x.Channel, channel) && Equals(x.Group, group));
-                    locker.Release();
+                    consumerInstances.TryRemove((channel, group), out _);
                 });
-                consumerInstances.Add(result);
-                locker.Release();
+                consumerInstances.TryAdd((channel, group), result);
             }
             else
                 result.AddListener();
