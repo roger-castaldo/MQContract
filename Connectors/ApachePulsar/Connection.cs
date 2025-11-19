@@ -4,6 +4,7 @@ using DotPulsar.Exceptions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace MQContract.ApachePulsar
@@ -16,8 +17,7 @@ namespace MQContract.ApachePulsar
     {
         private const string MessageTypeID = "_MessageTypeID";
 
-        private readonly SemaphoreSlim producerLock = new(1, 1);
-        private readonly Dictionary<string, IProducer<byte[]>> producers = new();
+        private readonly ConcurrentDictionary<string, IProducer<byte[]>> producers = new();
         private bool disposed;
 
         /// <summary>
@@ -58,11 +58,10 @@ namespace MQContract.ApachePulsar
 
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
-            await producerLock.WaitAsync();
-            if (!producers.TryGetValue(message.Channel, out var producer))
+            if (!producers.TryGetValue(message.Channel,out var producer))
             {
                 producer = PulsarClient.CreateProducer<byte[]>(new(message.Channel, Schema.ByteArray));
-                producers.Add(message.Channel, producer);
+                producers.TryAdd(message.Channel, producer);
             }
             (var messageMetaData, var data) = Convert(message);
             try
@@ -80,10 +79,6 @@ namespace MQContract.ApachePulsar
                     ProducerFencedException => false,
                     _ => false
                 }));
-            }
-            finally
-            {
-                producerLock.Release();
             }
         }
 
@@ -104,19 +99,16 @@ namespace MQContract.ApachePulsar
         {
             try
             {
-                await producerLock.WaitAsync();
                 var start = Stopwatch.GetTimestamp();
-                var producer = PulsarClient.CreateProducer<byte[]>(new("non-persistent://public/default/heartbeat", Schema.ByteArray));
+                await using var producer = PulsarClient.CreateProducer<byte[]>(new("non-persistent://public/default/heartbeat", Schema.ByteArray));
 
                 _ = await producer.Send(new(),new byte[0]); // empty payload
 
                 await producer.DisposeAsync();
-                producerLock.Release();
                 return new(PulsarClient.ServiceUrl.ToString(), string.Empty, Stopwatch.GetElapsedTime(start));
             }
             catch
             {
-                producerLock.Release();
                 throw new PingFailedException("Unable to create a producer and publish to the heartbeat path");
             }
             
@@ -127,13 +119,14 @@ namespace MQContract.ApachePulsar
             if (!disposed)
             {
                 disposed=true;
-                await producerLock.WaitAsync();
-                foreach (var p in producers.Values)
-                    await p.DisposeAsync();
+                var keys = producers.Keys;
+                foreach (var k in keys)
+                {
+                    if (producers.TryRemove(k, out var producer))
+                        await producer.DisposeAsync();
+                }
                 producers.Clear();
                 await PulsarClient.DisposeAsync();
-                producerLock.Release();
-                producerLock.Dispose();
             }
         }
     }
