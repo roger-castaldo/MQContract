@@ -5,24 +5,25 @@ namespace MQContract.InMemory
 {
     internal class Subscription(MessageGroup group, Func<InternalServiceMessage, ValueTask> messageRecieved) : IServiceSubscription
     {
-        private readonly Channel<InternalServiceMessage> channel = group.Register();
+        private readonly (Guid id, Channel<InternalServiceMessage> channel) registration = group.Register();
 
         public void Start()
         {
             Task.Run(async () =>
             {
-                while (await channel.Reader.WaitToReadAsync())
+                while (await registration.channel.Reader.WaitToReadAsync())
                 {
-                    var message = await channel.Reader.ReadAsync();
+                    var message = await registration.channel.Reader.ReadAsync();
                     await messageRecieved(message);
                 }
             });
         }
 
-        async ValueTask IServiceSubscription.EndAsync()
+        ValueTask IServiceSubscription.EndAsync()
         {
-            channel.Writer.TryComplete();
-            await group.UnregisterAsync(channel);
+            registration.channel.Writer.TryComplete();
+            group.Unregister(registration.id);
+            return ValueTask.CompletedTask;
         }
     }
 }

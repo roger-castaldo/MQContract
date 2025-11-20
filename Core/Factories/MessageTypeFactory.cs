@@ -7,27 +7,25 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Messages;
 using MQContract.Messages;
-using System.Reflection;
 using System.Runtime.Loader;
 
 namespace MQContract.Factories
 {
-    internal class MessageTypeFactory<T>
-        : AConverter<T,T>, IMessageFactory<T>
+    internal class MessageTypeFactory<TMessage>
+        : AConverter<TMessage,TMessage>, IMessageFactory<TMessage>
     {
+        private readonly Func<TMessage, ValueTask<byte[]>> encodeMessage;
+        private readonly Func<Stream, ValueTask<TMessage?>> decodeMessage;
 
-        private readonly IMessageEncoder? globalMessageEncoder;
-        private readonly IMessageTypeEncoder<T>? messageEncoder;
-        private readonly IEnumerable<IConversionPath<T>> converters;
+        private readonly IEnumerable<IConversionPath<TMessage>> converters;
         public bool IgnoreMessageHeader { get; private init; }
 
-        private readonly string messageName = Utility.MessageTypeName<T>();
-        private readonly string messageVersion = Utility.MessageVersionString<T>();
-        public string? MessageChannel => typeof(T).GetCustomAttribute<MessageAttribute>()?.Channel;
+        private readonly string messageName = Utility.MessageTypeName<TMessage>();
+        private readonly string messageVersion = Utility.MessageVersionString<TMessage>();
+        public string? MessageChannel { get; private init; } = Utility.GetCustomAttribute<TMessage, MessageAttribute>()?.Channel;
 
         public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider, bool ignoreMessageHeader)
         {
-            this.globalMessageEncoder = globalMessageEncoder;
             IgnoreMessageHeader = ignoreMessageHeader;
             var types = AssemblyLoadContext.All
                 .SelectMany(context => context.Assemblies)
@@ -37,7 +35,7 @@ namespace MQContract.Factories
                     {
                         return assembly.GetTypes()
                         .Where(t => !t.IsInterface && !t.IsAbstract
-                            && Array.Exists(t.GetInterfaces(), iface => iface == typeof(IMessageTypeEncoder<T>)
+                            && Array.Exists(t.GetInterfaces(), iface => iface == typeof(IMessageTypeEncoder<TMessage>)
                                 || iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)));
                     }
                     catch (Exception)
@@ -46,17 +44,27 @@ namespace MQContract.Factories
                     }
                 });
             var encoderType = types
-                .FirstOrDefault(type => type.GetInterfaces().Contains(typeof(IMessageTypeEncoder<T>)));
-            messageEncoder = (IMessageTypeEncoder<T>?)((serviceProvider, encoderType, globalMessageEncoder) switch
+                .FirstOrDefault(type => type.GetInterfaces().Contains(typeof(IMessageTypeEncoder<TMessage>)));
+            var messageEncoder = (IMessageTypeEncoder<TMessage>?)((serviceProvider, encoderType, globalMessageEncoder) switch
             {
                 (not null, not null, _) => ActivatorUtilities.CreateInstance(serviceProvider!, encoderType!),
                 (null, not null, _) => Activator.CreateInstance(encoderType)!,
-                (_, null, null) => new JsonEncoder<T>(),
+                (_, null, null) => new JsonEncoder<TMessage>(),
                 _ => null
             });
+            if (messageEncoder!=null)
+            {
+                encodeMessage = (message) => messageEncoder.EncodeAsync(message);
+                decodeMessage = (stream) => messageEncoder.DecodeAsync(stream);
+            }
+            else
+            {
+                encodeMessage = (message) => globalMessageEncoder!.EncodeAsync<TMessage>(message);
+                decodeMessage = (stream) => globalMessageEncoder!.DecodeAsync<TMessage>(stream);    
+            }
             converters = IgnoreMessageHeader
                 ? []
-                : ProduceConverters<T>(types, globalMessageEncoder, serviceProvider);
+                : ProduceConverters<TMessage>(types, globalMessageEncoder, serviceProvider);
         }
 
         private static IEnumerable<IConversionPath<M>> ProduceConverters<M>(IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
@@ -108,7 +116,7 @@ namespace MQContract.Factories
 
         private static Type[] ExtractGenericArguements(Type t) => t.GetInterfaces().First(iface => iface.IsGenericType && iface.GetGenericTypeDefinition()==typeof(IMessageConverter<,>)).GetGenericArguments();
 
-        public async ValueTask<ServiceMessage> ConvertMessageAsync(T message, bool ignoreChannel, string? channel, MessageHeader messageHeader)
+        public async ValueTask<ServiceMessage> ConvertMessageAsync(TMessage message, bool ignoreChannel, string? channel, MessageHeader messageHeader)
         {
             if (string.IsNullOrWhiteSpace(channel)&&!ignoreChannel)
                 throw new MessageChannelNullException();
@@ -118,11 +126,11 @@ namespace MQContract.Factories
                 $"{messageName}-{messageVersion}", 
                 channel??string.Empty, 
                 messageHeader,
-                await (messageEncoder?.EncodeAsync(message)??globalMessageEncoder!.EncodeAsync<T>(message))
+                await encodeMessage(message)
             );
         }
 
-        protected override async ValueTask<T?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
+        protected override async ValueTask<TMessage?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream)
         {
             if (!IgnoreMessageHeader)
 #pragma warning disable S3236 // Caller information arguments should not be provided explicitly
@@ -130,19 +138,20 @@ namespace MQContract.Factories
 #pragma warning restore S3236 // Caller information arguments should not be provided explicitly
             if (Equals(ErrorServiceMessage.MessageTypeID, message.MessageTypeID))
                 throw ErrorServiceMessage.DecodeError(message.Data);
-            IConversionPath<T>? converter = null;
-            T? result;
-            if (IgnoreMessageHeader || ((IConversionPath<T>)this).IsMatch(message.MessageTypeID))
-                result = await (messageEncoder?.DecodeAsync(new MemoryStream(message.Data.ToArray()))??globalMessageEncoder!.DecodeAsync<T>(new MemoryStream(message.Data.ToArray())));
+            IConversionPath<TMessage>? converter = null;
+            TMessage? result;
+            using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+            if (IgnoreMessageHeader || ((IConversionPath<TMessage>)this).IsMatch(message.MessageTypeID))
+                result = await decodeMessage(ms);
             else
             {
                 converter = converters.FirstOrDefault(conv => conv.IsMatch(message.MessageTypeID));
                 if (converter==null)
                     throw new InvalidCastException();
-                result = await converter.ConvertMessageAsync(logger, message, dataStream: new MemoryStream(message.Data.ToArray()));
+                result = await converter.ConvertMessageAsync(logger, message, dataStream: ms);
             }
-            if (Equals(result, default(T?)))
-                throw new MessageConversionException(typeof(T), converter?.GetType()??GetType());
+            if (Equals(result, default(TMessage?)))
+                throw new MessageConversionException(typeof(TMessage), converter?.GetType()??GetType());
             return result;
         }
     }

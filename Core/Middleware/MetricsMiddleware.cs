@@ -57,11 +57,11 @@ namespace MQContract.Middleware
         private async ValueTask AddStat(Type messageType, string? channel, bool sending, int messageSize, Stopwatch? stopWatch)
             => await this.channel.Writer.WriteAsync(new(messageType, channel, sending, messageSize, stopWatch?.Elapsed??TimeSpan.Zero));
 
-        public async ValueTask<(T message, MessageHeader messageHeader)> AfterMessageDecodeAsync<T>(IContext context, T message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
+        public async ValueTask<(TMessage message, MessageHeader messageHeader)> AfterMessageDecodeAsync<TMessage>(IContext context, TMessage message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
         {
             var stopWatch = (Stopwatch?)context[StopWatchKey];
             stopWatch?.Stop();
-            await AddStat(typeof(T), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageReceivedSizeKey]??0, stopWatch);
+            await AddStat(typeof(TMessage), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageReceivedSizeKey]??0, stopWatch);
             context[StopWatchKey]=null;
             context[MessageReceivedChannelKey]=null;
             context[MessageReceivedSizeKey]=null;
@@ -87,7 +87,7 @@ namespace MQContract.Middleware
             return ValueTask.FromResult((messageHeader, data));
         }
 
-        public ValueTask<(T message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
+        public ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader)
         {
             var stopwatch = new Stopwatch();
             context[StopWatchKey] = stopwatch;

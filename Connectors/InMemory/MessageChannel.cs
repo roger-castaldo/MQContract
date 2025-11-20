@@ -1,28 +1,23 @@
 ﻿using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using System.Collections.Concurrent;
 
 namespace MQContract.InMemory
 {
     internal class MessageChannel
     {
-        private readonly ReaderWriterLockSlim locker = new();
-        private readonly List<MessageGroup> groups = [];
+        private readonly ConcurrentDictionary<string, MessageGroup> groups = [];
 
         private async ValueTask<bool> Publish(InternalServiceMessage message, CancellationToken cancellationToken)
         {
-            locker.EnterReadLock();
-            var grps = groups.ToArray();
-            locker.ExitReadLock();
-            var results = await grps.WhenAll(grp => grp.PublishMessageAsync(message, cancellationToken));
+            var results = await groups.Values.ToArray().WhenAll(grp => grp.PublishMessageAsync(message, cancellationToken));
             return Array.TrueForAll(results.ToArray(), t => t) && results.Any();
         }
 
         public void Close()
         {
-            locker.EnterWriteLock();
-            var groupsToClose = groups.ToArray();
+            var groupsToClose = groups.Values.ToArray();
             groups.Clear();
-            locker.ExitWriteLock();
             foreach (var grp in groupsToClose)
                 grp.Close();
         }
@@ -40,14 +35,14 @@ namespace MQContract.InMemory
         internal async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
         {
             var messageIDs = messages.Select(m => m.ID).ToArray();
-            locker.EnterReadLock();
+            var grps = groups.Values.ToArray();
             var results = (await messages
                 .WhenAll(async (message) =>
                 {
                     try
                     {
                         var messageResults = (
-                        await groups
+                        await grps
                             .WhenAll(grp => grp.PublishMessageAsync(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data), cancellationToken))
                         ).ToArray();
                         return new TransmissionResult(message.ID, Error: Array.TrueForAll(messageResults, mr => mr) ? null : new(new TransmissionResultException(), true));
@@ -59,7 +54,6 @@ namespace MQContract.InMemory
                 })
                 ).OrderBy(res=>Array.IndexOf(messageIDs,res.ID))
                 .ToArray();
-            locker.ExitReadLock();
             return results;
         }
 
@@ -73,19 +67,14 @@ namespace MQContract.InMemory
         private MessageGroup GetGroup(string? group)
         {
             group??=Guid.NewGuid().ToString();
-            locker.EnterWriteLock();
-            var grp = groups.Find(g => Equals(g.Group, group));
-            if (grp==null)
+            if (!groups.TryGetValue(group, out MessageGroup? grp))
             {
-                grp = new MessageGroup(group, g =>
+                grp = new MessageGroup(() =>
                 {
-                    locker.EnterWriteLock();
-                    groups.Remove(g);
-                    locker.ExitWriteLock();
+                    groups.TryRemove(group,out _);
                 });
-                groups.Add(grp);
+                groups.TryAdd(group, grp);
             }
-            locker.ExitWriteLock();
             return grp;
         }
 

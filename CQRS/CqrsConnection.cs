@@ -5,13 +5,13 @@ using MQContract.CQRS.Interfaces.Query;
 using MQContract.CQRS.Registrars;
 using MQContract.Interfaces;
 using MQContract.Messages;
+using System.Collections.Concurrent;
 
 namespace MQContract.CQRS
 {
     internal sealed class CqrsConnection : ICQRSConnection
     {
-        private readonly List<InvocationInstance> invocationInstances = new();
-        private readonly SemaphoreSlim lockSlim = new(1);
+        private readonly ConcurrentDictionary<(Guid messageId,Guid correlationId, Guid? causationId),CancellationTokenSource> invocationInstances = new();
         private readonly IContractConnection contractConnection;
         private readonly string? cancelationTokenChannel;
         private readonly IProcessorRegistrar processorRegistrar;
@@ -24,7 +24,7 @@ namespace MQContract.CQRS
             {
                 if (!string.IsNullOrWhiteSpace(cancelationTokenChannel))
                     task = contractedConnection.RegisterPubSubAsyncConsumerAsync<CancellationRequest, CancellationRequestConsumer>(
-                        new CancellationRequestConsumer(lockSlim, invocationInstances),
+                        new CancellationRequestConsumer(invocationInstances),
                         channel: cancelationTokenChannel
                     ).AsTask();
                 processorRegistrar = new ContractedConnectionRegistrar(contractedConnection);
@@ -33,7 +33,7 @@ namespace MQContract.CQRS
             {
                 if (!string.IsNullOrWhiteSpace(cancelationTokenChannel))
                     task = mappedContractConnection.RegisterPubSubAsyncConsumerAsync<CancellationRequest, CancellationRequestConsumer>(
-                        new CancellationRequestConsumer(lockSlim, invocationInstances),
+                        new CancellationRequestConsumer(invocationInstances),
                         channel: cancelationTokenChannel
                     ).AsTask();
                 processorRegistrar = new MappedConnectionRegistrar(mappedContractConnection);
@@ -51,9 +51,7 @@ namespace MQContract.CQRS
             if (!string.IsNullOrWhiteSpace(cancelationTokenChannel))
             {
                 result.Token.Register(() => TransmitCancellation(context));
-                lockSlim.Wait();
-                invocationInstances.Add(new(context.MessageId, context.CorrelationId, context.CausationId, result));
-                lockSlim.Release();
+                invocationInstances.TryAdd((context.MessageId, context.CorrelationId, context.CausationId), result);
             }
             return result;
         }
@@ -62,18 +60,15 @@ namespace MQContract.CQRS
         {
             if (string.IsNullOrWhiteSpace(cancelationTokenChannel))
                 return;
-            lockSlim.Wait();
-            invocationInstances.RemoveAll(inst => Equals(inst.MessageId, context.MessageId) 
-                && Equals(inst.CorrelationId, context.CorrelationId)
-                && Equals(inst.CausationId,context.CausationId)
-            );
-            lockSlim.Release();
+            invocationInstances.TryRemove((context.MessageId,context.CorrelationId,context.CausationId), out _);
         }
 
         private void TransmitCancellation(Context context)
         {
             if (!string.IsNullOrEmpty(cancelationTokenChannel))
+#pragma warning disable CA2012 // Use ValueTasks correctly
                 _ = contractConnection.PublishAsync<CancellationRequest>(new(context.CorrelationId, context.MessageId), channel: cancelationTokenChannel);
+#pragma warning restore CA2012 // Use ValueTasks correctly
         }
 
         private Context SetupContext(Context? context, CancellationToken cancellationToken)
@@ -175,9 +170,7 @@ namespace MQContract.CQRS
             if (!disposedValue)
             {
                 disposedValue=true;
-                await lockSlim.WaitAsync();
                 invocationInstances.Clear();
-                lockSlim.Dispose();
                 await contractConnection.DisposeAsync();
             }
             GC.SuppressFinalize(this);

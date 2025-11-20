@@ -15,7 +15,6 @@ namespace MQContract.RabbitMQ
         private const string InboxExchange = "_Inbox";
 
         private readonly IChannel channel;
-        private readonly SemaphoreSlim semaphore = new(1, 1);
         private readonly string inboxChannel;
         private bool disposedValue;
 
@@ -127,7 +126,7 @@ namespace MQContract.RabbitMQ
 
         internal static ReceivedServiceMessage ConvertMessage(BasicDeliverEventArgs eventArgs, string channel, Func<ValueTask> acknowledge, out Guid? messageId)
         {
-            using var ms = new MemoryStream(eventArgs.Body.ToArray());
+            using var ms = new MemoryStream(eventArgs.Body.ToArray(),0,eventArgs.Body.Length,false,true);
             using var br = new BinaryReader(ms);
             var flag = br.ReadByte();
             if (flag==1)
@@ -154,7 +153,6 @@ namespace MQContract.RabbitMQ
 
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
-            await semaphore.WaitAsync(cancellationToken);
             TransmissionResult result;
             try
             {
@@ -170,7 +168,6 @@ namespace MQContract.RabbitMQ
                     _ => false
                 }));
             }
-            semaphore.Release();
             return result;
         }
 
@@ -235,7 +232,6 @@ namespace MQContract.RabbitMQ
         {
             (var props, var data) = ConvertMessage(message, correlationID);
             props.ReplyTo = inboxChannel;
-            await semaphore.WaitAsync(cancellationToken);
             TransmissionResult result;
             try
             {
@@ -250,7 +246,6 @@ namespace MQContract.RabbitMQ
                     _ => false
                 }));
             }
-            semaphore.Release();
             return result;
         }
 
@@ -262,7 +257,6 @@ namespace MQContract.RabbitMQ
                     if (result!=null)
                     {
                         (var props, var data) = ConvertMessage(result!, messageID);
-                        await semaphore.WaitAsync(cancellationToken);
                         try
                         {
                             await this.channel.BasicPublishAsync<BasicProperties>(InboxExchange, @event.BasicProperties.ReplyTo!, true, props, data);
@@ -271,7 +265,6 @@ namespace MQContract.RabbitMQ
                         {
                             errorReceived(e);
                         }
-                        semaphore.Release();
                     }
                 },
                 errorReceived
@@ -292,13 +285,10 @@ namespace MQContract.RabbitMQ
             if (!disposedValue)
             {
                 disposedValue=true;
-                await semaphore.WaitAsync();
                 await channel.CloseAsync();
                 await channel.DisposeAsync();
                 await RabbitMQConnection.CloseAsync();
                 await RabbitMQConnection.DisposeAsync();
-                semaphore.Release();
-                semaphore.Dispose();
             }
         }
     }

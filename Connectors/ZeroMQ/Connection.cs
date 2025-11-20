@@ -3,6 +3,7 @@ using MQContract.Messages;
 using NetMQ;
 using NetMQ.Monitoring;
 using NetMQ.Sockets;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace MQContract.ZeroMQ
@@ -40,10 +41,8 @@ namespace MQContract.ZeroMQ
 
         private readonly PublisherSocket publishConnection = new();
         private readonly SubscriberSocket subscriberConnection = new();
-        private readonly Dictionary<string, IEnumerable<Subscription>> subscriptions = [];
+        private readonly ConcurrentDictionary<string, IEnumerable<Subscription>> subscriptions = [];
         private readonly NetMQPoller poller = new();
-        private readonly SemaphoreSlim locker = new(1);
-        private readonly ReaderWriterLockSlim subLocker = new();
         private string? inboxAddress = null;
         private readonly List<string> servers = [];
         private TaskCompletionSource? pingResponse = null;
@@ -87,9 +86,7 @@ namespace MQContract.ZeroMQ
                     else
                     {
                         var mappedMessage = MessageMapper.Map(bytes);
-                        subLocker.EnterReadLock();
                         subscriptions.TryGetValue(mappedMessage.recievedMessage.Channel, out IEnumerable<Subscription>? subs);
-                        subLocker.ExitReadLock();
                         if (subs!=null)
                             await Task.WhenAll(
                                 subs.Select(s => s.Action(mappedMessage).AsTask())
@@ -142,29 +139,26 @@ namespace MQContract.ZeroMQ
 
         private Subscription RegisterSubscription(Func<(ReceivedInboxServiceMessage message, string? responseAddress), ValueTask> messageReceived, string channel)
         {
-            subLocker.EnterWriteLock();
             var result = new Subscription((pars) => messageReceived(pars), (id) =>
             {
-                subLocker.EnterWriteLock();
                 if (subscriptions.TryGetValue(channel, out var subs))
                 {
-                    subs = subs.Where(s => !Equals(s.ID, id));
-                    subscriptions.Remove(channel);
-                    if (subs.Any())
-                        subscriptions.Add(channel, subs);
+                    var newSubs = subs.Where(s => !Equals(s.ID, id)).ToArray();
+                    if (newSubs.Any())
+                        subscriptions.TryUpdate(channel, newSubs, subs);
+                    else
+                        subscriptions.TryRemove(channel, out _);
                 }
-                subLocker.ExitWriteLock();
             });
             if (subscriptions.TryGetValue(channel, out IEnumerable<Subscription>? subs))
-                subscriptions.Remove(channel);
-            subscriptions.Add(channel, (subs?? []).Append(result));
-            subLocker.ExitWriteLock();
+                subscriptions.TryUpdate(channel, subs.Append(result), subs);
+            else
+                subscriptions.TryAdd(channel, [result]);
             return result;
         }
 
-        private async ValueTask<ErrorMessage?> PublishMessageAsync(byte[] frame, CancellationToken cancellationToken)
+        private async ValueTask<ErrorMessage?> PublishMessageAsync(byte[] frame)
         {
-            await locker.WaitAsync(cancellationToken);
             ErrorMessage? error = null;
             try
             {
@@ -179,7 +173,6 @@ namespace MQContract.ZeroMQ
                     _ => false
                 });
             }
-            locker.Release();
             return error;
         }
 
@@ -196,19 +189,16 @@ namespace MQContract.ZeroMQ
             if (servers.Count>0)
             {
                 UndefinedInboxException.ThrowIfNullOrWhiteSpace(inboxAddress);
-                await locker.WaitAsync();
                 var start = Stopwatch.GetTimestamp();
                 pingResponse = new();
                 publishConnection.SendFrame([.. PingMessage, .. System.Text.UTF8Encoding.UTF8.GetBytes(inboxAddress!)]);
                 try
                 {
                     await pingResponse.Task.WaitAsync(PongTimeout);
-                    locker.Release();
                     return new(string.Join(',', servers), typeof(NetMQPoller).Assembly.GetName().Version?.ToString()??string.Empty, Stopwatch.GetElapsedTime(start));
                 }
                 finally {
                     pingResponse = null;
-                    locker.Release();
                 }
             }
             else if (poller.IsRunning)
@@ -217,7 +207,7 @@ namespace MQContract.ZeroMQ
         }
 
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-            => new(message.ID,await PublishMessageAsync(MessageMapper.Map(message), cancellationToken));
+            => new(message.ID,await PublishMessageAsync(MessageMapper.Map(message)));
 
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             =>ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
@@ -244,7 +234,7 @@ namespace MQContract.ZeroMQ
         async ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
         {
             UndefinedInboxException.ThrowIfNullOrWhiteSpace(inboxAddress);
-            return new(message.ID, await PublishMessageAsync(MessageMapper.Map(message, correlationID, inboxAddress), cancellationToken));
+            return new(message.ID, await PublishMessageAsync(MessageMapper.Map(message, correlationID, inboxAddress)));
         }
 
         ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
@@ -262,19 +252,13 @@ namespace MQContract.ZeroMQ
             if (!disposedValue)
             {
                 disposedValue=true;
-                locker.Wait();
                 if (poller.IsRunning)
                     poller.Stop();
                 if (!publishConnection.IsDisposed)
                     publishConnection.Dispose();
                 if (!subscriberConnection.IsDisposed)
                     subscriberConnection.Dispose();
-                locker.Release();
-                locker.Dispose();
-                subLocker.EnterWriteLock();
                 subscriptions.Clear();
-                subLocker.ExitWriteLock();
-                subLocker.Dispose();
             }
             GC.SuppressFinalize(this);
         }

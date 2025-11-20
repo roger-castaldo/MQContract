@@ -33,7 +33,7 @@ namespace MQContract.Middleware
 
         #region middleware
 
-        ValueTask<(T message, string? channel, MessageHeader messageHeader)> IBeforeEncodeMiddleware.BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
+        ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> IBeforeEncodeMiddleware.BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader)
         {
             if (linkActivitiesAcrossSystems && context.Activity!=null)
             {
@@ -43,7 +43,7 @@ namespace MQContract.Middleware
                 ]));
             }
             context.Activity?.AddTag(InitialChannelKey, channel);
-            context.Activity?.AddTag(MessageTypeClassKey, typeof(T).Name);
+            context.Activity?.AddTag(MessageTypeClassKey, typeof(TMessage).Name);
             context[StopwatchContextId] = Stopwatch.GetTimestamp();
             return ValueTask.FromResult((message, channel, messageHeader));
         }
@@ -72,9 +72,9 @@ namespace MQContract.Middleware
             return ValueTask.FromResult((messageHeader, data));
         }
 
-        ValueTask<(T message, MessageHeader messageHeader)> IAfterDecodeMiddleware.AfterMessageDecodeAsync<T>(IContext context, T message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
+        ValueTask<(TMessage message, MessageHeader messageHeader)> IAfterDecodeMiddleware.AfterMessageDecodeAsync<TMessage>(IContext context, TMessage message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
         {
-            context.Activity?.AddTag(MessageTypeClassKey, typeof(T).Name);
+            context.Activity?.AddTag(MessageTypeClassKey, typeof(TMessage).Name);
             context.Activity?.AddEvent(new("MessageDecoded", tags: new([
                 new(DecodingDurationKey, context[StopwatchContextId]!=null
                     ? $"{Stopwatch.GetElapsedTime((long)context[StopwatchContextId]!).TotalMilliseconds}ms"

@@ -21,11 +21,11 @@ jobs:
         dotnet-version: |
           8.0.x
     - name: Restore dependencies
-      run: dotnet restore  -p:TargetFramework=net8.0 -p:BlockMD=true AutomatedTesting
+      run: dotnet restore  -p:TargetFramework=net8.0 -p:BlockMD=true Testing/Core
     - name: Build-8.0
-      run: dotnet build --framework net8.0 -p:BlockMD=true --no-restore AutomatedTesting
+      run: dotnet build --framework net8.0 -p:BlockMD=true --no-restore Testing/Core
     - name: Test-8.0
-      run: dotnet test --framework net8.0 -p:BlockMD=true --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"Code Coverage" AutomatedTesting
+      run: dotnet test --framework net8.0 -p:BlockMD=true --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"Code Coverage" Testing/Core
     - name: report results
       uses: bibipkins/dotnet-test-reporter@v1.4.0
       with:

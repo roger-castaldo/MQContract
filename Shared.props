@@ -4,7 +4,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<Company>$(AssemblyName)</Company>
-		<VersionPrefix>3.0</VersionPrefix>
+		<VersionPrefix>3.1</VersionPrefix>
 		<PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>
@@ -23,16 +23,17 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="Vsxmd" Version="1.4.5" Condition="'$(BlockMD)' != 'true'">
+		<PackageReference Include="Vsxmd" Version="1.4.6" Condition="'$(BlockMD)' != 'true'">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
 	
-	<ItemGroup>
-		<None Update="Readme.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-	</ItemGroup>
+	<PropertyGroup>
+        <PackageReadmeFile>Readme.md</PackageReadmeFile>
+      </PropertyGroup>
+
+      <ItemGroup>
+        <None Include="Readme.md" Pack="true" PackagePath="\" />
+      </ItemGroup>
 </Project>

@@ -1,30 +1,33 @@
 ﻿using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
+using System.Collections.Concurrent;
 
 namespace MQContract.CQRS.Consumers
 {
-    internal class CancellationRequestConsumer(SemaphoreSlim lockSlim, List<InvocationInstance> invocationInstances) : IPubSubAsyncConsumer<CancellationRequest>
+    internal class CancellationRequestConsumer(ConcurrentDictionary<(Guid messageId, Guid correlationId, Guid? causationId), CancellationTokenSource> invocationInstances) : IPubSubAsyncConsumer<CancellationRequest>
     {
         void IBaseConsumer.ErrorRecieved(Exception error)
         {}
 
         async ValueTask IPubSubAsyncConsumer<CancellationRequest>.MessageReceivedAsync(IReceivedMessage<CancellationRequest> message)
         {
-            await lockSlim.WaitAsync();
-            foreach (var instance in invocationInstances.Where(inst => inst.IsMatch(message.Message)).ToArray())
+            var keys = invocationInstances.Keys.Where(key => Equals(message.Message.CorrelationId, key.correlationId)
+            && (Equals(message.Message.MessageId,key.messageId) || Equals(message.Message.MessageId,key.causationId))).ToArray();
+            foreach(var key in keys)
             {
-                try
+                if (invocationInstances.TryRemove(key,out var cancellationTokenSource))
                 {
-                    if (!instance.CancellationTokenSource.IsCancellationRequested)
-                        await instance.CancellationTokenSource.CancelAsync();
+                    try
+                    {
+                        if (!cancellationTokenSource.IsCancellationRequested)
+                            await cancellationTokenSource.CancelAsync();
+                    }
+                    catch
+                    {
+                        //no exception catch needed
+                    }
                 }
-                catch
-                {
-                    //no exception catch needed
-                }
-                invocationInstances.Remove(instance);
             }
-            lockSlim.Release();
         }
     }
 }

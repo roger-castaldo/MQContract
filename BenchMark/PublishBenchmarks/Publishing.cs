@@ -12,6 +12,7 @@ namespace BenchMark.PublishBenchmarks
     {
         public const string ChannelName = "sample";
         private const string MessageContent = "The quick brown fox";
+        private const int ExecutionCount = 250;
         private IMessageServiceConnection? serviceConnection;
         private IContractConnection? contractConnection;
         private Announcement? announcement;
@@ -26,28 +27,38 @@ namespace BenchMark.PublishBenchmarks
             encodedAnnouncement = new(MessageContent);
         }
 
+        private static async Task ExecuteOperationsAsync(Func<Task> operation)
+        {
+            for(var x=0;x<ExecutionCount;x++)
+                await operation();
+        }
+
         [Benchmark(Baseline = true)]
         public async Task PublishDirectlyToConnection()
-        {
-            _ = await serviceConnection!.PublishAsync(new(Guid.NewGuid().ToString(), "sample", ChannelName, new([]), ASCIIEncoding.ASCII.GetBytes(MessageContent)));
-        }
+            => await ExecuteOperationsAsync(async () =>
+            {
+                _ = await serviceConnection!.PublishAsync(new(Guid.NewGuid().ToString(), "sample", ChannelName, new([]), ASCIIEncoding.ASCII.GetBytes(MessageContent)));
+            });
 
         [Benchmark]
         public async Task PublishBasicEncodedMessage()
-        {
-            _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
-        }
+            => await ExecuteOperationsAsync(async () =>
+            {
+                _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
+            });
 
         [Benchmark]
         public async Task PublishDefaultEncodedMessage()
-        {
-            _ = await contractConnection!.PublishAsync<Announcement>(announcement!, channel: ChannelName);
-        }
+            => await ExecuteOperationsAsync(async () =>
+            {
+                _ = await contractConnection!.PublishAsync<Announcement>(announcement!, channel: ChannelName);
+            });
 
         [Benchmark]
         public async Task PublishCustomEncodedMessage()
-        {
-            _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(encodedAnnouncement!, channel: ChannelName);
-        }
+            => await ExecuteOperationsAsync(async () =>
+            {
+                _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(encodedAnnouncement!, channel: ChannelName);
+            });
     }
 }

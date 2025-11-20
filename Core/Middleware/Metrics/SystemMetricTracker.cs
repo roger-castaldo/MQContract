@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Metrics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.Metrics;
 
 namespace MQContract.Middleware.Metrics
 {
@@ -6,12 +7,10 @@ namespace MQContract.Middleware.Metrics
     {
         private const string MeterName = "mqcontract";
 
-
-        private readonly SemaphoreSlim semDataLock = new(1, 1);
         private readonly Meter meter;
         private readonly MessageMetric globalMetric;
-        private readonly Dictionary<Type, MessageMetric> typeMetrics = [];
-        private readonly Dictionary<string, MessageMetric> channelMetrics = [];
+        private readonly ConcurrentDictionary<Type, MessageMetric> typeMetrics = [];
+        private readonly ConcurrentDictionary<string, MessageMetric> channelMetrics = [];
 
         public SystemMetricTracker(Meter meter)
         {
@@ -29,7 +28,6 @@ namespace MQContract.Middleware.Metrics
         public void AppendEntry(MetricEntryValue entry)
         {
             globalMetric.AddEntry(entry);
-            semDataLock.Wait();
             MessageMetric? channelMetric = null;
             if (!typeMetrics.TryGetValue(entry.Type, out MessageMetric? typeMetric))
             {
@@ -41,7 +39,7 @@ namespace MQContract.Middleware.Metrics
                     meter.CreateHistogram<double>($"{MeterName}.types.{Utility.MessageTypeName(entry.Type)}.{Utility.MessageVersionString(entry.Type).Replace('.', '_')}.encodingduration", unit: "ms"),
                     meter.CreateHistogram<double>($"{MeterName}.types.{Utility.MessageTypeName(entry.Type)}.{Utility.MessageVersionString(entry.Type).Replace('.', '_')}.decodingduration", unit: "ms")
                 );
-                typeMetrics.Add(entry.Type, typeMetric!);
+                typeMetrics.TryAdd(entry.Type, typeMetric!);
             }
             if (!string.IsNullOrWhiteSpace(entry.Channel) && !channelMetrics.TryGetValue(entry.Channel, out channelMetric))
             {
@@ -53,11 +51,10 @@ namespace MQContract.Middleware.Metrics
                     meter.CreateHistogram<double>($"{MeterName}.channels.{entry.Channel}.encodingduration", unit: "ms"),
                     meter.CreateHistogram<double>($"{MeterName}.channels.{entry.Channel}.decodingduration", unit: "ms")
                 );
-                channelMetrics.Add(entry.Channel!, channelMetric!);
+                channelMetrics.TryAdd(entry.Channel!, channelMetric!);
             }
             typeMetric?.AddEntry(entry);
             channelMetric?.AddEntry(entry);
-            semDataLock.Release();
         }
     }
 }

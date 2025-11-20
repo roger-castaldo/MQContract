@@ -1,16 +1,17 @@
 ﻿using Microsoft.Extensions.Logging;
+using MQContract.Extensions;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
 using System.Diagnostics.CodeAnalysis;
 
 namespace MQContract.Subscriptions
 {
-    internal abstract class SubscriptionBase<T>(Func<string, ValueTask<string>> mapChannel, string? channel, bool synchronous, ILogger? logger) : ISubscription
+    internal abstract class SubscriptionBase<TMessage>(Func<string, ValueTask<string>> mapChannel, string? channel, bool synchronous, ILogger? logger) : ISubscription
     {
         protected IServiceSubscription? serviceSubscription;
         private bool disposedValue;
 
-        protected string MessageChannel { get; private init; } = Utility.GetChannel<T>(mapChannel, channel);
+        protected string MessageChannel { get; private init; } = Utility.GetChannel<TMessage>(mapChannel, channel);
         protected bool Synchronous { get; private init; } = synchronous;
         protected ILogger? Logger => logger;
         protected IDisposable? SetScope() => logger?.BeginScope<string>($"Subscription[{ID}]");
@@ -25,7 +26,7 @@ namespace MQContract.Subscriptions
         {
             if (serviceSubscription!=null)
             {
-                logger?.LogInformation("Calling subscription {ID} end async", ID);
+                logger?.LogInformationChecked("Calling subscription {ID} end async", ID);
                 await serviceSubscription.EndAsync();
                 serviceSubscription=null;
             }

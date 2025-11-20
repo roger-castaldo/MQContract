@@ -15,11 +15,9 @@ namespace MQContract.GooglePubSub
     /// <param name="publisherServiceBuilder">Used for building publishers</param>
     /// <param name="subscriberServiceBuilder">Used for building subscribers</param>
     public sealed class Connection(string projectId, PublisherServiceApiClientBuilder publisherServiceBuilder, SubscriberServiceApiClientBuilder subscriberServiceBuilder) :
-        IPingableMessageServiceConnection, IAsyncDisposable
+        IPingableMessageServiceConnection
     {
         private const string MessageTypeID = "_MessageTypeID";
-        private bool disposedValue;
-        private readonly SemaphoreSlim builderLock = new(1, 1);
 
         /// <summary>
         /// Houses the project id that was supplied in the constructor
@@ -76,7 +74,6 @@ namespace MQContract.GooglePubSub
 
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
-            await builderLock.WaitAsync(cancellationToken);
             try
             {
                 _ = await PublisherServiceApi.PublishAsync(ProduceRequest([ConvertMessage(message)], message.Channel), cancellationToken);
@@ -110,45 +107,33 @@ namespace MQContract.GooglePubSub
             {
                 return new(message.ID, Error: new(ex, false));
             }
-            finally
-            {
-                builderLock.Release();
-            }
             return new(message.ID);
         }
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
-            await builderLock.WaitAsync(cancellationToken);
             IServiceSubscription? result;
+            var subscriptionName = new SubscriptionName(projectId, group??channel);
+            var topicName = new TopicName(projectId, channel);
+            var createSubscription = false;
             try
             {
-                var subscriptionName = new SubscriptionName(projectId, group??channel);
-                var topicName = new TopicName(projectId, channel);
-                var createSubscription = false;
-                try
-                {
-                    createSubscription = (await SubscriberServiceApi.GetSubscriptionAsync(subscriptionName))==null;
-                }
-                catch
-                {
-                    createSubscription=true;
-                }
-                if (createSubscription)
-                    await SubscriberServiceApi.CreateSubscriptionAsync(subscriptionName, topicName, new() { }, 60);
-                result = new Subscription(
-                    SubscriberServiceApi,
-                    subscriptionName,
-                    messageReceived,
-                    errorReceived,
-                    channel
-                );
-                ((Subscription)result).Start();
+                createSubscription = (await SubscriberServiceApi.GetSubscriptionAsync(subscriptionName))==null;
             }
-            finally
+            catch
             {
-                builderLock.Release();
+                createSubscription=true;
             }
+            if (createSubscription)
+                await SubscriberServiceApi.CreateSubscriptionAsync(subscriptionName, topicName, new() { }, 60);
+            result = new Subscription(
+                SubscriberServiceApi,
+                subscriptionName,
+                messageReceived,
+                errorReceived,
+                channel
+            );
+            ((Subscription)result).Start();
             return result;
         }
 
@@ -169,16 +154,6 @@ namespace MQContract.GooglePubSub
             {
                 throw new PingFailedException("Unable to make a call against the Google PubSub services");
             }
-        }
-
-        ValueTask IAsyncDisposable.DisposeAsync()
-        {
-            if (!disposedValue)
-            {
-                disposedValue=true;
-                builderLock.Dispose();
-            }
-            return ValueTask.CompletedTask;
         }
     }
 }
