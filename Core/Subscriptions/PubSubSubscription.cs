@@ -5,10 +5,10 @@ using MQContract.Messages;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class PubSubSubscription<T>(Func<ReceivedServiceMessage, ValueTask<bool>> messageReceived, Action<Exception> errorReceived,
+    internal sealed class PubSubSubscription<TMessage>(Func<ReceivedServiceMessage, ValueTask<bool>> messageReceived, Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null, bool synchronous = false, ILogger? logger = null)
-        : SubscriptionBase<T>(mapChannel, channel, synchronous, logger)
+        : SubscriptionBase<TMessage>(mapChannel, channel, synchronous, logger)
     {
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)
         {

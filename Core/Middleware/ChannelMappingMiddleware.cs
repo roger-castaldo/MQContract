@@ -13,7 +13,7 @@ namespace MQContract.Middleware
             return await channelMapper.MapChannel(context.MapDirection, channel);
         }
 
-        public async ValueTask<(T message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<T>(IContext context, T message, string? channel, MessageHeader messageHeader)
+        public async ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader)
         {
             var mappedChannel = await MapChannel((Context)context, channel);
             context.Activity?.AddEvent(new("MessageChannelMapped", tags: new([

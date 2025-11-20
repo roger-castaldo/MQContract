@@ -41,8 +41,8 @@ namespace MQContract.Connections
         CC IMappableContractConnection<CC>.RegisterServiceConnection(Type messageType, string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
             => RegisterServiceConnection(pars => Equals(pars.messageType, messageType), serviceConnectionName, messageServiceConnection);
 
-        CC IMappableContractConnection<CC>.RegisterServiceConnection<T>(string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
-            => RegisterServiceConnection(pars => Equals(pars.messageType, typeof(T)), serviceConnectionName, messageServiceConnection);
+        CC IMappableContractConnection<CC>.RegisterServiceConnection<TMessage>(string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
+            => RegisterServiceConnection(pars => Equals(pars.messageType, typeof(TMessage)), serviceConnectionName, messageServiceConnection);
 
         CC IMappableContractConnection<CC>.RegisterServiceConnection(string messageHeaderKey, string messageHeaderValue, string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
             => RegisterServiceConnection(pars => Equals(pars.messageHeader[messageHeaderKey], messageHeaderValue), serviceConnectionName, messageServiceConnection);
@@ -50,8 +50,8 @@ namespace MQContract.Connections
         CC IMappableContractConnection<CC>.RegisterResiliencePolicy(string serviceConnectionName, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(serviceConnectionName, null, retryPolicy, circuitBreakPolicy);
 
-        CC IMappableContractConnection<CC>.RegisterResiliencePolicy<T>(string serviceConnectionName, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
-            => AddPolicy(serviceConnectionName, typeof(T), retryPolicy, circuitBreakPolicy);
+        CC IMappableContractConnection<CC>.RegisterResiliencePolicy<TMessage>(string serviceConnectionName, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+            => AddPolicy(serviceConnectionName, typeof(TMessage), retryPolicy, circuitBreakPolicy);
 
         CC IMappableContractConnection<CC>.RegisterResiliencePolicy(string serviceConnectionName, Type messageType, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(serviceConnectionName, messageType, retryPolicy, circuitBreakPolicy);
@@ -72,10 +72,10 @@ namespace MQContract.Connections
             return result;
         }
 
-        protected async ValueTask<(IEnumerable<ServiceConnectionList.ServiceConnection> connections, string channel)> GetConnectionsAsync<T>(string? channel, ChannelMapper.MapTypes mapTypes)
+        protected async ValueTask<(IEnumerable<ServiceConnectionList.ServiceConnection> connections, string channel)> GetConnectionsAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
         {
-            channel = await Utility.GetChannelAsync<T>((originalChannel) => MapChannel(mapTypes, originalChannel), channel);
-            return (await GetConnectionsAsync(channel, typeof(T), new MessageHeader([])), channel);
+            channel = await Utility.GetChannelAsync<TMessage>((originalChannel) => MapChannel(mapTypes, originalChannel), channel);
+            return (await GetConnectionsAsync(channel, typeof(TMessage), new MessageHeader([])), channel);
         }
 
         protected sealed override async ValueTask CloseAsync()

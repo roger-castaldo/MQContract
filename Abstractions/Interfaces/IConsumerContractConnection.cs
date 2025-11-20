@@ -21,7 +21,7 @@ namespace MQContract.Interfaces
         /// Called to register a PubSubConsumer into the contract connection 
         /// </summary>
         /// <typeparam name="TMessage">The Message type</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IPubSubConsumer&lt;T&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IPubSubConsumer&lt;TMessage&gt;</typeparam>
         /// <param name="consumer">An instance of the consumer</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
@@ -35,7 +35,7 @@ namespace MQContract.Interfaces
         /// Called to register a PubSubConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it. 
         /// </summary>
         /// <typeparam name="TMessage">The Message type</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IPubSubConsumer&lt;T&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IPubSubConsumer&lt;TMessage&gt;</typeparam>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
@@ -58,7 +58,7 @@ namespace MQContract.Interfaces
         /// Called to register a PubSubAsyncConsumer into the contract connection 
         /// </summary>
         /// <typeparam name="TMessage">The Message type</typeparam>
-        /// <typeparam name="TConsumer">The type that implements PubSubAsyncConsumer&lt;T&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements PubSubAsyncConsumer&lt;TMessage&gt;</typeparam>
         /// <param name="consumer">An instance of the consumer</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
@@ -72,7 +72,7 @@ namespace MQContract.Interfaces
         /// Called to register a PubSubAsyncConsumer into the contract connection.  This will create an instance of the TConsumer type that is requested and register it. 
         /// </summary>
         /// <typeparam name="TMessage">The Message type</typeparam>
-        /// <typeparam name="TConsumer">The type that implements PubSubAsyncConsumer&lt;T&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements PubSubAsyncConsumer&lt;TMessage&gt;</typeparam>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
@@ -97,7 +97,7 @@ namespace MQContract.Interfaces
         /// </summary>
         /// <typeparam name="TQuery">The type of message to listen for</typeparam>
         /// <typeparam name="TQueryResponse">The type of message to respond with</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IQueryResponseConsumer&lt;Q,R&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IQueryResponseConsumer&lt;TQuery,TQueryResponse&gt;</typeparam>
         /// <param name="consumer">An instance of the consumer</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
@@ -112,7 +112,7 @@ namespace MQContract.Interfaces
         /// </summary>
         /// <typeparam name="TQuery">The type of message to listen for</typeparam>
         /// <typeparam name="TQueryResponse">The type of message to respond with</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IQueryResponseConsumer&lt;Q,R&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IQueryResponseConsumer&lt;TQuery,TQueryResponse&gt;</typeparam>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>
@@ -136,7 +136,7 @@ namespace MQContract.Interfaces
         /// </summary>
         /// <typeparam name="TQuery">The type of message to listen for</typeparam>
         /// <typeparam name="TQueryResponse">The type of message to respond with</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IQueryResponseAsyncConsumer&lt;Q,R&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IQueryResponseAsyncConsumer&lt;TQuery,TQueryResponse&gt;</typeparam>
         /// <param name="consumer">An instance of the consumer</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
@@ -151,7 +151,7 @@ namespace MQContract.Interfaces
         /// </summary>
         /// <typeparam name="TQuery">The type of message to listen for</typeparam>
         /// <typeparam name="TQueryResponse">The type of message to respond with</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IQueryResponseAsyncConsumer&lt;Q,R&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IQueryResponseAsyncConsumer&lt;TQuery,TQueryResponse&gt;</typeparam>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
         /// <param name="ignoreMessageHeader">If true, the message type specified will be ignored and it will automatically attempt to convert the underlying message to the given class</param>

@@ -23,7 +23,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="Vsxmd" Version="1.4.5" Condition="'$(BlockMD)' != 'true'">
+		<PackageReference Include="Vsxmd" Version="1.4.6" Condition="'$(BlockMD)' != 'true'">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

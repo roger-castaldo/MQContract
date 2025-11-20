@@ -7,13 +7,13 @@ using System.Diagnostics;
 
 namespace MQContract.Subscriptions
 {
-    internal sealed class QueryResponseSubscription<T>(
+    internal sealed class QueryResponseSubscription<TMessage>(
         Func<ReceivedServiceMessage, string, ValueTask<(ServiceMessage? serviceMessage, Activity? activity, MessageFilterResult filterResult)>> processMessage,
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null,
         bool synchronous = false, ILogger? logger = null)
-        : SubscriptionBase<T>(mapChannel, channel, synchronous, logger)
+        : SubscriptionBase<TMessage>(mapChannel, channel, synchronous, logger)
     {
         private ManualResetEventSlim? manualResetEvent = new(true);
         private CancellationTokenSource? token = new();

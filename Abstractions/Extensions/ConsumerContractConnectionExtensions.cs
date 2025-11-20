@@ -15,7 +15,7 @@ namespace MQContract.Extensions
         /// </summary>
         /// <typeparam name="TContractConnection">Contract Connection</typeparam>
         /// <typeparam name="TMessage">The Message type</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IPubSubConsumer&lt;T&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IPubSubConsumer&lt;TMessage&gt;</typeparam>
         /// <param name="connectionTask">Original Registration task</param>
         /// <param name="consumer">An instance of the consumer</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
@@ -48,7 +48,7 @@ namespace MQContract.Extensions
         /// </summary>
         /// <typeparam name="TContractConnection">Contract Connection</typeparam>
         /// <typeparam name="TMessage">The Message type</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IPubSubConsumer&lt;T&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IPubSubConsumer&lt;TMessage&gt;</typeparam>
         /// <param name="connectionTask">Original Registration task</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
@@ -110,7 +110,7 @@ namespace MQContract.Extensions
         /// </summary>
         /// <typeparam name="TContractConnection">Contract Connection</typeparam>
         /// <typeparam name="TMessage">The Message type</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IPubSubAsyncConsumer&lt;T&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IPubSubAsyncConsumer&lt;TMessage&gt;</typeparam>
         /// <param name="connectionTask">Original Registration task</param>
         /// <param name="consumer">An instance of the consumer</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
@@ -143,7 +143,7 @@ namespace MQContract.Extensions
         /// </summary>
         /// <typeparam name="TContractConnection">Contract Connection</typeparam>
         /// <typeparam name="TMessage">The Message type</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IPubSubAsyncConsumer&lt;T&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IPubSubAsyncConsumer&lt;TMessage&gt;</typeparam>
         /// <param name="connectionTask">Original Registration task</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
@@ -206,7 +206,7 @@ namespace MQContract.Extensions
         /// <typeparam name="TContractConnection">Contract Connection</typeparam>
         /// <typeparam name="TQuery">The type of message to listen for</typeparam>
         /// <typeparam name="TQueryResponse">The type of message to respond with</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IQueryResponseConsumer&lt;Q,R&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IQueryResponseConsumer&lt;TQuery,TQueryResponse&gt;</typeparam>
         /// <param name="connectionTask">Original Registration task</param>
         /// <param name="consumer">An instance of the consumer</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
@@ -240,7 +240,7 @@ namespace MQContract.Extensions
         /// <typeparam name="TContractConnection">Contract Connection</typeparam>
         /// <typeparam name="TQuery">The type of message to listen for</typeparam>
         /// <typeparam name="TQueryResponse">The type of message to respond with</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IQueryResponseConsumer&lt;Q,R&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IQueryResponseConsumer&lt;TQuery,TQueryResponse&gt;</typeparam>
         /// <param name="connectionTask">Original Registration task</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>
@@ -303,7 +303,7 @@ namespace MQContract.Extensions
         /// <typeparam name="TContractConnection">Contract Connection</typeparam>
         /// <typeparam name="TQuery">The type of message to listen for</typeparam>
         /// <typeparam name="TQueryResponse">The type of message to respond with</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IQueryResponseAsyncConsumer&lt;Q,R&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IQueryResponseAsyncConsumer&lt;TQuery,TQueryResponse&gt;</typeparam>
         /// <param name="connectionTask">Original Registration task</param>
         /// <param name="consumer">An instance of the consumer</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
@@ -337,7 +337,7 @@ namespace MQContract.Extensions
         /// <typeparam name="TContractConnection">Contract Connection</typeparam>
         /// <typeparam name="TQuery">The type of message to listen for</typeparam>
         /// <typeparam name="TQueryResponse">The type of message to respond with</typeparam>
-        /// <typeparam name="TConsumer">The type that implements IQueryResponseAsyncConsumer&lt;Q,R&gt;</typeparam>
+        /// <typeparam name="TConsumer">The type that implements IQueryResponseAsyncConsumer&lt;TQuery,TQueryResponse&gt;</typeparam>
         /// <param name="connectionTask">Original Registration task</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the Message class.</param>
         /// <param name="group">The subscription group if desired (typically used when multiple instances of the same system are running)</param>

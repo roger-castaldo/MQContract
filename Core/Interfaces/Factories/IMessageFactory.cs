@@ -3,9 +3,9 @@ using MQContract.Messages;
 
 namespace MQContract.Interfaces.Factories
 {
-    internal interface IMessageFactory<T> : IMessageTypeFactory, IConversionPath<T>
+    internal interface IMessageFactory<TMessage> : IMessageTypeFactory, IConversionPath<TMessage>
     {
         string? MessageChannel { get; }
-        ValueTask<ServiceMessage> ConvertMessageAsync(T message, bool ignoreChannel, string? channel, MessageHeader messageHeader);
+        ValueTask<ServiceMessage> ConvertMessageAsync(TMessage message, bool ignoreChannel, string? channel, MessageHeader messageHeader);
     }
 }

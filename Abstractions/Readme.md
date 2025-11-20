@@ -439,7 +439,7 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | TContractConnection | Contract Connection |
 | TMessage | The Message type |
-| TConsumer | The type that implements IPubSubAsyncConsumer<T> |
+| TConsumer | The type that implements IPubSubAsyncConsumer<TMessage> |
 
 <a name='M-MQContract-Extensions-ConsumerContractConnectionExtensions-RegisterPubSubAsyncConsumerAsync``3-System-Threading-Tasks-ValueTask{MQContract-Interfaces-IConsumerContractConnection{``0}},System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``1},System-Threading-CancellationToken-'></a>
 ### RegisterPubSubAsyncConsumerAsync\`\`3(connectionTask,channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
@@ -469,7 +469,7 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | TContractConnection | Contract Connection |
 | TMessage | The Message type |
-| TConsumer | The type that implements IPubSubAsyncConsumer<T> |
+| TConsumer | The type that implements IPubSubAsyncConsumer<TMessage> |
 
 <a name='M-MQContract-Extensions-ConsumerContractConnectionExtensions-RegisterPubSubConsumerAsync``1-System-Threading-Tasks-ValueTask{MQContract-Interfaces-IConsumerContractConnection{``0}},System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
 ### RegisterPubSubConsumerAsync\`\`1(connectionTask,consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
@@ -528,7 +528,7 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | TContractConnection | Contract Connection |
 | TMessage | The Message type |
-| TConsumer | The type that implements IPubSubConsumer<T> |
+| TConsumer | The type that implements IPubSubConsumer<TMessage> |
 
 <a name='M-MQContract-Extensions-ConsumerContractConnectionExtensions-RegisterPubSubConsumerAsync``3-System-Threading-Tasks-ValueTask{MQContract-Interfaces-IConsumerContractConnection{``0}},System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``1},System-Threading-CancellationToken-'></a>
 ### RegisterPubSubConsumerAsync\`\`3(connectionTask,channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
@@ -558,7 +558,7 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | TContractConnection | Contract Connection |
 | TMessage | The Message type |
-| TConsumer | The type that implements IPubSubConsumer<T> |
+| TConsumer | The type that implements IPubSubConsumer<TMessage> |
 
 <a name='M-MQContract-Extensions-ConsumerContractConnectionExtensions-RegisterQueryResponseAsyncConsumerAsync``1-System-Threading-Tasks-ValueTask{MQContract-Interfaces-IConsumerContractConnection{``0}},System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
 ### RegisterQueryResponseAsyncConsumerAsync\`\`1(connectionTask,consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
@@ -618,7 +618,7 @@ The Contract Connection instance to allow chaining calls
 | TContractConnection | Contract Connection |
 | TQuery | The type of message to listen for |
 | TQueryResponse | The type of message to respond with |
-| TConsumer | The type that implements IQueryResponseAsyncConsumer<Q,R> |
+| TConsumer | The type that implements IQueryResponseAsyncConsumer<TQuery,TQueryResponse> |
 
 <a name='M-MQContract-Extensions-ConsumerContractConnectionExtensions-RegisterQueryResponseAsyncConsumerAsync``4-System-Threading-Tasks-ValueTask{MQContract-Interfaces-IConsumerContractConnection{``0}},System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``1},System-Threading-CancellationToken-'></a>
 ### RegisterQueryResponseAsyncConsumerAsync\`\`4(connectionTask,channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
@@ -649,7 +649,7 @@ The Contract Connection instance to allow chaining calls
 | TContractConnection | Contract Connection |
 | TQuery | The type of message to listen for |
 | TQueryResponse | The type of message to respond with |
-| TConsumer | The type that implements IQueryResponseAsyncConsumer<Q,R> |
+| TConsumer | The type that implements IQueryResponseAsyncConsumer<TQuery,TQueryResponse> |
 
 <a name='M-MQContract-Extensions-ConsumerContractConnectionExtensions-RegisterQueryResponseConsumerAsync``1-System-Threading-Tasks-ValueTask{MQContract-Interfaces-IConsumerContractConnection{``0}},System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
 ### RegisterQueryResponseConsumerAsync\`\`1(connectionTask,consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
@@ -709,7 +709,7 @@ The Contract Connection instance to allow chaining calls
 | TContractConnection | Contract Connection |
 | TQuery | The type of message to listen for |
 | TQueryResponse | The type of message to respond with |
-| TConsumer | The type that implements IQueryResponseConsumer<Q,R> |
+| TConsumer | The type that implements IQueryResponseConsumer<TQuery,TQueryResponse> |
 
 <a name='M-MQContract-Extensions-ConsumerContractConnectionExtensions-RegisterQueryResponseConsumerAsync``4-System-Threading-Tasks-ValueTask{MQContract-Interfaces-IConsumerContractConnection{``0}},System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``1},System-Threading-CancellationToken-'></a>
 ### RegisterQueryResponseConsumerAsync\`\`4(connectionTask,channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
@@ -740,7 +740,7 @@ The Contract Connection instance to allow chaining calls
 | TContractConnection | Contract Connection |
 | TQuery | The type of message to listen for |
 | TQueryResponse | The type of message to respond with |
-| TConsumer | The type that implements IQueryResponseConsumer<Q,R> |
+| TConsumer | The type that implements IQueryResponseConsumer<TQuery,TQueryResponse> |
 
 <a name='T-MQContract-Messages-ErrorMessage'></a>
 ## ErrorMessage `type`
@@ -1276,7 +1276,7 @@ The Contract Connection instance to allow chaining calls
 | Name | Description |
 | ---- | ----------- |
 | TMessage | The Message type |
-| TConsumer | The type that implements PubSubAsyncConsumer<T> |
+| TConsumer | The type that implements PubSubAsyncConsumer<TMessage> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterPubSubAsyncConsumerAsync``2-System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken-'></a>
 ### RegisterPubSubAsyncConsumerAsync\`\`2(channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
@@ -1304,7 +1304,7 @@ The Contract Connection instance to allow chaining calls
 | Name | Description |
 | ---- | ----------- |
 | TMessage | The Message type |
-| TConsumer | The type that implements PubSubAsyncConsumer<T> |
+| TConsumer | The type that implements PubSubAsyncConsumer<TMessage> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterPubSubConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
 ### RegisterPubSubConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
@@ -1354,7 +1354,7 @@ The Contract Connection instance to allow chaining calls
 | Name | Description |
 | ---- | ----------- |
 | TMessage | The Message type |
-| TConsumer | The type that implements IPubSubConsumer<T> |
+| TConsumer | The type that implements IPubSubConsumer<TMessage> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterPubSubConsumerAsync``2-System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken-'></a>
 ### RegisterPubSubConsumerAsync\`\`2(channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
@@ -1382,7 +1382,7 @@ The Contract Connection instance to allow chaining calls
 | Name | Description |
 | ---- | ----------- |
 | TMessage | The Message type |
-| TConsumer | The type that implements IPubSubConsumer<T> |
+| TConsumer | The type that implements IPubSubConsumer<TMessage> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterQueryResponseAsyncConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
 ### RegisterQueryResponseAsyncConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
@@ -1433,7 +1433,7 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | TQuery | The type of message to listen for |
 | TQueryResponse | The type of message to respond with |
-| TConsumer | The type that implements IQueryResponseAsyncConsumer<Q,R> |
+| TConsumer | The type that implements IQueryResponseAsyncConsumer<TQuery,TQueryResponse> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterQueryResponseAsyncConsumerAsync``3-System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken-'></a>
 ### RegisterQueryResponseAsyncConsumerAsync\`\`3(channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
@@ -1462,7 +1462,7 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | TQuery | The type of message to listen for |
 | TQueryResponse | The type of message to respond with |
-| TConsumer | The type that implements IQueryResponseAsyncConsumer<Q,R> |
+| TConsumer | The type that implements IQueryResponseAsyncConsumer<TQuery,TQueryResponse> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterQueryResponseConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken-'></a>
 ### RegisterQueryResponseConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken) `method`
@@ -1513,7 +1513,7 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | TQuery | The type of message to listen for |
 | TQueryResponse | The type of message to respond with |
-| TConsumer | The type that implements IQueryResponseConsumer<Q,R> |
+| TConsumer | The type that implements IQueryResponseConsumer<TQuery,TQueryResponse> |
 
 <a name='M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterQueryResponseConsumerAsync``3-System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken-'></a>
 ### RegisterQueryResponseConsumerAsync\`\`3(channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
@@ -1542,7 +1542,7 @@ The Contract Connection instance to allow chaining calls
 | ---- | ----------- |
 | TQuery | The type of message to listen for |
 | TQueryResponse | The type of message to respond with |
-| TConsumer | The type that implements IQueryResponseConsumer<Q,R> |
+| TConsumer | The type that implements IQueryResponseConsumer<TQuery,TQueryResponse> |
 
 <a name='T-MQContract-Interfaces-Middleware-IContext'></a>
 ## IContext `type`

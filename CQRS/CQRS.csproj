@@ -11,9 +11,6 @@
 	<ItemGroup>
       <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <PackageReference Update="Vsxmd" Version="1.4.6" />
-    </ItemGroup>
 	
 
 </Project>

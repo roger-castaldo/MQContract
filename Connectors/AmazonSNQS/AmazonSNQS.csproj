@@ -12,17 +12,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="Readme.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Update="Vsxmd" Version="1.4.6" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <PackageReference Include="AWSSDK.SimpleNotificationService" Version="4.*" />
 	  <PackageReference Include="AWSSDK.SQS" Version="4.*" />
 	</ItemGroup>

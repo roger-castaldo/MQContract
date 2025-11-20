@@ -24,14 +24,14 @@ namespace MQContract
             where TAttribute : Attribute
             => GetCustomAttribute<TAttribute>(typeof(TAttributeHolder), inherit);
 
-        internal static string MessageTypeName<T>()
-            => MessageTypeName(typeof(T));
+        internal static string MessageTypeName<TMessage>()
+            => MessageTypeName(typeof(TMessage));
 
         internal static string MessageTypeName(Type messageType)
             => GetCustomAttribute<MessageAttribute>(messageType)?.TypeName??TypeName(messageType);
 
-        internal static string TypeName<T>()
-            => TypeName(typeof(T));
+        internal static string TypeName<TMessage>()
+            => TypeName(typeof(TMessage));
 
         internal static string TypeName(Type type)
         {
@@ -41,8 +41,8 @@ namespace MQContract
             return result;
         }
 
-        internal static string MessageVersionString<T>()
-            => MessageVersionString(typeof(T));
+        internal static string MessageVersionString<TMessage>()
+            => MessageVersionString(typeof(TMessage));
 
         internal static string MessageVersionString(Type messageType)
             => GetCustomAttribute<MessageAttribute>(messageType)?.TypeVersion.ToString()??"0.0.0.0";
