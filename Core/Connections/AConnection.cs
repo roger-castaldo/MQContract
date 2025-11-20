@@ -226,6 +226,42 @@ namespace MQContract.Connections
         #region Subscriptions
         protected abstract ValueTask<ISubscription> CreateSubscriptionAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, bool synchronous, CancellationToken cancellationToken);
 
+        protected async ValueTask<ISubscription> CreateSubscriptionAsync<T>(IMessageFactory<T> messageFactory, IMessageServiceConnection serviceConnection, Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived,
+            string? channel, string? group, bool synchronous, string? serviceConnectionName, MessageFilters<T>? messageFilters, CancellationToken cancellationToken)
+        {
+            using var scope = SetScope();
+            logger?.LogDebugChecked("Creating PubSub Subscription for {T} on {Channel} in {Group}.", typeof(T), channel, group);
+            var subscription = new PubSubSubscription<T>(
+                async (serviceMessage) =>
+                {
+                    using var activity = StartActivity(Constants.ConsumeActivityName, messageHeader: serviceMessage.Header, serviceConnection: serviceConnection, connectionName: serviceConnectionName);
+                    try
+                    {
+                        var decodedResult = await DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes.PublishSubscription, messageFactory, serviceMessage, activity, messageFilters);
+                        if (decodedResult.FilterResult == MessageFilterResult.Allow)
+                            await messageReceived(new ReceivedMessage<T>(serviceMessage.ID, decodedResult.Message!, decodedResult.Header!, serviceMessage.ReceivedTimestamp, DateTime.Now, activity));
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+                        return !Equals(decodedResult.FilterResult, MessageFilterResult.DropAndDontAcknowledge);
+                    }
+                    catch
+                    {
+                        activity?.SetStatus(ActivityStatusCode.Error);
+                        throw;
+                    }
+                },
+                errorReceived,
+                (originalChannel) => MapChannel(ChannelMapper.MapTypes.PublishSubscription, originalChannel)!,
+                channel: channel,
+            group: group,
+            synchronous: synchronous,
+                logger: Logger);
+            logger?.LogInformationChecked("Establishing PubSub Subscription connection.");
+            if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
+                return subscription;
+            logger?.LogInformationChecked("Establishment of PubSub Subscription connection failed.");
+            throw new SubscriptionFailedException();
+        }
+
         ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
@@ -336,42 +372,6 @@ namespace MQContract.Connections
             }
             publishLock.Release();
             return result;
-        }
-
-        protected async ValueTask<ISubscription> CreateSubscriptionAsync<T>(IMessageFactory<T> messageFactory, IMessageServiceConnection serviceConnection, Func<IReceivedMessage<T>, ValueTask> messageReceived, Action<Exception> errorReceived, 
-            string? channel, string? group, bool synchronous, string? serviceConnectionName, MessageFilters<T>? messageFilters, CancellationToken cancellationToken)
-        {
-            using var scope = SetScope();
-            logger?.LogDebugChecked("Creating PubSub Subscription for {T} on {Channel} in {Group}.", typeof(T), channel, group);
-            var subscription = new PubSubSubscription<T>(
-                async (serviceMessage) =>
-                {
-                    using var activity = StartActivity(Constants.ConsumeActivityName, messageHeader:serviceMessage.Header, serviceConnection:serviceConnection, connectionName:serviceConnectionName);
-                    try
-                    {
-                        var decodedResult = await DecodeServiceMessageAsync<T>(ChannelMapper.MapTypes.PublishSubscription, messageFactory, serviceMessage, activity, messageFilters);
-                        if (decodedResult.FilterResult == MessageFilterResult.Allow)
-                            await messageReceived(new ReceivedMessage<T>(serviceMessage.ID, decodedResult.Message!, decodedResult.Header!, serviceMessage.ReceivedTimestamp, DateTime.Now, activity));
-                        activity?.SetStatus(ActivityStatusCode.Ok);
-                        return !Equals(decodedResult.FilterResult, MessageFilterResult.DropAndDontAcknowledge);
-                    }
-                    catch
-                    {
-                        activity?.SetStatus(ActivityStatusCode.Error);
-                        throw;
-                    }
-                },
-                errorReceived,
-                (originalChannel) => MapChannel(ChannelMapper.MapTypes.PublishSubscription, originalChannel)!,
-                channel: channel,
-            group: group,
-            synchronous: synchronous,
-                logger: Logger);
-            logger?.LogInformationChecked("Establishing PubSub Subscription connection.");
-            if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
-                return subscription;
-            logger?.LogInformationChecked("Establishment of PubSub Subscription connection failed.");
-            throw new SubscriptionFailedException();
         }
         #endregion
 
@@ -714,10 +714,7 @@ namespace MQContract.Connections
                             disposable.Dispose();
                     }),
                     .. consumerSubscriptions.Select(async(sub)=>{
-                        if (sub is IAsyncDisposable asyncDisposable)
-                            await asyncDisposable.DisposeAsync();
-                        else if (sub is IDisposable disposable)
-                            disposable.Dispose();
+                        await sub.DisposeAsync();
                     })
                 ]);
                 consumerSubscriptions.Clear();

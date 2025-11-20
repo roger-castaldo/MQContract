@@ -26,9 +26,6 @@ namespace MQContract.Connections
                 .Select(ss => ss.MessageServiceConnection)
                 .OfType<IPingableMessageServiceConnection>()
                 .WhenAll(pmc => pmc.PingAsync());
-
-        protected override ValueTask InternalDisposeAsync()
-            => base.InternalDisposeAsync();
             
         IMultiServiceContractConnection IMultiServiceContractConnection.RegisterServiceConnection(string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
             => RegisterServiceConnection(pars => true, serviceConnectionName, messageServiceConnection);

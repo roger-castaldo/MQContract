@@ -27,7 +27,7 @@ namespace BenchMark.PublishBenchmarks
             encodedAnnouncement = new(MessageContent);
         }
 
-        private async Task ExecuteOperationsAsync(Func<Task> operation)
+        private static async Task ExecuteOperationsAsync(Func<Task> operation)
         {
             for(var x=0;x<ExecutionCount;x++)
                 await operation();

@@ -3,7 +3,6 @@ using MQContract.Extensions;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Middleware;
 using System.Collections.Concurrent;
-using System.Reflection;
 
 namespace MQContract.Middleware
 {

@@ -38,14 +38,7 @@ namespace MQContract.Connections
                 .OfType<ServiceConnection>()
                 .DistinctBy(ss => ss.ServiceConnectionName)];
 
-        public IEnumerable<ServiceConnection> FullList
-        {
-            get
-            {
-                return connections.DistinctBy(ss => ss.ServiceConnectionName).ToArray();
-            }
-        }
-
+        public IEnumerable<ServiceConnection> FullList => [.. connections.DistinctBy(ss => ss.ServiceConnectionName)];
         public async ValueTask CloseAsync()
         {
             await connections.DistinctBy(sse => sse.ServiceConnectionName)

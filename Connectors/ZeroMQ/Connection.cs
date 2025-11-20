@@ -157,7 +157,7 @@ namespace MQContract.ZeroMQ
             return result;
         }
 
-        private async ValueTask<ErrorMessage?> PublishMessageAsync(byte[] frame, CancellationToken cancellationToken)
+        private async ValueTask<ErrorMessage?> PublishMessageAsync(byte[] frame)
         {
             ErrorMessage? error = null;
             try
@@ -207,7 +207,7 @@ namespace MQContract.ZeroMQ
         }
 
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-            => new(message.ID,await PublishMessageAsync(MessageMapper.Map(message), cancellationToken));
+            => new(message.ID,await PublishMessageAsync(MessageMapper.Map(message)));
 
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             =>ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
@@ -234,7 +234,7 @@ namespace MQContract.ZeroMQ
         async ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
         {
             UndefinedInboxException.ThrowIfNullOrWhiteSpace(inboxAddress);
-            return new(message.ID, await PublishMessageAsync(MessageMapper.Map(message, correlationID, inboxAddress), cancellationToken));
+            return new(message.ID, await PublishMessageAsync(MessageMapper.Map(message, correlationID, inboxAddress)));
         }
 
         ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
