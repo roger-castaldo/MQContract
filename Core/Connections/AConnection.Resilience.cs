@@ -9,7 +9,7 @@ namespace MQContract.Connections
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
         where TContractConnection : IBaseContractConnection
     {
-        private readonly ConcurrentDictionary<Tuple<string?, object?>, ResiliencePolicy> resilliancePolicies = [];
+        private readonly ConcurrentDictionary<(string? connectionName, object? dataType), ResiliencePolicy> resilliancePolicies = [];
 
         private ResiliencePolicy BuildPolicy((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
         {
@@ -20,9 +20,13 @@ namespace MQContract.Connections
             return new(logger, retryPolicy, circuitBreakPolicy);
         }
 
-        protected TContractConnection AddPolicy(string? connectionName, object? key, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        protected TContractConnection AddPolicy(
+            string? connectionName,
+            object? key,
+            (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy,
+            (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
         {
-            resilliancePolicies.TryAdd(new(connectionName, key), BuildPolicy(retryPolicy, circuitBreakPolicy));
+            resilliancePolicies.TryAdd((connectionName, key), BuildPolicy(retryPolicy, circuitBreakPolicy));
             return (TContractConnection)(IBaseContractConnection)this;
         }
 
@@ -40,16 +44,29 @@ namespace MQContract.Connections
 
         private ResiliencePolicy? GetResilliancePolicy<TMessage>(string? connectionName, string channel)
         {
-            ResiliencePolicy? policy = null;
-            if (connectionName!=null
-                &&!resilliancePolicies.TryGetValue(new(connectionName, channel), out policy)
-                && !resilliancePolicies.TryGetValue(new(connectionName, typeof(TMessage)), out policy))
-                resilliancePolicies.TryGetValue(new(connectionName, null), out policy);
-            if (policy==null
-                && !resilliancePolicies.TryGetValue(new(null, channel), out policy)
-                && !resilliancePolicies.TryGetValue(new(null, typeof(TMessage)), out policy))
-                resilliancePolicies.TryGetValue(new(null, null), out policy);
-            return policy;
+            if (resilliancePolicies.IsEmpty)
+                return null;
+
+            var msgType = typeof(TMessage);
+
+            // Ordered lookup (most specific → least specific)
+            var keys = new (string?, object?)[]
+            {
+                (connectionName, channel),
+                (connectionName, msgType),
+                (connectionName, null),
+                (null, channel),
+                (null, msgType),
+                (null, null)
+            };
+
+            foreach (var key in keys)
+            {
+                if (resilliancePolicies.TryGetValue(key, out var policy))
+                    return policy;
+            }
+
+            return null;
         }
 
         protected async ValueTask<TransmissionResult> ExecuteResilliantTransmissionAsync<TMessage>(Func<CancellationToken, ValueTask<TransmissionResult>> func, string? connectionName, string channel, CancellationToken cancellationToken)

@@ -314,8 +314,8 @@ namespace MQContract.Connections
                 serviceMessage.Channel,
                 cancellationToken
             );
-            OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
             publishLock.Release();
+            OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
             activity?.SetStatus(result.IsError ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;

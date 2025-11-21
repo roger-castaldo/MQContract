@@ -3,7 +3,7 @@
 namespace BenchMark.Messages
 {
     [Message(typeName:"EncodedAnnouncement",typeVersion:"1.0.0")]
-    internal record EncodedAnnouncement(string Message) : Announcement(Message)
+    public record EncodedAnnouncement(string Message) : Announcement(Message)
     {
     }
 }
