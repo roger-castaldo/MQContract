@@ -4,7 +4,7 @@ using MQContract.CQRS.Interfaces.Command;
 
 namespace BenchMark.Messages
 {
-    [Message(typeName:"Announcement", typeVersion:"1.0.0")]
-    public record Announcement(string Message) 
+    [Command(channel:"Announcements")]
+    public record AnnouncementCommand(string Message) : ICommand
     { }
 }

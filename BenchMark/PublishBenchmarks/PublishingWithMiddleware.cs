@@ -1,38 +1,61 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQContract;
-using MQContract.Interfaces;
 
 namespace BenchMark.PublishBenchmarks
 {
     [MemoryDiagnoser]
     public class PublishingWithMiddleware
     {
-        [Params("", "Metrics", "OTEL", "Resilience", "Metrics&OTEL", "Metrics&Resilience", "OTEL&Resilience", "ALL")]
-        public string Middleware { get; set; } = string.Empty;
-
+        
         public const string ChannelName = "sample";
         private const string MessageContent = "The quick brown fox";
-        private IContractedConnection? contractConnection;
 
-        [GlobalSetup]
-        public void Setup()
+        [Benchmark(Baseline = true)]
+        public async Task PublishWithNoMiddleware()
+            => await PublishBasicEncodedMessageMultipleTimes(string.Empty);
+
+        [Benchmark()]
+        public async Task PublishWithMetrics()
+            => await PublishBasicEncodedMessageMultipleTimes("Metrics");
+
+        [Benchmark()]
+        public async Task PublishWithOtel()
+            => await PublishBasicEncodedMessageMultipleTimes("OTEL");
+
+        [Benchmark()]
+        public async Task PublishWithResilience()
+            => await PublishBasicEncodedMessageMultipleTimes("Resilience");
+
+        [Benchmark()]
+        public async Task PublishWithMetricsAndOtel()
+            => await PublishBasicEncodedMessageMultipleTimes("Metrics&OTEL");
+
+        [Benchmark()]
+        public async Task PublishWithMetricsAndResilience()
+            => await PublishBasicEncodedMessageMultipleTimes("Metrics&Resilience");
+
+        [Benchmark()]
+        public async Task PublishWithOtelAndResilience()
+            => await PublishBasicEncodedMessageMultipleTimes("OTEL&Resilience");
+
+        [Benchmark()]
+        public async Task PublishWithAll()
+            => await PublishBasicEncodedMessageMultipleTimes("ALL");
+
+        private static async Task PublishBasicEncodedMessageMultipleTimes(string middleware)
         {
-            contractConnection = ContractConnection.Instance(new FakePublishConnection());
-            if (Middleware.Contains("Metrics")||Equals(Middleware,"ALL"))
+            await using var contractConnection = ContractConnection.Instance(new FakePublishConnection());
+            if (middleware.Contains("Metrics")||Equals(middleware, "ALL"))
                 contractConnection.AddMetrics(null, true);
-            if (Middleware.Contains("OTEL")||Equals(Middleware, "ALL"))
+            if (middleware.Contains("OTEL")||Equals(middleware, "ALL"))
                 contractConnection.EnableOpenTelemetry();
-            if (Middleware.Contains("Resilience")||Equals(Middleware, "ALL"))
+            if (middleware.Contains("Resilience")||Equals(middleware, "ALL"))
                 contractConnection.RegisterResiliencePolicy(
                         retryPolicy: (3, (int cnt) => TimeSpan.FromMilliseconds(100)),
                         circuitBreakPolicy: (3, TimeSpan.FromSeconds(1))
                     );
-        }
-
-        [Benchmark]
-        public async Task PublishBasicEncodedMessage()
-        {
-            _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
+            for (var x=0;x<Constants.PublishCount/10; x++)
+                _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
         }
     }
 }

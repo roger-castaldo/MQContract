@@ -8,7 +8,6 @@ namespace MQContract.Defaults
         private static JsonSerializerOptions JsonOptions => new()
         {
             WriteIndented=false,
-            DefaultBufferSize=4096,
             AllowTrailingCommas=true,
             PropertyNameCaseInsensitive=true,
             ReadCommentHandling=JsonCommentHandling.Skip
