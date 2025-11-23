@@ -42,7 +42,7 @@ namespace BenchMark.PublishBenchmarks
         public async Task PublishWithAll()
             => await PublishBasicEncodedMessageMultipleTimes("ALL");
 
-        private async Task PublishBasicEncodedMessageMultipleTimes(string middleware)
+        private static async Task PublishBasicEncodedMessageMultipleTimes(string middleware)
         {
             await using var contractConnection = ContractConnection.Instance(new FakePublishConnection());
             if (middleware.Contains("Metrics")||Equals(middleware, "ALL"))
