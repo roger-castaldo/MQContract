@@ -9,7 +9,7 @@ namespace MQContract.Connections
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
         where TContractConnection : IBaseContractConnection
     {
-        private readonly ConcurrentDictionary<(string? connectionName, object? dataType), ResiliencePolicy> resilliancePolicies = [];
+        private readonly ConcurrentDictionary<(string? connectionName, object? dataType), ResiliencePolicy?> resilliancePolicies = [];
 
         private ResiliencePolicy BuildPolicy((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
         {
@@ -27,6 +27,10 @@ namespace MQContract.Connections
             (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
         {
             resilliancePolicies.TryAdd((connectionName, key), BuildPolicy(retryPolicy, circuitBreakPolicy));
+            foreach(var k in resilliancePolicies.Keys
+                .Where(static k =>!string.IsNullOrWhiteSpace(k.connectionName) && k.dataType is not null && k.dataType is not Type && k.dataType is not string)
+                .ToArray())
+                resilliancePolicies.TryRemove(k,out _);
             return (TContractConnection)(IBaseContractConnection)this;
         }
 
@@ -49,6 +53,9 @@ namespace MQContract.Connections
 
             var msgType = typeof(TMessage);
 
+            if (resilliancePolicies.TryGetValue((connectionName, (channel, msgType)), out var policy))
+                return policy;
+
             // Ordered lookup (most specific → least specific)
             var keys = new (string?, object?)[]
             {
@@ -62,10 +69,13 @@ namespace MQContract.Connections
 
             foreach (var key in keys)
             {
-                if (resilliancePolicies.TryGetValue(key, out var policy))
+                if (resilliancePolicies.TryGetValue(key, out policy)) {
+                    resilliancePolicies.TryAdd((connectionName, (channel, msgType)), policy);
                     return policy;
+                }
             }
 
+            resilliancePolicies.TryAdd((connectionName, (channel, msgType)), null);
             return null;
         }
 

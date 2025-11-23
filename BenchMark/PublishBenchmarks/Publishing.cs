@@ -12,7 +12,6 @@ namespace BenchMark.PublishBenchmarks
     {
         public const string ChannelName = "sample";
         private const string MessageContent = "The quick brown fox";
-        private const int ExecutionCount = 250;
         private IMessageServiceConnection? serviceConnection;
         private IContractConnection? contractConnection;
         private Announcement? announcement;
@@ -29,7 +28,7 @@ namespace BenchMark.PublishBenchmarks
 
         private static async Task ExecuteOperationsAsync(Func<Task> operation)
         {
-            for(var x=0;x<ExecutionCount;x++)
+            for(var x=0;x<Constants.PublishCount; x++)
                 await operation();
         }
 

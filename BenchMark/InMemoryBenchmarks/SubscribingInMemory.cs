@@ -5,12 +5,13 @@ using MQContract.Interfaces;
 
 namespace BenchMark.InMemoryBenchmarks
 {
+    [MemoryDiagnoser]
     public class SubscribingInMemory
     {
-        private const string channel = "Accouncements";
+        private const string channel = "Announcements";
         private static readonly Announcement testMessage = new("The quick brown fox");
 
-        [Params(1, 10, 100, 1000, 5000, 10000, 50000, 100000, 250000)]
+        [Params(1, 10, 100, 1000, 5000, 10000, 50000)]
         public int MessageCount { get; set; }
         private IContractedConnection? contractConnection;
         private TaskCompletionSource? completionSource;

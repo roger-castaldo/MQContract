@@ -54,15 +54,20 @@ namespace MQContract.Middleware
         public IContractMetric? GetSnapshot(string channel, bool sent)
             => internalTracker?.GetSnapshot(channel, sent);
 
-        private async ValueTask AddStat(Type messageType, string? channel, bool sending, int messageSize, Stopwatch? stopWatch)
-            => await this.channel.Writer.WriteAsync(new(messageType, channel, sending, messageSize, stopWatch?.Elapsed??TimeSpan.Zero));
+        private async ValueTask AddStat(Type messageType, string? channel, bool sending, int messageSize, TimeSpan duration)
+            => await this.channel.Writer.WriteAsync(new(messageType, channel, sending, messageSize, duration));
+
+        private static TimeSpan GetDuration(IContext context)
+        {
+            var timestamp = (long?)context[StopWatchKey];
+            var result = (timestamp.HasValue ? Stopwatch.GetElapsedTime(timestamp.Value) : TimeSpan.Zero);
+            context[StopWatchKey]=null;
+            return result;
+        }
 
         public async ValueTask<(TMessage message, MessageHeader messageHeader)> AfterMessageDecodeAsync<TMessage>(IContext context, TMessage message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
         {
-            var stopWatch = (Stopwatch?)context[StopWatchKey];
-            stopWatch?.Stop();
-            await AddStat(typeof(TMessage), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageReceivedSizeKey]??0, stopWatch);
-            context[StopWatchKey]=null;
+            await AddStat(typeof(TMessage), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageReceivedSizeKey]??0, GetDuration(context));   
             context[MessageReceivedChannelKey]=null;
             context[MessageReceivedSizeKey]=null;
             return (message, messageHeader);
@@ -70,10 +75,7 @@ namespace MQContract.Middleware
 
         public async ValueTask<ServiceMessage> AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
         {
-            var stopWatch = (Stopwatch?)context[StopWatchKey];
-            stopWatch?.Stop();
-            await AddStat(messageType, message.Channel, true, message.Data.Length, stopWatch);
-            context[StopWatchKey] = null;
+            await AddStat(messageType, message.Channel, true, message.Data.Length, GetDuration(context));
             return message;
         }
 
@@ -81,17 +83,13 @@ namespace MQContract.Middleware
         {
             context[MessageReceivedChannelKey] = messageChannel;
             context[MessageReceivedSizeKey] = data.Length;
-            var stopwatch = new Stopwatch();
-            context[StopWatchKey] = stopwatch;
-            stopwatch.Start();
+            context[StopWatchKey] = Stopwatch.GetTimestamp();
             return ValueTask.FromResult((messageHeader, data));
         }
 
         public ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader)
         {
-            var stopwatch = new Stopwatch();
-            context[StopWatchKey] = stopwatch;
-            stopwatch.Start();
+            context[StopWatchKey] = Stopwatch.GetTimestamp();
             return ValueTask.FromResult((message, channel, messageHeader));
         }
     }

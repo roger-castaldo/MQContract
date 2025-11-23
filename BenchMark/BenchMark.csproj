@@ -14,6 +14,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Connectors\InMemory\InMemory.csproj" />
 	  <ProjectReference Include="..\Core\Core.csproj" />
+	  <ProjectReference Include="..\CQRS\CQRS.csproj" />
 	</ItemGroup>
 
 </Project>
