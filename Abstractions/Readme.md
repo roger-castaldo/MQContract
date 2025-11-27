@@ -95,7 +95,7 @@
 - [IHeaderFilteredConsumer](#T-MQContract-Interfaces-Consumers-IHeaderFilteredConsumer 'MQContract.Interfaces.Consumers.IHeaderFilteredConsumer')
   - [Filter](#P-MQContract-Interfaces-Consumers-IHeaderFilteredConsumer-Filter 'MQContract.Interfaces.Consumers.IHeaderFilteredConsumer.Filter')
 - [IInboxQueryableMessageServiceConnection](#T-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection')
-  - [EstablishInboxSubscriptionAsync(messageReceived,cancellationToken)](#M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-EstablishInboxSubscriptionAsync-System-Action{MQContract-Messages-ReceivedInboxServiceMessage},System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(System.Action{MQContract.Messages.ReceivedInboxServiceMessage},System.Threading.CancellationToken)')
+  - [EstablishInboxSubscriptionAsync(messageReceived,cancellationToken)](#M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-EstablishInboxSubscriptionAsync-System-Func{MQContract-Messages-ReceivedInboxServiceMessage,System-Threading-Tasks-ValueTask},System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(System.Func{MQContract.Messages.ReceivedInboxServiceMessage,System.Threading.Tasks.ValueTask},System.Threading.CancellationToken)')
   - [QueryAsync(message,correlationID,cancellationToken)](#M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-QueryAsync-MQContract-Messages-ServiceMessage,System-Guid,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IInboxQueryableMessageServiceConnection.QueryAsync(MQContract.Messages.ServiceMessage,System.Guid,System.Threading.CancellationToken)')
 - [IMappableContractConnection\`1](#T-MQContract-Interfaces-IMappableContractConnection`1 'MQContract.Interfaces.IMappableContractConnection`1')
   - [RegisterResiliencePolicy(serviceConnectionName,retryPolicy,circuitBreakPolicy)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterResiliencePolicy-System-String,System-Nullable{System-ValueTuple{System-Int32,System-Func{System-Int32,System-TimeSpan}}},System-Nullable{System-ValueTuple{System-Int32,System-TimeSpan}}- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterResiliencePolicy(System.String,System.Nullable{System.ValueTuple{System.Int32,System.Func{System.Int32,System.TimeSpan}}},System.Nullable{System.ValueTuple{System.Int32,System.TimeSpan}})')
@@ -122,7 +122,7 @@
   - [MaxMessageBodySize](#P-MQContract-Interfaces-Service-IMessageServiceConnection-MaxMessageBodySize 'MQContract.Interfaces.Service.IMessageServiceConnection.MaxMessageBodySize')
   - [CloseAsync()](#M-MQContract-Interfaces-Service-IMessageServiceConnection-CloseAsync 'MQContract.Interfaces.Service.IMessageServiceConnection.CloseAsync')
   - [PublishAsync(message,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-PublishAsync-MQContract-Messages-ServiceMessage,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.PublishAsync(MQContract.Messages.ServiceMessage,System.Threading.CancellationToken)')
-  - [SubscribeAsync(messageReceived,errorReceived,channel,group,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeAsync-System-Action{MQContract-Messages-ReceivedServiceMessage},System-Action{System-Exception},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.SubscribeAsync(System.Action{MQContract.Messages.ReceivedServiceMessage},System.Action{System.Exception},System.String,System.String,System.Threading.CancellationToken)')
+  - [SubscribeAsync(messageReceived,errorReceived,channel,group,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeAsync-System-Func{MQContract-Messages-ReceivedServiceMessage,System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.SubscribeAsync(System.Func{MQContract.Messages.ReceivedServiceMessage,System.Threading.Tasks.ValueTask},System.Action{System.Exception},System.String,System.String,System.Threading.CancellationToken)')
 - [IMessageTypeEncoder\`1](#T-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1')
   - [DecodeAsync(stream)](#M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-DecodeAsync-System-IO-Stream- 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1.DecodeAsync(System.IO.Stream)')
   - [EncodeAsync(message)](#M-MQContract-Interfaces-Encoding-IMessageTypeEncoder`1-EncodeAsync-`0- 'MQContract.Interfaces.Encoding.IMessageTypeEncoder`1.EncodeAsync(`0)')
@@ -1866,7 +1866,7 @@ MQContract.Interfaces.Service
 Used to implement an Inbox style query response underlying service, this is if the service does not support QueryResponse messaging but does support a sort of query inbox response 
 style pub sub where you can specify the destination down to a specific instance.
 
-<a name='M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-EstablishInboxSubscriptionAsync-System-Action{MQContract-Messages-ReceivedInboxServiceMessage},System-Threading-CancellationToken-'></a>
+<a name='M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-EstablishInboxSubscriptionAsync-System-Func{MQContract-Messages-ReceivedInboxServiceMessage,System-Threading-Tasks-ValueTask},System-Threading-CancellationToken-'></a>
 ### EstablishInboxSubscriptionAsync(messageReceived,cancellationToken) `method`
 
 ##### Summary
@@ -1881,7 +1881,7 @@ A service subscription object specifically tied to the RPC inbox for this partic
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| messageReceived | [System.Action{MQContract.Messages.ReceivedInboxServiceMessage}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{MQContract.Messages.ReceivedInboxServiceMessage}') | Callback called when a message is recieved in the RPC inbox |
+| messageReceived | [System.Func{MQContract.Messages.ReceivedInboxServiceMessage,System.Threading.Tasks.ValueTask}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Messages.ReceivedInboxServiceMessage,System.Threading.Tasks.ValueTask}') | Callback called when a message is recieved in the RPC inbox |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
 <a name='M-MQContract-Interfaces-Service-IInboxQueryableMessageServiceConnection-QueryAsync-MQContract-Messages-ServiceMessage,System-Guid,System-Threading-CancellationToken-'></a>
@@ -2322,7 +2322,7 @@ A transmission result instance indicating the result
 | message | [MQContract.Messages.ServiceMessage](#T-MQContract-Messages-ServiceMessage 'MQContract.Messages.ServiceMessage') | The message to publish |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
-<a name='M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeAsync-System-Action{MQContract-Messages-ReceivedServiceMessage},System-Action{System-Exception},System-String,System-String,System-Threading-CancellationToken-'></a>
+<a name='M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeAsync-System-Func{MQContract-Messages-ReceivedServiceMessage,System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Threading-CancellationToken-'></a>
 ### SubscribeAsync(messageReceived,errorReceived,channel,group,cancellationToken) `method`
 
 ##### Summary
@@ -2337,7 +2337,7 @@ A service subscription object
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| messageReceived | [System.Action{MQContract.Messages.ReceivedServiceMessage}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{MQContract.Messages.ReceivedServiceMessage}') | The callback to invoke when a message is received |
+| messageReceived | [System.Func{MQContract.Messages.ReceivedServiceMessage,System.Threading.Tasks.ValueTask}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Messages.ReceivedServiceMessage,System.Threading.Tasks.ValueTask}') | The callback to invoke when a message is received |
 | errorReceived | [System.Action{System.Exception}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Exception}') | The callback to invoke when an exception occurs |
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The name of the channel to subscribe to |
 | group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The consumer group to register as |

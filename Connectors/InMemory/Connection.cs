@@ -51,14 +51,14 @@ namespace MQContract.InMemory
         ValueTask<IEnumerable<TransmissionResult>> IBulkPublishableMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
             => GetChannel(messages.First().Channel).BulkPublishAsync(messages, cancellationToken);
 
-        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => GetChannel(channel).RegisterSubscriptionAsync(messageReceived, errorReceived, group, cancellationToken);
 
         ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => GetChannel(channel).RegisterQuerySubscriptionAsync(messageReceived, errorReceived,
                 async (response) => await GetChannel(inboxChannel).PublishAsync(response, cancellationToken), group, cancellationToken);
 
-        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage,ValueTask> messageReceived, CancellationToken cancellationToken)
             => GetChannel(inboxChannel).EstablishInboxSubscriptionAsync(messageReceived, cancellationToken);
         ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
             => GetChannel(message.Channel).QueryAsync(message, inboxChannel, correlationID, cancellationToken);

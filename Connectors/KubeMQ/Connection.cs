@@ -258,7 +258,7 @@ namespace MQContract.KubeMQ
 #pragma warning restore S2139 // Exceptions should be either logged or rethrown but not both
         }
 
-        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var sub = new PubSubscription(
                 connectionOptions,

@@ -14,7 +14,7 @@ namespace MQContract.InMemory
                 while (await registration.channel.Reader.WaitToReadAsync())
                 {
                     var message = await registration.channel.Reader.ReadAsync();
-                    await messageRecieved(message);
+                    await messageRecieved(message).ConfigureAwait(false);
                 }
             });
         }

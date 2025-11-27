@@ -4,7 +4,7 @@ using NATS.Client.Core;
 namespace MQContract.NATS.Subscriptions
 {
     internal class PublishSubscription(IAsyncEnumerable<NatsMsg<byte[]>> asyncEnumerable,
-        Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived)
+        Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived)
         : SubscriptionBase()
     {
         protected override async Task RunAction()
@@ -13,7 +13,7 @@ namespace MQContract.NATS.Subscriptions
             {
                 try
                 {
-                    messageReceived(ExtractMessage(msg));
+                    await messageReceived(ExtractMessage(msg)).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

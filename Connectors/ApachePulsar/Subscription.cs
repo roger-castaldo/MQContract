@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace MQContract.ApachePulsar
 {
-    internal class Subscription(IPulsarClient pulsarClient, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group) : IServiceSubscription, IAsyncDisposable
+    internal class Subscription(IPulsarClient pulsarClient, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group) : IServiceSubscription, IAsyncDisposable
     {
         private static readonly Regex regReplyGroup = new Regex(@"^reply-[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$", RegexOptions.Compiled|RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
@@ -31,11 +31,11 @@ namespace MQContract.ApachePulsar
                     {
                         var msg = await consumer.Receive(cancelToken.Token);
                         if (msg!=null)
-                            messageReceived(Connection.ConvertMessage(
+                            await messageReceived(Connection.ConvertMessage(
                                 msg,
                                 consumer.Topic,
                                 async () => await consumer.Acknowledge(msg.MessageId, cancelToken.Token)
-                            ));
+                            )).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {

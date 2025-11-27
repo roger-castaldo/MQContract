@@ -89,7 +89,7 @@ namespace Messages
             }
 
             List<(ArrivalAnnouncement, MessageHeader?)> arrivalAnnouncements = [];
-            for (var x = 10; x<20; x++)
+            for (var x = 10; x<50; x++)
                 arrivalAnnouncements.Add((new($"FirstName{x}", $"LastName{x}"), null));
 
             var bulkResult = await contractConnection.BulkPublishAsync<ArrivalAnnouncement>(arrivalAnnouncements, cancellationToken: sourceCancel.Token);

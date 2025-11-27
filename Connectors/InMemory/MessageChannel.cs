@@ -108,25 +108,20 @@ namespace MQContract.InMemory
                 cancellationToken
             );
 
-        internal async ValueTask<IServiceSubscription?> RegisterSubscriptionAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string? group, CancellationToken cancellationToken)
+        internal async ValueTask<IServiceSubscription?> RegisterSubscriptionAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string? group, CancellationToken cancellationToken)
             => await CreateSubscription(
-                (receivedMessage) =>
-                {
-                    messageReceived(new(receivedMessage.ID, receivedMessage.MessageTypeID, receivedMessage.Channel, receivedMessage.Header, receivedMessage.Data));
-                    return ValueTask.CompletedTask;
-                },
+                (receivedMessage) => messageReceived(new(receivedMessage.ID, receivedMessage.MessageTypeID, receivedMessage.Channel, receivedMessage.Header, receivedMessage.Data)),
                 errorReceived,
                 group,
                 cancellationToken
             );
 
-        internal async ValueTask<IServiceSubscription> EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
+        internal async ValueTask<IServiceSubscription> EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage,ValueTask> messageReceived, CancellationToken cancellationToken)
             => await CreateSubscription(
-                (receivedMessage) =>
+                async (receivedMessage) =>
                 {
                     if (receivedMessage.CorrelationID!=null)
-                        messageReceived(new(receivedMessage.ID, receivedMessage.MessageTypeID, receivedMessage.Channel, receivedMessage.Header, receivedMessage.CorrelationID.Value, receivedMessage.Data));
-                    return ValueTask.CompletedTask;
+                        await messageReceived(new(receivedMessage.ID, receivedMessage.MessageTypeID, receivedMessage.Channel, receivedMessage.Header, receivedMessage.CorrelationID.Value, receivedMessage.Data));
                 },
                 (error) => { },
                 null,

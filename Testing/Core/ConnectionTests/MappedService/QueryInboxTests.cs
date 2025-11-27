@@ -30,7 +30,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<Action<ReceivedInboxServiceMessage>> receivedActions = [];
+            List<Func<ReceivedInboxServiceMessage, ValueTask>> receivedActions = [];
             List<ServiceMessage> messages = [];
             List<Guid> messageIDs = [];
             var acknowledgeCount = 0;
@@ -89,7 +89,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
@@ -106,7 +106,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
             var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
-            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, Guid messageID, CancellationToken cancellationToken) =>
@@ -136,7 +136,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
@@ -152,7 +152,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var defaultTimeout = TimeSpan.FromSeconds(5);
 
             var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
-            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns((ServiceMessage message, Guid messageID, CancellationToken cancellationToken) =>
@@ -179,7 +179,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
@@ -200,7 +200,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<Action<ReceivedInboxServiceMessage>> receivedActions = [];
+            List<Func<ReceivedInboxServiceMessage, ValueTask>> receivedActions = [];
             List<ServiceMessage> messages = [];
             List<Guid> messageIDs = [];
             var acknowledgeCount = 0;
@@ -260,7 +260,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             mockSubscription.As<IDisposable>().Verify(x => x.Dispose(), Times.Once);
             #endregion
@@ -285,7 +285,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<Action<ReceivedInboxServiceMessage>> receivedActions = [];
+            List<Func<ReceivedInboxServiceMessage, ValueTask>> receivedActions = [];
             List<ServiceMessage> messages = [];
             List<Guid> messageIDs = [];
             var acknowledgeCount = 0;
@@ -345,7 +345,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             mockSubscription.As<IAsyncDisposable>().Verify(x => x.DisposeAsync(), Times.Once);
             #endregion
@@ -370,7 +370,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             var defaultTimeout = TimeSpan.FromMinutes(1);
 
-            List<Action<ReceivedInboxServiceMessage>> receivedActions = [];
+            List<Func<ReceivedInboxServiceMessage, ValueTask>> receivedActions = [];
             List<ServiceMessage> messages = [];
             List<Guid> messageIDs = [];
             var acknowledgeCount = 0;
@@ -449,7 +449,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
@@ -473,7 +473,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
-            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), Error: new(error, false))));
@@ -505,7 +505,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Exactly(retryCount+1));
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
@@ -529,7 +529,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
-            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), Error: new(error, false))));
@@ -562,7 +562,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
@@ -587,7 +587,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
-            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), Error: new(error, false))));
@@ -627,7 +627,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Exactly(retryCount+1));
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
@@ -652,7 +652,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
-            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), Error: new(error, true))));
@@ -688,7 +688,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
@@ -711,7 +711,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             List<ServiceMessage> messages = [];
 
             var serviceConnection = new Mock<IInboxQueryableMessageServiceConnection>();
-            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()))
+            serviceConnection.Setup(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mockSubscription.Object);
             serviceConnection.Setup(x => x.QueryAsync(Capture.In(messages), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult(new TransmissionResult(Guid.NewGuid().ToString(), Error: new(error, false))));
@@ -756,7 +756,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Verify
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Exactly(((retryCount+1)*2)+1));
-            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Action<ReceivedInboxServiceMessage>>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.EstablishInboxSubscriptionAsync(It.IsAny<Func<ReceivedInboxServiceMessage, ValueTask>>(), It.IsAny<CancellationToken>()), Times.Once);
             mockSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }

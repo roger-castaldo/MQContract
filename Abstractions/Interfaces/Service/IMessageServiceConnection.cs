@@ -29,7 +29,7 @@ namespace MQContract.Interfaces.Service
         /// <param name="group">The consumer group to register as</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A service subscription object</returns>
-        ValueTask<IServiceSubscription?> SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group = null, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<IServiceSubscription?> SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group = null, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Implements a call to close off the connection when the ContractConnection is closed
         /// </summary>

@@ -428,10 +428,10 @@ namespace AutomatedTesting.ContractConnectionTests
                 new KeyValuePair<string,string>("test","test")
             ]);
 
-            var actions = new List<Action<ReceivedServiceMessage>>();
+            var actions = new List<Func<ReceivedServiceMessage, ValueTask>>();
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
-            serviceConnection.Setup(x => x.SubscribeAsync(Moq.Capture.In<Action<ReceivedServiceMessage>>(actions), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
+            serviceConnection.Setup(x => x.SubscribeAsync(Moq.Capture.In<Func<ReceivedServiceMessage, ValueTask>>(actions), It.IsAny<Action<Exception>>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(serviceSubscription.Object);
             serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))

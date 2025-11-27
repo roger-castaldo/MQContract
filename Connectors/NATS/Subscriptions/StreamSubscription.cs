@@ -3,7 +3,7 @@ using NATS.Client.JetStream;
 
 namespace MQContract.NATS.Subscriptions
 {
-    internal class StreamSubscription(INatsJSConsumer consumer, Action<ReceivedServiceMessage> messageReceived,
+    internal class StreamSubscription(INatsJSConsumer consumer, Func<ReceivedServiceMessage, ValueTask> messageReceived,
         Action<Exception> errorReceived)
         : SubscriptionBase()
     {
@@ -20,7 +20,7 @@ namespace MQContract.NATS.Subscriptions
                         var success = true;
                         try
                         {
-                            messageReceived(ExtractMessage(msg));
+                            await messageReceived(ExtractMessage(msg)).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {

@@ -9,15 +9,15 @@ namespace MQContract.RabbitMQ
         private readonly IChannel channel;
         private readonly string consumerTag;
 
-        public static async ValueTask<Subscription> ProduceInstanceAsync(IConnection conn, string channel, string group, Action<BasicDeliverEventArgs, IChannel, Func<ValueTask>> messageReceived, Action<Exception> errorReceived, string? routingKey = null)
+        public static async ValueTask<Subscription> ProduceInstanceAsync(IConnection conn, string channel, string group, Func<BasicDeliverEventArgs, IChannel, Func<ValueTask>, ValueTask> messageReceived, Action<Exception> errorReceived, string? routingKey = null)
         {
             var connectionChannel = await conn.CreateChannelAsync();
             await connectionChannel.QueueBindAsync(group, channel, routingKey??Guid.NewGuid().ToString());
             await connectionChannel.BasicQosAsync(0, 1, false);
             var consumer = new AsyncEventingBasicConsumer(connectionChannel);
-            consumer.ReceivedAsync+= (sender, @event) =>
+            consumer.ReceivedAsync+= async (sender, @event) =>
             {
-                messageReceived(
+                await messageReceived(
                     @event,
                     connectionChannel,
                     async () =>
@@ -25,7 +25,6 @@ namespace MQContract.RabbitMQ
                         await connectionChannel.BasicAckAsync(@event.DeliveryTag, false);
                     }
                 );
-                return Task.CompletedTask;
             };
 
             return new Subscription(connectionChannel, await connectionChannel.BasicConsumeAsync(group, false, consumer));

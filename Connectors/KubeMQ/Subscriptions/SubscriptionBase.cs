@@ -40,7 +40,7 @@ namespace MQContract.KubeMQ.Subscriptions
                         await foreach (var resp in call.ResponseStream.ReadAllAsync(cancelToken.Token))
                         {
                             if (active)
-                                await MessageReceived(resp);
+                                await MessageReceived(resp).ConfigureAwait(false);
                             else
                                 break;
                         }

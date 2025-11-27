@@ -104,15 +104,15 @@ namespace MQContract.HiveMQ
             return new(message.ID);
         }
 
-        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var result = new Subscription(
                 clientOptions,
-                (msg) =>
+                async (msg) =>
                 {
                     try
                     {
-                        messageReceived(ConvertMessage(msg, out _));
+                        await messageReceived(ConvertMessage(msg, out _));
                     }
                     catch (Exception e)
                     {
@@ -126,16 +126,16 @@ namespace MQContract.HiveMQ
 
         private string InboxChannel => $"_inbox/{connectionID}";
 
-        async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
         {
             var result = new Subscription(
                 clientOptions,
-                (msg) =>
+                async (msg) =>
                 {
                     var incomingMessage = ConvertMessage(msg, out var responseID);
                     if (responseID!=null && Guid.TryParse(responseID, out var responseGuid))
                     {
-                        messageReceived(new(
+                        await messageReceived(new(
                             incomingMessage.ID,
                             incomingMessage.MessageTypeID,
                             InboxChannel,

@@ -96,7 +96,7 @@ namespace MQContract.AmazonSNQS
             throw new TransmissionException(new NoChannelFoundException(message.Channel),true);
         }
 
-        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             SqsClientNullException.ThrowIfNull(SQSClient);
             var queue = (await SQSClient!.ListQueuesAsync(channel, cancellationToken)).QueueUrls.FirstOrDefault();

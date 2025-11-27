@@ -21,7 +21,7 @@ namespace MQContract.AzureServiceBus
                     {
                         var msg = await receiver.ReceiveMessageAsync(cancellationToken: cancelToken.Token);
                         if (msg!=null)
-                            await messageRecieved(msg, async () => await receiver.CompleteMessageAsync(msg));
+                            await messageRecieved(msg, async () => await receiver.CompleteMessageAsync(msg)).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {

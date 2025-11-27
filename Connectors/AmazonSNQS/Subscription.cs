@@ -5,7 +5,7 @@ using MQContract.Messages;
 
 namespace MQContract.AmazonSNQS
 {
-    internal class Subscription(AmazonSQSClient sqsClient,string queueUrl, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, CancellationToken connectionCancellationToken) 
+    internal class Subscription(AmazonSQSClient sqsClient,string queueUrl, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, CancellationToken connectionCancellationToken) 
         : IServiceSubscription, IAsyncDisposable
     {
         protected readonly CancellationTokenSource cancelToken = new();
@@ -39,10 +39,10 @@ namespace MQContract.AmazonSNQS
 
                         foreach (var msg in receiveResponse.Messages?? [])
                         {
-                            messageReceived(MessageMapper.Map(msg, async () =>
+                            await messageReceived(MessageMapper.Map(msg, async () =>
                             {
                                 await sqsClient.DeleteMessageAsync(queueUrl, msg.ReceiptHandle);
-                            }));
+                            })).ConfigureAwait(false);
                         }
                     }catch(Exception error)
                     {

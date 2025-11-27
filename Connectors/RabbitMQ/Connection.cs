@@ -171,7 +171,7 @@ namespace MQContract.RabbitMQ
             return result;
         }
 
-        private async Task<Subscription> ProduceSubscriptionAsync(string channel, string? group, Action<BasicDeliverEventArgs, IChannel, Func<ValueTask>> messageReceived, Action<Exception> errorReceived)
+        private async Task<Subscription> ProduceSubscriptionAsync(string channel, string? group, Func<BasicDeliverEventArgs, IChannel, Func<ValueTask>, ValueTask> messageReceived, Action<Exception> errorReceived)
         {
             if (group==null)
             {
@@ -192,16 +192,13 @@ namespace MQContract.RabbitMQ
             return await Subscription.ProduceInstanceAsync(RabbitMQConnection, channel, group, messageReceived, errorReceived);
         }
 
-        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => await ProduceSubscriptionAsync(channel, group,
-                (@event, modelChannel, acknowledge) =>
-                {
-                    messageReceived(ConvertMessage(@event, channel, acknowledge, out _));
-                },
+                async (@event, modelChannel, acknowledge) => await messageReceived(ConvertMessage(@event, channel, acknowledge, out _)).ConfigureAwait(false),
                 errorReceived
             );
 
-        async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
         {
             await channel.ExchangeDeclareAsync(InboxExchange, ExchangeType.Direct, durable: false, autoDelete: true, cancellationToken: cancellationToken);
             await channel.QueueDeclareAsync(inboxChannel, durable: false, exclusive: false, autoDelete: true, cancellationToken: cancellationToken);
@@ -209,11 +206,11 @@ namespace MQContract.RabbitMQ
                 RabbitMQConnection,
                 InboxExchange,
                 inboxChannel,
-                (@event, model, acknowledge) =>
+                async (@event, model, acknowledge) =>
                 {
                     var responseMessage = ConvertMessage(@event, string.Empty, acknowledge, out var messageId);
                     if (messageId!=null)
-                        messageReceived(new(
+                        await messageReceived(new(
                             responseMessage.ID,
                             responseMessage.MessageTypeID,
                             inboxChannel,
@@ -221,7 +218,7 @@ namespace MQContract.RabbitMQ
                             messageId.Value,
                             responseMessage.Data,
                             acknowledge
-                        ));
+                        )).ConfigureAwait(false);
                 },
                 (error) => { },
                 routingKey: inboxChannel

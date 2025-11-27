@@ -5,7 +5,7 @@ using MQContract.Messages;
 
 namespace MQContract.GooglePubSub
 {
-    internal class Subscription(SubscriberServiceApiClient subscriberClientApi, SubscriptionName subscriptionName, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel) : IServiceSubscription, IAsyncDisposable
+    internal class Subscription(SubscriberServiceApiClient subscriberClientApi, SubscriptionName subscriptionName, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel) : IServiceSubscription, IAsyncDisposable
     {
         protected readonly CancellationTokenSource cancelToken = new();
         private bool disposedValue;
@@ -20,11 +20,11 @@ namespace MQContract.GooglePubSub
                     {
                         var msg = await subscriberClientApi.PullAsync(subscriptionName, 1, cancelToken.Token);
                         if (msg!=null)
-                            messageReceived(Connection.ConvertMessage(
+                            await messageReceived(Connection.ConvertMessage(
                                 msg.ReceivedMessages[0],
                                 channel,
                                 async () => await subscriberClientApi.AcknowledgeAsync(subscriptionName, [msg.ReceivedMessages[0].AckId], cancelToken.Token)
-                            ));
+                            )).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
