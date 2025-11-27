@@ -1,9 +1,12 @@
 ﻿using Confluent.SchemaRegistry;
+using Json.Schema;
 using Microsoft.Extensions.Caching.Memory;
 using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
-using NJsonSchema;
+using Json.Schema.Generation;
 using System.Buffers.Binary;
+using System.Text.Json;
+using Json.More;
 
 
 namespace MQContract.Kafka.Middleware
@@ -99,7 +102,7 @@ namespace MQContract.Kafka.Middleware
             }
             if (schema == null && failOnMissingSchema)
                 throw new MissingSchemaException(messageTypeID);
-            else if (schema!=null && !(await ValidateSchemaAsync(schema, new MemoryStream(data.ToArray(),0,data.Length,false,true))))
+            else if (schema!=null && !(await ValidateSchemaAsync(schemaId, schema, new MemoryStream(data.ToArray(),0,data.Length,false,true))))
                 throw new SchemaValidationFailedException(schemaId, messageTypeID);
         }
 
@@ -166,7 +169,9 @@ namespace MQContract.Kafka.Middleware
             if (extractSchemaAsync!=null)
                 return await extractSchemaAsync(messageType);
             else if (registerSchemaType == Confluent.SchemaRegistry.SchemaType.Json)
-                return JsonSchema.FromType(messageType).ToJson();
+                return JsonSerializer.Serialize(new JsonSchemaBuilder()
+                    .FromType(messageType)
+                    .Build());
             throw new NotImplementedException();
         }
 
@@ -190,14 +195,21 @@ namespace MQContract.Kafka.Middleware
             return (messageHeader,data);
         }
 
-        private async ValueTask<bool> ValidateSchemaAsync(Schema schema, Stream dataStream)
+        private async ValueTask<bool> ValidateSchemaAsync(int schemaId, Schema schema, Stream dataStream)
         {
             if (validateSchemaAsync!=null)
                 return await validateSchemaAsync(schema, dataStream);
             else if (schema.SchemaType == Confluent.SchemaRegistry.SchemaType.Json)
             {
-                var jSchema = await JsonSchema.FromJsonAsync(schema.SchemaString);
-                return jSchema.Validate(await new StreamReader(dataStream).ReadToEndAsync()).Count==0;
+                JsonSchema? jSchema;
+                if (!(cache?.TryGetValue($"CompiledSchema_{schemaId}", out var schemaValue)??false))
+                {
+                    jSchema = JsonSchema.FromText(schema.SchemaString);
+                    cache?.Set($"CompiledSchema_{schemaId}", jSchema, cacheOptions);
+                }
+                else
+                    jSchema=(JsonSchema)schemaValue!;
+                return !jSchema.Evaluate((await JsonSerializer.DeserializeAsync<JsonDocument>(dataStream))!).HasErrors;
             }
             return false;
         }

@@ -15,18 +15,20 @@ namespace MQContract.Kafka.Subscriptions
             {
                 while (!cancelToken.IsCancellationRequested)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Waiting to consume message from {channel}");
                     try
                     {
                         var msg = consumer.Consume(cancellationToken: cancelToken.Token);
-                        System.Diagnostics.Debug.WriteLine($"Consuming message {msg.Offset} from {channel}");
                         var headers = Connection.ExtractHeaders(msg.Message.Headers, out var messageTypeID);
                         messageReceived(new ReceivedServiceMessage(
                             msg.Message.Key??string.Empty,
                             messageTypeID??string.Empty,
                             channel,
                             headers,
-                            msg.Message.Value
+                            msg.Message.Value,
+                            Acknowledge:()=>{
+                                consumer.StoreOffset(msg);
+                                return ValueTask.CompletedTask;
+                            }
                         ));
                     }
                     catch (OperationCanceledException)

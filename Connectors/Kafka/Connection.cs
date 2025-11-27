@@ -40,17 +40,17 @@ namespace MQContract.Kafka
             return result;
         }
 
-        private static MessageHeader ExtractHeaders(Headers header)
-            => new(
+        internal static MessageHeader ExtractHeaders(Headers header, out string? messageTypeID)
+        {
+            if (header.TryGetLastBytes(MESSAGE_TYPE_HEADER, out var lastHeader))
+                messageTypeID = DecodeHeaderValue(lastHeader);
+            else
+                messageTypeID=null;
+            return new(
                 header
                 .Where(h => !Equals(h.Key, MESSAGE_TYPE_HEADER))
                 .Select(h => new KeyValuePair<string, string>(h.Key, DecodeHeaderValue(h.GetValueBytes())))
             );
-
-        internal static MessageHeader ExtractHeaders(Headers header, out string? messageTypeID)
-        {
-            messageTypeID = DecodeHeaderValue(header.FirstOrDefault(pair => Equals(pair.Key, MESSAGE_TYPE_HEADER))?.GetValueBytes()?? []);
-            return ExtractHeaders(header);
         }
 
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
@@ -85,7 +85,9 @@ namespace MQContract.Kafka
             var builder = new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
             {
                 GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
-                AutoOffsetReset = (isReply ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest)
+                AutoOffsetReset = (isReply ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest),
+                EnableAutoOffsetStore = false,
+                EnableAutoCommit = true
             });
             if (isReply)
                 builder.SetPartitionsAssignedHandler((c, partitions) =>
