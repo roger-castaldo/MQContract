@@ -24,12 +24,7 @@ using var tracerProvider = Sdk.CreateTracerProviderBuilder()
 var serviceConnection = new Connection(new NATS.Client.Core.NatsOpts()
 {
     LoggerFactory=new Microsoft.Extensions.Logging.LoggerFactory(),
-    Name="NATSSample",
-    Url="tls://connect.ngs.global:4222",
-    AuthOpts = new()
-    {
-        CredsFile="./NGS-Default-test_run.creds"
-    }
+    Name="NATSSample"
 });
 
 var streamConfig = new StreamConfig("StoredArrivalsStream", ["StoredArrivals"])

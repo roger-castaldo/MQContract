@@ -3,7 +3,7 @@ using MQContract.Messages;
 
 namespace MQContract.Kafka.Subscriptions
 {
-    internal class PublishSubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel)
+    internal class PublishSubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel)
         : IServiceSubscription
     {
         private bool disposedValue;
@@ -11,23 +11,25 @@ namespace MQContract.Kafka.Subscriptions
 
         public void Start()
         {
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 while (!cancelToken.IsCancellationRequested)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Waiting to consume message from {channel}");
                     try
                     {
                         var msg = consumer.Consume(cancellationToken: cancelToken.Token);
-                        System.Diagnostics.Debug.WriteLine($"Consuming message {msg.Offset} from {channel}");
                         var headers = Connection.ExtractHeaders(msg.Message.Headers, out var messageTypeID);
-                        messageReceived(new ReceivedServiceMessage(
+                        await messageReceived(new ReceivedServiceMessage(
                             msg.Message.Key??string.Empty,
                             messageTypeID??string.Empty,
                             channel,
                             headers,
-                            msg.Message.Value
-                        ));
+                            msg.Message.Value,
+                            Acknowledge:()=>{
+                                consumer.StoreOffset(msg);
+                                return ValueTask.CompletedTask;
+                            }
+                        )).ConfigureAwait(false);
                     }
                     catch (OperationCanceledException)
                     {

@@ -3,6 +3,7 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Middleware;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace Messages
@@ -73,6 +74,7 @@ namespace Messages
             Console.WriteLine("Awaiting 5 seconds to ensure that all subscriptions are established fully.");
             await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
             Console.WriteLine("Beginning message transmissions...");
+            var start = Stopwatch.GetTimestamp();
 
             var result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Result 1 [Success:{!result.IsError}, ID:{result.ID}]");
@@ -87,7 +89,7 @@ namespace Messages
             }
 
             List<(ArrivalAnnouncement, MessageHeader?)> arrivalAnnouncements = [];
-            for (var x = 10; x<20; x++)
+            for (var x = 10; x<50; x++)
                 arrivalAnnouncements.Add((new($"FirstName{x}", $"LastName{x}"), null));
 
             var bulkResult = await contractConnection.BulkPublishAsync<ArrivalAnnouncement>(arrivalAnnouncements, cancellationToken: sourceCancel.Token);
@@ -108,7 +110,7 @@ namespace Messages
             Console.WriteLine("Press Enter to close");
 
             Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck.CheckHealthAsync(new(), sourceCancel.Token))}");
-
+            var stop = Stopwatch.GetElapsedTime(start);
             Console.ReadLine();
             await sourceCancel.CancelAsync();
 
@@ -123,6 +125,7 @@ namespace Messages
             Console.WriteLine($"StoredArrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), false), jsonOptions)}");
             Console.WriteLine($"Arrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), true), jsonOptions)}");
             Console.WriteLine($"Arrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), false), jsonOptions)}");
+            Console.WriteLine($"Total Duration: {stop}");
         }
     }
 }

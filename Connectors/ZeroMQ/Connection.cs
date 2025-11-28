@@ -209,24 +209,17 @@ namespace MQContract.ZeroMQ
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
             => new(message.ID,await PublishMessageAsync(MessageMapper.Map(message)));
 
-        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             =>ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
-                (msg)=> {
-                    messageReceived((ReceivedServiceMessage)msg.message);
-                    return ValueTask.CompletedTask;
-                },
+                async (msg)=> await messageReceived((ReceivedServiceMessage)msg.message).ConfigureAwait(false),
                 channel
             ));
 
-        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
         {
             UndefinedInboxException.ThrowIfNullOrWhiteSpace(inboxAddress);
             return ValueTask.FromResult<IServiceSubscription>(RegisterSubscription(
-                (msg) =>
-                {
-                    messageReceived(msg.message);
-                    return ValueTask.CompletedTask;
-                },
+                (msg) =>messageReceived(msg.message),
                 INBOX_CHANNEL
             ));
         }

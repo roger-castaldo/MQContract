@@ -104,26 +104,22 @@ namespace MQContract.AzureServiceBus
         private static async ValueTask<IServiceSubscription> StartServiceSubscriptionAsync(Subscription subscription)
             => await subscription.StartAsync();
 
-        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => await StartServiceSubscriptionAsync(new Subscription(
                 client,
-                (msg, acknowledge) =>
-                {
-                    messageReceived(ConvertMessage(msg, channel, acknowledge));
-                    return ValueTask.CompletedTask;
-                },
+                (msg, acknowledge) => messageReceived(ConvertMessage(msg, channel, acknowledge)),
                 (error) => errorReceived(error),
                 channel,
                 group
             ));
 
-        async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken)
+        async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
             => await StartServiceSubscriptionAsync(new Subscription(
                 client,
-                (msg, acknowledge) =>
+                async (msg, acknowledge) =>
                 {
                     var result = ConvertMessage(msg, INBOX_CHANNEL_NAME, acknowledge);
-                    messageReceived(new ReceivedInboxServiceMessage(
+                    await messageReceived(new ReceivedInboxServiceMessage(
                         result.ID,
                         result.MessageTypeID,
                         INBOX_CHANNEL_NAME,
@@ -132,7 +128,6 @@ namespace MQContract.AzureServiceBus
                         result.Data,
                         result.Acknowledge
                     ));
-                    return ValueTask.CompletedTask;
                 },
                 (error) => { },
                 INBOX_CHANNEL_NAME,

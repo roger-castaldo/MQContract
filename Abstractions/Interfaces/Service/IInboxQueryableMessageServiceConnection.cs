@@ -14,7 +14,7 @@ namespace MQContract.Interfaces.Service
         /// <param name="messageReceived">Callback called when a message is recieved in the RPC inbox</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A service subscription object specifically tied to the RPC inbox for this particular connection instance</returns>
-        ValueTask<IServiceSubscription> EstablishInboxSubscriptionAsync(Action<ReceivedInboxServiceMessage> messageReceived, CancellationToken cancellationToken = new CancellationToken());
+        ValueTask<IServiceSubscription> EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
         /// Called to publish a Query Request when using the inbox style
         /// </summary>

@@ -72,7 +72,7 @@ namespace MQContract.Kafka.Middleware
             $"{typeof(IEnumerable<bool>).Name}-0.0.0.0"
         ];
 
-        private sealed record CachedSchema(int Id,Schema Schema);
+        private sealed record CachedSchema(int Id,Schema Schema, JsonSchema? CompiledSchema);
 
         private readonly MemoryCacheEntryOptions cacheOptions = new MemoryCacheEntryOptions
         {
@@ -80,26 +80,26 @@ namespace MQContract.Kafka.Middleware
             SlidingExpiration = TimeSpan.FromMinutes(5)
         };
 
-        private void CacheSchema(string schemaName, int schemaId, Schema schema)
+        private async Task<CachedSchema> CacheSchema(string schemaName, int schemaId, Schema schema)
         {
-            cache?.Set(schemaName, new CachedSchema(schemaId, schema), cacheOptions);
-            cache?.Set($"SchemaById_{schemaId}",new CachedSchema(schemaId, schema), cacheOptions);
+            var cacheItem = new CachedSchema(schemaId, schema, (schema.SchemaType == Confluent.SchemaRegistry.SchemaType.Json && validateSchemaAsync==null ? await JsonSchema.FromJsonAsync(schema.SchemaString) : null));
+            cache?.Set(schemaName, cacheItem, cacheOptions);
+            cache?.Set($"SchemaById_{schemaId}", cacheItem, cacheOptions);
+            return cacheItem;
         }
 
         private async Task LoadAndCheckSchemaAsync(int schemaId, string messageTypeID, ReadOnlyMemory<byte> data)
         {
-            Schema? schema;
-            if ((cache?.TryGetValue($"SchemaById_{schemaId}", out CachedSchema? cached)??false))
-                schema = cached!.Schema;
-            else
+            CachedSchema? cachedSchema = null;
+            if (!(cache?.TryGetValue($"SchemaById_{schemaId}", out cachedSchema)??false))
             {
-                schema = await schemaRegistryClient.GetSchemaAsync(schemaId);
+                var schema = await schemaRegistryClient.GetSchemaAsync(schemaId);
                 if (schema!=null)
-                    CacheSchema(messageTypeID, schemaId, schema);
+                    cachedSchema = await CacheSchema(messageTypeID, schemaId, schema);
             }
-            if (schema == null && failOnMissingSchema)
+            if (cachedSchema == null && failOnMissingSchema)
                 throw new MissingSchemaException(messageTypeID);
-            else if (schema!=null && !(await ValidateSchemaAsync(schema, new MemoryStream(data.ToArray(),0,data.Length,false,true))))
+            else if (cachedSchema!=null && !(await ValidateSchemaAsync(cachedSchema, new MemoryStream(data.ToArray(),0,data.Length,false,true))))
                 throw new SchemaValidationFailedException(schemaId, messageTypeID);
         }
 
@@ -113,7 +113,7 @@ namespace MQContract.Kafka.Middleware
                 {
                     var builtSchema = new Schema(await ExtractSchemaAsync(messageType), registerSchemaType);
                     schemaId = await schemaRegistryClient.RegisterSchemaAsync(schemaName, builtSchema);
-                    CacheSchema(schemaName, schemaId.Value, builtSchema);
+                    await CacheSchema(schemaName, schemaId.Value, builtSchema);
                 }
                 else if (schemaId!=null)
                     await LoadAndCheckSchemaAsync(schemaId.Value, message.MessageTypeID, message.Data);
@@ -150,7 +150,7 @@ namespace MQContract.Kafka.Middleware
                     if (schemaResult!=null)
                     {
                         schemaId = schemaResult.Id;
-                        CacheSchema(schemaName, schemaId.Value, schemaResult.Schema);
+                        await CacheSchema(schemaName, schemaId.Value, schemaResult.Schema);
                     }
                 }
                 catch
@@ -190,15 +190,12 @@ namespace MQContract.Kafka.Middleware
             return (messageHeader,data);
         }
 
-        private async ValueTask<bool> ValidateSchemaAsync(Schema schema, Stream dataStream)
+        private async ValueTask<bool> ValidateSchemaAsync(CachedSchema cachedSchema, Stream dataStream)
         {
             if (validateSchemaAsync!=null)
-                return await validateSchemaAsync(schema, dataStream);
-            else if (schema.SchemaType == Confluent.SchemaRegistry.SchemaType.Json)
-            {
-                var jSchema = await JsonSchema.FromJsonAsync(schema.SchemaString);
-                return jSchema.Validate(await new StreamReader(dataStream).ReadToEndAsync()).Count==0;
-            }
+                return await validateSchemaAsync(cachedSchema.Schema, dataStream);
+            else if (cachedSchema.CompiledSchema!=null)
+                return cachedSchema.CompiledSchema.Validate(await new StreamReader(dataStream).ReadToEndAsync()).Count==0;
             return false;
         }
     }

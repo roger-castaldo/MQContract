@@ -5,7 +5,7 @@ using MQContract.Interfaces.Service;
 
 namespace MQContract.HiveMQ
 {
-    internal class Subscription(HiveMQClientOptions clientOptions, Action<MQTT5PublishMessage> messageReceived, string channel, string? group) : IServiceSubscription, IAsyncDisposable
+    internal class Subscription(HiveMQClientOptions clientOptions, Func<MQTT5PublishMessage,ValueTask> messageReceived, string channel, string? group) : IServiceSubscription, IAsyncDisposable
     {
         private readonly HiveMQClient client = new(CloneOptions(clientOptions, channel));
         private bool isOpen = false;
@@ -23,8 +23,8 @@ namespace MQContract.HiveMQ
 
         public async ValueTask EstablishAsync()
         {
-            client.OnMessageReceived += (sender, args)
-                => messageReceived(args.PublishMessage);
+            client.OnMessageReceived += async (sender, args)
+                => await messageReceived(args.PublishMessage).ConfigureAwait(false);
             var connectResult = await client.ConnectAsync();
             if (connectResult.ReasonCode != HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
                 throw new ConnectionFailedException(connectResult.ReasonString);

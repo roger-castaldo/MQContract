@@ -40,17 +40,17 @@ namespace MQContract.Kafka
             return result;
         }
 
-        private static MessageHeader ExtractHeaders(Headers header)
-            => new(
+        internal static MessageHeader ExtractHeaders(Headers header, out string? messageTypeID)
+        {
+            if (header.TryGetLastBytes(MESSAGE_TYPE_HEADER, out var lastHeader))
+                messageTypeID = DecodeHeaderValue(lastHeader);
+            else
+                messageTypeID=null;
+            return new(
                 header
                 .Where(h => !Equals(h.Key, MESSAGE_TYPE_HEADER))
                 .Select(h => new KeyValuePair<string, string>(h.Key, DecodeHeaderValue(h.GetValueBytes())))
             );
-
-        internal static MessageHeader ExtractHeaders(Headers header, out string? messageTypeID)
-        {
-            messageTypeID = DecodeHeaderValue(header.FirstOrDefault(pair => Equals(pair.Key, MESSAGE_TYPE_HEADER))?.GetValueBytes()?? []);
-            return ExtractHeaders(header);
         }
 
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
@@ -79,13 +79,15 @@ namespace MQContract.Kafka
 
         private static readonly Regex regReplyGroup = new Regex(@"^reply-[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$", RegexOptions.Compiled|RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
-        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Action<ReceivedServiceMessage> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var isReply = regReplyGroup.IsMatch(group??string.Empty);
             var builder = new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
             {
                 GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
-                AutoOffsetReset = (isReply ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest)
+                AutoOffsetReset = (isReply ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest),
+                EnableAutoOffsetStore = false,
+                EnableAutoCommit = true
             });
             if (isReply)
                 builder.SetPartitionsAssignedHandler((c, partitions) =>
