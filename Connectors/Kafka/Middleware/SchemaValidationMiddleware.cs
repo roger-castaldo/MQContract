@@ -1,12 +1,10 @@
 ﻿using Confluent.SchemaRegistry;
-using Json.Schema;
 using Microsoft.Extensions.Caching.Memory;
 using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
-using Json.Schema.Generation;
+using NJsonSchema;
 using System.Buffers.Binary;
 using System.Text.Json;
-using Json.More;
 
 
 namespace MQContract.Kafka.Middleware
@@ -169,9 +167,7 @@ namespace MQContract.Kafka.Middleware
             if (extractSchemaAsync!=null)
                 return await extractSchemaAsync(messageType);
             else if (registerSchemaType == Confluent.SchemaRegistry.SchemaType.Json)
-                return JsonSerializer.Serialize(new JsonSchemaBuilder()
-                    .FromType(messageType)
-                    .Build());
+                return JsonSchema.FromType(messageType).ToJson();
             throw new NotImplementedException();
         }
 
@@ -204,12 +200,12 @@ namespace MQContract.Kafka.Middleware
                 JsonSchema? jSchema;
                 if (!(cache?.TryGetValue($"CompiledSchema_{schemaId}", out var schemaValue)??false))
                 {
-                    jSchema = JsonSchema.FromText(schema.SchemaString);
+                    jSchema = await JsonSchema.FromJsonAsync(schema.SchemaString);
                     cache?.Set($"CompiledSchema_{schemaId}", jSchema, cacheOptions);
                 }
                 else
                     jSchema=(JsonSchema)schemaValue!;
-                return !jSchema.Evaluate((await JsonSerializer.DeserializeAsync<JsonDocument>(dataStream))!).HasErrors;
+                return jSchema.Validate(await new StreamReader(dataStream).ReadToEndAsync()).Count==0;
             }
             return false;
         }
