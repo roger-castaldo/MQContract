@@ -68,21 +68,27 @@ namespace MQContract.Middleware
         }
 
         public (IEnumerable<TGenericHandler> genericHandlers, IEnumerable<TSpecificHandler> specificHandlers) GetHandlers<TGenericHandler, TSpecificHandler>()
-            => (GetHandlers<TGenericHandler>(), collection.OfType<TSpecificHandler>().ToArray());
+            => (GetHandlers<TGenericHandler>(), GetHandlers<TSpecificHandler>());
 
         public IEnumerable<THandler> GetHandlers<THandler>()
         {
             if (!cache.TryGetValue(typeof(THandler), out var handlers))
             {
-                injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Pre), out var preItems);
-                injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Post), out var postItems);
-                IEnumerable<THandler> enumHandlers = [
-                    .. (preItems?? []).OfType<THandler>(),
-                    .. collection.OfType<THandler>(),
-                    .. (postItems ?? []).OfType<THandler>()
-                ];
+                IEnumerable<THandler> enumHandlers = [];
+                if (typeof(THandler).IsGenericType)
+                    enumHandlers = [.. collection.OfType<THandler>()];
+                else
+                {
+                    injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Pre), out var preItems);
+                    injectableItems.TryGetValue((typeof(THandler), InjectionPositions.Post), out var postItems);
+                    enumHandlers = [
+                        .. (preItems?? []).OfType<THandler>(),
+                        .. collection.OfType<THandler>(),
+                        .. (postItems ?? []).OfType<THandler>()
+                    ];
+                }
                 cache.TryAdd(typeof(THandler), enumHandlers);
-                return enumHandlers;
+                handlers = enumHandlers;
             }
             return (IEnumerable<THandler>)handlers;
         }

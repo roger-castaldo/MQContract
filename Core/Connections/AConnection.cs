@@ -104,7 +104,6 @@ namespace MQContract.Connections
         private async ValueTask<ServiceMessage> AfterMessageEncodeAsync<TMessage>(IContext context, ServiceMessage message)
         {
             using var scope = SetScope(message.ID);
-            logger?.LogDebugChecked("Executing After Message Encode middleware for message of type {Type}", typeof(TMessage));
             var genericHandlers = middleware.GetHandlers<IAfterEncodeMiddleware>();
             logger?.LogDebugChecked("Executing generic After Message Encode middleware for message of type {Type}", typeof(TMessage));
             foreach (var handler in genericHandlers)
@@ -115,7 +114,6 @@ namespace MQContract.Connections
         private async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
         {
             using var scope = SetScope(id);
-            logger?.LogDebugChecked("Executing Before Message Decode middleware");
             var genericHandlers = middleware.GetHandlers<IBeforeDecodeMiddleware>();
             logger?.LogDebugChecked("Executing generic Before Message Decode middleware");
             foreach (var handler in genericHandlers)
