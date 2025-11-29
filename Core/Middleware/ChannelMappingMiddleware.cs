@@ -1,6 +1,4 @@
 ﻿using MQContract.Interfaces.Middleware;
-using MQContract.Messages;
-using System.Threading.Channels;
 
 namespace MQContract.Middleware
 {

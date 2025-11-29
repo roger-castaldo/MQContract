@@ -1,7 +1,6 @@
 ﻿using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using System.IO.Compression;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MQContract.Middleware
 {

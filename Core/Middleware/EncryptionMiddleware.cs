@@ -4,7 +4,6 @@ using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using System.Collections.Concurrent;
 using System.Runtime.Loader;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MQContract.Middleware
 {
