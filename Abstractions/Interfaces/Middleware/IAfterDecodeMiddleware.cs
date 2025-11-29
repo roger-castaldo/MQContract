@@ -18,6 +18,6 @@ namespace MQContract.Interfaces.Middleware
         /// <param name="receivedTimestamp">The timestamp of when the message was recieved</param>
         /// <param name="processedTimeStamp">The timestamp of when the message was decoded into a Class</param>
         /// <returns>The message and header to allow for changes if desired</returns>
-        ValueTask<(TMessage message, MessageHeader messageHeader)> AfterMessageDecodeAsync<TMessage>(IContext context, TMessage message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp);
+        ValueTask<DecodedMessage<TMessage>> AfterMessageDecodeAsync<TMessage>(IContext context, string ID, DecodedMessage<TMessage> message, DateTime receivedTimestamp, DateTime processedTimeStamp);
     }
 }

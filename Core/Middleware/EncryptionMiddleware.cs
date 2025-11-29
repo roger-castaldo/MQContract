@@ -4,6 +4,7 @@ using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using System.Collections.Concurrent;
 using System.Runtime.Loader;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MQContract.Middleware
 {
@@ -67,13 +68,13 @@ namespace MQContract.Middleware
             );
         }
 
-        async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
+        async ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)
         {
-            using var dataStream = await GetEncryptor((Type)context[ExpectedTypeKey]!).DecryptAsync(new MemoryStream(data.ToArray(),0,data.Length,false,true), messageHeader);
+            using var dataStream = await GetEncryptor((Type)context[ExpectedTypeKey]!).DecryptAsync(new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true), message.MessageHeader);
             using var ms = new MemoryStream();
             await dataStream.CopyToAsync(ms);
             ms.TryGetBuffer(out ArraySegment<byte> buffer);
-            return (messageHeader,buffer.AsMemory(0, (int)ms.Length));
+            return new(message.MessageHeader, buffer.AsMemory(0, (int)ms.Length));
         }
     }
 }

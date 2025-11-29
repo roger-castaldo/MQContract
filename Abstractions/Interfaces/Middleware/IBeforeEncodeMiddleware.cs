@@ -16,6 +16,6 @@ namespace MQContract.Interfaces.Middleware
         /// <param name="channel">The channel this message was requested to transmit to</param>
         /// <param name="messageHeader">The message headers being supplied</param>
         /// <returns>The message, channel and header to allow for changes if desired</returns>
-        ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader);
+        ValueTask<EncodableMessage<TMessage>> BeforeMessageEncodeAsync<TMessage>(IContext context, EncodableMessage<TMessage> message);
     }
 }

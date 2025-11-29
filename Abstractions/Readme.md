@@ -32,9 +32,9 @@
   - [IsFatal](#P-MQContract-Messages-ErrorMessage-IsFatal 'MQContract.Messages.ErrorMessage.IsFatal')
   - [Message](#P-MQContract-Messages-ErrorMessage-Message 'MQContract.Messages.ErrorMessage.Message')
 - [IAfterDecodeMiddleware](#T-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware 'MQContract.Interfaces.Middleware.IAfterDecodeMiddleware')
-  - [AfterMessageDecodeAsync\`\`1(context,message,ID,messageHeader,receivedTimestamp,processedTimeStamp)](#M-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware-AfterMessageDecodeAsync``1-MQContract-Interfaces-Middleware-IContext,``0,System-String,MQContract-Messages-MessageHeader,System-DateTime,System-DateTime- 'MQContract.Interfaces.Middleware.IAfterDecodeMiddleware.AfterMessageDecodeAsync``1(MQContract.Interfaces.Middleware.IContext,``0,System.String,MQContract.Messages.MessageHeader,System.DateTime,System.DateTime)')
+  - [AfterMessageDecodeAsync\`\`1(context,message,ID,messageHeader,receivedTimestamp,processedTimeStamp)](#M-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware-AfterMessageDecodeAsync``1-MQContract-Interfaces-Middleware-IContext,System-String,MQContract-Interfaces-Middleware-DecodedMessage{``0},System-DateTime,System-DateTime- 'MQContract.Interfaces.Middleware.IAfterDecodeMiddleware.AfterMessageDecodeAsync``1(MQContract.Interfaces.Middleware.IContext,System.String,MQContract.Interfaces.Middleware.DecodedMessage{``0},System.DateTime,System.DateTime)')
 - [IAfterDecodeSpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-IAfterDecodeSpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.IAfterDecodeSpecificTypeMiddleware`1')
-  - [AfterMessageDecodeAsync(context,message,ID,messageHeader,receivedTimestamp,processedTimeStamp)](#M-MQContract-Interfaces-Middleware-IAfterDecodeSpecificTypeMiddleware`1-AfterMessageDecodeAsync-MQContract-Interfaces-Middleware-IContext,`0,System-String,MQContract-Messages-MessageHeader,System-DateTime,System-DateTime- 'MQContract.Interfaces.Middleware.IAfterDecodeSpecificTypeMiddleware`1.AfterMessageDecodeAsync(MQContract.Interfaces.Middleware.IContext,`0,System.String,MQContract.Messages.MessageHeader,System.DateTime,System.DateTime)')
+  - [AfterMessageDecodeAsync(context,message,ID,messageHeader,receivedTimestamp,processedTimeStamp)](#M-MQContract-Interfaces-Middleware-IAfterDecodeSpecificTypeMiddleware`1-AfterMessageDecodeAsync-MQContract-Interfaces-Middleware-IContext,System-String,MQContract-Interfaces-Middleware-DecodedMessage{`0},System-DateTime,System-DateTime- 'MQContract.Interfaces.Middleware.IAfterDecodeSpecificTypeMiddleware`1.AfterMessageDecodeAsync(MQContract.Interfaces.Middleware.IContext,System.String,MQContract.Interfaces.Middleware.DecodedMessage{`0},System.DateTime,System.DateTime)')
 - [IAfterEncodeMiddleware](#T-MQContract-Interfaces-Middleware-IAfterEncodeMiddleware 'MQContract.Interfaces.Middleware.IAfterEncodeMiddleware')
   - [AfterMessageEncodeAsync(messageType,context,message)](#M-MQContract-Interfaces-Middleware-IAfterEncodeMiddleware-AfterMessageEncodeAsync-System-Type,MQContract-Interfaces-Middleware-IContext,MQContract-Messages-ServiceMessage- 'MQContract.Interfaces.Middleware.IAfterEncodeMiddleware.AfterMessageEncodeAsync(System.Type,MQContract.Interfaces.Middleware.IContext,MQContract.Messages.ServiceMessage)')
 - [IBaseConsumer](#T-MQContract-Interfaces-Consumers-IBaseConsumer 'MQContract.Interfaces.Consumers.IBaseConsumer')
@@ -47,11 +47,11 @@
   - [SubscribeQueryAsyncResponseAsync\`\`2(messageReceived,errorReceived,channel,group,ignoreMessageHeader,messageFilters,cancellationToken)](#M-MQContract-Interfaces-IBaseContractConnection-SubscribeQueryAsyncResponseAsync``2-System-Func{MQContract-Interfaces-IReceivedMessage{``0},System-Threading-Tasks-ValueTask{MQContract-Messages-QueryResponseMessage{``1}}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken- 'MQContract.Interfaces.IBaseContractConnection.SubscribeQueryAsyncResponseAsync``2(System.Func{MQContract.Interfaces.IReceivedMessage{``0},System.Threading.Tasks.ValueTask{MQContract.Messages.QueryResponseMessage{``1}}},System.Action{System.Exception},System.String,System.String,System.Boolean,MQContract.Messages.MessageFilters{``0},System.Threading.CancellationToken)')
   - [SubscribeQueryResponseAsync\`\`2(messageReceived,errorReceived,channel,group,ignoreMessageHeader,messageFilters,cancellationToken)](#M-MQContract-Interfaces-IBaseContractConnection-SubscribeQueryResponseAsync``2-System-Func{MQContract-Interfaces-IReceivedMessage{``0},MQContract-Messages-QueryResponseMessage{``1}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken- 'MQContract.Interfaces.IBaseContractConnection.SubscribeQueryResponseAsync``2(System.Func{MQContract.Interfaces.IReceivedMessage{``0},MQContract.Messages.QueryResponseMessage{``1}},System.Action{System.Exception},System.String,System.String,System.Boolean,MQContract.Messages.MessageFilters{``0},System.Threading.CancellationToken)')
 - [IBeforeDecodeMiddleware](#T-MQContract-Interfaces-Middleware-IBeforeDecodeMiddleware 'MQContract.Interfaces.Middleware.IBeforeDecodeMiddleware')
-  - [BeforeMessageDecodeAsync(context,id,messageHeader,messageTypeID,messageChannel,data)](#M-MQContract-Interfaces-Middleware-IBeforeDecodeMiddleware-BeforeMessageDecodeAsync-MQContract-Interfaces-Middleware-IContext,System-String,MQContract-Messages-MessageHeader,System-String,System-String,System-ReadOnlyMemory{System-Byte}- 'MQContract.Interfaces.Middleware.IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(MQContract.Interfaces.Middleware.IContext,System.String,MQContract.Messages.MessageHeader,System.String,System.String,System.ReadOnlyMemory{System.Byte})')
+  - [BeforeMessageDecodeAsync(context,id,messageHeader,messageTypeID,messageChannel,data)](#M-MQContract-Interfaces-Middleware-IBeforeDecodeMiddleware-BeforeMessageDecodeAsync-MQContract-Interfaces-Middleware-IContext,System-String,System-String,System-String,MQContract-Interfaces-Middleware-DecodableMessage- 'MQContract.Interfaces.Middleware.IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(MQContract.Interfaces.Middleware.IContext,System.String,System.String,System.String,MQContract.Interfaces.Middleware.DecodableMessage)')
 - [IBeforeEncodeMiddleware](#T-MQContract-Interfaces-Middleware-IBeforeEncodeMiddleware 'MQContract.Interfaces.Middleware.IBeforeEncodeMiddleware')
-  - [BeforeMessageEncodeAsync\`\`1(context,message,channel,messageHeader)](#M-MQContract-Interfaces-Middleware-IBeforeEncodeMiddleware-BeforeMessageEncodeAsync``1-MQContract-Interfaces-Middleware-IContext,``0,System-String,MQContract-Messages-MessageHeader- 'MQContract.Interfaces.Middleware.IBeforeEncodeMiddleware.BeforeMessageEncodeAsync``1(MQContract.Interfaces.Middleware.IContext,``0,System.String,MQContract.Messages.MessageHeader)')
+  - [BeforeMessageEncodeAsync\`\`1(context,message,channel,messageHeader)](#M-MQContract-Interfaces-Middleware-IBeforeEncodeMiddleware-BeforeMessageEncodeAsync``1-MQContract-Interfaces-Middleware-IContext,MQContract-Interfaces-Middleware-EncodableMessage{``0}- 'MQContract.Interfaces.Middleware.IBeforeEncodeMiddleware.BeforeMessageEncodeAsync``1(MQContract.Interfaces.Middleware.IContext,MQContract.Interfaces.Middleware.EncodableMessage{``0})')
 - [IBeforeEncodeSpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-IBeforeEncodeSpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.IBeforeEncodeSpecificTypeMiddleware`1')
-  - [BeforeMessageEncodeAsync(context,message,channel,messageHeader)](#M-MQContract-Interfaces-Middleware-IBeforeEncodeSpecificTypeMiddleware`1-BeforeMessageEncodeAsync-MQContract-Interfaces-Middleware-IContext,`0,System-String,MQContract-Messages-MessageHeader- 'MQContract.Interfaces.Middleware.IBeforeEncodeSpecificTypeMiddleware`1.BeforeMessageEncodeAsync(MQContract.Interfaces.Middleware.IContext,`0,System.String,MQContract.Messages.MessageHeader)')
+  - [BeforeMessageEncodeAsync(context,message,channel,messageHeader)](#M-MQContract-Interfaces-Middleware-IBeforeEncodeSpecificTypeMiddleware`1-BeforeMessageEncodeAsync-MQContract-Interfaces-Middleware-IContext,MQContract-Interfaces-Middleware-EncodableMessage{`0}- 'MQContract.Interfaces.Middleware.IBeforeEncodeSpecificTypeMiddleware`1.BeforeMessageEncodeAsync(MQContract.Interfaces.Middleware.IContext,MQContract.Interfaces.Middleware.EncodableMessage{`0})')
 - [IBulkPublishableMessageServiceConnection](#T-MQContract-Interfaces-Service-IBulkPublishableMessageServiceConnection 'MQContract.Interfaces.Service.IBulkPublishableMessageServiceConnection')
   - [BulkPublishAsync(messages,cancellationToken)](#M-MQContract-Interfaces-Service-IBulkPublishableMessageServiceConnection-BulkPublishAsync-System-Collections-Generic-IEnumerable{MQContract-Messages-ServiceMessage},System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IBulkPublishableMessageServiceConnection.BulkPublishAsync(System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage},System.Threading.CancellationToken)')
 - [IConsumerContractConnection\`1](#T-MQContract-Interfaces-IConsumerContractConnection`1 'MQContract.Interfaces.IConsumerContractConnection`1')
@@ -803,7 +803,7 @@ MQContract.Interfaces.Middleware
 
 This interface represents a Middleware to execute after a Message has been decoded from a ServiceMessage to the expected Class
 
-<a name='M-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware-AfterMessageDecodeAsync``1-MQContract-Interfaces-Middleware-IContext,``0,System-String,MQContract-Messages-MessageHeader,System-DateTime,System-DateTime-'></a>
+<a name='M-MQContract-Interfaces-Middleware-IAfterDecodeMiddleware-AfterMessageDecodeAsync``1-MQContract-Interfaces-Middleware-IContext,System-String,MQContract-Interfaces-Middleware-DecodedMessage{``0},System-DateTime,System-DateTime-'></a>
 ### AfterMessageDecodeAsync\`\`1(context,message,ID,messageHeader,receivedTimestamp,processedTimeStamp) `method`
 
 ##### Summary
@@ -819,11 +819,10 @@ The message and header to allow for changes if desired
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | context | [MQContract.Interfaces.Middleware.IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext') | A shared context that exists from the start of this decode process instance |
-| message | [\`\`0](#T-``0 '``0') | The class message |
-| ID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The id of the message |
-| messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The headers from the message |
+| message | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The class message |
+| ID | [MQContract.Interfaces.Middleware.DecodedMessage{\`\`0}](#T-MQContract-Interfaces-Middleware-DecodedMessage{``0} 'MQContract.Interfaces.Middleware.DecodedMessage{``0}') | The id of the message |
+| messageHeader | [System.DateTime](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.DateTime 'System.DateTime') | The headers from the message |
 | receivedTimestamp | [System.DateTime](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.DateTime 'System.DateTime') | The timestamp of when the message was recieved |
-| processedTimeStamp | [System.DateTime](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.DateTime 'System.DateTime') | The timestamp of when the message was decoded into a Class |
 
 ##### Generic Types
 
@@ -842,7 +841,7 @@ MQContract.Interfaces.Middleware
 
 This interface represents a Middleware to execute after a Message of the given type T has been decoded from a ServiceMessage to the expected Class
 
-<a name='M-MQContract-Interfaces-Middleware-IAfterDecodeSpecificTypeMiddleware`1-AfterMessageDecodeAsync-MQContract-Interfaces-Middleware-IContext,`0,System-String,MQContract-Messages-MessageHeader,System-DateTime,System-DateTime-'></a>
+<a name='M-MQContract-Interfaces-Middleware-IAfterDecodeSpecificTypeMiddleware`1-AfterMessageDecodeAsync-MQContract-Interfaces-Middleware-IContext,System-String,MQContract-Interfaces-Middleware-DecodedMessage{`0},System-DateTime,System-DateTime-'></a>
 ### AfterMessageDecodeAsync(context,message,ID,messageHeader,receivedTimestamp,processedTimeStamp) `method`
 
 ##### Summary
@@ -858,11 +857,10 @@ The message and header to allow for changes if desired
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | context | [MQContract.Interfaces.Middleware.IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext') | A shared context that exists from the start of this decode process instance |
-| message | [\`0](#T-`0 '`0') | The class message |
-| ID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The id of the message |
-| messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The headers from the message |
+| message | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The class message |
+| ID | [MQContract.Interfaces.Middleware.DecodedMessage{\`0}](#T-MQContract-Interfaces-Middleware-DecodedMessage{`0} 'MQContract.Interfaces.Middleware.DecodedMessage{`0}') | The id of the message |
+| messageHeader | [System.DateTime](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.DateTime 'System.DateTime') | The headers from the message |
 | receivedTimestamp | [System.DateTime](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.DateTime 'System.DateTime') | The timestamp of when the message was recieved |
-| processedTimeStamp | [System.DateTime](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.DateTime 'System.DateTime') | The timestamp of when the message was decoded into a Class |
 
 <a name='T-MQContract-Interfaces-Middleware-IAfterEncodeMiddleware'></a>
 ## IAfterEncodeMiddleware `type`
@@ -1080,7 +1078,7 @@ MQContract.Interfaces.Middleware
 
 This interface represents a Middleware to execute before decoding a ServiceMessage
 
-<a name='M-MQContract-Interfaces-Middleware-IBeforeDecodeMiddleware-BeforeMessageDecodeAsync-MQContract-Interfaces-Middleware-IContext,System-String,MQContract-Messages-MessageHeader,System-String,System-String,System-ReadOnlyMemory{System-Byte}-'></a>
+<a name='M-MQContract-Interfaces-Middleware-IBeforeDecodeMiddleware-BeforeMessageDecodeAsync-MQContract-Interfaces-Middleware-IContext,System-String,System-String,System-String,MQContract-Interfaces-Middleware-DecodableMessage-'></a>
 ### BeforeMessageDecodeAsync(context,id,messageHeader,messageTypeID,messageChannel,data) `method`
 
 ##### Summary
@@ -1097,10 +1095,9 @@ The message header and data to allow for changes if desired
 | ---- | ---- | ----------- |
 | context | [MQContract.Interfaces.Middleware.IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext') | A shared context that exists from the start of this decode process instance |
 | id | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The id of the message |
-| messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The headers from the message |
+| messageHeader | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The headers from the message |
 | messageTypeID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message type id |
-| messageChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel the message was recieved on |
-| data | [System.ReadOnlyMemory{System.Byte}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.ReadOnlyMemory 'System.ReadOnlyMemory{System.Byte}') | The data of the message |
+| messageChannel | [MQContract.Interfaces.Middleware.DecodableMessage](#T-MQContract-Interfaces-Middleware-DecodableMessage 'MQContract.Interfaces.Middleware.DecodableMessage') | The channel the message was recieved on |
 
 <a name='T-MQContract-Interfaces-Middleware-IBeforeEncodeMiddleware'></a>
 ## IBeforeEncodeMiddleware `type`
@@ -1113,7 +1110,7 @@ MQContract.Interfaces.Middleware
 
 This interface represents a Middleware to execute Before a message is encoded
 
-<a name='M-MQContract-Interfaces-Middleware-IBeforeEncodeMiddleware-BeforeMessageEncodeAsync``1-MQContract-Interfaces-Middleware-IContext,``0,System-String,MQContract-Messages-MessageHeader-'></a>
+<a name='M-MQContract-Interfaces-Middleware-IBeforeEncodeMiddleware-BeforeMessageEncodeAsync``1-MQContract-Interfaces-Middleware-IContext,MQContract-Interfaces-Middleware-EncodableMessage{``0}-'></a>
 ### BeforeMessageEncodeAsync\`\`1(context,message,channel,messageHeader) `method`
 
 ##### Summary
@@ -1129,9 +1126,7 @@ The message, channel and header to allow for changes if desired
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | context | [MQContract.Interfaces.Middleware.IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext') | A shared context that exists from the start of this encoding instance |
-| message | [\`\`0](#T-``0 '``0') | The message being encoded |
-| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel this message was requested to transmit to |
-| messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message headers being supplied |
+| message | [MQContract.Interfaces.Middleware.EncodableMessage{\`\`0}](#T-MQContract-Interfaces-Middleware-EncodableMessage{``0} 'MQContract.Interfaces.Middleware.EncodableMessage{``0}') | The message being encoded |
 
 ##### Generic Types
 
@@ -1150,7 +1145,7 @@ MQContract.Interfaces.Middleware
 
 This interface represents a Middleware to execute Before a specific message type is encoded
 
-<a name='M-MQContract-Interfaces-Middleware-IBeforeEncodeSpecificTypeMiddleware`1-BeforeMessageEncodeAsync-MQContract-Interfaces-Middleware-IContext,`0,System-String,MQContract-Messages-MessageHeader-'></a>
+<a name='M-MQContract-Interfaces-Middleware-IBeforeEncodeSpecificTypeMiddleware`1-BeforeMessageEncodeAsync-MQContract-Interfaces-Middleware-IContext,MQContract-Interfaces-Middleware-EncodableMessage{`0}-'></a>
 ### BeforeMessageEncodeAsync(context,message,channel,messageHeader) `method`
 
 ##### Summary
@@ -1166,9 +1161,7 @@ The message, channel and header to allow for changes if desired
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | context | [MQContract.Interfaces.Middleware.IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext') | A shared context that exists from the start of this encoding instance |
-| message | [\`0](#T-`0 '`0') | The message being encoded |
-| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel this message was requested to transmit to |
-| messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message headers being supplied |
+| message | [MQContract.Interfaces.Middleware.EncodableMessage{\`0}](#T-MQContract-Interfaces-Middleware-EncodableMessage{`0} 'MQContract.Interfaces.Middleware.EncodableMessage{`0}') | The message being encoded |
 
 <a name='T-MQContract-Interfaces-Service-IBulkPublishableMessageServiceConnection'></a>
 ## IBulkPublishableMessageServiceConnection `type`

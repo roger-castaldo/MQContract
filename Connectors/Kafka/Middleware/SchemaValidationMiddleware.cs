@@ -125,7 +125,7 @@ namespace MQContract.Kafka.Middleware
                     data[0] = MagicByte;
                     BinaryPrimitives.WriteInt32BigEndian(data.AsSpan(1, 4), schemaId.Value);
                     message.Data.ToArray().CopyTo(data, 5);
-                    return new(
+                    message = new(
                         message.ID,
                         message.MessageTypeID,
                         message.Channel,
@@ -170,24 +170,24 @@ namespace MQContract.Kafka.Middleware
             throw new NotImplementedException();
         }
 
-        async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
+        async ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)
         {
             if (!IgnoredMessageTypes.Contains(messageTypeID))
             {
-                var schemaId = messageHeader[SchemaIdHeader];
-                if (data.Span[0]==MagicByte)
+                var schemaId = message.MessageHeader[SchemaIdHeader];
+                if (message.Data.Span[0]==MagicByte)
                 {
-                    var otherSchemaId = BinaryPrimitives.ReadInt32BigEndian(data.Slice(1, 4).Span).ToString();
-                    data = data.Slice(5);
+                    var otherSchemaId = BinaryPrimitives.ReadInt32BigEndian(message.Data.Slice(1, 4).Span).ToString();
+                    message=new(message.MessageHeader, message.Data.Slice(5));
                     if (schemaId!=otherSchemaId)
                         schemaId= otherSchemaId;
                 }
                 if (string.IsNullOrWhiteSpace(schemaId) && failOnMissingSchema)
                     throw new MissingSchemaException(messageTypeID);
                 else if (!string.IsNullOrWhiteSpace(schemaId))
-                    await LoadAndCheckSchemaAsync(int.Parse(schemaId), schemaId, data);
+                    await LoadAndCheckSchemaAsync(int.Parse(schemaId), schemaId, message.Data);
             }
-            return (messageHeader,data);
+            return message;
         }
 
         private async ValueTask<bool> ValidateSchemaAsync(CachedSchema cachedSchema, Stream dataStream)
