@@ -18,8 +18,6 @@ namespace MQContract.Connections
         where CC : IBaseContractConnection
     {
         private readonly ServiceConnectionList connectionList = new();
-
-
         protected IEnumerable<ServiceConnectionList.ServiceConnection> FullList => connectionList.FullList;
         protected uint? MaxMessageBodySize => connectionList.MaxMessageBodySize;
 
@@ -72,10 +70,12 @@ namespace MQContract.Connections
             return result;
         }
 
-        protected async ValueTask<(IEnumerable<ServiceConnectionList.ServiceConnection> connections, string channel)> GetConnectionsAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
+        protected readonly record struct GetConnectionsResult(IEnumerable<ServiceConnectionList.ServiceConnection> Connections,string Channel);
+
+        protected async ValueTask<GetConnectionsResult> GetConnectionsAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
         {
             channel = await Utility.GetChannelAsync<TMessage>((originalChannel) => MapChannel(mapTypes, originalChannel), channel);
-            return (await GetConnectionsAsync(channel, typeof(TMessage), new MessageHeader([])), channel);
+            return new(await GetConnectionsAsync(channel, typeof(TMessage), new MessageHeader([])), channel);
         }
 
         protected sealed override async ValueTask CloseAsync()

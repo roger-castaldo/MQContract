@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MQContract.Connections;
 using MQContract.Extensions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
@@ -8,7 +9,7 @@ using System.Diagnostics;
 namespace MQContract.Subscriptions
 {
     internal sealed class QueryResponseSubscription<TMessage>(
-        Func<ReceivedServiceMessage, string, ValueTask<(ServiceMessage? serviceMessage, Activity? activity, MessageFilterResult filterResult)>> processMessage,
+        Func<ReceivedServiceMessage, string, ValueTask<FilteredServiceMessage>> processMessage,
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         string? channel = null, string? group = null,
@@ -89,7 +90,9 @@ namespace MQContract.Subscriptions
             }
         }
 
-        private async ValueTask<(ServiceMessage? response, Activity? activity)> ProcessServiceMessageAsync(ReceivedServiceMessage message, string replyChannel)
+        private readonly record struct ProcessedServiceResponse(ServiceMessage? Response, Activity? Activity);
+
+        private async ValueTask<ProcessedServiceResponse> ProcessServiceMessageAsync(ReceivedServiceMessage message, string replyChannel)
         {
             using var scope = SetScope();
             if (Synchronous && !(token?.IsCancellationRequested ?? false))
@@ -99,15 +102,13 @@ namespace MQContract.Subscriptions
             }
 
             Exception? error = null;
-            ServiceMessage? response = null;
-            Activity? activity = null;
-            MessageFilterResult filterResult = MessageFilterResult.Allow;
+            FilteredServiceMessage? response = null;
 
             try
             {
                 Logger?.LogDebugChecked("Processing service message with ID: {MessageID}", message.ID);
-                (response, activity,filterResult) = await processMessage(message, replyChannel);
-                if (message.Acknowledge != null && !Equals(filterResult, MessageFilterResult.DropAndDontAcknowledge))
+                response = await processMessage(message, replyChannel);
+                if (message.Acknowledge != null && !Equals(response?.FilterResult, MessageFilterResult.DropAndDontAcknowledge))
                 {
                     Logger?.LogDebugChecked("Acknowledging service message with ID: {MessageID}", message.ID);
                     await message.Acknowledge();
@@ -129,11 +130,11 @@ namespace MQContract.Subscriptions
             if (error != null)
             {
                 Logger?.LogWarningChecked("Returning error response for message with ID: {MessageID}", message.ID);
-                return (ErrorServiceMessage.Produce(replyChannel, error), activity);
+                return new(ErrorServiceMessage.Produce(replyChannel, error), response?.Activity);
             }
 
             Logger?.LogInformationChecked("Returning valid service response for message with ID: {MessageID}", message.ID);
-            return (response ?? (Equals(filterResult,MessageFilterResult.Allow) ? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()) : null), activity);
+            return new(response?.ServiceMessage ?? (Equals(response?.FilterResult,MessageFilterResult.Allow) ? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()) : null), response?.Activity);
         }
 
         protected override void InternalDispose()

@@ -40,7 +40,7 @@ namespace MQContract.Connections
             await base.InternalDisposeAsync();
         }
 
-        private new async ValueTask<ServiceConnectionList.ServiceConnection> GetConnectionsAsync(string channel, Type messageType, MessageHeader messageHeader)
+        private async ValueTask<ServiceConnectionList.ServiceConnection> GetConnectionAsync(string channel, Type messageType, MessageHeader messageHeader)
         {
             using var scope = SetScope();
             Logger?.LogDebugChecked("Locating a connection for {Channel}, {MessageType} and {HeaderKeys}", channel, messageType, string.Join(',', messageHeader.Keys));
@@ -53,32 +53,34 @@ namespace MQContract.Connections
             return connections.First();
         }
 
-        private new async ValueTask<(ServiceConnectionList.ServiceConnection connections, string channel)> GetConnectionsAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
+        private readonly record struct GetConnectionResult(ServiceConnectionList.ServiceConnection Connection, string Channel);
+
+        private async ValueTask<GetConnectionResult> GetConnectionAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
         {
             using var scope = SetScope();
             Logger?.LogDebugChecked("Locating a connection for {Channel}, {TMessage} and {MapType}", channel, typeof(TMessage), mapTypes);
-            (var connections, channel) = await base.GetConnectionsAsync<TMessage>(channel, mapTypes);
-            if (connections.Count()>1)
+            var connections = await base.GetConnectionsAsync<TMessage>(channel, mapTypes);
+            if (connections.Connections.Count()>1)
             {
                 Logger?.LogErrorChecked("Located more than 1 connection for {Channel}, {TMessage} and {MapType}", channel, typeof(TMessage), mapTypes);
                 throw new TooManyConnectionMatchesException();
             }
-            return (connections.First(), channel);
+            return new(connections.Connections.First(), connections.Channel);
         }
 
         #region PubSub
         protected override async ValueTask<ISubscription> CreateSubscriptionAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, bool synchronous, CancellationToken cancellationToken)
         {
-            (var connection, channel) = await GetConnectionsAsync<TMessage>(channel, ChannelMapper.MapTypes.PublishSubscription);
+            var connection = await GetConnectionAsync<TMessage>(channel, ChannelMapper.MapTypes.PublishSubscription);
             return await CreateSubscriptionAsync<TMessage>(
                 GetMessageFactory<TMessage>(ignoreMessageHeader),
-                connection.MessageServiceConnection,
+                connection.Connection.MessageServiceConnection,
                 messageReceived,
                 errorReceived,
-                channel,
+                connection.Channel,
                 group,
                 synchronous,
-                connection.ServiceConnectionName,
+                connection.Connection.ServiceConnectionName,
                 messageFilters,
                 cancellationToken
             );
@@ -99,7 +101,7 @@ namespace MQContract.Connections
                 channel: channel, 
                 messageHeader: messageHeader
             );
-            var serviceConnection = await GetConnectionsAsync(serviceMessage.Channel, typeof(TMessage), serviceMessage.Header);
+            var serviceConnection = await GetConnectionAsync(serviceMessage.Channel, typeof(TMessage), serviceMessage.Header);
             OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
             return await PublishMessageAsync<TMessage>(publishLock, serviceMessage, serviceConnection.MessageServiceConnection, activity, serviceConnection.ServiceConnectionName, cancellationToken);
         }
@@ -122,7 +124,7 @@ namespace MQContract.Connections
                         messageHeader: m.messageHeader
                     )
                 );
-            var serviceConnection = await GetConnectionsAsync(serviceMessages.First().Channel, typeof(TMessage), serviceMessages.First().Header);
+            var serviceConnection = await GetConnectionAsync(serviceMessages.First().Channel, typeof(TMessage), serviceMessages.First().Header);
             OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
             var result = await BulkPublishAsync<TMessage>(publishLock, serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken, connectionName: serviceConnection.ServiceConnectionName);
             activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
@@ -147,7 +149,7 @@ namespace MQContract.Connections
                 channel: channel, 
                 messageHeader: messageHeader
             );
-            var serviceConnection = await GetConnectionsAsync(serviceMessage.Channel, typeof(TQuery), serviceMessage.Header);
+            var serviceConnection = await GetConnectionAsync(serviceMessage.Channel, typeof(TQuery), serviceMessage.Header);
             OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
             return await ExecuteQueryAsync<TQuery, TQueryResponse>(serviceConnection.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: serviceConnection.ServiceConnectionName, cancellationToken: cancellationToken);
         }
@@ -191,8 +193,8 @@ namespace MQContract.Connections
             Logger?.LogDebugChecked("Producing QueryResponse Subscription for {TQuery} responding with {TQueryResponse} on {Channel} in {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
             var queryMessageFactory = GetMessageFactory<TQuery>(ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<TQueryResponse>();
-            (var serviceConnection, channel) = await GetConnectionsAsync<TQuery>(channel, ChannelMapper.MapTypes.QuerySubscription);
-            return await CreateSubscriptionAsync<TQuery, TQueryResponse>(queryMessageFactory, responseMessageFactory, serviceConnection.MessageServiceConnection, messageReceived, errorReceived, channel, group, synchronous, serviceConnection.ServiceConnectionName, messageFilter, cancellationToken);
+            var connection = await GetConnectionAsync<TQuery>(channel, ChannelMapper.MapTypes.QuerySubscription);
+            return await CreateSubscriptionAsync<TQuery, TQueryResponse>(queryMessageFactory, responseMessageFactory, connection.Connection.MessageServiceConnection, messageReceived, errorReceived, connection.Channel, group, synchronous, connection.Connection.ServiceConnectionName, messageFilter, cancellationToken);
         }
         #endregion
     }
