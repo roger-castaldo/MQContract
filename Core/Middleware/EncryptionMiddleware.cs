@@ -19,8 +19,8 @@ namespace MQContract.Middleware
             ValueTask<Stream> IMessageEncryptor.DecryptAsync(Stream stream, MessageHeader headers)
                 => ValueTask.FromResult(stream);
 
-            ValueTask<(byte[] data, Dictionary<string, string?> headers)> IMessageEncryptor.EncryptAsync(byte[] data)
-                => ValueTask.FromResult<(byte[] data, Dictionary<string, string?> headers)>((data, []));
+            ValueTask<EncryptionResult> IMessageEncryptor.EncryptAsync(byte[] data)
+                => ValueTask.FromResult<EncryptionResult>(new(null,data));
         }
 
         private IMessageEncryptor GetEncryptor(Type messageType)
@@ -57,23 +57,23 @@ namespace MQContract.Middleware
 
         async ValueTask<ServiceMessage> IAfterEncodeMiddleware.AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
         {
-            var (body, messageHeaders) = await GetEncryptor(messageType).EncryptAsync(message.Data.ToArray());
+            var encryptionResult = await GetEncryptor(messageType).EncryptAsync(message.Data.ToArray());
             return new(
                 message.ID,
                 message.MessageTypeID,
                 message.Channel,
-                new(message.Header,messageHeaders),
-                body
+                (encryptionResult.Headers==null ? message.Header : new(message.Header,encryptionResult.Headers)),
+                encryptionResult.Data
             );
         }
 
-        async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
+        async ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)
         {
-            using var dataStream = await GetEncryptor((Type)context[ExpectedTypeKey]!).DecryptAsync(new MemoryStream(data.ToArray(),0,data.Length,false,true), messageHeader);
+            using var dataStream = await GetEncryptor((Type)context[ExpectedTypeKey]!).DecryptAsync(new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true), message.MessageHeader);
             using var ms = new MemoryStream();
             await dataStream.CopyToAsync(ms);
             ms.TryGetBuffer(out ArraySegment<byte> buffer);
-            return (messageHeader,buffer.AsMemory(0, (int)ms.Length));
+            return new(message.MessageHeader, buffer.AsMemory(0, (int)ms.Length));
         }
     }
 }

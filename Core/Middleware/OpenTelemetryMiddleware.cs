@@ -33,19 +33,19 @@ namespace MQContract.Middleware
 
         #region middleware
 
-        ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> IBeforeEncodeMiddleware.BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader)
+        ValueTask<EncodableMessage<TMessage>> IBeforeEncodeMiddleware.BeforeMessageEncodeAsync<TMessage>(IContext context, EncodableMessage<TMessage> message)
         {
             if (linkActivitiesAcrossSystems && context.Activity!=null)
             {
-                messageHeader = new(messageHeader, new Dictionary<string, string?>([
+                message = new(new MessageHeader(message.MessageHeader, new Dictionary<string, string?>([
                     new(TraceParentHeaderKey, context.Activity.TraceId.ToString()),
                     new(TraceParentSpanHeaderKey, context.Activity.SpanId.ToString())
-                ]));
+                ])), message.Message, message.Channel);
             }
-            context.Activity?.AddTag(InitialChannelKey, channel);
+            context.Activity?.AddTag(InitialChannelKey, message.Channel);
             context.Activity?.AddTag(MessageTypeClassKey, typeof(TMessage).Name);
             context[StopwatchContextId] = Stopwatch.GetTimestamp();
-            return ValueTask.FromResult((message, channel, messageHeader));
+            return ValueTask.FromResult(message);
         }
 
         ValueTask<ServiceMessage> IAfterEncodeMiddleware.AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
@@ -63,16 +63,16 @@ namespace MQContract.Middleware
             return ValueTask.FromResult(message);
         }
 
-        ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
+        ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)
         {
             context.Activity?.AddTag(MessageTypeKey, messageTypeID);
             context.Activity?.AddTag(RecievedChannelKey, messageChannel);
             context.Activity?.AddTag(MessageIdKey, id);
             context[StopwatchContextId] = Stopwatch.GetTimestamp();
-            return ValueTask.FromResult((messageHeader, data));
+            return ValueTask.FromResult(message);
         }
 
-        ValueTask<(TMessage message, MessageHeader messageHeader)> IAfterDecodeMiddleware.AfterMessageDecodeAsync<TMessage>(IContext context, TMessage message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
+        ValueTask<DecodedMessage<TMessage>> IAfterDecodeMiddleware.AfterMessageDecodeAsync<TMessage>(IContext context, string ID, DecodedMessage<TMessage> message, DateTime receivedTimestamp, DateTime processedTimeStamp)
         {
             context.Activity?.AddTag(MessageTypeClassKey, typeof(TMessage).Name);
             context.Activity?.AddEvent(new("MessageDecoded", tags: new([
@@ -82,7 +82,7 @@ namespace MQContract.Middleware
                 ),
                 new(MessageIdKey,ID)
             ])));
-            return ValueTask.FromResult((message, messageHeader));
+            return ValueTask.FromResult(message);
         }
 
         #endregion

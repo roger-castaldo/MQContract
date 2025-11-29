@@ -31,18 +31,18 @@ namespace MQContract.Middleware
             return message;
         }
 
-        async ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
+        async ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)
         {
-            if (messageTypeID.StartsWith("C-") || bool.Parse(messageHeader[CompressedHeader]??"false"))
+            if (messageTypeID.StartsWith("C-") || bool.Parse(message.MessageHeader[CompressedHeader]??"false"))
             {
-                using var ms = new MemoryStream(data.ToArray(),0,data.Length,false,true);
+                using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
                 using var zip = new GZipStream(ms, CompressionMode.Decompress);
                 using var resultStream = new MemoryStream();
                 await zip.CopyToAsync(resultStream);
                 resultStream.TryGetBuffer(out ArraySegment<byte> buffer);
-                return (messageHeader, buffer.AsMemory(0, (int)resultStream.Length));
+                return new(message.MessageHeader, buffer.AsMemory(0, (int)resultStream.Length));
             }
-            return (messageHeader, data);
+            return message;
         }
     }
 }

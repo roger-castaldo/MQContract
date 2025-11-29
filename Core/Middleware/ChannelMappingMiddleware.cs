@@ -1,5 +1,4 @@
 ﻿using MQContract.Interfaces.Middleware;
-using MQContract.Messages;
 
 namespace MQContract.Middleware
 {
@@ -13,14 +12,14 @@ namespace MQContract.Middleware
             return await channelMapper.MapChannel(context.MapDirection, channel);
         }
 
-        public async ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader)
+        async ValueTask<EncodableMessage<TMessage>> IBeforeEncodeMiddleware.BeforeMessageEncodeAsync<TMessage>(IContext context, EncodableMessage<TMessage> message)
         {
-            var mappedChannel = await MapChannel((Context)context, channel);
+            var mappedChannel = await MapChannel((Context)context, message.Channel);
             context.Activity?.AddEvent(new("MessageChannelMapped", tags: new([
-                new(OpenTelemetryMiddleware.InitialChannelKey,channel),
+                new(OpenTelemetryMiddleware.InitialChannelKey,message.Channel),
                 new($"{OpenTelemetryMiddleware.KeyBase}.mappedchannel",mappedChannel)
             ])));
-            return (message, mappedChannel, messageHeader);
+            return new(message.MessageHeader, message.Message, mappedChannel);
         }
     }
 }

@@ -1,6 +1,4 @@
 ﻿using MQContract.Attributes;
-using MQContract.CQRS.Attributes;
-using MQContract.CQRS.Interfaces.Command;
 
 namespace BenchMark.Messages
 {

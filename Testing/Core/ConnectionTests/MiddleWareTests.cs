@@ -155,10 +155,10 @@ namespace AutomatedTesting.ContractConnectionTests
                 .ReturnsAsync(transmissionResult);
 
             var mockMiddleware = new Mock<IBeforeEncodeMiddleware>();
-            mockMiddleware.Setup(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()))
-                .Returns((IContext context, BasicMessage message, string? channel, MessageHeader messageHeader) =>
+            mockMiddleware.Setup(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<EncodableMessage<BasicMessage>>()))
+                .Returns((IContext context, EncodableMessage<BasicMessage> message) =>
                 {
-                    return ValueTask.FromResult<(BasicMessage message, string? channel, MessageHeader messageHeader)>((message, newChannel, headers));
+                    return ValueTask.FromResult<EncodableMessage<BasicMessage>>(new(headers, message.Message, newChannel));
                 });
 
 
@@ -179,7 +179,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Verify
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
-            mockMiddleware.Verify(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()), Times.Once);
+            mockMiddleware.Verify(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<EncodableMessage<BasicMessage>>()), Times.Once);
             #endregion
         }
 
@@ -303,10 +303,10 @@ namespace AutomatedTesting.ContractConnectionTests
                 .ReturnsAsync(transmissionResult);
 
             var mockMiddleware = new Mock<IBeforeEncodeSpecificTypeMiddleware<BasicMessage>>();
-            mockMiddleware.Setup(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()))
-                .Returns((IContext context, BasicMessage message, string? channel, MessageHeader messageHeader) =>
+            mockMiddleware.Setup(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<EncodableMessage<BasicMessage>>()))
+                .Returns((IContext context, EncodableMessage<BasicMessage> message) =>
                 {
-                    return ValueTask.FromResult<(BasicMessage message, string? channel, MessageHeader headers)>((message, newChannel, headers));
+                    return ValueTask.FromResult<EncodableMessage<BasicMessage>>(new(headers, message.Message, newChannel));
                 });
 
 
@@ -327,7 +327,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Verify
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
-            mockMiddleware.Verify(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()), Times.Once);
+            mockMiddleware.Verify(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<EncodableMessage<BasicMessage>>()), Times.Once);
             #endregion
         }
 
@@ -351,10 +351,10 @@ namespace AutomatedTesting.ContractConnectionTests
                 .ReturnsAsync(transmissionResult);
 
             var mockMiddleware = new Mock<IBeforeEncodeSpecificTypeMiddleware<BasicMessage>>();
-            mockMiddleware.Setup(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()))
-                .Returns((IContext context, BasicMessage message, string? channel, MessageHeader messageHeader) =>
+            mockMiddleware.Setup(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<EncodableMessage<BasicMessage>>()))
+                .Returns((IContext context, EncodableMessage<BasicMessage> message) =>
                 {
-                    return ValueTask.FromResult<(BasicMessage message, string? channel, MessageHeader headers)>((message, newChannel, headers));
+                    return ValueTask.FromResult<EncodableMessage<BasicMessage>>(new(headers, message.Message, newChannel));
                 });
 
 
@@ -375,7 +375,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Verify
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
-            mockMiddleware.Verify(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string?>(), It.IsAny<MessageHeader>()), Times.Once);
+            mockMiddleware.Verify(x => x.BeforeMessageEncodeAsync(It.IsAny<IContext>(), It.IsAny<EncodableMessage<BasicMessage>>()), Times.Once);
             #endregion
         }
 
@@ -444,10 +444,10 @@ namespace AutomatedTesting.ContractConnectionTests
                 });
 
             var mockMiddleware = new Mock<IAfterDecodeSpecificTypeMiddleware<BasicMessage>>();
-            mockMiddleware.Setup(x => x.AfterMessageDecodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string>(), It.IsAny<MessageHeader>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
-                .Returns((IContext context, BasicMessage message, string ID, MessageHeader messageHeader, DateTime recievedTimestamp, DateTime processedTimeStamp) =>
+            mockMiddleware.Setup(x => x.AfterMessageDecodeAsync(It.IsAny<IContext>(), It.IsAny<string>(), It.IsAny<DecodedMessage<BasicMessage>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+                .Returns((IContext context, string ID, DecodedMessage<BasicMessage> message, DateTime recievedTimestamp, DateTime processedTimeStamp) =>
                 {
-                    return ValueTask.FromResult((message, headers));
+                    return ValueTask.FromResult<DecodedMessage<BasicMessage>>(new(headers,message.Message));
                 });
 
 
@@ -473,7 +473,7 @@ namespace AutomatedTesting.ContractConnectionTests
 
             #region Verify
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
-            mockMiddleware.Verify(x => x.AfterMessageDecodeAsync(It.IsAny<IContext>(), It.IsAny<BasicMessage>(), It.IsAny<string>(), It.IsAny<MessageHeader>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Once);
+            mockMiddleware.Verify(x => x.AfterMessageDecodeAsync(It.IsAny<IContext>(), It.IsAny<string>(), It.IsAny<DecodedMessage<BasicMessage>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Once);
             #endregion
         }
     }

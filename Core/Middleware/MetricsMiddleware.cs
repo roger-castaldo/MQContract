@@ -65,12 +65,12 @@ namespace MQContract.Middleware
             return result;
         }
 
-        public async ValueTask<(TMessage message, MessageHeader messageHeader)> AfterMessageDecodeAsync<TMessage>(IContext context, TMessage message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
-        {
+        async ValueTask<DecodedMessage<TMessage>> IAfterDecodeMiddleware.AfterMessageDecodeAsync<TMessage>(IContext context, string ID, DecodedMessage<TMessage> message, DateTime receivedTimestamp, DateTime processedTimeStamp)
+        { 
             await AddStat(typeof(TMessage), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageReceivedSizeKey]??0, GetDuration(context));   
             context[MessageReceivedChannelKey]=null;
             context[MessageReceivedSizeKey]=null;
-            return (message, messageHeader);
+            return message;
         }
 
         public async ValueTask<ServiceMessage> AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
@@ -79,18 +79,18 @@ namespace MQContract.Middleware
             return message;
         }
 
-        public ValueTask<(MessageHeader messageHeader, ReadOnlyMemory<byte> data)> BeforeMessageDecodeAsync(IContext context, string id, MessageHeader messageHeader, string messageTypeID, string messageChannel, ReadOnlyMemory<byte> data)
+        ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)
         {
             context[MessageReceivedChannelKey] = messageChannel;
-            context[MessageReceivedSizeKey] = data.Length;
+            context[MessageReceivedSizeKey] = message.Data.Length;
             context[StopWatchKey] = Stopwatch.GetTimestamp();
-            return ValueTask.FromResult((messageHeader, data));
+            return ValueTask.FromResult(message);
         }
 
-        public ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader)
+        ValueTask<EncodableMessage<TMessage>> IBeforeEncodeMiddleware.BeforeMessageEncodeAsync<TMessage>(IContext context, EncodableMessage<TMessage> message)
         {
             context[StopWatchKey] = Stopwatch.GetTimestamp();
-            return ValueTask.FromResult((message, channel, messageHeader));
+            return ValueTask.FromResult(message);
         }
     }
 }

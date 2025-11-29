@@ -1,6 +1,4 @@
-﻿using MQContract.Messages;
-
-namespace MQContract.Interfaces.Middleware
+﻿namespace MQContract.Interfaces.Middleware
 {
     /// <summary>
     /// This interface represents a Middleware to execute Before a specific message type is encoded
@@ -11,10 +9,8 @@ namespace MQContract.Interfaces.Middleware
         /// This is the method invoked as part of the Middle Ware processing during message encoding
         /// </summary>
         /// <param name="context">A shared context that exists from the start of this encoding instance</param>
-        /// <param name="message">The message being encoded</param>
-        /// <param name="channel">The channel this message was requested to transmit to</param>
-        /// <param name="messageHeader">The message headers being supplied</param>
+        /// <param name="message">The message being encoded including headers and channel</param>
         /// <returns>The message, channel and header to allow for changes if desired</returns>
-        ValueTask<(TMessage message, string? channel, MessageHeader messageHeader)> BeforeMessageEncodeAsync(IContext context, TMessage message, string? channel, MessageHeader messageHeader);
+        ValueTask<EncodableMessage<TMessage>> BeforeMessageEncodeAsync(IContext context, EncodableMessage<TMessage> message);
     }
 }
