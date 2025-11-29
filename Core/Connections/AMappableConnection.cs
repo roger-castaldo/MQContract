@@ -57,6 +57,7 @@ namespace MQContract.Connections
         CC IMappableContractConnection<CC>.RegisterResiliencePolicy(string serviceConnectionName, string messageChannel, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             => AddPolicy(serviceConnectionName, messageChannel, retryPolicy, circuitBreakPolicy);
 
+        protected readonly record struct GetConnectionsResult(IEnumerable<ServiceConnectionList.ServiceConnection> Connections, string Channel);
         protected async ValueTask<IEnumerable<ServiceConnectionList.ServiceConnection>> GetConnectionsAsync(string channel, Type messageType, MessageHeader messageHeader)
         {
             using var scope = SetScope();
@@ -69,9 +70,6 @@ namespace MQContract.Connections
             }
             return result;
         }
-
-        protected readonly record struct GetConnectionsResult(IEnumerable<ServiceConnectionList.ServiceConnection> Connections,string Channel);
-
         protected async ValueTask<GetConnectionsResult> GetConnectionsAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
         {
             channel = await Utility.GetChannelAsync<TMessage>((originalChannel) => MapChannel(mapTypes, originalChannel), channel);

@@ -40,6 +40,8 @@ namespace MQContract.Connections
             await base.InternalDisposeAsync();
         }
 
+        private readonly record struct GetConnectionResult(ServiceConnectionList.ServiceConnection Connection, string Channel);
+
         private async ValueTask<ServiceConnectionList.ServiceConnection> GetConnectionAsync(string channel, Type messageType, MessageHeader messageHeader)
         {
             using var scope = SetScope();
@@ -52,8 +54,6 @@ namespace MQContract.Connections
             }
             return connections.First();
         }
-
-        private readonly record struct GetConnectionResult(ServiceConnectionList.ServiceConnection Connection, string Channel);
 
         private async ValueTask<GetConnectionResult> GetConnectionAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
         {

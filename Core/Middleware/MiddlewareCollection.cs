@@ -74,7 +74,7 @@ namespace MQContract.Middleware
         {
             if (!cache.TryGetValue(typeof(THandler), out var handlers))
             {
-                IEnumerable<THandler> enumHandlers = [];
+                IEnumerable<THandler> enumHandlers;
                 if (typeof(THandler).IsGenericType)
                     enumHandlers = [.. collection.OfType<THandler>()];
                 else
