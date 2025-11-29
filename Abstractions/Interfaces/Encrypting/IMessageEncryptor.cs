@@ -22,6 +22,6 @@ namespace MQContract.Interfaces.Encrypting
         /// </summary>
         /// <param name="data">The original unencrypted body data</param>
         /// <returns>An encrypted byte array of the message body and any headers that might be needed</returns>
-        ValueTask<(byte[] data, Dictionary<string, string?> headers)> EncryptAsync(byte[] data);
+        ValueTask<EncryptionResult> EncryptAsync(byte[] data);
     }
 }

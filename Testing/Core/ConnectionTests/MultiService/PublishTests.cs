@@ -289,7 +289,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             var globalEncryptor = new Mock<IMessageEncryptor>();
             globalEncryptor.Setup(x => x.EncryptAsync(Capture.In(binaries)))
-                .ReturnsAsync((byte[] binary) => (binary.Reverse().ToArray(), headers));
+                .ReturnsAsync((byte[] binary) => new(headers, binary.Reverse().ToArray()));
 
             var contractConnection = ContractConnection.MultiServiceInstance(defaultMessageEncryptor: globalEncryptor.Object)
                 .RegisterServiceConnection(ServiceName, serviceConnection.Object);

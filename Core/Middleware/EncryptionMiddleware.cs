@@ -20,8 +20,8 @@ namespace MQContract.Middleware
             ValueTask<Stream> IMessageEncryptor.DecryptAsync(Stream stream, MessageHeader headers)
                 => ValueTask.FromResult(stream);
 
-            ValueTask<(byte[] data, Dictionary<string, string?> headers)> IMessageEncryptor.EncryptAsync(byte[] data)
-                => ValueTask.FromResult<(byte[] data, Dictionary<string, string?> headers)>((data, []));
+            ValueTask<EncryptionResult> IMessageEncryptor.EncryptAsync(byte[] data)
+                => ValueTask.FromResult<EncryptionResult>(new(null,data));
         }
 
         private IMessageEncryptor GetEncryptor(Type messageType)
@@ -58,13 +58,13 @@ namespace MQContract.Middleware
 
         async ValueTask<ServiceMessage> IAfterEncodeMiddleware.AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
         {
-            var (body, messageHeaders) = await GetEncryptor(messageType).EncryptAsync(message.Data.ToArray());
+            var encryptionResult = await GetEncryptor(messageType).EncryptAsync(message.Data.ToArray());
             return new(
                 message.ID,
                 message.MessageTypeID,
                 message.Channel,
-                new(message.Header,messageHeaders),
-                body
+                (encryptionResult.Headers==null ? message.Header : new(message.Header,encryptionResult.Headers)),
+                encryptionResult.Data
             );
         }
 

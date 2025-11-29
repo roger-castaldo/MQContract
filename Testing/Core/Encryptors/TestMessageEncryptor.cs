@@ -17,10 +17,10 @@ namespace AutomatedTesting.Encryptors
             return ValueTask.FromResult<Stream>(new MemoryStream(data.Reverse().ToArray()));
         }
 
-        public ValueTask<(byte[] data, Dictionary<string, string?> headers)> EncryptAsync(byte[] data)
-            => ValueTask.FromResult<(byte[] data, Dictionary<string, string?> headers)>((
-                data.Reverse().ToArray(),
-                new([new(HeaderKey, HeaderValue)])
+        public ValueTask<EncryptionResult> EncryptAsync(byte[] data)
+            => ValueTask.FromResult<EncryptionResult>(new(
+                new([new(HeaderKey, HeaderValue)]),
+                [.. data.Reverse()]
             ));
     }
 }
