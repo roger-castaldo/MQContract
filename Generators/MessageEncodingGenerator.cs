@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +7,7 @@ using System.Text;
 namespace MQContract.Generators
 {
     [Generator]
-    public sealed class MqContractGenerator : IIncrementalGenerator
+    public sealed class MessageEncodingGenerator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
@@ -21,20 +20,8 @@ namespace MQContract.Generators
             SourceProductionContext context,
             Compilation compilation)
         {
-            var assemblies = compilation.SourceModule
-                .ReferencedAssemblySymbols
-                .Append(compilation.Assembly);
+            var (assemblies, messages) = Helper.ExtractMessageTypes(compilation);
 
-            // Collect message types
-            var messages = assemblies.SelectMany(assembly =>
-                assembly.GetAttributes()
-                .Where(attr=> attr.AttributeClass?.Name == "UseMqContractAttribute" &&
-                        attr.ConstructorArguments[0].Value is INamedTypeSymbol)
-                .Select(attr => (INamedTypeSymbol)attr.ConstructorArguments[0].Value!)
-            )
-                .Distinct(SymbolEqualityComparer.Default)
-                .OfType<INamedTypeSymbol>()
-                .ToArray();
             var encoders = new Dictionary<INamedTypeSymbol, INamedTypeSymbol>(
                 SymbolEqualityComparer.Default);
 

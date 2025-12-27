@@ -1,4 +1,4 @@
-﻿using MQContract.Attributes;
+﻿using MQContract.Helpers;
 using MQContract.Messages;
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -24,29 +24,6 @@ namespace MQContract
             where TAttribute : Attribute
             => GetCustomAttribute<TAttribute>(typeof(TAttributeHolder), inherit);
 
-        internal static string MessageTypeName<TMessage>()
-            => MessageTypeName(typeof(TMessage));
-
-        internal static string MessageTypeName(Type messageType)
-            => GetCustomAttribute<MessageAttribute>(messageType)?.TypeName??TypeName(messageType);
-
-        internal static string TypeName<TMessage>()
-            => TypeName(typeof(TMessage));
-
-        internal static string TypeName(Type type)
-        {
-            var result = type.Name;
-            if (result.Contains('`'))
-                result=result[..result.IndexOf('`')];
-            return result;
-        }
-
-        internal static string MessageVersionString<TMessage>()
-            => MessageVersionString(typeof(TMessage));
-
-        internal static string MessageVersionString(Type messageType)
-            => GetCustomAttribute<MessageAttribute>(messageType)?.TypeVersion.ToString()??"0.0.0.0";
-
         internal static async ValueTask<object?> InvokeMethodAsync(MethodInfo method, object container, object?[]? parameters)
         {
             var valueTask = method.Invoke(container, parameters)!;
@@ -55,11 +32,11 @@ namespace MQContract
         }
 
         internal async static ValueTask<string> GetChannelAsync<TMessage>(Func<string, ValueTask<string>> mapChannel, string? channel = null)
-            => await mapChannel(channel??GetCustomAttribute<TMessage, MessageAttribute>()?.Channel??throw new MessageChannelNullException());
+            => await mapChannel(channel??MessageTypeHelper.MessageChannel<TMessage>()??throw new MessageChannelNullException());
 
         internal static string GetChannel<TMessage>(Func<string, ValueTask<string>> mapChannel, string? channel = null)
         {
-            var chan = channel??GetCustomAttribute<TMessage, MessageAttribute>()?.Channel??throw new MessageChannelNullException();
+            var chan = channel??MessageTypeHelper.MessageChannel<TMessage>()??throw new MessageChannelNullException();
             var tsk = mapChannel(chan).AsTask();
             tsk.Wait();
             return tsk.Result;

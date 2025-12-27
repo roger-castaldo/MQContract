@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using MQContract.Defaults;
 using MQContract.Extensions;
+using MQContract.Helpers;
 using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Messages;
@@ -31,7 +32,7 @@ namespace MQContract.Factories
             object? result = await (globalMessageEncoder!=null && messageEncoder is JsonEncoder<TMessage> ? globalMessageEncoder.DecodeAsync<TMessage>(dataStream) : messageEncoder.DecodeAsync(dataStream));
             foreach (var converter in path)
             {
-                logger?.LogTraceChecked("Attempting to convert {SourceType} to {DestiniationType} through converters for {IntermediateType}", Utility.TypeName<TMessage>(), Utility.TypeName<TResult>(), Utility.TypeName(ExtractGenericArguements(converter.GetType())[0]));
+                logger?.LogTraceChecked("Attempting to convert {SourceType} to {DestiniationType} through converters for {IntermediateType}", MessageTypeHelper.MessageTypeName<TMessage>(), MessageTypeHelper.MessageTypeName<TResult>(), MessageTypeHelper.MessageTypeName(ExtractGenericArguements(converter.GetType())[0]));
                 result = await ExecuteConverter(converter, result, ExtractGenericArguements(converter.GetType())[1]);
             }
             return (TResult?)result;

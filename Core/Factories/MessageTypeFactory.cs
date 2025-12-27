@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MQContract.Attributes;
-using MQContract.Defaults;
+using MQContract.Helpers;
 using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Factories;
@@ -20,9 +19,9 @@ namespace MQContract.Factories
         private readonly IEnumerable<IConversionPath<TMessage>> converters;
         public bool IgnoreMessageHeader { get; private init; }
 
-        private readonly string messageName = Utility.MessageTypeName<TMessage>();
-        private readonly string messageVersion = Utility.MessageVersionString<TMessage>();
-        public string? MessageChannel { get; private init; } = Utility.GetCustomAttribute<TMessage, MessageAttribute>()?.Channel;
+        private readonly string messageName = MessageTypeHelper.MessageTypeName<TMessage>();
+        private readonly string messageVersion = MessageTypeHelper.MessageVersionString<TMessage>();
+        public string? MessageChannel { get; private init; } = MessageTypeHelper.MessageChannel<TMessage>();
 
         public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider, bool ignoreMessageHeader)
         {

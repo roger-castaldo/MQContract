@@ -1,15 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Attributes;
+using MQContract.Helpers;
 using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Messages;
-using System.Reflection;
 
 namespace MQContract.Factories
 {
     internal abstract class AConverter<TMeessageType,TSourceMessageType>
         : IConversionPath<TMeessageType>
     {
-        private readonly string messageTypeName = $"{Utility.GetCustomAttribute<TSourceMessageType,MessageAttribute>()?.TypeName??Utility.TypeName<TSourceMessageType>()}-{typeof(TSourceMessageType).GetCustomAttribute<MessageAttribute>()?.TypeVersion.ToString()??"0.0.0.0"}";
+        private readonly string messageTypeName = $"{MessageTypeHelper.MessageTypeName<TSourceMessageType>()}-{MessageTypeHelper.MessageVersionString<TSourceMessageType>()}";
 
         protected abstract ValueTask<TMeessageType?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message, Stream? dataStream);
 
