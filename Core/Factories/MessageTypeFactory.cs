@@ -35,33 +35,14 @@ namespace MQContract.Factories
                     {
                         return assembly.GetTypes()
                         .Where(t => !t.IsInterface && !t.IsAbstract
-                            && Array.Exists(t.GetInterfaces(), iface => iface == typeof(IMessageTypeEncoder<TMessage>)
-                                || iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)));
+                            && Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>)));
                     }
                     catch (Exception)
                     {
                         return [];
                     }
                 });
-            var encoderType = types
-                .FirstOrDefault(type => type.GetInterfaces().Contains(typeof(IMessageTypeEncoder<TMessage>)));
-            var messageEncoder = (IMessageTypeEncoder<TMessage>?)((serviceProvider, encoderType, globalMessageEncoder) switch
-            {
-                (not null, not null, _) => ActivatorUtilities.CreateInstance(serviceProvider!, encoderType!),
-                (null, not null, _) => Activator.CreateInstance(encoderType)!,
-                (_, null, null) => new JsonEncoder<TMessage>(),
-                _ => null
-            });
-            if (messageEncoder!=null)
-            {
-                encodeMessage = (message) => messageEncoder.EncodeAsync(message);
-                decodeMessage = (stream) => messageEncoder.DecodeAsync(stream);
-            }
-            else
-            {
-                encodeMessage = (message) => globalMessageEncoder!.EncodeAsync<TMessage>(message);
-                decodeMessage = (stream) => globalMessageEncoder!.DecodeAsync<TMessage>(stream);    
-            }
+            (encodeMessage, decodeMessage) = MessageEncodingFactory.GetCallbacks<TMessage>(globalMessageEncoder, serviceProvider);
             converters = IgnoreMessageHeader
                 ? []
                 : ProduceConverters<TMessage>(types, globalMessageEncoder, serviceProvider);

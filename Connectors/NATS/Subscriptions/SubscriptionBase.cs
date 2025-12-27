@@ -11,7 +11,7 @@ namespace MQContract.NATS.Subscriptions
 
         protected CancellationToken CancelToken => CancelTokenSource.Token;
 
-        protected static ReceivedServiceMessage ExtractMessage(NatsJSMsg<byte[]> receivedMessage)
+        protected static ReceivedServiceMessage ExtractMessage(INatsJSMsg<byte[]> receivedMessage)
             => ExtractMessage(receivedMessage.Headers, receivedMessage.Subject, receivedMessage.Data);
 
         protected static ReceivedServiceMessage ExtractMessage(NatsMsg<byte[]> receivedMessage)

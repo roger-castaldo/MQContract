@@ -349,6 +349,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+            Trace.WriteLine($"Error Message: {result?.Error?.Message}");
+            Trace.WriteLine($"Error Stack: {result?.Error?.Exception.StackTrace}");
             #endregion
 
             #region Assert
