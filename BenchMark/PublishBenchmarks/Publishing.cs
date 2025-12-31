@@ -59,5 +59,35 @@ namespace BenchMark.PublishBenchmarks
             {
                 _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(encodedAnnouncement!, channel: ChannelName);
             });
+
+        [Benchmark]
+        public async Task PublishBasicEncodedMessageWithContext()
+        {
+            ((IContractedConnection)contractConnection!).RegisterMessageContext(new MyMessageContext());
+            await ExecuteOperationsAsync(async () =>
+            {
+                _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
+            });
+        }
+
+        [Benchmark]
+        public async Task PublishDefaultEncodedMessageWithContext()
+        {
+            ((IContractedConnection)contractConnection!).RegisterMessageContext(new MyMessageContext());
+            await ExecuteOperationsAsync(async () =>
+            {
+                _ = await contractConnection!.PublishAsync<Announcement>(announcement!, channel: ChannelName);
+            });
+        }
+
+        [Benchmark]
+        public async Task PublishCustomEncodedMessageWithContext()
+        {
+            ((IContractedConnection)contractConnection!).RegisterMessageContext(new MyMessageContext());
+            await ExecuteOperationsAsync(async () =>
+            {
+                _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(encodedAnnouncement!, channel: ChannelName);
+            });
+        }
     }
 }

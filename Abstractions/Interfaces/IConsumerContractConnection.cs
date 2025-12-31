@@ -7,7 +7,7 @@ namespace MQContract.Interfaces
     /// <summary>
     /// This interface represents a portion of the Contract Connection, specifically the portion for registering all Consumer classes
     /// </summary>
-    public interface IConsumerContractConnection<TContractConnection> : IBaseContractConnection
+    public interface IConsumerContractConnection<TContractConnection> : IMessageContextContractConnection<TContractConnection>
         where TContractConnection : IBaseContractConnection
     {
         /// <summary>

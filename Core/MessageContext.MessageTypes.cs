@@ -2,13 +2,11 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace MQContract.Helpers
+namespace MQContract
 {
-    internal static partial class MessageTypeHelper
+    internal partial class MessageContext
     {
-        internal readonly record struct MessageTypeDefinition(string? Channel, string TypeName, Version TypeVersion);
-
-        internal static readonly ConcurrentDictionary<Type, MessageTypeDefinition> cache = new()
+        internal readonly ConcurrentDictionary<Type, MQContract.MQContractMessageContext.MessageTypeDefinition> cache = new()
         {
             [typeof(ushort)] = new(null, typeof(ushort).Name, new("0.0.0.0")),
             [typeof(ushort[])] = new(null, typeof(ushort[]).Name, new("0.0.0.0")),
@@ -48,35 +46,41 @@ namespace MQContract.Helpers
             [typeof(bool[])] = new(null, typeof(bool[]).Name, new("0.0.0.0")),
             [typeof(IEnumerable<bool>)] = new(null, typeof(IEnumerable<bool>).Name, new("0.0.0.0"))
         };
-        internal static string MessageTypeName<TMessage>()
+
+        public string MessageTypeName<TMessage>()
             => MessageTypeName(typeof(TMessage));
 
-        internal static string MessageTypeName(Type messageType)
+        public string MessageTypeName(Type messageType)
             => GetMessageAttribute(messageType).TypeName;
 
-        internal static string MessageVersionString<TMessage>()
+        public string MessageVersionString<TMessage>()
             => MessageVersionString(typeof(TMessage));
 
-        internal static string MessageVersionString(Type messageType)
+        public string MessageVersionString(Type messageType)
             => GetMessageAttribute(messageType).TypeVersion.ToString();
 
-        internal static string? MessageChannel<TMessage>()
-            => MessageChannel(typeof(TMessage));
+        public string? MessageChannel<TMessage>()
+            => GetMessageAttribute(typeof(TMessage)).Channel;
 
-        internal static string? MessageChannel(Type messageType)
-            => GetMessageAttribute(messageType).Channel;
-
-        private static MessageTypeDefinition GetMessageAttribute(Type messageType)
+        private MQContract.MQContractMessageContext.MessageTypeDefinition GetMessageAttribute(Type messageType)
         {
             if (!cache.TryGetValue(messageType, out var messageDefinition))
             {
-                var (channel, name, version) = TryGetType(messageType);
-                if (name!=null)
-                    messageDefinition = new(channel, name!, version!);
-                else
+                var found = false;
+                foreach(var context in contexts)
+                {
+                    var def = context.TryGetMessageType(messageType);
+                    if (def!=null)
+                    {
+                        messageDefinition = def.Value;
+                        found=true;
+                        break;
+                    }
+                }
+                if (!found)
                 {
                     var messageAttribute = messageType.GetCustomAttribute<MessageAttribute>();
-                    name = messageAttribute?.TypeName;
+                    var name = messageAttribute?.TypeName;
                     if (name==null)
                     {
                         name = messageType.Name;

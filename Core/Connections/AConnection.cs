@@ -40,7 +40,7 @@ namespace MQContract.Connections
         {
             if (!typeFactories.TryGetValue((typeof(TMessage),ignoreMessageHeader),out var result))
             {
-                result = new MessageTypeFactory<TMessage>(defaultMessageEncoder, serviceProvider, ignoreMessageHeader);
+                result = new MessageTypeFactory<TMessage>(defaultMessageEncoder, serviceProvider, ignoreMessageHeader, messageContext);
                 typeFactories.TryAdd((typeof(TMessage), ignoreMessageHeader), result);
             }
             return (IMessageFactory<TMessage>)result;
@@ -206,7 +206,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope();
             logger?.LogDebugChecked("Enabling metrics on service connection with {Meter} and {UseInternal}", meter, useInternal);
-            metricsMiddleware = new MetricsMiddleware(meter, useInternal);
+            metricsMiddleware = new MetricsMiddleware(meter, messageContext, useInternal);
             middleware.RegisterInjectionMiddleware<IBeforeEncodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Pre);
             middleware.RegisterInjectionMiddleware<IAfterEncodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Post);
             middleware.RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(metricsMiddleware, MiddlewareCollection.InjectionPositions.Pre);
@@ -252,6 +252,7 @@ namespace MQContract.Connections
                 },
                 errorReceived,
                 (originalChannel) => MapChannel(ChannelMapper.MapTypes.PublishSubscription, originalChannel)!,
+                messageContext,
                 channel: channel,
             group: group,
             synchronous: synchronous,
@@ -678,6 +679,7 @@ namespace MQContract.Connections
                 },
                 errorReceived,
                 (originalChannel) => MapChannel(ChannelMapper.MapTypes.QuerySubscription, originalChannel),
+                messageContext,
                 channel: channel,
             group: group,
             synchronous: synchronous,

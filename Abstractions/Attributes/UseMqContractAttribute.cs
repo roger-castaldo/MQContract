@@ -1,12 +1,19 @@
-﻿namespace MQContract.Attributes
+﻿using MQContract.Interfaces.Encoding;
+
+namespace MQContract.Attributes
 {
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public sealed class UseMqContractAttribute : Attribute
     {
         public Type ContractType { get; }
-        public UseMqContractAttribute(Type contractType)
+        public Type? EncoderType { get; }
+        public Type[]? Converters { get; }
+        public UseMqContractAttribute(Type contractType, Type? encoderType = null, Type[]? Converters = null)
         {
+            if (encoderType!=null && !encoderType.GetInterfaces().Any(t => Equals(t, typeof(IMessageTypeEncoder<>).MakeGenericType(contractType))))
+                throw new Exception($"Cannot link an encoder type that does not implement the interface IMessageTypeEncoder<{contractType.Name}>");
             ContractType = contractType;
+            EncoderType = encoderType;
         }
     }
 }

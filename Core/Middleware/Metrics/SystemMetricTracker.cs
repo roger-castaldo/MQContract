@@ -1,5 +1,4 @@
-﻿using MQContract.Helpers;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 
 namespace MQContract.Middleware.Metrics
@@ -9,13 +8,15 @@ namespace MQContract.Middleware.Metrics
         private const string MeterName = "mqcontract";
 
         private readonly Meter meter;
+        private readonly MessageContext context;
         private readonly MessageMetric globalMetric;
         private readonly ConcurrentDictionary<Type, MessageMetric> typeMetrics = [];
         private readonly ConcurrentDictionary<string, MessageMetric> channelMetrics = [];
 
-        public SystemMetricTracker(Meter meter)
+        public SystemMetricTracker(Meter meter, MessageContext context)
         {
             this.meter = meter;
+            this.context = context;
             globalMetric = new(
                 meter.CreateUpDownCounter<long>($"{MeterName}.messages.sent.count"),
                 meter.CreateUpDownCounter<long>($"{MeterName}.messages.sent.bytes"),
@@ -33,12 +34,12 @@ namespace MQContract.Middleware.Metrics
             if (!typeMetrics.TryGetValue(entry.Type, out MessageMetric? typeMetric))
             {
                 typeMetric = new(
-                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{MessageTypeHelper.MessageTypeName(entry.Type)}.{MessageTypeHelper.MessageVersionString(entry.Type).Replace('.', '_')}.sent.count"),
-                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{MessageTypeHelper.MessageTypeName(entry.Type)}.{MessageTypeHelper.MessageVersionString(entry.Type).Replace('.', '_')}.sent.bytes"),
-                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{MessageTypeHelper.MessageTypeName(entry.Type)}.{MessageTypeHelper.MessageVersionString(entry.Type).Replace('.', '_')}.received.count"),
-                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{MessageTypeHelper.MessageTypeName(entry.Type)}.{MessageTypeHelper.MessageVersionString(entry.Type).Replace('.', '_')}.received.bytes"),
-                    meter.CreateHistogram<double>($"{MeterName}.types.{MessageTypeHelper.MessageTypeName(entry.Type)}.{MessageTypeHelper.MessageVersionString(entry.Type).Replace('.', '_')}.encodingduration", unit: "ms"),
-                    meter.CreateHistogram<double>($"{MeterName}.types.{MessageTypeHelper.MessageTypeName(entry.Type)}.{MessageTypeHelper.MessageVersionString(entry.Type).Replace('.', '_')}.decodingduration", unit: "ms")
+                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{context.MessageTypeName(entry.Type)}.{context.MessageVersionString(entry.Type).Replace('.', '_')}.sent.count"),
+                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{context.MessageTypeName(entry.Type)}.{context.MessageVersionString(entry.Type).Replace('.', '_')}.sent.bytes"),
+                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{context.MessageTypeName(entry.Type)}.{context.MessageVersionString(entry.Type).Replace('.', '_')}.received.count"),
+                    meter.CreateUpDownCounter<long>($"{MeterName}.types.{context.MessageTypeName(entry.Type)}.{context.MessageVersionString(entry.Type).Replace('.', '_')}.received.bytes"),
+                    meter.CreateHistogram<double>($"{MeterName}.types.{context.MessageTypeName(entry.Type)}.{context.MessageVersionString(entry.Type).Replace('.', '_')}.encodingduration", unit: "ms"),
+                    meter.CreateHistogram<double>($"{MeterName}.types.{context.MessageTypeName(entry.Type)}.{context.MessageVersionString(entry.Type).Replace('.', '_')}.decodingduration", unit: "ms")
                 );
                 typeMetrics.TryAdd(entry.Type, typeMetric!);
             }

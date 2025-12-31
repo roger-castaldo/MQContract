@@ -40,6 +40,13 @@ namespace MQContract.Connections
             return (TContractConnection)(IBaseContractConnection)this;
         }
 
+        protected readonly MessageContext messageContext = new();
+
+        TContractConnection IMessageContextContractConnection<TContractConnection>.RegisterMessageContext(MQContractMessageContext messageContext)
+        {
+            this.messageContext.RegisterContext(messageContext);
+            return (TContractConnection)(IBaseContractConnection)this;
+        }
 
         private static Type GetConsumerInterfaceType(Type consumerType, Type interfaceType)
             => Array.Find(consumerType.GetInterfaces(), t => t.IsGenericType && t.GetGenericTypeDefinition() == interfaceType)

@@ -1,5 +1,4 @@
-﻿using MQContract.Helpers;
-using MQContract.Messages;
+﻿using MQContract.Messages;
 using System.Collections.Concurrent;
 using System.Reflection;
 
@@ -31,12 +30,12 @@ namespace MQContract
             return valueTask.GetType().GetProperty(nameof(ValueTask<object>.Result))!.GetValue(valueTask);
         }
 
-        internal async static ValueTask<string> GetChannelAsync<TMessage>(Func<string, ValueTask<string>> mapChannel, string? channel = null)
-            => await mapChannel(channel??MessageTypeHelper.MessageChannel<TMessage>()??throw new MessageChannelNullException());
+        internal async static ValueTask<string> GetChannelAsync<TMessage>(Func<string, ValueTask<string>> mapChannel, MessageContext context, string? channel = null)
+            => await mapChannel(channel??context.MessageChannel<TMessage>()??throw new MessageChannelNullException());
 
-        internal static string GetChannel<TMessage>(Func<string, ValueTask<string>> mapChannel, string? channel = null)
+        internal static string GetChannel<TMessage>(Func<string, ValueTask<string>> mapChannel, MessageContext context, string? channel = null)
         {
-            var chan = channel??MessageTypeHelper.MessageChannel<TMessage>()??throw new MessageChannelNullException();
+            var chan = channel??context.MessageChannel<TMessage>()??throw new MessageChannelNullException();
             var tsk = mapChannel(chan).AsTask();
             tsk.Wait();
             return tsk.Result;

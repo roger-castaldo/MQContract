@@ -5,9 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 
-namespace MQContract.Factories
+namespace MQContract
 {
-    internal static partial class MessageEncodingFactory
+    internal partial class MessageContext
     {
         private static (Func<TMessage, ValueTask<byte[]>> encodeMessage, Func<Stream, ValueTask<TMessage?>> decodeMessage) ProduceCallbacks<TMessage>(object encoder)
         {
@@ -17,7 +17,34 @@ namespace MQContract.Factories
             return ((message) => messageEncoder.EncodeAsync<TMessage>(message), (stream) => messageEncoder.DecodeAsync<TMessage>(stream));
         }
 
-        public static (Func<TMessage, ValueTask<byte[]>> encodeMessage, Func<Stream, ValueTask<TMessage?>> decodeMessage) GetCallbacks<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
+        [RequiresDynamicCode("Uses unbounded reflection to discover encoders, if AOT and no usage of UseMqContractAttribute to autogenerate code, will result in falling back to Json Encoding as default")]
+        private static object ExtractEncoderThroughReflection<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
+        {
+            var specificEncoderType = AssemblyLoadContext.All
+                            .SelectMany(context => context.Assemblies)
+                            .SelectMany(assembly =>
+                            {
+                                try
+                                {
+                                    return assembly.GetTypes()
+                                    .Where(t => !t.IsInterface && !t.IsInterface && Array.Exists(t.GetInterfaces(), iface => iface==typeof(IMessageTypeEncoder<TMessage>)));
+                                }
+                                catch (Exception)
+                                {
+                                    return [];
+                                }
+                            })
+                            .FirstOrDefault();
+            return (serviceProvider, specificEncoderType, globalMessageEncoder) switch
+            {
+                (not null, not null, _) => ActivatorUtilities.CreateInstance(serviceProvider!, specificEncoderType!)!,
+                (null, not null, _) => Activator.CreateInstance(specificEncoderType!)!,
+                (_, null, null) => new JsonEncoder<TMessage>(),
+                _ => globalMessageEncoder!
+            };
+        }
+
+        public (Func<TMessage, ValueTask<byte[]>> encodeMessage, Func<Stream, ValueTask<TMessage?>> decodeMessage) GetEncodingCallbacks<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
         {
             object? internalEncoder = (typeof(TMessage), globalMessageEncoder, serviceProvider) switch
             {
@@ -66,39 +93,15 @@ namespace MQContract.Factories
             };
             if (internalEncoder!=null)
                 return ProduceCallbacks<TMessage>(internalEncoder);
-            var specificEncoder = TryGetMessageEncoder<TMessage>(globalMessageEncoder, serviceProvider);
-            if (specificEncoder!=null)
-                return ProduceCallbacks<TMessage>(specificEncoder);
+            foreach(var context in contexts)
+            {
+                var specificEncoder = context.TryGetMessageEncoder<TMessage>(globalMessageEncoder, serviceProvider);
+                if (specificEncoder!=null)
+                    return ProduceCallbacks<TMessage>(specificEncoder);
+            }
             if (RuntimeFeature.IsDynamicCodeSupported)
                 return ProduceCallbacks<TMessage>(ExtractEncoderThroughReflection<TMessage>(globalMessageEncoder, serviceProvider));
             return ProduceCallbacks<TMessage>((globalMessageEncoder == null ? new JsonEncoder<TMessage>() : globalMessageEncoder));
-        }
-
-        [RequiresDynamicCode("Uses unbounded reflection to discover encoders, if AOT and no usage of UseMqContractAttribute to autogenerate code, will result in falling back to Json Encoding as default")]
-        private static object ExtractEncoderThroughReflection<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
-        {
-            var specificEncoderType = AssemblyLoadContext.All
-                            .SelectMany(context => context.Assemblies)
-                            .SelectMany(assembly =>
-                            {
-                                try
-                                {
-                                    return assembly.GetTypes()
-                                    .Where(t => !t.IsInterface && !t.IsInterface && Array.Exists(t.GetInterfaces(), iface => iface==typeof(IMessageTypeEncoder<TMessage>)));
-                                }
-                                catch (Exception)
-                                {
-                                    return [];
-                                }
-                            })
-                            .FirstOrDefault();
-            return (serviceProvider, specificEncoderType, globalMessageEncoder) switch
-            {
-                (not null, not null, _) => ActivatorUtilities.CreateInstance(serviceProvider!, specificEncoderType!)!,
-                (null, not null, _) => Activator.CreateInstance(specificEncoderType!)!,
-                (_, null, null) => new JsonEncoder<TMessage>(),
-                _ => globalMessageEncoder!
-            };
         }
     }
 }

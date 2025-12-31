@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MQContract.Helpers;
 using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Factories;
@@ -19,12 +18,16 @@ namespace MQContract.Factories
         private readonly IEnumerable<IConversionPath<TMessage>> converters;
         public bool IgnoreMessageHeader { get; private init; }
 
-        private readonly string messageName = MessageTypeHelper.MessageTypeName<TMessage>();
-        private readonly string messageVersion = MessageTypeHelper.MessageVersionString<TMessage>();
-        public string? MessageChannel { get; private init; } = MessageTypeHelper.MessageChannel<TMessage>();
+        private readonly string messageName; 
+        private readonly string messageVersion;
+        public string? MessageChannel { get; private init; }
 
-        public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider, bool ignoreMessageHeader)
+        public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider, bool ignoreMessageHeader, MessageContext context)
+            : base(context)
         {
+            messageName = context.MessageTypeName<TMessage>();
+            messageVersion = context.MessageVersionString<TMessage>();
+            MessageChannel = context.MessageChannel<TMessage>();
             IgnoreMessageHeader = ignoreMessageHeader;
             var types = AssemblyLoadContext.All
                 .SelectMany(context => context.Assemblies)
@@ -41,13 +44,13 @@ namespace MQContract.Factories
                         return [];
                     }
                 });
-            (encodeMessage, decodeMessage) = MessageEncodingFactory.GetCallbacks<TMessage>(globalMessageEncoder, serviceProvider);
+            (encodeMessage, decodeMessage) = context.GetEncodingCallbacks<TMessage>(globalMessageEncoder, serviceProvider);
             converters = IgnoreMessageHeader
                 ? []
-                : ProduceConverters<TMessage>(types, globalMessageEncoder, serviceProvider);
+                : ProduceConverters<TMessage>(types, globalMessageEncoder, serviceProvider, context);
         }
 
-        private static IEnumerable<IConversionPath<M>> ProduceConverters<M>(IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
+        private static IEnumerable<IConversionPath<M>> ProduceConverters<M>(IEnumerable<Type> types, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider, MessageContext context)
         {
             var paths = types
                 .Where(t => Array.Exists(t.GetInterfaces(), iface => iface.IsGenericType &&
@@ -84,7 +87,7 @@ namespace MQContract.Factories
                 .Select(path =>
                 {
 #pragma warning disable CS8601 // Possible null reference assignment.
-                    var args = new object[] { path, types, globalMessageEncoder, serviceProvider };
+                    var args = new object[] { path, types, globalMessageEncoder, serviceProvider, context };
 #pragma warning restore CS8601 // Possible null reference assignment.
                     var type = typeof(ConversionPath<,>).MakeGenericType(
                         ExtractGenericArguements(path.First().GetType())[0],
