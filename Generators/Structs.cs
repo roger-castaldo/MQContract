@@ -4,11 +4,11 @@ using System.Collections.Immutable;
 
 namespace MQContract.Generators
 {
-    internal readonly struct ContractType(INamedTypeSymbol contract, IEnumerable<INamedTypeSymbol>? encoders, IEnumerable<INamedTypeSymbol>? converters)
+    internal readonly struct ContractType(INamedTypeSymbol contract, IEnumerable<INamedTypeSymbol>? encoders, IEnumerable<ITypeSymbol>? converters)
     {
         public INamedTypeSymbol Contract => contract;
         public IEnumerable<INamedTypeSymbol>? Encoders => encoders;
-        public IEnumerable<INamedTypeSymbol>? Converters => converters;
+        public IEnumerable<ITypeSymbol>? Converters => converters;
     }
 
     internal readonly struct ContractEncoder(INamedTypeSymbol encoder, IEnumerable<ITypeSymbol> contracts)
@@ -27,5 +27,12 @@ namespace MQContract.Generators
     {
         public INamedTypeSymbol Target => target;
         public ImmutableArray<ContractType> Contracts => contracts;
+    }
+
+    internal readonly struct ContractConverterPair(INamedTypeSymbol converter, ITypeSymbol from, ITypeSymbol to)
+    {
+        public INamedTypeSymbol Converter => converter;
+        public ITypeSymbol From => from;
+        public ITypeSymbol To => to;
     }
 }

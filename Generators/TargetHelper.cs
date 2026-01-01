@@ -36,8 +36,8 @@ namespace MQContract.Generators
                 {
                     var contractType = a.ConstructorArguments[0].Value as INamedTypeSymbol;
                     var encoders = (IEnumerable<INamedTypeSymbol>?)(a.ConstructorArguments[1].IsNull ? null : [(INamedTypeSymbol)a.ConstructorArguments[1].Value]);
-                    var converers = (IEnumerable<INamedTypeSymbol>?)(a.ConstructorArguments[2].IsNull ? null : [(INamedTypeSymbol)a.ConstructorArguments[2].Value]);
-                    return new ContractType(contractType!, encoders, converers);
+                    var converters = (IEnumerable<ITypeSymbol>?)(a.ConstructorArguments[2].IsNull ? null : a.ConstructorArguments[2].Values.Select(v=>(ITypeSymbol)v.Value));
+                    return new ContractType(contractType!, encoders, converters);
                 })
                 .ToImmutableArray()!;
 

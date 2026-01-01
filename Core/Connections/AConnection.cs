@@ -507,7 +507,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope(serviceMessage.ID);
             logger?.LogDebugChecked("Attempting to execute a Query of {Q} with a response {R}", typeof(TQuery), typeof(TQueryResponse));
-            var realTimeout = timeout??Utility.GetCustomAttribute<TQuery,QueryMessageAttribute>()?.ResponseTimeout;
+            var realTimeout = timeout??messageContext.QueryResponseTimeout<TQuery>();
             activity?.SetStatus(ActivityStatusCode.Ok);
             try
             {
@@ -568,7 +568,7 @@ namespace MQContract.Connections
         protected async ValueTask<QueryResult<TQueryREsponse>> ProcessPubSubQuery<TQuery, TQueryREsponse>(IMessageServiceConnection serviceConnection, string? connectionName, string? responseChannel, TimeSpan? realTimeout, ServiceMessage serviceMessage, Activity? activity, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            responseChannel ??= Utility.GetCustomAttribute<TQuery,QueryMessageAttribute>()?.ResponseChannel;
+            responseChannel ??= messageContext.QueryResponseChannel<TQuery>();
             logger?.LogInformationChecked("Attempting a QueryResponse call using PubSub style messaging, querying {Q}, expecting a response of {R} on {ResponseChannel}", typeof(TQuery), typeof(TQueryREsponse), responseChannel);
             ArgumentNullException.ThrowIfNullOrWhiteSpace(responseChannel);
             var replyChannel = await MapChannel(ChannelMapper.MapTypes.QueryResponse, responseChannel!);

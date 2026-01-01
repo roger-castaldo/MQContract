@@ -127,7 +127,7 @@ namespace MQContract.Connections
             using var scope = SetScope();
             Logger?.LogDebugChecked("Attempting to get response type for QueryResponse for {TQuery} on {Channel} with {ResponseChannel}", typeof(TQuery), channel, responseChannel);
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
-            var responseType = Utility.GetCustomAttribute<TQuery,QueryMessageAttribute>()?.ResponseType??throw new UnknownResponseTypeException("ResponseType", typeof(TQuery));
+            var responseType = messageContext.QueryResponseType<TQuery>()??throw new UnknownResponseTypeException("ResponseType", typeof(TQuery));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
             Logger?.LogInformationChecked("Obtained {ResponseType} for QueryResponse for {TQuery} on {Channel} with {ResponseChannel}", responseType, typeof(TQuery), channel, responseChannel);
             try
