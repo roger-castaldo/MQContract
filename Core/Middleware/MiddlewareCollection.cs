@@ -27,14 +27,14 @@ namespace MQContract.Middleware
         private readonly ConcurrentDictionary<Type, object> cache = [];
         private readonly ILogger? logger;
 
-        public MiddlewareCollection(ILogger? logger,ChannelMapper? channelMapper,IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
+        public MiddlewareCollection(ILogger? logger,ChannelMapper? channelMapper, MessageContext messageContext,IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
         {
             this.logger=logger;
             collection.Add(new ChannelMappingMiddleware(channelMapper));
             var compressionMiddleware = new CompressionMiddleware();
             RegisterInjectionMiddleware<IAfterEncodeMiddleware>(compressionMiddleware, InjectionPositions.Post);
             RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(compressionMiddleware, InjectionPositions.Pre);
-            var encryptionMiddleware = new EncryptionMiddleware(defaultMessageEncryptor, serviceProvider);
+            var encryptionMiddleware = new EncryptionMiddleware(messageContext, defaultMessageEncryptor, serviceProvider);
             RegisterInjectionMiddleware<IAfterEncodeMiddleware>(encryptionMiddleware, InjectionPositions.Post);
             RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(encryptionMiddleware, InjectionPositions.Pre);
         }

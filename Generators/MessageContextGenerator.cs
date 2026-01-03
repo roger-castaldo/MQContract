@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -27,33 +26,39 @@ namespace MQContract.Generators
             // 3. Find converters
             var converters = ConvertersHelper.LocateConverters(context);
 
+            // 4. Find Encryptors
+            var encryptors = EncryptorsHelper.LocateEncryptors(context);
+
             // 3. Generate code
             context.RegisterSourceOutput(
                 candidateClasses
                     .Combine(encoders.Collect())
-                    .Combine(converters.Collect()),
+                    .Combine(converters.Collect())
+                    .Combine(encryptors.Collect()),
                 Generate
             );
         }
 
-        private void Generate(SourceProductionContext context, ((ContractContext? Left, ImmutableArray<ContractEncoder?> Right) Left, ImmutableArray<ContractConverter?> Right) candidate)
+        private void Generate(SourceProductionContext context, (((ContractContext? Left, ImmutableArray<ContractEncoder?> Right) Left, ImmutableArray<ContractConverter?> Right) Left, ImmutableArray<ContractEncryptor?> Right) candidate)
         {
-            if (candidate.Left.Left.HasValue)
+            if (candidate.Left.Left.Left.HasValue)
             {
-                var contractContext = candidate.Left.Left.Value;
-                var encoders = candidate.Left.Right.OfType<ContractEncoder>();
-                var converters = candidate.Right.OfType<ContractConverter>();
+                var contractContext = candidate.Left.Left.Left.Value;
+                var encoders = candidate.Left.Left.Right.OfType<ContractEncoder>();
+                var converters = candidate.Left.Right.OfType<ContractConverter>();
+                var encryptors = candidate.Right.OfType<ContractEncryptor>();
 
-                contractContext = MergeEncodersAndConverters(contractContext, encoders, converters);
+                contractContext = MergeEncodersConvertersAndEncryptors(contractContext, encoders, converters, encryptors);
 
                 GenerateCodeGeneratedImplementation(context, contractContext);
                 GenerateDefinitionImplementation(context, contractContext);
                 GenerateEncoderImplementation(context, contractContext);
                 GenerateConverterImplementataion(context, contractContext, converters);
+                GeneateEncryptorImplementation(context, contractContext);
             }
         }
 
-        private ContractContext MergeEncodersAndConverters(ContractContext contractContext, IEnumerable<ContractEncoder> encoders, IEnumerable<ContractConverter> converters)
+        private ContractContext MergeEncodersConvertersAndEncryptors(ContractContext contractContext, IEnumerable<ContractEncoder> encoders, IEnumerable<ContractConverter> converters, IEnumerable<ContractEncryptor> encryptors)
         {
             return contractContext;
         }
@@ -294,6 +299,61 @@ namespace {contractContext.Target.ContainingNamespace};
             _ => null
         }};
         return (callback == null ? null : callback(serviceProvider));
+    }}
+}}", Encoding.UTF8));
+        }
+
+        private void GeneateEncryptorImplementation(SourceProductionContext context, ContractContext contractContext)
+        {
+            var typeSwitches = new List<string>();
+            foreach (var contract in contractContext.Contracts)
+            {
+                var messageId = GetMessageIDUpperInvariant(contract.Contract);
+                if (contract.Encryptors!=null)
+                {
+                    if (contract.Encryptors.Count()==1)
+                    {
+                        var encryptor = contract.Encoders.First();
+                        typeSwitches.Add($@"            (Type t, _, not null) when t == typeof({contract.Contract.ToDisplayString()}) => ActivatorUtilities.CreateInstance<{encryptor.ToDisplayString()}>(serviceProvider!),
+            (Type t, _, null) when t == typeof({contract.Contract.ToDisplayString()}) => Activator.CreateInstance<{encryptor.ToDisplayString()}>(),");
+                    }
+                    else
+                    {
+                        //throw error here
+                    }
+                }
+                else
+                    typeSwitches.Add($@"            (Type t, not null, _) when t == typeof({contract.Contract.ToDisplayString()}) => globalEncryptor,
+            (Type t, null, _) when t == typeof({contract.Contract.ToDisplayString()}) => new NonEncryptor(),");
+            }
+
+            context.AddSource(
+                $"{contractContext.Target.Name}.Encryptors.g.cs",
+                SourceText.From($@"using System;
+using MQContract;
+using MQContract.Messages;
+using MQContract.Interfaces.Encrypting;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace {contractContext.Target.ContainingNamespace};
+
+{contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
+
+    private sealed class NonEncryptor : IMessageEncryptor
+    {{
+        ValueTask<Stream> IMessageEncryptor.DecryptAsync(Stream stream, MessageHeader headers)
+            => ValueTask.FromResult(stream);
+
+        ValueTask<EncryptionResult> IMessageEncryptor.EncryptAsync(byte[] data)
+            => ValueTask.FromResult<EncryptionResult>(new(null,data));
+    }}
+
+    public override IMessageEncryptor TryGetMessageEncryptor(Type messageType, IMessageEncryptor globalEncryptor, IServiceProvider serviceProvider){{
+        return (messageType, globalEncryptor, serviceProvider) switch
+        {{
+{string.Join("\r\n", typeSwitches)}
+            _ => null
+        }};
     }}
 }}", Encoding.UTF8));
         }

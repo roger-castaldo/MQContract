@@ -1,4 +1,5 @@
 ﻿using MQContract.Interfaces.Encoding;
+using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Messages;
 
 namespace MQContract
@@ -21,5 +22,8 @@ namespace MQContract
 
         public virtual bool IsMessageCodeGenerated<TMessage>()
             => false;
+
+        public virtual IMessageEncryptor? TryGetMessageEncryptor(Type messageType, IMessageEncryptor? globalEncryptor, IServiceProvider? serviceProvider)
+            => null;
     }
 }

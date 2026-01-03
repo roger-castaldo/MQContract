@@ -17,7 +17,7 @@ namespace MQContract.Connections
                 throw new InvalidPolicyArgumentsException([nameof(retryPolicy), nameof(circuitBreakPolicy)]);
             if (retryPolicy is not null && circuitBreakPolicy is not null && retryPolicy.Value.retryCount>circuitBreakPolicy.Value.handledEventsAllowedBeforeBreaking)
                 throw new InvalidRetryCircuitBreakTriggersException(nameof(retryPolicy.Value.retryCount), nameof(circuitBreakPolicy.Value.handledEventsAllowedBeforeBreaking));
-            return new(logger, retryPolicy, circuitBreakPolicy);
+            return new(Logger, retryPolicy, circuitBreakPolicy);
         }
 
         protected TContractConnection AddPolicy(

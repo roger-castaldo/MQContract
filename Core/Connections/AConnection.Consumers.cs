@@ -34,14 +34,12 @@ namespace MQContract.Connections
             }
             catch (Exception err)
             {
-                logger?.LogErrorChecked(err, "An error occured attempting to register a {ConsumerName} of type {ConsumerType}", consumerName, consumerType);
+                Logger?.LogErrorChecked(err, "An error occured attempting to register a {ConsumerName} of type {ConsumerType}", consumerName, consumerType);
                 throw new ConsumerRegistrationFailedException(consumerName,consumerType,err);
             }
             consumerSubscriptions.Add(subscription);
             return (TContractConnection)(IBaseContractConnection)this;
         }
-
-        protected readonly MessageContext messageContext = new();
 
         TContractConnection IMessageContextContractConnection<TContractConnection>.RegisterMessageContext(MQContractMessageContext messageContext)
         {

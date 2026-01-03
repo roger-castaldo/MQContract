@@ -1,11 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using MQContract.Interfaces.Conversion;
+﻿using Microsoft.Extensions.Logging;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Messages;
 using MQContract.Messages;
-using System.Runtime.Loader;
 
 namespace MQContract.Factories
 {

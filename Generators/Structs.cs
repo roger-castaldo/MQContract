@@ -4,16 +4,23 @@ using System.Collections.Immutable;
 
 namespace MQContract.Generators
 {
-    internal readonly struct ContractType(ITypeSymbol contract, IEnumerable<INamedTypeSymbol>? encoders, IEnumerable<ITypeSymbol>? converters)
+    internal readonly struct ContractType(ITypeSymbol contract, IEnumerable<INamedTypeSymbol>? encoders, IEnumerable<ITypeSymbol>? converters, IEnumerable<INamedTypeSymbol>? encryptors)
     {
         public ITypeSymbol Contract => contract;
         public IEnumerable<INamedTypeSymbol>? Encoders => encoders;
         public IEnumerable<ITypeSymbol>? Converters => converters;
+        public IEnumerable<INamedTypeSymbol>? Encryptors => encryptors;
     }
 
     internal readonly struct ContractEncoder(INamedTypeSymbol encoder, IEnumerable<ITypeSymbol> contracts)
     {
         public INamedTypeSymbol Encoder => encoder;
+        public IEnumerable<ITypeSymbol> Contracts => contracts;
+    }
+
+    internal readonly struct ContractEncryptor(INamedTypeSymbol encryptor, IEnumerable<ITypeSymbol> contracts)
+    {
+        public INamedTypeSymbol Encryptor => encryptor;
         public IEnumerable<ITypeSymbol> Contracts => contracts;
     }
 
