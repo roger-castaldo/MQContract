@@ -7,6 +7,8 @@
     <RootNamespace>MQContract</RootNamespace>
 	  <Title>Core for MQContract</Title>
 	  <IncludeAnalyzer>true</IncludeAnalyzer>
+	  <!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+	  <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>-->
   </PropertyGroup>
 
 	<ItemGroup>

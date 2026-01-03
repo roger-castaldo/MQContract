@@ -4,9 +4,9 @@ using System.Collections.Immutable;
 
 namespace MQContract.Generators
 {
-    internal readonly struct ContractType(INamedTypeSymbol contract, IEnumerable<INamedTypeSymbol>? encoders, IEnumerable<ITypeSymbol>? converters)
+    internal readonly struct ContractType(ITypeSymbol contract, IEnumerable<INamedTypeSymbol>? encoders, IEnumerable<ITypeSymbol>? converters)
     {
-        public INamedTypeSymbol Contract => contract;
+        public ITypeSymbol Contract => contract;
         public IEnumerable<INamedTypeSymbol>? Encoders => encoders;
         public IEnumerable<ITypeSymbol>? Converters => converters;
     }

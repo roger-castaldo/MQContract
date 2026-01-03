@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -14,6 +14,10 @@ namespace MQContract.Generators
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
+            //if (!Debugger.IsAttached)
+            //{
+            //    Debugger.Launch();
+            //}
             // 1. Find candidate classes
             var candidateClasses = TargetHelper.LocateContexts(context);
 
@@ -42,6 +46,7 @@ namespace MQContract.Generators
 
                 contractContext = MergeEncodersAndConverters(contractContext, encoders, converters);
 
+                GenerateCodeGeneratedImplementation(context, contractContext);
                 GenerateDefinitionImplementation(context, contractContext);
                 GenerateEncoderImplementation(context, contractContext);
                 GenerateConverterImplementataion(context, contractContext, converters);
@@ -53,15 +58,62 @@ namespace MQContract.Generators
             return contractContext;
         }
 
+        private void GenerateCodeGeneratedImplementation(SourceProductionContext context, ContractContext contractContext)
+        {
+            context.AddSource(
+                $"{contractContext.Target.Name}.CodeGenerated.g.cs",
+                SourceText.From($@"namespace {contractContext.Target.ContainingNamespace};
+
+{contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
+
+    public virtual bool IsMessageCodeGenerated<TMessage>() 
+        => (typeof(TMessage)) switch {{
+{string.Join("\r\n",contractContext.Contracts.Select(contract=>$"            (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => true,"))}
+            _ => false
+        }};
+}}", Encoding.UTF8));
+        }
+
         private static readonly string[] MessageAttributes = ["MessageAttribute", "QueryMessageAttribute", "CommandAttribute", "QueryAttribute"];
 
         private AttributeData? GetMessageAttribute(ITypeSymbol contract)
             => contract.GetAttributes().FirstOrDefault(a => MessageAttributes.Contains(a.AttributeClass?.Name));
 
+        private string GetMessageName(AttributeData? att, ITypeSymbol contract)
+        {
+            var name = (string?)att?.ConstructorArguments[1].Value??contract.Name;
+            if (att==null && (!contract.ToDisplayString().EndsWith(name, StringComparison.InvariantCultureIgnoreCase) || string.IsNullOrWhiteSpace(contract.Name)))
+            {
+                name = contract.ToDisplayString();
+                if (!string.IsNullOrWhiteSpace(contract.Name) && name.Contains(contract.Name, StringComparison.InvariantCultureIgnoreCase))
+                    name = name.Substring(name.IndexOf(contract.Name, StringComparison.InvariantCultureIgnoreCase));
+                name = FixInternalBrackets(name);
+            }
+            return name;
+        }
+
+        private string FixInternalBrackets(string name)
+        {
+            if (name.Contains('<'))
+            {
+                var preBracket = name.Substring(0, name.IndexOf("<")+1);
+                var betweenBrackets = name.Substring(preBracket.Length, name.Length-1-preBracket.Length);
+                return $"{preBracket}{FixInternalBrackets(betweenBrackets)}>";
+            }else if (name.Contains(","))
+            {
+                var splt = name.Split(',');
+                for (var x = 0; x<splt.Length; x++)
+                    splt[x]=FixInternalBrackets(splt[x]);
+                return string.Join(",", splt);
+            }else if (name.Contains('.'))
+                return name.Substring(name.LastIndexOf('.')+1);
+            return name;
+        }
+
         private string GetMessageIDUpperInvariant(ITypeSymbol contract)
         {
             var att = GetMessageAttribute(contract);
-            return $"{((string?)att?.ConstructorArguments[1].Value)??contract.Name}-{((string?)att?.ConstructorArguments[2].Value)??"0.0.0.0"}".ToUpperInvariant();
+            return $"{GetMessageName(att,contract)}-{((string?)att?.ConstructorArguments[2].Value)??"0.0.0.0"}".ToUpperInvariant();
         }
 
         private void GenerateDefinitionImplementation(SourceProductionContext context, ContractContext contractContext)
@@ -79,12 +131,12 @@ namespace {contractContext.Target.ContainingNamespace};
             {
                 var att = GetMessageAttribute(contract.Contract);
                 var channel = (string?)att?.ConstructorArguments[0].Value;
-                var name = (string?)att?.ConstructorArguments[1].Value;
+                var name = GetMessageName(att, contract.Contract);
                 var version = (string?)att?.ConstructorArguments[2].Value;
                 var responseChannel = (string?)(att?.ConstructorArguments.Length>=4 ? att?.ConstructorArguments[3].Value : null);
                 var responseTimeout = (int?)(att?.ConstructorArguments.Length>=5 ? att?.ConstructorArguments[4].Value : null);
                 var responseType = (ITypeSymbol?)(att?.ConstructorArguments.Length>=6 ? att?.ConstructorArguments[5].Value : null);
-                sb.AppendLine($"            (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => new({(channel==null ? "null" : $"\"{channel}\"")}, \"{name??contract.Contract.Name}\",new Version(\"{version??"0.0.0.0"}\"), {(responseChannel==null ? "null" : $"\"{responseChannel}\"")},{(responseTimeout==null ? "null" : $"TimeSpan.FromMilliseconds({responseTimeout})")}, {(responseType == null ? "null" : $"typeof({responseType.ToDisplayString()})")}),");
+                sb.AppendLine($"            (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => new({(channel==null ? "null" : $"\"{channel}\"")}, \"{name}\",new Version(\"{version??"0.0.0.0"}\"), {(responseChannel==null ? "null" : $"\"{responseChannel}\"")},{(responseTimeout==null ? "null" : $"TimeSpan.FromMilliseconds({responseTimeout})")}, {(responseType == null ? "null" : $"typeof({responseType.ToDisplayString()})")}),");
             }
             sb.AppendLine(@"            _ => null
         };
@@ -111,8 +163,22 @@ namespace {contractContext.Target.ContainingNamespace};
                         var encoder = contract.Encoders.First();
                         typeSwitches.Add($@"            (Type t, _, not null) when t == typeof({contract.Contract.ToDisplayString()}) => ActivatorUtilities.CreateInstance<{encoder.ToDisplayString()}>(serviceProvider!),
             (Type t, _, null) when t == typeof({contract.Contract.ToDisplayString()}) => Activator.CreateInstance<{encoder.ToDisplayString()}>(),");
-                        idSwitches.Add($@"            (""{messageId}"", not null, _) => ActivatorUtilities.CreateInstance<{encoder.ToDisplayString()}>(serviceProvider!),
-            (""{messageId}"", null, _) => Activator.CreateInstance<{encoder.ToDisplayString()}>(),");
+                        idSwitches.Add($@"            (""{messageId}"", not null, _) => () => {{
+                IMessageTypeEncoder<{contract.Contract.ToDisplayString()}> encoder = ActivatorUtilities.CreateInstance<{encoder.ToDisplayString()}>(serviceProvider!);
+                Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
+                    using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                    return (object)(await encoder.DecodeAsync(ms));
+                }};
+                return callback;
+            }},
+            (""{messageId}"", null, _) => () => {{
+                IMessageTypeEncoder<{contract.Contract.ToDisplayString()}> encoder = Activator.CreateInstance<{encoder.ToDisplayString()}>();
+                Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
+                    using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                    return (object)(await encoder.DecodeAsync(ms));
+                }};
+                return callback;
+            }},");
                     }
                     else
                     {
@@ -123,8 +189,21 @@ namespace {contractContext.Target.ContainingNamespace};
                 {
                     typeSwitches.Add($@"            (Type t, not null, _) when t == typeof({contract.Contract.ToDisplayString()}) => globalMessageEncoder,
             (Type t, null, _) when t == typeof({contract.Contract.ToDisplayString()}) => new DefaultJsonEncoder<{contract.Contract.ToDisplayString()}>(jsonOptions),");
-                    idSwitches.Add($@"            (""{messageId}"", not null, _) => globalMessageEncoder,
-            (""{messageId}"", null, _) => new DefaultJsonEncoder<{contract.Contract.ToDisplayString()}>(jsonOptions),");
+                    idSwitches.Add($@"            (""{messageId}"", not null, _) => () => {{
+                Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
+                    using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                    return (object)(await globalMessageEncoder.DecodeAsync<{contract.Contract.ToDisplayString()}>(ms));
+                }};
+                return callback;
+            }},
+            (""{messageId}"", null, _) => () => {{
+                IMessageTypeEncoder<{contract.Contract.ToDisplayString()}> encoder = new DefaultJsonEncoder<{contract.Contract.ToDisplayString()}>(jsonOptions);
+                Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
+                    using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                    return (object)(await encoder.DecodeAsync(ms));
+                }};
+                return callback;
+            }},");
                 }
             }
 
@@ -135,6 +214,7 @@ using System.Text.Json;
 using MQContract;
 using MQContract.Interfaces.Encoding;
 using Microsoft.Extensions.DependencyInjection;
+using MQContract.Interfaces.Messages;
 
 namespace {contractContext.Target.ContainingNamespace};
 
@@ -162,18 +242,19 @@ namespace {contractContext.Target.ContainingNamespace};
         }};
     }}
 
-    public override object TryGetMessageEncoder(string messageID, IMessageEncoder globalMessageEncoder, IServiceProvider serviceProvider){{
+    public override Func<IEncodedMessage, ValueTask<object>> TryGetDecodingCallback(string messageID, IMessageEncoder globalMessageEncoder, IServiceProvider serviceProvider){{
         var jsonOptions = new JsonSerializerOptions(){{
             WriteIndented=false,
             AllowTrailingCommas=true,
             PropertyNameCaseInsensitive=true,
             ReadCommentHandling=JsonCommentHandling.Skip
         }};
-        return (messageID.ToUpperInvariant(), globalMessageEncoder, serviceProvider) switch
+        Func<Func<IEncodedMessage, ValueTask<object>>> result = (messageID.ToUpperInvariant(), globalMessageEncoder, serviceProvider) switch
         {{
 {string.Join("\r\n", idSwitches)}
             _ => null
         }};
+        return (result == null ? null : result());
     }}
 }}", Encoding.UTF8));
         }
@@ -217,7 +298,7 @@ namespace {contractContext.Target.ContainingNamespace};
 }}", Encoding.UTF8));
         }
 
-        private void GeneratePrimaryConverters(Dictionary<string, string> encoderCalls, INamedTypeSymbol contract, IEnumerable<ContractConverter> converters)
+        private void GeneratePrimaryConverters(Dictionary<string, string> encoderCalls, ITypeSymbol contract, IEnumerable<ContractConverter> converters)
         {
             foreach (var converter in converters.Where(con=>con.Contracts.Any(c=> SymbolEqualityComparer.Default.Equals(c.to, contract))))
             {
@@ -229,7 +310,7 @@ namespace {contractContext.Target.ContainingNamespace};
             }
         }
 
-        private void GenerateChainedConverter(Dictionary<string, string> encoderCalls, ITypeSymbol from, INamedTypeSymbol contract, IEnumerable<ContractConverterPair> previousSteps, IEnumerable<ContractConverter> converterDefinitions)
+        private void GenerateChainedConverter(Dictionary<string, string> encoderCalls, ITypeSymbol from, ITypeSymbol contract, IEnumerable<ContractConverterPair> previousSteps, IEnumerable<ContractConverter> converterDefinitions)
         {
             foreach (var con in converterDefinitions.Where(con => con.Contracts.Any(c => SymbolEqualityComparer.Default.Equals(c.to, from))))
             {
@@ -259,13 +340,13 @@ namespace {contractContext.Target.ContainingNamespace};
             }
             sb.AppendLine($@"                    Func<IEncodedMessage, ValueTask<object>> func = async (encodedMessage) => {{
                         var msg = ({conversion.from.ToDisplayString()})(await messageDecode(encodedMessage));
-                        if (msg==null) throw new Exception(""Unable to convert message"");
+                        if (msg==null) return null;
                         var msg0 = await step0.ConvertAsync(msg);");
             idx=0;
             foreach(var pair in previousSteps)
             {
                 sb.AppendLine($@"                        var msg{idx+1} = await step{idx+1}.ConvertAsync(msg{idx});
-                        if (msg{idx+1}==null) throw new Exception(""Unable to convert message"");");
+                        if (msg{idx+1}==null) return null;");
                 idx++;
             }
                         

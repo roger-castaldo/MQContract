@@ -34,9 +34,9 @@ namespace MQContract.Generators
                 .Where(a => a.AttributeClass?.Name == "UseMqContractAttribute")
                 .Select(a =>
                 {
-                    var contractType = a.ConstructorArguments[0].Value as INamedTypeSymbol;
-                    var encoders = (IEnumerable<INamedTypeSymbol>?)(a.ConstructorArguments[1].IsNull ? null : [(INamedTypeSymbol)a.ConstructorArguments[1].Value]);
-                    var converters = (IEnumerable<ITypeSymbol>?)(a.ConstructorArguments[2].IsNull ? null : a.ConstructorArguments[2].Values.Select(v=>(ITypeSymbol)v.Value));
+                    var contractType = a.ConstructorArguments[0].Value as ITypeSymbol;
+                    var encoders = (IEnumerable<INamedTypeSymbol>?)(a.ConstructorArguments[1].IsNull ? null : [(INamedTypeSymbol)a.ConstructorArguments[1].Value!]);
+                    var converters = (IEnumerable<ITypeSymbol>?)(a.ConstructorArguments[2].IsNull ? null : a.ConstructorArguments[2].Values.Select(v=>(ITypeSymbol)v.Value!));
                     return new ContractType(contractType!, encoders, converters);
                 })
                 .ToImmutableArray()!;

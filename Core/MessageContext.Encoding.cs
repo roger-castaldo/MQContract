@@ -1,7 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using MQContract.Attributes;
 using MQContract.Defaults;
+using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encoding;
+using MQContract.Interfaces.Messages;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 
@@ -46,53 +50,6 @@ namespace MQContract
 
         public (Func<TMessage, ValueTask<byte[]>> encodeMessage, Func<Stream, ValueTask<TMessage?>> decodeMessage) GetEncodingCallbacks<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
         {
-            object? internalEncoder = (typeof(TMessage), globalMessageEncoder, serviceProvider) switch
-            {
-                (Type t, _, _) when t == typeof(byte[]) => new ByteArrayEncoder(),
-                (Type t, _, _) when t == typeof(byte) => new ByteEncoder(),
-                (Type t, _, _) when t == typeof(bool) => new BooleanEncoder(),
-                (Type t, _, _) when t == typeof(bool[]) => new BooleanEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<bool>) => new BooleanEncoder(),
-                (Type t, _, _) when t == typeof(char) => new CharEncoder(),
-                (Type t, _, _) when t == typeof(char[]) => new CharEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<char>) => new CharEncoder(),
-                (Type t, _, _) when t == typeof(decimal) => new DecimalEncoder(),
-                (Type t, _, _) when t == typeof(decimal[]) => new DecimalEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<decimal>) => new DecimalEncoder(),
-                (Type t, _, _) when t == typeof(double) => new DoubleEncoder(),
-                (Type t, _, _) when t == typeof(double[]) => new DoubleEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<double>) => new DoubleEncoder(),
-                (Type t, _, _) when t == typeof(float) => new FloatEncoder(),
-                (Type t, _, _) when t == typeof(float[]) => new FloatEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<float>) => new FloatEncoder(),
-                (Type t, _, _) when t == typeof(Half) => new HalfEncoder(),
-                (Type t, _, _) when t == typeof(Half[]) => new HalfEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<Half>) => new HalfEncoder(),
-                (Type t, _, _) when t == typeof(int) => new IntEncoder(),
-                (Type t, _, _) when t == typeof(int[]) => new IntEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<int>) => new IntEncoder(),
-                (Type t, _, _) when t == typeof(long) => new LongEncoder(),
-                (Type t, _, _) when t == typeof(long[]) => new LongEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<long>) => new LongEncoder(),
-                (Type t, _, _) when t == typeof(short) => new ShortEncoder(),
-                (Type t, _, _) when t == typeof(short[]) => new ShortEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<short>) => new ShortEncoder(),
-                (Type t, _, _) when t == typeof(string) => new StringEncoder(),
-                (Type t, _, _) when t == typeof(string[]) => new StringEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<string>) => new StringEncoder(),
-                (Type t, _, _) when t == typeof(uint) => new UIntEncoder(),
-                (Type t, _, _) when t == typeof(uint[]) => new UIntEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<uint>) => new UIntEncoder(),
-                (Type t, _, _) when t == typeof(ulong) => new ULongEncoder(),
-                (Type t, _, _) when t == typeof(ulong[]) => new ULongEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<ulong>) => new ULongEncoder(),
-                (Type t, _, _) when t == typeof(ushort) => new UShortEncoder(),
-                (Type t, _, _) when t == typeof(ushort[]) => new UShortEncoder(),
-                (Type t, _, _) when t == typeof(IEnumerable<ushort>) => new UShortEncoder(),
-                _ => null
-            };
-            if (internalEncoder!=null)
-                return ProduceCallbacks<TMessage>(internalEncoder);
             foreach(var context in contexts)
             {
                 var specificEncoder = context.TryGetMessageEncoder<TMessage>(globalMessageEncoder, serviceProvider);
@@ -102,6 +59,105 @@ namespace MQContract
             if (RuntimeFeature.IsDynamicCodeSupported)
                 return ProduceCallbacks<TMessage>(ExtractEncoderThroughReflection<TMessage>(globalMessageEncoder, serviceProvider));
             return ProduceCallbacks<TMessage>((globalMessageEncoder == null ? new JsonEncoder<TMessage>() : globalMessageEncoder));
+        }
+
+        public Func<IEncodedMessage, ValueTask<object?>> GetDecodingCallback(string messageID, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
+        {
+            foreach(var context in contexts)
+            {
+                var specificEncoder = context.TryGetDecodingCallback(messageID, globalMessageEncoder, serviceProvider);
+                if (specificEncoder!=null)
+                    return specificEncoder;
+            }
+            if (RuntimeFeature.IsDynamicCodeSupported)
+                return ExtractDecodeThroughReflection(messageID, globalMessageEncoder, serviceProvider);
+            return ProduceDecodingCallback(null, globalMessageEncoder);
+        }
+
+        private Func<IEncodedMessage, ValueTask<object?>> ProduceDecodingCallback(Type? messageType, IMessageEncoder? globalMessageEncoder)
+        {
+            if (globalMessageEncoder!=null)
+                return message =>
+                {
+                    using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                    return globalMessageEncoder.DecodeAsync<object>(ms);
+                };
+            if (messageType!=null)
+            {
+                var jEncoder = Activator.CreateInstance(typeof(JsonEncoder<>).MakeGenericType([messageType]))!;
+                var method = typeof(JsonEncoder<>).MakeGenericType([messageType]).GetMethod("DecodeAsync")!;
+                return async message =>
+                {
+                    using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                    return await Utility.InvokeMethodAsync(method, jEncoder, [ms]);
+                };
+            }
+            var encoder = new JsonEncoder<object>();
+            return message =>
+            {
+                using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                return encoder.DecodeAsync(ms);
+            };
+        }
+
+        [RequiresDynamicCode("Uses unbounded reflection to discover encoders, if AOT and no usage of UseMqContractAttribute to autogenerate code for the encoders used")]
+        private Func<IEncodedMessage, ValueTask<object?>> ExtractDecodeThroughReflection(string messageID, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
+        {
+            var messageType = AssemblyLoadContext.All
+                .SelectMany(context => context.Assemblies)
+                .SelectMany(assembly =>
+                {
+                    try
+                    {
+                        return assembly.GetTypes()
+                        .Where(t => !t.IsInterface && !t.IsAbstract
+                            && string.Equals(MessageID(t), messageID, StringComparison.InvariantCultureIgnoreCase));
+                    }
+                    catch (Exception)
+                    {
+                        return [];
+                    }
+                })
+                .FirstOrDefault();
+            var encoderType = AssemblyLoadContext.All
+                .SelectMany(context => context.Assemblies)
+                .SelectMany(assembly =>
+                {
+                    try
+                    {
+                        return assembly.GetTypes()
+                        .Where(t => !t.IsInterface && !t.IsAbstract
+                            && Array.Exists(t.GetInterfaces(), iface => {
+                                    if (iface.IsGenericType
+                                    && iface.GetGenericTypeDefinition() == typeof(IMessageTypeEncoder<>)
+                                    && string.Equals(MessageID(iface.GetGenericArguments()[0]), messageID, StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    messageType = iface.GetGenericArguments()[0];
+                                    return true;
+                                }
+                                return false;
+                                }));
+                    }
+                    catch (Exception)
+                    {
+                        return [];
+                    }
+                })
+                .FirstOrDefault();
+            if (encoderType!=null)
+            {
+                var encoder = (serviceProvider==null ? Activator.CreateInstance(encoderType) : ActivatorUtilities.CreateInstance(serviceProvider, encoderType))!;
+                return async message =>
+                {
+                    using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                    return await Utility.InvokeMethodAsync(
+                        typeof(IMessageTypeEncoder<>).MakeGenericType([messageType!]).GetMethod("DecodeAsync")!,
+                        encoder,
+                        [ms]
+                    );
+                };
+            }
+            return ProduceDecodingCallback(messageType, globalMessageEncoder);
         }
     }
 }

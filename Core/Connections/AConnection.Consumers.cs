@@ -7,6 +7,7 @@ using MQContract.Interfaces.Consumers;
 using MQContract.Messages;
 using MQContract.Middleware;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Loader;
 
@@ -105,6 +106,8 @@ namespace MQContract.Connections
             }
         }
 
+        [RequiresDynamicCode("Uses reflection, MakeGenericMethod, and MethodInfo.Invoke. Not compatible with NativeAOT.")]
+        [RequiresUnreferencedCode("Uses reflection over generic methods and runtime types.")]
         async ValueTask IConsumerContractConnection<TContractConnection>.AutoRegisterAllConsumersAsync(Assembly? assembly, CancellationToken cancellationToken)
         {
             if (assembly!=null)

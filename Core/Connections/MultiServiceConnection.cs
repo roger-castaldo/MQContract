@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Attributes;
 using MQContract.Extensions;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;

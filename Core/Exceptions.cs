@@ -5,8 +5,8 @@
     /// </summary>
     public class MessageConversionException : Exception
     {
-        internal MessageConversionException(Type messageType, Type converterType)
-            : base($"The attempt to convert the incoming message resulted in a null object.[MessageType:{messageType.FullName},ConverterType:{converterType.FullName}]") { }
+        internal MessageConversionException(Type messageType)
+            : base($"The attempt to convert the incoming message resulted in a null object.[MessageType:{messageType.FullName}]") { }
     }
 
     /// <summary>

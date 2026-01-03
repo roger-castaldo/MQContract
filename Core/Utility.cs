@@ -19,10 +19,6 @@ namespace MQContract
             return (TAttribute?)att;
         }
 
-        internal static TAttribute? GetCustomAttribute<TAttributeHolder, TAttribute>(bool inherit = false)
-            where TAttribute : Attribute
-            => GetCustomAttribute<TAttribute>(typeof(TAttributeHolder), inherit);
-
         internal static async ValueTask<object?> InvokeMethodAsync(MethodInfo method, object container, object?[]? parameters)
         {
             var valueTask = method.Invoke(container, parameters)!;

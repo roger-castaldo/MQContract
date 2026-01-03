@@ -10,13 +10,16 @@ namespace MQContract
         public virtual object? TryGetMessageEncoder<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
             => null;
 
-        public virtual object? TryGetMessageEncoder(string messageID, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
+        public virtual Func<IEncodedMessage, ValueTask<object?>>? TryGetDecodingCallback(string messageID, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
             => null;
 
         public virtual MessageTypeDefinition? TryGetMessageType(Type messageType)
             => null;
 
-        public virtual Func<IEncodedMessage, ValueTask<object?>> TryGetMessageConverter<TMessage>(string messageID, Func<IEncodedMessage, ValueTask<object?>> messageDecode, IServiceProvider? serviceProvider)
+        public virtual Func<IEncodedMessage, ValueTask<object?>>? TryGetMessageConverter<TMessage>(string messageID, Func<IEncodedMessage, ValueTask<object?>> messageDecode, IServiceProvider? serviceProvider)
             => null;
+
+        public virtual bool IsMessageCodeGenerated<TMessage>()
+            => false;
     }
 }

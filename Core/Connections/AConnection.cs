@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MQContract.Attributes;
 using MQContract.Extensions;
 using MQContract.Factories;
 using MQContract.Interfaces;
