@@ -71,7 +71,7 @@ namespace MQContract.Generators
 
 {contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
 
-    public virtual bool IsMessageCodeGenerated<TMessage>() 
+    public override sealed bool IsMessageCodeGenerated<TMessage>() 
         => (typeof(TMessage)) switch {{
 {string.Join("\r\n",contractContext.Contracts.Select(contract=>$"            (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => true,"))}
             _ => false
@@ -129,7 +129,7 @@ namespace MQContract.Generators
 namespace {contractContext.Target.ContainingNamespace};
 
 {contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
-    public override MessageTypeDefinition? TryGetMessageType(Type messageType){{
+    public override sealed MessageTypeDefinition? TryGetMessageType(Type messageType){{
         return (messageType) switch {{");
 
             foreach (var contract in contractContext.Contracts)
@@ -233,7 +233,7 @@ namespace {contractContext.Target.ContainingNamespace};
             => ValueTask.FromResult(JsonSerializer.SerializeToUtf8Bytes<TMessage>(message, jsonOptions));
     }}
 
-    public override object TryGetMessageEncoder<TMessage>(IMessageEncoder globalMessageEncoder, IServiceProvider serviceProvider){{
+    public override sealed object TryGetMessageEncoder<TMessage>(IMessageEncoder globalMessageEncoder, IServiceProvider serviceProvider){{
         var jsonOptions = new JsonSerializerOptions(){{
             WriteIndented=false,
             AllowTrailingCommas=true,
@@ -247,7 +247,7 @@ namespace {contractContext.Target.ContainingNamespace};
         }};
     }}
 
-    public override Func<IEncodedMessage, ValueTask<object>> TryGetDecodingCallback(string messageID, IMessageEncoder globalMessageEncoder, IServiceProvider serviceProvider){{
+    public override sealed Func<IEncodedMessage, ValueTask<object>> TryGetDecodingCallback(string messageID, IMessageEncoder globalMessageEncoder, IServiceProvider serviceProvider){{
         var jsonOptions = new JsonSerializerOptions(){{
             WriteIndented=false,
             AllowTrailingCommas=true,
@@ -348,7 +348,7 @@ namespace {contractContext.Target.ContainingNamespace};
             => ValueTask.FromResult<EncryptionResult>(new(null,data));
     }}
 
-    public override IMessageEncryptor TryGetMessageEncryptor(Type messageType, IMessageEncryptor globalEncryptor, IServiceProvider serviceProvider){{
+    public override sealed IMessageEncryptor TryGetMessageEncryptor(Type messageType, IMessageEncryptor globalEncryptor, IServiceProvider serviceProvider){{
         return (messageType, globalEncryptor, serviceProvider) switch
         {{
 {string.Join("\r\n", typeSwitches)}
