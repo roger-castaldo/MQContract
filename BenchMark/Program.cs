@@ -18,5 +18,6 @@ BenchmarkRunner.Run(
                 .WithMaxIterationCount(16)
             )
             .WithOptions(ConfigOptions.DisableLogFile)
-        )
+        ),
+    args
 );

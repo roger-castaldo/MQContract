@@ -16,6 +16,7 @@ namespace BenchMark.PublishBenchmarks
         private IContractConnection? contractConnection;
         private Announcement? announcement;
         private EncodedAnnouncement? encodedAnnouncement;
+        private MyMessageContext myMessageContext;
 
         [GlobalSetup]
         public void Setup()
@@ -24,6 +25,7 @@ namespace BenchMark.PublishBenchmarks
             contractConnection = ContractConnection.Instance(serviceConnection);
             announcement = new(MessageContent);
             encodedAnnouncement = new(MessageContent);
+            myMessageContext = new();
         }
 
         private static async Task ExecuteOperationsAsync(Func<Task> operation)
@@ -63,7 +65,7 @@ namespace BenchMark.PublishBenchmarks
         [Benchmark]
         public async Task PublishBasicEncodedMessageWithContext()
         {
-            ((IContractedConnection)contractConnection!).RegisterMessageContext(new MyMessageContext());
+            ((IContractedConnection)contractConnection!).RegisterMessageContext(myMessageContext);
             await ExecuteOperationsAsync(async () =>
             {
                 _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
@@ -73,7 +75,7 @@ namespace BenchMark.PublishBenchmarks
         [Benchmark]
         public async Task PublishDefaultEncodedMessageWithContext()
         {
-            ((IContractedConnection)contractConnection!).RegisterMessageContext(new MyMessageContext());
+            ((IContractedConnection)contractConnection!).RegisterMessageContext(myMessageContext);
             await ExecuteOperationsAsync(async () =>
             {
                 _ = await contractConnection!.PublishAsync<Announcement>(announcement!, channel: ChannelName);
@@ -83,7 +85,7 @@ namespace BenchMark.PublishBenchmarks
         [Benchmark]
         public async Task PublishCustomEncodedMessageWithContext()
         {
-            ((IContractedConnection)contractConnection!).RegisterMessageContext(new MyMessageContext());
+            ((IContractedConnection)contractConnection!).RegisterMessageContext(myMessageContext);
             await ExecuteOperationsAsync(async () =>
             {
                 _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(encodedAnnouncement!, channel: ChannelName);

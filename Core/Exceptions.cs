@@ -1,4 +1,6 @@
-﻿namespace MQContract
+﻿using System.Runtime.CompilerServices;
+
+namespace MQContract
 {
     /// <summary>
     /// Thrown when an incoming data message causes a null object return from a converter
@@ -150,5 +152,19 @@
     {
         internal ConsumerRegistrationFailedException(string consumerName, Type consumerType, Exception exception)
             : base($"Failed to register a {consumerName} of type {consumerType}", exception) { }
+    }
+
+    public sealed class DynamicCodeNotSupportedException
+        : Exception
+    {
+        private DynamicCodeNotSupportedException(string message)
+            : base(message) { }
+
+        internal static void ThrowIfDynamicCodeIsBlocked(string message)
+        {
+            if (!RuntimeFeature.IsDynamicCodeSupported)
+                throw new DynamicCodeNotSupportedException(message);
+        }
+
     }
 }

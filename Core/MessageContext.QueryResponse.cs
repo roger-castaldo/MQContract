@@ -15,9 +15,8 @@ namespace MQContract
                 if (resultTask.HasValue)
                     return resultTask.Value;
             }
-            if (RuntimeFeature.IsDynamicCodeSupported)
-                return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
-            throw new NotSupportedException("Unable to execute query due to dynamic code not supported and query type not defined in context");
+            DynamicCodeNotSupportedException.ThrowIfDynamicCodeIsBlocked("Unable to execute query due to dynamic code not supported and query type not defined in context");
+            return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
         }
 
         public ValueTask<IEnumerable<QueryResult<object>>> ExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
