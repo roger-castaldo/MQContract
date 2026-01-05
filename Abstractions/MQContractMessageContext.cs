@@ -1,6 +1,8 @@
-﻿using MQContract.Interfaces.Encoding;
+﻿using MQContract.Interfaces;
+using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Messages;
+using MQContract.Messages;
 
 namespace MQContract
 {
@@ -24,6 +26,12 @@ namespace MQContract
             => false;
 
         public virtual IMessageEncryptor? TryGetMessageEncryptor(Type messageType, IMessageEncryptor? globalEncryptor, IServiceProvider? serviceProvider)
+            => null;
+
+        public virtual ValueTask<QueryResult<object>>? TryExecuteQuery<TQuery>(IContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+            => null;
+
+        public virtual ValueTask<IEnumerable<QueryResult<object>>>? TryExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
             => null;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MQContract.Defaults;
+using MQContract.Messages;
 
 namespace MQContract
 {
@@ -8,5 +9,7 @@ namespace MQContract
 
         internal void RegisterContext(MQContractMessageContext messageContext)
             => contexts.Add(messageContext);
+
+        internal delegate ValueTask<ServiceMessage> delProduceServiceMessage<TMessage>(TMessage message);
     }
 }

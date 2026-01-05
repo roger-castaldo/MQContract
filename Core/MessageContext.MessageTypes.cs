@@ -35,7 +35,7 @@ namespace MQContract
         public string? QueryResponseChannel<TQuery>()
             => GetMessageAttribute(typeof(TQuery)).ResponseChannel;
 
-        public Type? QueryResponseType<TQuery>()
+        private Type? QueryResponseType<TQuery>()
             => GetMessageAttribute(typeof(TQuery)).ResponseType;
 
         private MQContract.MQContractMessageContext.MessageTypeDefinition GetMessageAttribute(Type messageType)

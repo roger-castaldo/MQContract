@@ -54,7 +54,8 @@ namespace MQContract.Generators
                 GenerateDefinitionImplementation(context, contractContext);
                 GenerateEncoderImplementation(context, contractContext);
                 GenerateConverterImplementataion(context, contractContext, converters);
-                GeneateEncryptorImplementation(context, contractContext);
+                GenerateEncryptorImplementation(context, contractContext);
+                GenerateQueryResponseImplementation(context, contractContext);
             }
         }
 
@@ -67,7 +68,9 @@ namespace MQContract.Generators
         {
             context.AddSource(
                 $"{contractContext.Target.Name}.CodeGenerated.g.cs",
-                SourceText.From($@"namespace {contractContext.Target.ContainingNamespace};
+                SourceText.From($@"using MQContract;
+
+namespace {contractContext.Target.ContainingNamespace};
 
 {contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
 
@@ -292,7 +295,7 @@ namespace {contractContext.Target.ContainingNamespace};
 
 {contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
 
-    public override Func<IEncodedMessage, ValueTask<object>> TryGetMessageConverter<TMessage>(string messageID, Func<IEncodedMessage,ValueTask<object>> messageDecode, IServiceProvider serviceProvider){{
+    public override sealed Func<IEncodedMessage, ValueTask<object>> TryGetMessageConverter<TMessage>(string messageID, Func<IEncodedMessage,ValueTask<object>> messageDecode, IServiceProvider serviceProvider){{
         Func<IServiceProvider,Func<IEncodedMessage, ValueTask<object>>> callback = (messageID.ToUpperInvariant(), typeof(TMessage)) switch
         {{
 {string.Join("\r\n", encoderCalls.Select(pair=>$"           {pair.Key} => {pair.Value},"))}
@@ -303,7 +306,7 @@ namespace {contractContext.Target.ContainingNamespace};
 }}", Encoding.UTF8));
         }
 
-        private void GeneateEncryptorImplementation(SourceProductionContext context, ContractContext contractContext)
+        private void GenerateEncryptorImplementation(SourceProductionContext context, ContractContext contractContext)
         {
             var typeSwitches = new List<string>();
             foreach (var contract in contractContext.Contracts)
@@ -354,6 +357,63 @@ namespace {contractContext.Target.ContainingNamespace};
 {string.Join("\r\n", typeSwitches)}
             _ => null
         }};
+    }}
+}}", Encoding.UTF8));
+        }
+
+        private void GenerateQueryResponseImplementation(SourceProductionContext context, ContractContext contractContext)
+        {
+            var connectionSwitches = new List<string>();
+            var multiConnectionSwitches = new List<string>();
+
+            foreach(var contract in contractContext.Contracts)
+            {
+                var att = GetMessageAttribute(contract.Contract);
+                if (att?.ConstructorArguments.Length>=6)
+                {
+                    var responseType = (ITypeSymbol)att.ConstructorArguments[5].Value;
+                    connectionSwitches.Add($@"          (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => async () => {{
+                    var result = await contractConnection.QueryAsync<{contract.Contract.ToDisplayString()}, {responseType.ToDisplayString()}>(({contract.Contract.ToDisplayString()})message, timeout, channel, responseChannel, messageHeader, cancellationToken);
+                    return new QueryResult<object>(result.ID, result.Header, result.Result, result.Error);
+                }},");
+                    multiConnectionSwitches.Add($@"          (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => async () => {{
+                    var result = await contractConnection.QueryAsync<{contract.Contract.ToDisplayString()}, {responseType.ToDisplayString()}>(({contract.Contract.ToDisplayString()})message, timeout, channel, responseChannel, messageHeader, cancellationToken);
+                    return result.Select(r=>new QueryResult<object>(r.ID, r.Header, r.Result, r.Error));
+                }},");
+                }
+            }
+
+            context.AddSource(
+                $"{contractContext.Target.Name}.QueryResponse.g.cs",
+                SourceText.From($@"using System;
+using MQContract;
+using MQContract.Messages;
+using MQContract.Interfaces;
+
+namespace {contractContext.Target.ContainingNamespace};
+
+{contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
+
+    public override sealed ValueTask<QueryResult<object>>? TryExecuteQuery<TQuery>(IContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken){{
+        Func<ValueTask<QueryResult<object>>> callback =  (typeof(TQuery)) switch
+        {{
+{string.Join("\r\n", connectionSwitches)}
+            _ => null
+        }};
+        if (callback!=null)
+            return callback();
+        return null;
+    }}
+
+    public override sealed ValueTask<IEnumerable<QueryResult<object>>>? TryExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken){{
+        Func<ValueTask<IEnumerable<QueryResult<object>>>> callback =  (typeof(TQuery)) switch
+        {{
+{string.Join("\r\n", multiConnectionSwitches)}
+            _ => null
+        }};
+        if (callback!=null)
+            return callback();
+        return null;
     }}
 }}", Encoding.UTF8));
         }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MQContract.Interfaces.Encrypting;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 
@@ -20,6 +21,7 @@ namespace MQContract
             return null;
         }
 
+        [RequiresDynamicCode("Uses unbounded reflection to discover encryptors, if AOT and no usage of UseMqContractAttribute to autogenerate code, will result in falling back to Non Encrypting as default")]
         private static IMessageEncryptor? ExtractEncryptorThroughReflection(Type messageType, IMessageEncryptor? globalEncryptor, IServiceProvider? serviceProvider)
         {
             var ifaceType = typeof(IMessageTypeEncryptor<>).MakeGenericType(messageType);
