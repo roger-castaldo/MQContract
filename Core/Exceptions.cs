@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace MQContract
+﻿namespace MQContract
 {
     /// <summary>
     /// Thrown when an incoming data message causes a null object return from a converter
@@ -162,7 +160,7 @@ namespace MQContract
 
         internal static void ThrowIfDynamicCodeIsBlocked(string message)
         {
-            if (!RuntimeFeature.IsDynamicCodeSupported)
+            if (!DynamicCodeGate.IsSupported)
                 throw new DynamicCodeNotSupportedException(message);
         }
 

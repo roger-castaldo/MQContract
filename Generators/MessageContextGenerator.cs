@@ -29,7 +29,7 @@ namespace MQContract.Generators
             // 4. Find Encryptors
             var encryptors = EncryptorsHelper.LocateEncryptors(context);
 
-            // 3. Generate code
+            // 6. Generate code
             context.RegisterSourceOutput(
                 candidateClasses
                     .Combine(encoders.Collect())
@@ -60,8 +60,41 @@ namespace MQContract.Generators
         }
 
         private ContractContext MergeEncodersConvertersAndEncryptors(ContractContext contractContext, IEnumerable<ContractEncoder> encoders, IEnumerable<ContractConverter> converters, IEnumerable<ContractEncryptor> encryptors)
+            => new(
+                contractContext.Target,
+                contractContext.Settings,
+                contractContext.Contracts.Select(contract =>
+                {
+                    var conEncoders = contract.Encoders;
+                    var conConverters = contract.Converters;
+                    var conEncryptors = contract.Encryptors;
+                    if (conEncoders == null  && contractContext.Settings.LocateEncoders)
+                        conEncoders = encoders.Where(enc => enc.Contracts.Any(c => SymbolEqualityComparer.Default.Equals(c, contract.Contract))).Select(enc => enc.Encoder).ToArray();
+                    if (conEncryptors == null && contractContext.Settings.LocateEncryptors)
+                        conEncryptors = encryptors.Where(enc => enc.Contracts.Any(c => SymbolEqualityComparer.Default.Equals(c, contract.Contract))).Select(enc => enc.Encryptor).ToArray();
+                    if (conConverters==null && contractContext.Settings.LocateConverters)
+                        conConverters = RecursivelyLocateConverters(contract.Contract, converters, new());
+                    return new ContractType(
+                        contract.Contract,
+                        (conEncoders?.Count()==0 ? null : conEncoders),
+                        conConverters,
+                        (conEncryptors?.Count()==0 ? null : conEncryptors)
+                    );
+                }).ToImmutableArray()
+            );
+
+        private IEnumerable<ITypeSymbol>? RecursivelyLocateConverters(ITypeSymbol destination, IEnumerable<ContractConverter> converters, List<ITypeSymbol> currentList)
         {
-            return contractContext;
+            foreach(var converter in converters.Where(con=>con.Contracts.Any(pair=>SymbolEqualityComparer.Default.Equals(pair.to, destination))))
+            {
+                if (!currentList.Contains(converter.Converter))
+                {
+                    currentList.Add(converter.Converter);
+                    foreach(var source in converter.Contracts.Select(c=>c.from))
+                        RecursivelyLocateConverters(source, converters, currentList);
+                }
+            }
+            return currentList;
         }
 
         private void GenerateCodeGeneratedImplementation(SourceProductionContext context, ContractContext contractContext)
@@ -317,8 +350,8 @@ namespace {contractContext.Target.ContainingNamespace};
                     if (contract.Encryptors.Count()==1)
                     {
                         var encryptor = contract.Encoders.First();
-                        typeSwitches.Add($@"            (Type t, _, not null) when t == typeof({contract.Contract.ToDisplayString()}) => ActivatorUtilities.CreateInstance<{encryptor.ToDisplayString()}>(serviceProvider!),
-            (Type t, _, null) when t == typeof({contract.Contract.ToDisplayString()}) => Activator.CreateInstance<{encryptor.ToDisplayString()}>(),");
+                        typeSwitches.Add($@"            (Type t, _, not null) when t == typeof({contract.Contract.ToDisplayString()}) => (IMessageEncryptor)ActivatorUtilities.CreateInstance<{encryptor.ToDisplayString()}>(serviceProvider!),
+            (Type t, _, null) when t == typeof({contract.Contract.ToDisplayString()}) => (IMessageEncryptor)Activator.CreateInstance<{encryptor.ToDisplayString()}>(),");
                     }
                     else
                     {

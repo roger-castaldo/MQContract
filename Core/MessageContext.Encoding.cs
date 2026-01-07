@@ -3,7 +3,6 @@ using MQContract.Defaults;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Messages;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 
 namespace MQContract
@@ -53,7 +52,7 @@ namespace MQContract
                 if (specificEncoder!=null)
                     return ProduceCallbacks<TMessage>(specificEncoder);
             }
-            if (RuntimeFeature.IsDynamicCodeSupported)
+            if (DynamicCodeGate.IsSupported)
                 return ProduceCallbacks<TMessage>(ExtractEncoderThroughReflection<TMessage>(globalMessageEncoder, serviceProvider));
             return ProduceCallbacks<TMessage>((globalMessageEncoder == null ? new JsonEncoder<TMessage>() : globalMessageEncoder));
         }
@@ -66,7 +65,7 @@ namespace MQContract
                 if (specificEncoder!=null)
                     return specificEncoder;
             }
-            if (RuntimeFeature.IsDynamicCodeSupported)
+            if (DynamicCodeGate.IsSupported)
                 return ExtractDecodeThroughReflection(messageID, globalMessageEncoder, serviceProvider);
             return ProduceDecodingCallback(null, globalMessageEncoder);
         }

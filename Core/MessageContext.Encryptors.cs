@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MQContract.Interfaces.Encrypting;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 
 namespace MQContract
@@ -16,7 +15,7 @@ namespace MQContract
                 if (result!=null)
                     return result;
             }
-            if (RuntimeFeature.IsDynamicCodeSupported)
+            if (DynamicCodeGate.IsSupported)
                 return ExtractEncryptorThroughReflection(messageType, globalEncryptor, serviceProvider);
             return null;
         }

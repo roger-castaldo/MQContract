@@ -4,7 +4,6 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Messages;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 
 namespace MQContract
@@ -35,7 +34,7 @@ namespace MQContract
 
         internal void PrimeConverters<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
         {
-            if (!contexts.Any(context=>context.IsMessageCodeGenerated<TMessage>()) && RuntimeFeature.IsDynamicCodeSupported)
+            if (!contexts.Any(context=>context.IsMessageCodeGenerated<TMessage>()) && DynamicCodeGate.IsSupported)
                 ExtractConvertersThroughReflection<TMessage>(globalMessageEncoder, serviceProvider);
         }
 

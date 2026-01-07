@@ -45,7 +45,16 @@ namespace MQContract.Generators
             if (contracts.Length == 0)
                 return null;
 
-            return new ContractContext(namedType, contracts);
+            var settingsAtt = symbol.GetAttributes()
+                .FirstOrDefault(a => a.AttributeClass?.Name=="MQContractMessageContextAttribute");
+
+            var settings = new ContextSettings(
+                (settingsAtt?.ConstructorArguments.Length>=1 ? (bool?)settingsAtt?.ConstructorArguments[0].Value : null),
+                (settingsAtt?.ConstructorArguments.Length>=2 ? (bool?)settingsAtt?.ConstructorArguments[1].Value : null),
+                (settingsAtt?.ConstructorArguments.Length>=3 ? (bool?)settingsAtt?.ConstructorArguments[2].Value : null)
+                );
+
+            return new ContractContext(namedType, settings, contracts);
         }
 
         public static IncrementalValuesProvider<ContractContext?> LocateContexts(IncrementalGeneratorInitializationContext context)

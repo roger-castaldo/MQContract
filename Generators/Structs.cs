@@ -30,9 +30,10 @@ namespace MQContract.Generators
         public IEnumerable<(ITypeSymbol from, ITypeSymbol to)> Contracts => contracts;
     }
 
-    internal readonly struct ContractContext(INamedTypeSymbol target, ImmutableArray<ContractType> contracts)
+    internal readonly struct ContractContext(INamedTypeSymbol target, ContextSettings settings, ImmutableArray<ContractType> contracts)
     {
         public INamedTypeSymbol Target => target;
+        public ContextSettings Settings => settings;
         public ImmutableArray<ContractType> Contracts => contracts;
     }
 
@@ -41,5 +42,12 @@ namespace MQContract.Generators
         public INamedTypeSymbol Converter => converter;
         public ITypeSymbol From => from;
         public ITypeSymbol To => to;
+    }
+
+    internal readonly struct ContextSettings(bool? locateEncoders, bool? locateConverters, bool? locateEncryptors)
+    {
+        public bool LocateEncoders => locateEncoders??false;
+        public bool LocateConverters => locateConverters??false;
+        public bool LocateEncryptors => locateEncryptors??false;
     }
 }
