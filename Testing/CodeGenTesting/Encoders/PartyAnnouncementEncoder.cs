@@ -1,4 +1,5 @@
 ﻿using CodeGenTesting.Messages;
+using Microsoft.Extensions.DependencyInjection;
 using MQContract.Interfaces.Encoding;
 using System.Text.Json;
 
@@ -6,6 +7,14 @@ namespace CodeGenTesting.Encoders
 {
     internal class PartyAnnouncementEncoder : IMessageTypeEncoder<PartyAnnouncement>
     {
+        public PartyAnnouncementEncoder() { }
+
+        [ActivatorUtilitiesConstructor]
+        public PartyAnnouncementEncoder(IServiceInjection serviceInjection)
+        {
+            ArgumentNullException.ThrowIfNull(serviceInjection, nameof(serviceInjection));
+        }
+
         private static JsonSerializerOptions JsonOptions => new()
         {
             WriteIndented=false,

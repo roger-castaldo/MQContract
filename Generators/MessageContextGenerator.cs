@@ -349,7 +349,7 @@ namespace {contractContext.Target.ContainingNamespace};
                 {
                     if (contract.Encryptors.Count()==1)
                     {
-                        var encryptor = contract.Encoders.First();
+                        var encryptor = contract.Encryptors.First();
                         typeSwitches.Add($@"            (Type t, _, not null) when t == typeof({contract.Contract.ToDisplayString()}) => (IMessageEncryptor)ActivatorUtilities.CreateInstance<{encryptor.ToDisplayString()}>(serviceProvider!),
             (Type t, _, null) when t == typeof({contract.Contract.ToDisplayString()}) => (IMessageEncryptor)Activator.CreateInstance<{encryptor.ToDisplayString()}>(),");
                     }

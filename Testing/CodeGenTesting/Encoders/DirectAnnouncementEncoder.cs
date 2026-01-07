@@ -1,4 +1,5 @@
 ﻿using CodeGenTesting.Messages;
+using Microsoft.Extensions.DependencyInjection;
 using MQContract.Interfaces.Encoding;
 using System.Text;
 
@@ -6,6 +7,14 @@ namespace CodeGenTesting.Encoders
 {
     internal class DirectAnnouncementEncoder : IMessageTypeEncoder<DirectAnnouncement>
     {
+        public DirectAnnouncementEncoder() { }
+
+        [ActivatorUtilitiesConstructor]
+        public DirectAnnouncementEncoder(IServiceInjection serviceInjection)
+        {
+            ArgumentNullException.ThrowIfNull(serviceInjection, nameof(serviceInjection));
+        }
+
         ValueTask<DirectAnnouncement?> IMessageTypeEncoder<DirectAnnouncement>.DecodeAsync(Stream stream)
         {
             var br = new BinaryReader(stream);
