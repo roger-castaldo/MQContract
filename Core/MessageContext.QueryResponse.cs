@@ -10,7 +10,7 @@ namespace MQContract
         {
             foreach(var context in contexts)
             {
-                var resultTask = context.TryExecuteQuery<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
+                var resultTask = context.TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, messageHeader, cancellationToken);
                 if (resultTask.HasValue)
                     return resultTask.Value;
             }
@@ -22,13 +22,12 @@ namespace MQContract
         {
             foreach (var context in contexts)
             {
-                var resultTask = context.TryExecuteQuery<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
+                var resultTask = context.TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, messageHeader, cancellationToken);
                 if (resultTask.HasValue)
                     return resultTask.Value;
             }
-            if (DynamicCodeGate.IsSupported)
-                return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
-            throw new NotSupportedException("Unable to execute query due to dynamic code not supported and query type not defined in context");
+            DynamicCodeNotSupportedException.ThrowIfDynamicCodeIsBlocked("Unable to execute query due to dynamic code not supported and query type not defined in context");
+            return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
         }
 
         private static QueryResult<object>? ConvertResultFromObject(object? obj)

@@ -16,13 +16,13 @@ using MQContract.Messages;
 namespace CodeGenTesting
 {
     [TestClass]
-    public class ContextTests
+    public class AutoContextTests
     {
         [TestMethod]
         public void CheckIsMessageCodeGenerated()
         {
             //Arrange
-            var context = new MyMessageContext();
+            var context = new MyAutoMessageContext();
             //Act
 
             //Assert
@@ -38,7 +38,7 @@ namespace CodeGenTesting
         public void CheckMessageType()
         {
             //Arrange
-            var context = new MyMessageContext();
+            var context = new MyAutoMessageContext();
             //Act
 
             //Assert
@@ -76,13 +76,13 @@ namespace CodeGenTesting
         public void CheckMessageEncoder()
         {
             //Arrange
-            var context = new MyMessageContext();
+            var context = new MyAutoMessageContext();
             var mockMessageEncoder = new Mock<IMessageEncoder>();
             var mockServiceProvider = MockServiceProvider.Instance;
             //Act
 
             //Assert
-            Assert.AreEqual("CodeGenTesting.MyMessageContext+DefaultJsonEncoder`1[CodeGenTesting.Messages.Announcement]", context.TryGetMessageEncoder<Announcement>(null, null)?.GetType().ToString());
+            Assert.AreEqual("CodeGenTesting.MyAutoMessageContext+DefaultJsonEncoder`1[CodeGenTesting.Messages.Announcement]", context.TryGetMessageEncoder<Announcement>(null, null)?.GetType().ToString());
             Assert.AreEqual(mockMessageEncoder.Object, context.TryGetMessageEncoder<Announcement>(mockMessageEncoder.Object, null));
             Assert.AreEqual(mockMessageEncoder.Object, context.TryGetMessageEncoder<Announcement>(mockMessageEncoder.Object, mockServiceProvider.Object));
 
@@ -94,7 +94,7 @@ namespace CodeGenTesting
             Assert.IsInstanceOfType(context.TryGetMessageEncoder<DirectAnnouncement>(mockMessageEncoder.Object, null), typeof(DirectAnnouncementEncoder));
             Assert.IsInstanceOfType(context.TryGetMessageEncoder<DirectAnnouncement>(mockMessageEncoder.Object, mockServiceProvider.Object), typeof(DirectAnnouncementEncoder));
 
-            Assert.AreEqual("CodeGenTesting.MyMessageContext+DefaultJsonEncoder`1[CodeGenTesting.Messages.Prompt]", context.TryGetMessageEncoder<Prompt>(null, null)?.GetType().ToString());
+            Assert.AreEqual("CodeGenTesting.MyAutoMessageContext+DefaultJsonEncoder`1[CodeGenTesting.Messages.Prompt]", context.TryGetMessageEncoder<Prompt>(null, null)?.GetType().ToString());
             Assert.AreEqual(mockMessageEncoder.Object, context.TryGetMessageEncoder<Prompt>(mockMessageEncoder.Object, null));
             Assert.AreEqual(mockMessageEncoder.Object, context.TryGetMessageEncoder<Prompt>(mockMessageEncoder.Object, mockServiceProvider.Object));
 
@@ -109,17 +109,17 @@ namespace CodeGenTesting
         public void CheckMessageEncryptor()
         {
             //Arrange
-            var context = new MyMessageContext();
+            var context = new MyAutoMessageContext();
             var mockMessageEncryptor = new Mock<IMessageEncryptor>();
             var mockServiceProvider = MockServiceProvider.Instance;
             //Act
 
             //Assert
-            Assert.AreEqual("CodeGenTesting.MyMessageContext+NonEncryptor", context.TryGetMessageEncryptor(typeof(Announcement), null, null)?.GetType().ToString());
+            Assert.AreEqual("CodeGenTesting.MyAutoMessageContext+NonEncryptor", context.TryGetMessageEncryptor(typeof(Announcement), null, null)?.GetType().ToString());
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(Announcement), mockMessageEncryptor.Object, null));
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(Announcement), mockMessageEncryptor.Object, mockServiceProvider.Object));
 
-            Assert.AreEqual("CodeGenTesting.MyMessageContext+NonEncryptor",context.TryGetMessageEncryptor(typeof(PartyAnnouncement), null, null)?.GetType().ToString());
+            Assert.AreEqual("CodeGenTesting.MyAutoMessageContext+NonEncryptor",context.TryGetMessageEncryptor(typeof(PartyAnnouncement), null, null)?.GetType().ToString());
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(PartyAnnouncement), mockMessageEncryptor.Object, null));
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(PartyAnnouncement), mockMessageEncryptor.Object, mockServiceProvider.Object));
 
@@ -127,7 +127,7 @@ namespace CodeGenTesting
             Assert.IsInstanceOfType(context.TryGetMessageEncryptor(typeof(DirectAnnouncement), mockMessageEncryptor.Object, null), typeof(DirectAnnouncementEncryptor));
             Assert.IsInstanceOfType(context.TryGetMessageEncryptor(typeof(DirectAnnouncement), mockMessageEncryptor.Object, mockServiceProvider.Object), typeof(DirectAnnouncementEncryptor));
 
-            Assert.AreEqual("CodeGenTesting.MyMessageContext+NonEncryptor", context.TryGetMessageEncryptor(typeof(Prompt), null, null)?.GetType().ToString());
+            Assert.AreEqual("CodeGenTesting.MyAutoMessageContext+NonEncryptor", context.TryGetMessageEncryptor(typeof(Prompt), null, null)?.GetType().ToString());
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(Prompt), mockMessageEncryptor.Object, null));
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(Prompt), mockMessageEncryptor.Object, mockServiceProvider.Object));
 
@@ -142,7 +142,7 @@ namespace CodeGenTesting
         public async Task CheckDecodingCallback()
         {
             //Arrange
-            var context = new MyMessageContext();
+            var context = new MyAutoMessageContext();
             var mockServiceProvider = MockServiceProvider.Instance;
             var messageContext = new MessageContext();
             messageContext.RegisterContext(context);
@@ -230,7 +230,7 @@ namespace CodeGenTesting
         public async Task CheckConverterCallback()
         {
             //Arrange
-            var context = new MyMessageContext();
+            var context = new MyAutoMessageContext();
             var mockServiceProvider = MockServiceProvider.Instance;
             var messageContext = new MessageContext();
             messageContext.RegisterContext(context);
@@ -296,7 +296,7 @@ namespace CodeGenTesting
         public async Task CheckContractConnectionQuery(int? timeout, string? channel, string? responseChannel, string? headerKey,string? headerValue)
         {
             //Arrange
-            var context = new MyMessageContext();
+            var context = new MyAutoMessageContext();
             var prompt = new Prompt(Helper.RandomString(), Helper.RandomString());
             var replyResult = new QueryResult<Reply>(
                 Helper.RandomString(),
@@ -339,7 +339,7 @@ namespace CodeGenTesting
         public async Task CheckMultiServiceContractConnectionQuery(int? timeout, string? channel, string? responseChannel, string? headerKey, string? headerValue)
         {
             //Arrange
-            var context = new MyMessageContext();
+            var context = new MyAutoMessageContext();
             var prompt = new Prompt(Helper.RandomString(), Helper.RandomString());
             var replyResult = new QueryResult<Reply>(
                 Helper.RandomString(),

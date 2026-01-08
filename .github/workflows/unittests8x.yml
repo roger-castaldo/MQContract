@@ -22,11 +22,17 @@ jobs:
       run: dotnet restore  -p:TargetFramework=net8.0 -p:BlockMD=true Testing/Core
     - name: Restore dependencies testing cqrs
       run: dotnet restore  -p:TargetFramework=net8.0 -p:BlockMD=true Testing/CQRSTesting
+    - name: Restore dependencies testing codegen
+      run: dotnet restore  -p:TargetFramework=net8.0 -p:BlockMD=true Testing/CodeGenTesting
     - name: Build-8.0 tesitng core
       run: dotnet build --framework net8.0 -p:BlockMD=true --no-restore Testing/Core
     - name: Build-8.0 tesitng cqrs
       run: dotnet build --framework net8.0 -p:BlockMD=true --no-restore Testing/CQRSTesting
+    - name: Build-8.0 tesitng codegen
+      run: dotnet build --framework net8.0 -p:BlockMD=true --no-restore Testing/CodeGenTesting
     - name: Test-8.0 core
       run: dotnet test --framework net8.0 -p:BlockMD=true --no-build --verbosity normal Testing/Core
     - name: Test-8.0 cqrs
       run: dotnet test --framework net8.0 -p:BlockMD=true --no-build --verbosity normal Testing/CQRSTesting
+    - name: Test-8.0 codegen
+      run: dotnet test --framework net8.0 -p:BlockMD=true --no-build --verbosity normal Testing/CodeGenTesting

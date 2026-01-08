@@ -204,7 +204,7 @@ namespace {contractContext.Target.ContainingNamespace};
                         var encoder = contract.Encoders.First();
                         typeSwitches.Add($@"            (Type t, _, not null) when t == typeof({contract.Contract.ToDisplayString()}) => ActivatorUtilities.CreateInstance<{encoder.ToDisplayString()}>(serviceProvider!),
             (Type t, _, null) when t == typeof({contract.Contract.ToDisplayString()}) => Activator.CreateInstance<{encoder.ToDisplayString()}>(),");
-                        idSwitches.Add($@"            (""{messageId}"", not null, _) => () => {{
+                        idSwitches.Add($@"            (""{messageId}"", _, not null) => () => {{
                 IMessageTypeEncoder<{contract.Contract.ToDisplayString()}> encoder = ActivatorUtilities.CreateInstance<{encoder.ToDisplayString()}>(serviceProvider!);
                 Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
                     using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
@@ -212,7 +212,7 @@ namespace {contractContext.Target.ContainingNamespace};
                 }};
                 return callback;
             }},
-            (""{messageId}"", null, _) => () => {{
+            (""{messageId}"", _, null) => () => {{
                 IMessageTypeEncoder<{contract.Contract.ToDisplayString()}> encoder = Activator.CreateInstance<{encoder.ToDisplayString()}>();
                 Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
                     using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
