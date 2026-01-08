@@ -118,11 +118,12 @@ namespace MQContract.Helpers
                     .Select(pair=>
                         ((pair.InterfaceType?.GetGenericTypeDefinition()) switch
                         {
-                            (Type t) when t == typeof(IPubSubConsumer<>)=> RegisterPubSubConsumerAsync<TContractConnection>(consumerConnection, serviceProvider, pair.ConsumerType, null, null, false, cancellationToken),
-                            (Type t) when t == typeof(IPubSubAsyncConsumer<>) => RegisterPubSubAsyncConsumerAsync<TContractConnection>(consumerConnection, serviceProvider, pair.ConsumerType, null, null, false, cancellationToken),
-                            (Type t) when t == typeof(IQueryResponseConsumer<,>) => RegisterQueryResponseConsumerAsync<TContractConnection>(consumerConnection, serviceProvider, pair.ConsumerType, null, null, false, cancellationToken),
-                            (Type t) when t == typeof(IQueryResponseAsyncConsumer<,>) => RegisterQueryResponseAsyncConsumerAsync<TContractConnection>(consumerConnection, serviceProvider, pair.ConsumerType, null, null, false, cancellationToken),
-                        }).AsTask()
+                            (Type t) when t == typeof(IPubSubConsumer<>)=> RegisterPubSubConsumerAsync<TContractConnection>(consumerConnection, serviceProvider, pair.ConsumerType, null, null, false, cancellationToken).AsTask(),
+                            (Type t) when t == typeof(IPubSubAsyncConsumer<>) => RegisterPubSubAsyncConsumerAsync<TContractConnection>(consumerConnection, serviceProvider, pair.ConsumerType, null, null, false, cancellationToken).AsTask(),
+                            (Type t) when t == typeof(IQueryResponseConsumer<,>) => RegisterQueryResponseConsumerAsync<TContractConnection>(consumerConnection, serviceProvider, pair.ConsumerType, null, null, false, cancellationToken).AsTask(),
+                            (Type t) when t == typeof(IQueryResponseAsyncConsumer<,>) => RegisterQueryResponseAsyncConsumerAsync<TContractConnection>(consumerConnection, serviceProvider, pair.ConsumerType, null, null, false, cancellationToken).AsTask(),
+                            _ => Task.CompletedTask
+                        })
                     )
                 );
         }

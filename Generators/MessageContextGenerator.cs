@@ -101,7 +101,8 @@ namespace MQContract.Generators
         {
             context.AddSource(
                 $"{contractContext.Target.Name}.CodeGenerated.g.cs",
-                SourceText.From($@"using MQContract;
+                SourceText.From($@"#nullable enable
+using MQContract;
 
 namespace {contractContext.Target.ContainingNamespace};
 
@@ -160,7 +161,8 @@ namespace {contractContext.Target.ContainingNamespace};
         private void GenerateDefinitionImplementation(SourceProductionContext context, ContractContext contractContext)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($@"using MQContract;
+            sb.AppendLine($@"#nullable enable
+using MQContract;
 
 namespace {contractContext.Target.ContainingNamespace};
 
@@ -206,17 +208,17 @@ namespace {contractContext.Target.ContainingNamespace};
             (Type t, _, null) when t == typeof({contract.Contract.ToDisplayString()}) => Activator.CreateInstance<{encoder.ToDisplayString()}>(),");
                         idSwitches.Add($@"            (""{messageId}"", _, not null) => () => {{
                 IMessageTypeEncoder<{contract.Contract.ToDisplayString()}> encoder = ActivatorUtilities.CreateInstance<{encoder.ToDisplayString()}>(serviceProvider!);
-                Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
+                Func<IEncodedMessage, ValueTask<object?>> callback = async (IEncodedMessage message) => {{
                     using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
-                    return (object)(await encoder.DecodeAsync(ms));
+                    return (object?)(await encoder.DecodeAsync(ms));
                 }};
                 return callback;
             }},
             (""{messageId}"", _, null) => () => {{
                 IMessageTypeEncoder<{contract.Contract.ToDisplayString()}> encoder = Activator.CreateInstance<{encoder.ToDisplayString()}>();
-                Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
+                Func<IEncodedMessage, ValueTask<object?>> callback = async (IEncodedMessage message) => {{
                     using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
-                    return (object)(await encoder.DecodeAsync(ms));
+                    return (object?)(await encoder.DecodeAsync(ms));
                 }};
                 return callback;
             }},");
@@ -231,17 +233,17 @@ namespace {contractContext.Target.ContainingNamespace};
                     typeSwitches.Add($@"            (Type t, not null, _) when t == typeof({contract.Contract.ToDisplayString()}) => globalMessageEncoder,
             (Type t, null, _) when t == typeof({contract.Contract.ToDisplayString()}) => new DefaultJsonEncoder<{contract.Contract.ToDisplayString()}>(jsonOptions),");
                     idSwitches.Add($@"            (""{messageId}"", not null, _) => () => {{
-                Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
+                Func<IEncodedMessage, ValueTask<object?>> callback = async (IEncodedMessage message) => {{
                     using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
-                    return (object)(await globalMessageEncoder.DecodeAsync<{contract.Contract.ToDisplayString()}>(ms));
+                    return (object?)(await globalMessageEncoder.DecodeAsync<{contract.Contract.ToDisplayString()}>(ms));
                 }};
                 return callback;
             }},
             (""{messageId}"", null, _) => () => {{
                 IMessageTypeEncoder<{contract.Contract.ToDisplayString()}> encoder = new DefaultJsonEncoder<{contract.Contract.ToDisplayString()}>(jsonOptions);
-                Func<IEncodedMessage, ValueTask<object>> callback = async (IEncodedMessage message) => {{
+                Func<IEncodedMessage, ValueTask<object?>> callback = async (IEncodedMessage message) => {{
                     using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
-                    return (object)(await encoder.DecodeAsync(ms));
+                    return (object?)(await encoder.DecodeAsync(ms));
                 }};
                 return callback;
             }},");
@@ -250,7 +252,8 @@ namespace {contractContext.Target.ContainingNamespace};
 
             context.AddSource(
                 $"{contractContext.Target.Name}.Encoders.g.cs",
-                SourceText.From($@"using System;
+                SourceText.From($@"#nullable enable
+using System;
 using System.Text.Json;
 using MQContract;
 using MQContract.Interfaces.Encoding;
@@ -262,14 +265,14 @@ namespace {contractContext.Target.ContainingNamespace};
 {contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
 
     private class DefaultJsonEncoder<TMessage>(JsonSerializerOptions jsonOptions) : IMessageTypeEncoder<TMessage> {{
-        public async ValueTask<TMessage> DecodeAsync(Stream stream)
+        public async ValueTask<TMessage?> DecodeAsync(Stream stream)
             => await JsonSerializer.DeserializeAsync<TMessage>(stream, options: jsonOptions);
 
         public ValueTask<byte[]> EncodeAsync(TMessage message)
             => ValueTask.FromResult(JsonSerializer.SerializeToUtf8Bytes<TMessage>(message, jsonOptions));
     }}
 
-    public override sealed object TryGetMessageEncoder<TMessage>(IMessageEncoder globalMessageEncoder, IServiceProvider serviceProvider){{
+    public override sealed object? TryGetMessageEncoder<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider){{
         var jsonOptions = new JsonSerializerOptions(){{
             WriteIndented=false,
             AllowTrailingCommas=true,
@@ -283,14 +286,14 @@ namespace {contractContext.Target.ContainingNamespace};
         }};
     }}
 
-    public override sealed Func<IEncodedMessage, ValueTask<object>> TryGetDecodingCallback(string messageID, IMessageEncoder globalMessageEncoder, IServiceProvider serviceProvider){{
+    public override sealed Func<IEncodedMessage, ValueTask<object?>>? TryGetDecodingCallback(string messageID, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider){{
         var jsonOptions = new JsonSerializerOptions(){{
             WriteIndented=false,
             AllowTrailingCommas=true,
             PropertyNameCaseInsensitive=true,
             ReadCommentHandling=JsonCommentHandling.Skip
         }};
-        Func<Func<IEncodedMessage, ValueTask<object>>> result = (messageID.ToUpperInvariant(), globalMessageEncoder, serviceProvider) switch
+        Func<Func<IEncodedMessage, ValueTask<object?>>>? result = (messageID.ToUpperInvariant(), globalMessageEncoder, serviceProvider) switch
         {{
 {string.Join("\r\n", idSwitches)}
             _ => null
@@ -317,7 +320,8 @@ namespace {contractContext.Target.ContainingNamespace};
 
             context.AddSource(
                 $"{contractContext.Target.Name}.Converters.g.cs",
-                SourceText.From($@"using System;
+                SourceText.From($@"#nullable enable
+using System;
 using MQContract;
 using MQContract.Interfaces.Encoding;
 using Microsoft.Extensions.DependencyInjection;
@@ -328,8 +332,8 @@ namespace {contractContext.Target.ContainingNamespace};
 
 {contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
 
-    public override sealed Func<IEncodedMessage, ValueTask<object>> TryGetMessageConverter<TMessage>(string messageID, Func<IEncodedMessage,ValueTask<object>> messageDecode, IServiceProvider serviceProvider){{
-        Func<IServiceProvider,Func<IEncodedMessage, ValueTask<object>>> callback = (messageID.ToUpperInvariant(), typeof(TMessage)) switch
+    public override sealed Func<IEncodedMessage, ValueTask<object?>>? TryGetMessageConverter<TMessage>(string messageID, Func<IEncodedMessage,ValueTask<object?>> messageDecode, IServiceProvider? serviceProvider){{
+        Func<IServiceProvider?,Func<IEncodedMessage, ValueTask<object?>>>? callback = (messageID.ToUpperInvariant(), typeof(TMessage)) switch
         {{
 {string.Join("\r\n", encoderCalls.Select(pair=>$"           {pair.Key} => {pair.Value},"))}
             _ => null
@@ -365,7 +369,8 @@ namespace {contractContext.Target.ContainingNamespace};
 
             context.AddSource(
                 $"{contractContext.Target.Name}.Encryptors.g.cs",
-                SourceText.From($@"using System;
+                SourceText.From($@"#nullable enable
+using System;
 using MQContract;
 using MQContract.Messages;
 using MQContract.Interfaces.Encrypting;
@@ -384,7 +389,7 @@ namespace {contractContext.Target.ContainingNamespace};
             => ValueTask.FromResult<EncryptionResult>(new(null,data));
     }}
 
-    public override sealed IMessageEncryptor TryGetMessageEncryptor(Type messageType, IMessageEncryptor globalEncryptor, IServiceProvider serviceProvider){{
+    public override sealed IMessageEncryptor? TryGetMessageEncryptor(Type messageType, IMessageEncryptor? globalEncryptor, IServiceProvider? serviceProvider){{
         return (messageType, globalEncryptor, serviceProvider) switch
         {{
 {string.Join("\r\n", typeSwitches)}
@@ -418,7 +423,8 @@ namespace {contractContext.Target.ContainingNamespace};
 
             context.AddSource(
                 $"{contractContext.Target.Name}.QueryResponse.g.cs",
-                SourceText.From($@"using System;
+                SourceText.From($@"#nullable enable
+using System;
 using MQContract;
 using MQContract.Messages;
 using MQContract.Interfaces;
@@ -428,7 +434,7 @@ namespace {contractContext.Target.ContainingNamespace};
 {contractContext.Target.DeclaredAccessibility.ToString().ToLower()} partial class {contractContext.Target.Name} : MQContractMessageContext {{
 
     public override sealed ValueTask<QueryResult<object>>? TryExecuteQuery<TQuery>(IContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken){{
-        Func<ValueTask<QueryResult<object>>> callback =  (typeof(TQuery)) switch
+        Func<ValueTask<QueryResult<object>>>? callback =  (typeof(TQuery)) switch
         {{
 {string.Join("\r\n", connectionSwitches)}
             _ => null
@@ -439,7 +445,7 @@ namespace {contractContext.Target.ContainingNamespace};
     }}
 
     public override sealed ValueTask<IEnumerable<QueryResult<object>>>? TryExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken){{
-        Func<ValueTask<IEnumerable<QueryResult<object>>>> callback =  (typeof(TQuery)) switch
+        Func<ValueTask<IEnumerable<QueryResult<object>>>>? callback =  (typeof(TQuery)) switch
         {{
 {string.Join("\r\n", multiConnectionSwitches)}
             _ => null
@@ -491,8 +497,8 @@ namespace {contractContext.Target.ContainingNamespace};
                 sb.AppendLine($"                    IMessageConverter<{pair.From.ToDisplayString()},{pair.To.ToDisplayString()}> step{idx} = (sp == null ? Activator.CreateInstance<{pair.Converter.ToDisplayString()}>() : ActivatorUtilities.CreateInstance<{pair.Converter.ToDisplayString()}>(sp!))!;");
                 idx++;
             }
-            sb.AppendLine($@"                    Func<IEncodedMessage, ValueTask<object>> func = async (encodedMessage) => {{
-                        var msg = ({conversion.from.ToDisplayString()})(await messageDecode(encodedMessage));
+            sb.AppendLine($@"                    Func<IEncodedMessage, ValueTask<object?>> func = async (encodedMessage) => {{
+                        var msg = ({conversion.from.ToDisplayString()}?)(await messageDecode(encodedMessage));
                         if (msg==null) return null;
                         var msg0 = await step0.ConvertAsync(msg);");
             idx=0;
