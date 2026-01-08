@@ -113,7 +113,7 @@ namespace MQContract.Helpers
                 })
                 .Where(pair => pair.InterfaceType!=null)
                 .ToArray();
-            _ = await Task.WhenAll(
+            await Task.WhenAll(
                     loadablePairs
                     .Select(pair=>
                         ((pair.InterfaceType?.GetGenericTypeDefinition()) switch

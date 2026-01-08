@@ -14,7 +14,11 @@ namespace Messages
         {
             using var sourceCancel = new CancellationTokenSource();
 
-            var contractConnection = ContractConnection.Instance(serviceConnection, channelMapper: mapper);
+            var contractConnection = ContractConnection.Instance(serviceConnection, channelMapper: mapper)
+                .RegisterResiliencePolicy<Greeting>(
+                    retryPolicy:(3,(ct)=>TimeSpan.FromSeconds(1)),
+                    circuitBreakPolicy:(4, TimeSpan.FromSeconds(5))
+                );
             var healthCheck = contractConnection.HealthCheck;
             Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck!.CheckHealthAsync(new(), sourceCancel.Token))}");
             contractConnection.AddMetrics(null, true)

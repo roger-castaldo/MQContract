@@ -323,6 +323,7 @@ namespace MQContract.Connections
                     serviceMessage,
                     ct
                 ),
+                activity, 
                 connectionName,
                 serviceMessage.Channel,
                 cancellationToken
@@ -344,6 +345,7 @@ namespace MQContract.Connections
                 Logger?.LogInformationChecked("Executing bulk publish against a service connection that supports bulk publish");
                 result = await ExecuteResilliantTransmissionAsync<TMessage>(
                     bulkPublishableMessageServiceConnection.BulkPublishAsync,
+                    activity,
                     connectionName,
                     serviceMessages,
                     cancellationToken
@@ -370,6 +372,7 @@ namespace MQContract.Connections
                                 message,
                                 ct
                             ),
+                            activity,
                             connectionName,
                             message.Channel,
                             cancellationToken
@@ -439,6 +442,7 @@ namespace MQContract.Connections
             Logger?.LogInformationChecked("Transmitting Inbox Query request to underlying system with {CorrelationID} and being waiting on response", messageID);
             var result = await ExecuteResilliantTransmissionAsync<TMessage>(
                 async (ct) => await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, ct),
+                activity,
                 connectionName,
                 serviceMessage.Channel,
                 cancellationToken
@@ -547,6 +551,7 @@ namespace MQContract.Connections
                                 connectionName
                             );
                         },
+                        activity,
                         connectionName,
                         serviceMessage.Channel,
                         cancellationToken
@@ -604,6 +609,7 @@ namespace MQContract.Connections
             Logger?.LogDebugChecked("Transmitting Query request over PubSub");
             var result = await ExecuteResilliantTransmissionAsync<TQuery>(
                 async (ct) => await serviceConnection.PublishAsync(msg, cancellationToken: ct),
+                activity,
                 connectionName,
                 serviceMessage.Channel,
                 cancellationToken
