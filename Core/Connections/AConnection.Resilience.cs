@@ -1,5 +1,4 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using MQContract.Interfaces;
+﻿using MQContract.Interfaces;
 using MQContract.Messages;
 using System.Collections.Concurrent;
 using System.Diagnostics;

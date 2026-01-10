@@ -193,8 +193,6 @@ namespace MQContract.Connections
                 cancellationToken
             );
 
-        private static readonly MethodInfo RegisterQueryResponseConsumerMethod = typeof(IConsumerContractConnection<TContractConnection>).GetMethods()
-            .First(method => Equals(method.Name, "RegisterQueryResponseConsumerAsync") && method.GetGenericArguments().Length==3 && method.GetParameters().Length==6);
         ValueTask<TContractConnection> IConsumerContractConnection<TContractConnection>.RegisterQueryResponseConsumerAsync(Type consumerType, string? channel, string? group, bool ignoreMessageHeader, CancellationToken cancellationToken)
             => ConsumerConnectionHelper.RegisterQueryResponseConsumerAsync<TContractConnection>(this, serviceProvider, consumerType, channel, group, ignoreMessageHeader, cancellationToken);
         #endregion

@@ -7,11 +7,7 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using System.Reflection.PortableExecutable;
-using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 namespace CodeGenTesting
 {
@@ -71,7 +67,7 @@ namespace CodeGenTesting
         }
 
         [TestMethod]
-        public async Task CheckDecingCallbacks()
+        public async Task CheckDecodingCallbacks()
         {
             //Arrange
             var context = new MessageContext();

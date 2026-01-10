@@ -36,21 +36,5 @@ namespace MQContract
             tsk.Wait();
             return tsk.Result;
         }
-
-        internal static QueryResult<object>? ConvertResultFromObject(object? obj)
-        {
-            if (obj == null) return null;
-            var type = obj.GetType();
-            if (type.IsGenericType && Equals(type.GetGenericTypeDefinition(), typeof(QueryResult<>)))
-            {
-                return new(
-                    (string)type.GetProperty(nameof(QueryResult<object>.ID))!.GetValue(obj)!,
-                    (MessageHeader)type.GetProperty(nameof(QueryResult<object>.Header))!.GetValue(obj)!,
-                    type.GetProperty(nameof(QueryResult<object>.Result))!.GetValue(obj),
-                    (ErrorMessage?)type.GetProperty(nameof(QueryResult<object>.Error))!.GetValue(obj)
-                );
-            }
-            throw new InvalidCastException();
-        }
     }
 }

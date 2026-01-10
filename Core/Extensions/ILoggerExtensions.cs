@@ -4,13 +4,6 @@ namespace MQContract.Extensions
 {
     internal static class ILoggerExtensions
     {
-        public static void LogTraceChecked(this ILogger logger, string message, params object?[] args)
-        {
-            if (logger.IsEnabled(LogLevel.Trace))
-#pragma warning disable CA2254 // Template should be a static expression
-                logger.LogTrace(message, args);
-#pragma warning restore CA2254 // Template should be a static expression
-        }
         public static void LogWarningChecked(this ILogger logger, string message, params object?[] args)
         {
             if (logger.IsEnabled(LogLevel.Warning))

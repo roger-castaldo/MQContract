@@ -97,7 +97,7 @@ namespace MQContract
             {
                 throw new QueryTimeoutException();
             }
-            return results.Select(o => Utility.ConvertResultFromObject(o)!);
+            return results.Select(obj => ConvertResultFromObject(obj)!);
         }
     }
 }
