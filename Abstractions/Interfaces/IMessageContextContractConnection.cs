@@ -4,7 +4,7 @@
     /// Houses the message context pieces for a given contract connection
     /// </summary>
     /// <typeparam name="TContractConnection">The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining.</typeparam>
-    public interface IMessageContextContractConnection<TContractConnection> : IBaseContractConnection
+    public interface IMessageContextContractConnection<out TContractConnection> : IBaseContractConnection
         where TContractConnection : IBaseContractConnection
     {
         /// <summary>

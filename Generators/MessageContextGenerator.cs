@@ -31,10 +31,6 @@ namespace MQContract.Generators
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            //if (!System.Diagnostics.Debugger.IsAttached)
-            //{
-            //    System.Diagnostics.Debugger.Launch();
-            //}
             // 1. Find candidate classes
             var candidateClasses = TargetHelper.LocateContexts(context);
 
@@ -325,9 +321,9 @@ namespace {contractContext.Target.ContainingNamespace};
                         conConverters = RecursivelyLocateConverters(contract.Contract, converters, new());
                     return new ContractType(
                         contract.Contract,
-                        (conEncoders?.Count()==0 ? null : conEncoders),
+                        (conEncoders?.Any()??false ? conEncoders : null),
                         conConverters,
-                        (conEncryptors?.Count()==0 ? null : conEncryptors)
+                        (conEncryptors?.Any()??false ? conEncryptors : null)
                     );
                 }).ToImmutableArray()
             );
@@ -348,7 +344,7 @@ namespace {contractContext.Target.ContainingNamespace};
 
         private static readonly string[] MessageAttributes = ["MessageAttribute", "QueryMessageAttribute", "CommandAttribute", "QueryAttribute"];
 
-        private AttributeData? GetMessageAttribute(ITypeSymbol contract)
+        private static AttributeData? GetMessageAttribute(ITypeSymbol contract)
             => contract.GetAttributes().FirstOrDefault(a => MessageAttributes.Contains(a.AttributeClass?.Name));
 
         private string GetMessageName(AttributeData? att, ITypeSymbol contract)
@@ -416,7 +412,7 @@ namespace {contractContext.Target.ContainingNamespace};
             }
         }
 
-        private string BuildEncoderChain(ContractConverter con, (ITypeSymbol from, ITypeSymbol to) conversion, IEnumerable<ContractConverterPair> previousSteps)
+        private static string BuildEncoderChain(ContractConverter con, (ITypeSymbol from, ITypeSymbol to) conversion, IEnumerable<ContractConverterPair> previousSteps)
         {
             var sb = new StringBuilder();
             sb.AppendLine($@"(sp)=>

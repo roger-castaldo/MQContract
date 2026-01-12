@@ -203,6 +203,8 @@
 - [ISpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.ISpecificTypeMiddleware`1')
 - [ISubscription](#T-MQContract-Interfaces-ISubscription 'MQContract.Interfaces.ISubscription')
   - [EndAsync()](#M-MQContract-Interfaces-ISubscription-EndAsync 'MQContract.Interfaces.ISubscription.EndAsync')
+- [InvalidEncoderException](#T-MQContract-InvalidEncoderException 'MQContract.InvalidEncoderException')
+- [InvalidEncryptorException](#T-MQContract-InvalidEncryptorException 'MQContract.InvalidEncryptorException')
 - [MQContractMessageContext](#T-MQContract-MQContractMessageContext 'MQContract.MQContractMessageContext')
   - [IsMessageCodeGenerated\`\`1()](#M-MQContract-MQContractMessageContext-IsMessageCodeGenerated``1 'MQContract.MQContractMessageContext.IsMessageCodeGenerated``1')
   - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
@@ -3657,6 +3659,28 @@ A task that is ending the subscription and closing off the resources for it
 ##### Parameters
 
 This method has no parameters.
+
+<a name='T-MQContract-InvalidEncoderException'></a>
+## InvalidEncoderException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown when the type specified in a UseMQContract for the encoder does not match the contract type
+
+<a name='T-MQContract-InvalidEncryptorException'></a>
+## InvalidEncryptorException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown when the type specified in a UseMQContract for the encryptor does not match the contract type
 
 <a name='T-MQContract-MQContractMessageContext'></a>
 ## MQContractMessageContext `type`

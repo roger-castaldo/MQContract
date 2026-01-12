@@ -49,4 +49,26 @@
     public sealed class PingFailedException(string message) 
         : Exception(message)
     {}
+
+    /// <summary>
+    /// Thrown when the type specified in a UseMQContract for the encoder does not match the contract type
+    /// </summary>
+    public sealed class InvalidEncoderException
+        : Exception
+    {
+        internal InvalidEncoderException(Type contractType)
+            : base($"Cannot link an encoder type that does not implement the interface IMessageTypeEncoder<{contractType.Name}>") 
+        { }
+    }
+
+    /// <summary>
+    /// Thrown when the type specified in a UseMQContract for the encryptor does not match the contract type
+    /// </summary>
+    public sealed class InvalidEncryptorException
+        : Exception
+    {
+        internal InvalidEncryptorException(Type contractType)
+            : base($"Cannot link an encryptor type that does not implement the interface IMessageTypeEncoder<{contractType.Name}>")
+        { }
+    }
 }

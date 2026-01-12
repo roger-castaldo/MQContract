@@ -27,7 +27,7 @@ namespace MQContract
                                 try
                                 {
                                     return assembly.GetTypes()
-                                    .Where(t => !t.IsInterface && !t.IsInterface && Array.Exists(t.GetInterfaces(), iface => iface==typeof(IMessageTypeEncoder<TMessage>)));
+                                    .Where(t => !t.IsInterface && !t.IsAbstract && Array.Exists(t.GetInterfaces(), iface => iface==typeof(IMessageTypeEncoder<TMessage>)));
                                 }
                                 catch (Exception)
                                 {
@@ -70,7 +70,7 @@ namespace MQContract
             return ProduceDecodingCallback(null, globalMessageEncoder);
         }
 
-        private Func<IEncodedMessage, ValueTask<object?>> ProduceDecodingCallback(Type? messageType, IMessageEncoder? globalMessageEncoder)
+        private static Func<IEncodedMessage, ValueTask<object?>> ProduceDecodingCallback(Type? messageType, IMessageEncoder? globalMessageEncoder)
         {
             Func<Func<IEncodedMessage, ValueTask<object?>>> produce = (messageType, globalMessageEncoder, DynamicCodeGate.IsSupported) switch
             {
@@ -89,8 +89,8 @@ namespace MQContract
                 },
                 (not null, null, true) => () =>
                 {
-                    var jEncoder = Activator.CreateInstance(typeof(JsonEncoder<>).MakeGenericType([messageType]))!;
-                    var method = typeof(JsonEncoder<>).MakeGenericType([messageType]).GetMethod("DecodeAsync")!;
+                    var jEncoder = Activator.CreateInstance(typeof(JsonEncoder<>).MakeGenericType(messageType))!;
+                    var method = typeof(JsonEncoder<>).MakeGenericType(messageType).GetMethod("DecodeAsync")!;
                     return async (IEncodedMessage message) =>
                     {
                         using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
@@ -174,7 +174,7 @@ namespace MQContract
                 {
                     using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
                     return await Utility.InvokeMethodAsync(
-                        typeof(IMessageTypeEncoder<>).MakeGenericType([messageType!]).GetMethod("DecodeAsync")!,
+                        typeof(IMessageTypeEncoder<>).MakeGenericType(messageType!).GetMethod("DecodeAsync")!,
                         encoder,
                         [ms]
                     );

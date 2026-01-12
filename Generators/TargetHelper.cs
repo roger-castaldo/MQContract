@@ -36,7 +36,7 @@ namespace MQContract.Generators
                 {
                     var contractType = a.ConstructorArguments[0].Value as ITypeSymbol;
                     var encoders = (IEnumerable<INamedTypeSymbol>?)(a.ConstructorArguments[1].IsNull ? null : [(INamedTypeSymbol)a.ConstructorArguments[1].Value!]);
-                    var converters = (IEnumerable<ITypeSymbol>?)(a.ConstructorArguments[2].IsNull ? null : a.ConstructorArguments[2].Values.Select(v=>(ITypeSymbol)v.Value!));
+                    var converters = (a.ConstructorArguments[2].IsNull ? null : a.ConstructorArguments[2].Values.Select(v=>(ITypeSymbol)v.Value!));
                     var encryptors = (IEnumerable<INamedTypeSymbol>?)(a.ConstructorArguments[3].IsNull ? null : [(INamedTypeSymbol)a.ConstructorArguments[3].Value!]);
                     return new ContractType(contractType!, encoders, converters, encryptors);
                 })
@@ -49,9 +49,9 @@ namespace MQContract.Generators
                 .FirstOrDefault(a => a.AttributeClass?.Name=="MQContractMessageContextAttribute");
 
             var settings = new ContextSettings(
-                (settingsAtt?.ConstructorArguments.Length>=1 ? (bool?)settingsAtt?.ConstructorArguments[0].Value : null),
-                (settingsAtt?.ConstructorArguments.Length>=2 ? (bool?)settingsAtt?.ConstructorArguments[1].Value : null),
-                (settingsAtt?.ConstructorArguments.Length>=3 ? (bool?)settingsAtt?.ConstructorArguments[2].Value : null)
+                (settingsAtt?.ConstructorArguments.Length>=1 ? (bool?)settingsAtt.ConstructorArguments[0].Value : null),
+                (settingsAtt?.ConstructorArguments.Length>=2 ? (bool?)settingsAtt.ConstructorArguments[1].Value : null),
+                (settingsAtt?.ConstructorArguments.Length>=3 ? (bool?)settingsAtt.ConstructorArguments[2].Value : null)
                 );
 
             return new ContractContext(namedType, settings, contracts);

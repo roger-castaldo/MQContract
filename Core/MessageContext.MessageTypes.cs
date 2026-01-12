@@ -1,5 +1,6 @@
 ﻿using MQContract.Attributes;
 using System.Collections.Concurrent;
+using System.Diagnostics.Contracts;
 using System.Reflection;
 
 namespace MQContract
@@ -57,18 +58,44 @@ namespace MQContract
                 {
                     var queryAttribute = messageType.GetCustomAttribute<QueryMessageAttribute>();
                     var messageAttribute = (queryAttribute==null ? messageType.GetCustomAttribute<MessageAttribute>() : (MessageAttribute)queryAttribute);
-                    var name = messageAttribute?.TypeName;
-                    if (name==null)
-                    {
-                        name = messageType.Name;
-                        if (name.Contains('`'))
-                            name=name[..name.IndexOf('`')];
-                    }
-                    messageDefinition = new(messageAttribute?.Channel, name, messageAttribute?.TypeVersion??new("0.0.0.0"), queryAttribute?.ResponseChannel, queryAttribute?.ResponseTimeout, queryAttribute?.ResponseType);
+                    messageDefinition = new(messageAttribute?.Channel, GetMessageName(messageType, messageAttribute), messageAttribute?.TypeVersion??new("0.0.0.0"), queryAttribute?.ResponseChannel, queryAttribute?.ResponseTimeout, queryAttribute?.ResponseType);
                 }
                 cache.TryAdd(messageType, messageDefinition);
             }
             return messageDefinition;
+        }
+
+        private static string GetMessageName(Type messageType, MessageAttribute? messageAttribute)
+        {
+            var name = messageAttribute?.TypeName??messageType.Name;
+            if (messageAttribute==null && (!messageType.FullName!.EndsWith(name, StringComparison.InvariantCultureIgnoreCase) || string.IsNullOrWhiteSpace(messageType.Name)))
+            {
+                name = messageType.FullName;
+                if (!string.IsNullOrWhiteSpace(messageType.Name) && name.Contains(messageType.Name, StringComparison.InvariantCultureIgnoreCase))
+                    name = name.Substring(name.IndexOf(messageType.Name, StringComparison.InvariantCultureIgnoreCase));
+                name = FixInternalBrackets(name);
+            }
+            return name;
+        }
+
+        private static string FixInternalBrackets(string name)
+        {
+            if (name.Contains('<'))
+            {
+                var preBracket = name.Substring(0, name.IndexOf("<")+1);
+                var betweenBrackets = name.Substring(preBracket.Length, name.Length-1-preBracket.Length);
+                return $"{preBracket}{FixInternalBrackets(betweenBrackets)}>";
+            }
+            else if (name.Contains(","))
+            {
+                var splt = name.Split(',');
+                for (var x = 0; x<splt.Length; x++)
+                    splt[x]=FixInternalBrackets(splt[x]);
+                return string.Join(",", splt);
+            }
+            else if (name.Contains('.'))
+                return name.Substring(name.LastIndexOf('.')+1);
+            return name;
         }
     }
 }
