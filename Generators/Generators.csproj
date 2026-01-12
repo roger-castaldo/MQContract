@@ -9,6 +9,8 @@
 		<AssemblyName>MQContract.Generators</AssemblyName>
 		<RootNamespace>MQContract.Generators</RootNamespace>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+		<RestoreAdditionalProjectSources></RestoreAdditionalProjectSources>
 	</PropertyGroup>
 
 	<ItemGroup>
