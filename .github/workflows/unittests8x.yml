@@ -18,7 +18,7 @@ jobs:
       with:
         dotnet-version: |
           8.0.x
-          netstandard2.0
+          6.0.x
     - name: Restore dependencies testing core
       run: dotnet restore  -p:TargetFramework=net8.0 -p:BlockMD=true Testing/Core
     - name: Restore dependencies testing cqrs
