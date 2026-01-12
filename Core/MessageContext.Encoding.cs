@@ -72,29 +72,56 @@ namespace MQContract
 
         private Func<IEncodedMessage, ValueTask<object?>> ProduceDecodingCallback(Type? messageType, IMessageEncoder? globalMessageEncoder)
         {
-            if (globalMessageEncoder!=null)
-                return message =>
-                {
-                    using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
-                    return globalMessageEncoder.DecodeAsync<object>(ms);
-                };
-            if (messageType!=null)
+            Func<Func<IEncodedMessage, ValueTask<object?>>> produce = (messageType, globalMessageEncoder, DynamicCodeGate.IsSupported) switch
             {
-                var jEncoder = Activator.CreateInstance(typeof(JsonEncoder<>).MakeGenericType([messageType]))!;
-                var method = typeof(JsonEncoder<>).MakeGenericType([messageType]).GetMethod("DecodeAsync")!;
-                return async message =>
+                (not null, not null, true) => () =>
                 {
-                    using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
-                    return await Utility.InvokeMethodAsync(method, jEncoder, [ms]);
-                };
-            }
-            var encoder = new JsonEncoder<object>();
-            return message =>
-            {
-                using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
-                return encoder.DecodeAsync(ms);
+                    var method = typeof(IMessageEncoder).GetMethod(nameof(IMessageEncoder.DecodeAsync))!.MakeGenericMethod(messageType);
+                    return async (IEncodedMessage message) =>
+                    {
+                        using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                        return await Utility.InvokeMethodAsync(
+                            method,
+                            globalMessageEncoder,
+                            [ms]
+                        );
+                    };
+                },
+                (not null, null, true) => () =>
+                {
+                    var jEncoder = Activator.CreateInstance(typeof(JsonEncoder<>).MakeGenericType([messageType]))!;
+                    var method = typeof(JsonEncoder<>).MakeGenericType([messageType]).GetMethod("DecodeAsync")!;
+                    return async (IEncodedMessage message) =>
+                    {
+                        using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                        return await Utility.InvokeMethodAsync(
+                            method,
+                            jEncoder,
+                            [ms]
+                        );
+                    };
+                },
+                (_, not null, false) => () =>
+                {
+                    return async (IEncodedMessage message) =>
+                    {
+                        using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                        return await globalMessageEncoder.DecodeAsync<object>(ms);
+                    };
+                },
+                _ => () =>
+                {
+                    var jEncoder = new JsonEncoder<object>();
+                    return async (IEncodedMessage message) =>
+                    {
+                        using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
+                        return await jEncoder.DecodeAsync(ms);
+                    };
+                }
             };
+            return produce();
         }
+        
 
         [RequiresDynamicCode("Uses unbounded reflection to discover encoders, if AOT and no usage of UseMqContractAttribute to autogenerate code for the encoders used")]
         private Func<IEncodedMessage, ValueTask<object?>> ExtractDecodeThroughReflection(string messageID, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)

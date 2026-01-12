@@ -10,6 +10,7 @@ namespace MQContract
 {
     internal partial class MessageContext
     {
+        [ExcludeFromCodeCoverage(Justification = "Simple record class used as a key in a dictionary, nothing to test")]
         private readonly record struct ConverterKey(string MessageID,Type MessageType);
         private readonly record struct ConverterInstance(object Instance, Type ConverterType, Type SourceType, Type DestinationType);
 

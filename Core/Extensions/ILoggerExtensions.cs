@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MQContract.Extensions
 {
+    [ExcludeFromCodeCoverage(Justification = "This is a simple extensions class used to wrap all logging calls to check for enablement as per recommended code")]
     internal static class ILoggerExtensions
     {
         public static void LogWarningChecked(this ILogger logger, string message, params object?[] args)

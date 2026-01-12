@@ -3,9 +3,11 @@ using Moq;
 using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces;
+using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Service;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
 
 namespace AutomatedTesting.ConnectionTests.MultiService
 {
@@ -887,6 +889,90 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Verify
             serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            #endregion
+        }
+
+        [TestMethod]
+        public async Task TestSubscribeAsyncWithConversionAndGlobalEncoder()
+        {
+            #region Arrange
+            var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
+            var serviceSubscription = new Mock<IServiceSubscription>();
+            var serviceConnection = new Mock<IMessageServiceConnection>();
+            var globalEncoder = new Mock<IMessageEncoder>();
+
+            var actions = new List<Func<ReceivedServiceMessage, ValueTask>>();
+            var errorActions = new List<Action<Exception>>();
+            var channels = new List<string>();
+            var groups = new List<string>();
+            var serviceMessages = new List<ReceivedServiceMessage>();
+
+            serviceConnection.Setup(x => x.SubscribeAsync(Capture.In(actions), Capture.In(errorActions), Capture.In(channels),
+                Capture.In(groups), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceSubscription.Object);
+            serviceConnection.Setup(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()))
+                .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
+                {
+                    var rmessage = Helper.ProduceReceivedServiceMessage(message);
+                    serviceMessages.Add(rmessage);
+                    foreach (var act in actions)
+                        act(rmessage);
+                    return ValueTask.FromResult(transmissionResult);
+                });
+            globalEncoder.Setup(x => x.DecodeAsync<BasicMessage>(It.IsAny<Stream>()))
+                .Returns(async (Stream stream) => await JsonSerializer.DeserializeAsync<BasicMessage>(stream));
+            globalEncoder.Setup(x => x.EncodeAsync<BasicMessage>(It.IsAny<BasicMessage>()))
+                .Returns((BasicMessage message) => ValueTask.FromResult(JsonSerializer.SerializeToUtf8Bytes(message)));
+
+            var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
+            var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
+
+            var contractConnection = ContractConnection.MultiServiceInstance(defaultMessageEncoder: globalEncoder.Object)
+                .RegisterServiceConnection(ServiceName, serviceConnection.Object);
+            #endregion
+
+            #region Act
+            var messages = new List<IReceivedMessage<NamedAndVersionedMessage>>();
+            var exceptions = new List<Exception>();
+            var subscription = await contractConnection.SubscribeAsync<NamedAndVersionedMessage>((msg) =>
+            {
+                messages.Add(msg);
+                return ValueTask.CompletedTask;
+            }, (error) => exceptions.Add(error));
+            var stopwatch = Stopwatch.StartNew();
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel);
+            stopwatch.Stop();
+            Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
+
+            foreach (var act in errorActions)
+                act(exception);
+            #endregion
+
+            #region Assert
+            Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
+            Assert.IsNotNull(subscription);
+            Assert.IsNotNull(result);
+            Assert.HasCount(1, actions);
+            Assert.HasCount(1, channels);
+            Assert.HasCount(1, groups);
+            Assert.HasCount(1, serviceMessages);
+            Assert.HasCount(1, errorActions);
+            Assert.HasCount(1, exceptions);
+            Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
+            Assert.IsNull(groups[0]);
+            Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
+            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
+            Assert.AreEqual(message.Name, messages[0].Message.TestName);
+            Assert.AreEqual(exception, exceptions[0]);
+            Trace.WriteLine($"Time to process message {messages[0].ProcessedTimestamp.Subtract(messages[0].ReceivedTimestamp).TotalMilliseconds}ms");
+            #endregion
+
+            #region Verify
+            serviceConnection.Verify(x => x.SubscribeAsync(It.IsAny<Func<ReceivedServiceMessage, ValueTask>>(), It.IsAny<Action<Exception>>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+            serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+            globalEncoder.Verify(x => x.DecodeAsync<BasicMessage>(It.IsAny<Stream>()), Times.Once);
+            globalEncoder.Verify(x => x.EncodeAsync<BasicMessage>(It.IsAny<BasicMessage>()), Times.Once);
             #endregion
         }
 

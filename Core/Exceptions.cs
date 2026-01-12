@@ -152,6 +152,9 @@
             : base($"Failed to register a {consumerName} of type {consumerType}", exception) { }
     }
 
+    /// <summary>
+    /// Thrown when dynamic code is not supported but a call that requires it is made
+    /// </summary>
     public sealed class DynamicCodeNotSupportedException
         : Exception
     {

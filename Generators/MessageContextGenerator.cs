@@ -13,6 +13,22 @@ namespace MQContract.Generators
     {
         private const string LineBreak = "\r\n";
 
+        private static readonly DiagnosticDescriptor MultipleEncoders = new(
+    id: "MQCONTRACTGEN001",
+    title: "Mutliple encoders located",
+    messageFormat: "Mutliple encoders for {0} found, unable to determine which to use. [{1}].",
+    category: "Usage",
+    defaultSeverity: DiagnosticSeverity.Warning, // Set severity to Warning
+    isEnabledByDefault: true);
+
+        private static readonly DiagnosticDescriptor MultipleEncryptors = new(
+    id: "MQCONTRACTGEN002",
+    title: "Mutliple encryptors located",
+    messageFormat: "Mutliple encryptors for {0} found, unable to determine which to use. [{1}].",
+    category: "Usage",
+    defaultSeverity: DiagnosticSeverity.Warning, // Set severity to Warning
+    isEnabledByDefault: true);
+
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             //if (!System.Diagnostics.Debugger.IsAttached)
@@ -101,9 +117,12 @@ namespace MQContract.Generators
             }},");
                         }
                         else
-                        {
-                            //faile here due to unknowns
-                        }
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                descriptor: MultipleEncoders,
+                                location: contract.Contract.Locations.First(),
+                                contract.Contract.ToDisplayString(),
+                                string.Join(", ",contract.Encoders.Select(enc=>enc.ToDisplayString()))
+                            ));
                     }
                     else
                     {
@@ -147,9 +166,12 @@ namespace MQContract.Generators
             (Type t, _, null) when t == typeof({contract.Contract.ToDisplayString()}) => (IMessageEncryptor)Activator.CreateInstance<{encryptor.ToDisplayString()}>(),");
                         }
                         else
-                        {
-                            //throw error here
-                        }
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                descriptor: MultipleEncryptors,
+                                location: contract.Contract.Locations.First(),
+                                contract.Contract.ToDisplayString(),
+                                string.Join(", ", contract.Encryptors.Select(enc => enc.ToDisplayString()))
+                            ));
                     }
                     else
                         encryptorSwitches.Add($@"            (Type t, not null, _) when t == typeof({contract.Contract.ToDisplayString()}) => globalEncryptor,

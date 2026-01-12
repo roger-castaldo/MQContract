@@ -72,6 +72,11 @@ namespace CodeGenTesting
             //Arrange
             var context = new MessageContext();
             context.RegisterContext(new MyMessageContext());
+
+            var globalEncodcer = new Mock<IMessageEncoder>();
+            globalEncodcer.Setup(x => x.DecodeAsync<object>(It.IsAny<Stream>()))
+                .Returns(async (Stream stream) => await JsonSerializer.DeserializeAsync<object>(stream));
+
             var nonMessage = new NonContextMessage(Helper.RandomString());
             var partyMessage = new PartyAnnouncement(Helper.RandomString(), Helper.RandomString());
 
@@ -79,15 +84,18 @@ namespace CodeGenTesting
             var partyData = await ((IMessageTypeEncoder<PartyAnnouncement>)new PartyAnnouncementEncoder()).EncodeAsync(partyMessage);
 
             var nonDecoder = context.GetDecodingCallback(context.MessageID<NonContextMessage>(), null, null);
+            var globalNonDecoder = context.GetDecodingCallback(context.MessageID<NonContextMessage>(), globalEncodcer.Object, null);
             var partyDecoder = context.GetDecodingCallback(context.MessageID<PartyAnnouncement>(), null, null);
 
             //Act
             var nonDecodedMessage = (JsonElement?)(await nonDecoder(new DummyEncodedMessage("", nonData)));
+            var gloalNonDecodedMessage = (JsonElement?)(await globalNonDecoder(new DummyEncodedMessage("", nonData)));
             var partyDecodedMessage = await partyDecoder(new DummyEncodedMessage("", partyData));
             
 
             //Assert
             Assert.AreEqual(nonMessage.Message, nonDecodedMessage?.GetProperty("Message").GetString());
+            Assert.AreEqual(nonMessage.Message, gloalNonDecodedMessage?.GetProperty("Message").GetString());
             Assert.AreEqual(partyMessage, partyDecodedMessage);
 
             //Verify
