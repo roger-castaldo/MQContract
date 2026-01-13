@@ -68,9 +68,9 @@ namespace MQContract
         private static string GetMessageName(Type messageType, MessageAttribute? messageAttribute)
         {
             var name = messageAttribute?.TypeName??messageType.Name;
-            if (messageAttribute==null && (!messageType.FullName!.EndsWith(name, StringComparison.InvariantCultureIgnoreCase) || string.IsNullOrWhiteSpace(messageType.Name)))
+            if (messageAttribute==null && (!(messageType.FullName?.EndsWith(name, StringComparison.InvariantCultureIgnoreCase)??false) || string.IsNullOrWhiteSpace(messageType.Name)))
             {
-                name = messageType.FullName;
+                name = messageType.FullName??messageType.Name;
                 if (!string.IsNullOrWhiteSpace(messageType.Name) && name.Contains(messageType.Name, StringComparison.InvariantCultureIgnoreCase))
                     name = name.Substring(name.IndexOf(messageType.Name, StringComparison.InvariantCultureIgnoreCase));
                 name = FixInternalBrackets(name);
