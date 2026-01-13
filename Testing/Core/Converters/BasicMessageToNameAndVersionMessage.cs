@@ -1,6 +1,5 @@
 ﻿using AutomatedTesting.Messages;
 using MQContract.Interfaces.Conversion;
-using System.Text.Json;
 
 namespace AutomatedTesting.Converters
 {

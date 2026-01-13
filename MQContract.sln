@@ -79,6 +79,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Generators", "Generators\Ge
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeGenTesting", "Testing\CodeGenTesting\CodeGenTesting.csproj", "{F75FB3A9-93C6-4BD2-8553-B1924FD6FCEC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CQRSSample", "Samples\CQRSSample\CQRSSample.csproj", "{D7ADBEFC-AF6C-5E21-75A9-E54BB8D0B545}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -225,6 +227,10 @@ Global
 		{F75FB3A9-93C6-4BD2-8553-B1924FD6FCEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F75FB3A9-93C6-4BD2-8553-B1924FD6FCEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F75FB3A9-93C6-4BD2-8553-B1924FD6FCEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7ADBEFC-AF6C-5E21-75A9-E54BB8D0B545}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7ADBEFC-AF6C-5E21-75A9-E54BB8D0B545}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7ADBEFC-AF6C-5E21-75A9-E54BB8D0B545}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7ADBEFC-AF6C-5E21-75A9-E54BB8D0B545}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -260,6 +266,7 @@ Global
 		{1356D09D-4600-5FC7-03DC-7ACC659D0A13} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{77234E39-6DF8-44C6-B77A-1B326E4C8E64} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{F75FB3A9-93C6-4BD2-8553-B1924FD6FCEC} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{D7ADBEFC-AF6C-5E21-75A9-E54BB8D0B545} = {0DAB9C52-BDAF-44CD-B10A-B9E057105696}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4431E3A-7CBE-469C-A7FE-0A48F6768E02}

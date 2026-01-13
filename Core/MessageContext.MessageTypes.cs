@@ -1,6 +1,5 @@
 ﻿using MQContract.Attributes;
 using System.Collections.Concurrent;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 
 namespace MQContract

@@ -1,5 +1,4 @@
-﻿using MQContract.Messages;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace MQContract

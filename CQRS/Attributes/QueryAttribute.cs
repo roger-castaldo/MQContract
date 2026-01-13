@@ -6,6 +6,12 @@ namespace MQContract.CQRS.Attributes
     /// Use this attribute to specify the Channel, TypeName, TypeVersion, Response Channel and or Response timeout 
     /// for the Query being defined
     /// </summary>
+    /// <example>
+    /// <code>
+    /// [Query(channel: "UserQueries", typeName: "GetUser", typeVersion: "1.0.0", responseChannel: "UserResponses")]
+    /// public record GetUserQuery(string UserId) : IQuery;
+    /// </code>
+    /// </example>
     /// <param name="channel">The channel to be used</param>
     /// <param name="typeName">The query type to use</param>
     /// <param name="typeVersion">The query type version to use</param>
