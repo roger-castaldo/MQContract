@@ -16,6 +16,12 @@ namespace MQContract.Interfaces
         /// <summary>
         /// Called to send a message into the underlying service Pub/Sub style
         /// </summary>
+        /// <example>
+        /// <code>
+        /// var result = await contractConnection.PublishAsync(new ArrivalAnnouncement("John", "Doe"));
+        /// Console.WriteLine($"Published ID: {result.ID}");
+        /// </code>
+        /// </example>
         /// <typeparam name="TMessage">The type of message to send</typeparam>
         /// <param name="message">The message to send</param>
         /// <param name="channel">Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class.</param>
@@ -38,6 +44,12 @@ namespace MQContract.Interfaces
         /// <summary>
         /// Called to send a message into the underlying service in the Query/Response style
         /// </summary>
+        /// <example>
+        /// <code>
+        /// var response = await contractConnection.QueryAsync&lt;Greeting, string&gt;(new Greeting("John", "Doe"));
+        /// Console.WriteLine($"Response: {response.Result}");
+        /// </code>
+        /// </example>
         /// <typeparam name="TQuery">The type of message to send for the query</typeparam>
         /// <typeparam name="TQueryResponse">The type of message to expect back for the response</typeparam>
         /// <param name="message">The message to send</param>

@@ -11,6 +11,17 @@ namespace MQContract.Interfaces
         /// <summary>
         /// Called to create a subscription into the underlying service Pub/Sub style and have the messages processed asynchronously
         /// </summary>
+        /// <example>
+        /// <code>
+        /// await contractConnection.SubscribeAsync&lt;ArrivalAnnouncement&gt;(
+        ///     (message) => {
+        ///         Console.WriteLine($"Arrival: {message.Message.FirstName}");
+        ///         return ValueTask.CompletedTask;
+        ///     },
+        ///     (error) => Console.WriteLine($"Error: {error.Message}")
+        /// );
+        /// </code>
+        /// </example>
         /// <typeparam name="TMessage">The type of message to listen for</typeparam>
         /// <param name="messageReceived">The callback invoked when a new message is received</param>
         /// <param name="errorReceived">The callback to invoke when an error occurs</param>

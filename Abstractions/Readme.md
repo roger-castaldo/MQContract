@@ -383,6 +383,19 @@ for a given Consumer
 | ---- | ---- | ----------- |
 | channel | [T:MQContract.Attributes.ConsumerAttribute](#T-T-MQContract-Attributes-ConsumerAttribute 'T:MQContract.Attributes.ConsumerAttribute') | The channel the consumer will listen on |
 
+##### Example
+
+```
+[Consumer(channel: "Arrivals", group: "Group1")]
+public class MyConsumer : IPubSubConsumer<ArrivalAnnouncement>
+{
+    public void MessageReceived(IReceivedMessage<ArrivalAnnouncement> message)
+    {
+        Console.WriteLine($"Received: {message.Message.FirstName}");
+    }
+}
+```
+
 <a name='M-MQContract-Attributes-ConsumerAttribute-#ctor-System-String,System-String,System-Boolean-'></a>
 ### #ctor(channel,group,ignoreMessageTypeHeader) `constructor`
 
@@ -398,6 +411,19 @@ for a given Consumer
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel the consumer will listen on |
 | group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The group the consumer will register as |
 | ignoreMessageTypeHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | A falg to indicate if ignoring the message type is desired |
+
+##### Example
+
+```
+[Consumer(channel: "Arrivals", group: "Group1")]
+public class MyConsumer : IPubSubConsumer<ArrivalAnnouncement>
+{
+    public void MessageReceived(IReceivedMessage<ArrivalAnnouncement> message)
+    {
+        Console.WriteLine($"Received: {message.Message.FirstName}");
+    }
+}
+```
 
 <a name='P-MQContract-Attributes-ConsumerAttribute-Channel'></a>
 ### Channel `property`
@@ -1239,6 +1265,18 @@ A subscription instance that can be ended when desired
 | ---- | ----------- |
 | TMessage | The type of message to listen for |
 
+##### Example
+
+```
+await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
+    (message) => {
+        Console.WriteLine($"Arrival: {message.Message.FirstName}");
+        return ValueTask.CompletedTask;
+    },
+    (error) => Console.WriteLine($"Error: {error.Message}")
+);
+```
+
 <a name='M-MQContract-Interfaces-IBaseContractConnection-SubscribeAsync``1-System-Action{MQContract-Interfaces-IReceivedMessage{``0}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken-'></a>
 ### SubscribeAsync\`\`1(messageReceived,errorReceived,channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
 
@@ -1910,6 +1948,13 @@ A result indicating the tranmission results
 | ---- | ----------- |
 | TMessage | The type of message to send |
 
+##### Example
+
+```
+var result = await contractConnection.PublishAsync(new ArrivalAnnouncement("John", "Doe"));
+Console.WriteLine($"Published ID: {result.ID}");
+```
+
 <a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
 
@@ -1969,6 +2014,13 @@ only used when the underlying connection does not support a QueryResponse style 
 | ---- | ----------- |
 | TQuery | The type of message to send for the query |
 | TQueryResponse | The type of message to expect back for the response |
+
+##### Example
+
+```
+var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("John", "Doe"));
+Console.WriteLine($"Response: {response.Result}");
+```
 
 <a name='T-MQContract-Interfaces-IContractMetric'></a>
 ## IContractMetric `type`
@@ -3989,6 +4041,13 @@ Message being defined
 | ---- | ---- | ----------- |
 | channel | [T:MQContract.Attributes.MessageAttribute](#T-T-MQContract-Attributes-MessageAttribute 'T:MQContract.Attributes.MessageAttribute') | The channel to be used |
 
+##### Example
+
+```
+[Message(channel: "Arrivals")]
+public record ArrivalAnnouncement(string FirstName, string LastName);
+```
+
 ##### Remarks
 
 
@@ -4008,6 +4067,13 @@ Message being defined
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to be used |
 | typeName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message type to use |
 | typeVersion | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message version to use |
+
+##### Example
+
+```
+[Message(channel: "Arrivals")]
+public record ArrivalAnnouncement(string FirstName, string LastName);
+```
 
 ##### Remarks
 

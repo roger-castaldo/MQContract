@@ -457,6 +457,14 @@ An instance of IContractConnection
 | channelMapper | [MQContract.ChannelMapper](#T-MQContract-ChannelMapper 'MQContract.ChannelMapper') | An instance of a ChannelMapper used to translate channels from one instance to another based on class channel attributes or supplied channels if necessary.
 For example, it might be necessary for a Nats.IO instance when you are trying to read from a stored message stream that is comprised of another channel or set of channels |
 
+##### Example
+
+```
+using MQContract.InMemory;
+var serviceConnection = new Connection();
+var contractConnection = ContractConnection.Instance(serviceConnection);
+```
+
 <a name='M-MQContract-ContractConnection-MappedServiceInstance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper-'></a>
 ### MappedServiceInstance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper) `method`
 

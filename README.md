@@ -12,10 +12,75 @@ their systems to supply the new version of the message.  By default all message 
 and unencrypted, all of which can be overridden on a 
 global level or on a per message type level through implementation of the appropriate interfaces.
 
+## Getting Started
+
+Follow these steps to quickly get started with MQContract using the InMemory connector for a simple example.
+
+1. **Install the required NuGet packages:**
+   ```bash
+   dotnet add package MQContract.Abstractions
+   dotnet add package MQContract.Core
+   dotnet add package MQContract.InMemory
+   ```
+
+2. **Define your message classes:**
+   ```csharp
+   using MQContract.Attributes;
+
+   [Message(channel: "Arrivals")]
+   public record ArrivalAnnouncement(string FirstName, string LastName);
+   ```
+
+3. **Create a connection and interact:**
+   ```csharp
+   using MQContract;
+   using MQContract.InMemory;
+
+   var serviceConnection = new Connection();
+   var contractConnection = ContractConnection.Instance(serviceConnection);
+
+   // Subscribe to messages
+   await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
+       (message) => {
+           Console.WriteLine($"Arrival: {message.Message.FirstName} {message.Message.LastName}");
+           return ValueTask.CompletedTask;
+       },
+       (error) => Console.WriteLine($"Error: {error.Message}")
+   );
+
+   // Publish a message
+   var result = await contractConnection.PublishAsync(new ArrivalAnnouncement("John", "Doe"));
+   Console.WriteLine($"Published: {result.ID}");
+   ```
+
+For more advanced usage, including query/response patterns, middleware, and other connectors, explore the [Samples](#samples) section below.
+
 ## Benchmarks
 
-Below is a sample performance benchmarking to indicate how small the effect is on using MQContract vs directly connecting to a service
+Below is a sample performance benchmarking to indicate how small the effect is on using MQContract vs directly connecting to a service as well as comparisons with using the Source Generated MessageContext vs without.
 ![Sample Benchmarks](images/performance.jpg)
+
+## Samples
+
+Practical examples demonstrating MQContract usage with various connectors:
+
+* [ActiveMQ Sample](Samples/ActiveMQSample/)
+* [Amazon SQS Sample](Samples/AmazonSNQSSample/)
+* [Apache Pulsar Sample](Samples/ApachePulsarSample/)
+* [Azure Service Bus Sample](Samples/AzureServiceBusSample/)
+* [CQRS Sample](Samples/CQRSSample/)
+* [DotNetty Sample](Samples/DotNettySample/)
+* [Google Pub/Sub Sample](Samples/GooglePubSubSample/)
+* [HiveMQ Sample](Samples/HiveMQSample/)
+* [InMemory Sample](Samples/InMemorySample/)
+* [Kafka Sample](Samples/KafkaSample/)
+* [KubeMQ Sample](Samples/KubeMQSample/)
+* [NATS Sample](Samples/NATSSample/)
+* [RabbitMQ Sample](Samples/RabbitMQSample/)
+* [Redis Sample](Samples/RedisSample/)
+* [ZeroMQ Sample](Samples/ZeroMQ/)
+
+## Documentation
 
 * [Abstractions](/Abstractions/Readme.md)
 * [Core](/Core/Readme.md)
@@ -35,4 +100,5 @@ Below is a sample performance benchmarking to indicate how small the effect is o
 	* [ZeroMQ](/Connectors/ZeroMQ/Readme.md)
 * [OpenTelemetry](/OpenTelemetry.md)
 * [Resiliency](/Resiliency.md)
+* [SourceGenerator](/SourceGenerator.md)
 * [CQRS](/CQRS/Readme.md)

@@ -14,6 +14,13 @@ namespace MQContract
         /// <summary>
         /// This is the call used to create an instance of a Contract Connection which will return the Interface
         /// </summary>
+        /// <example>
+        /// <code>
+        /// using MQContract.InMemory;
+        /// var serviceConnection = new Connection();
+        /// var contractConnection = ContractConnection.Instance(serviceConnection);
+        /// </code>
+        /// </example>
         /// <param name="serviceConnection">The service connection implementation to use for the underlying message requests.</param>
         /// <param name="defaultMessageEncoder">A default message encoder implementation if desired.  If there is no specific encoder for a given type, this encoder would be called.  The built in default being used dotnet Json serializer.</param>
         /// <param name="defaultMessageEncryptor">A default message encryptor implementation if desired.  If there is no specific encryptor </param>
