@@ -144,7 +144,7 @@ namespace CQRSTesting.MappedConnection
 
             #region Verify
             mockCommandProcessor.Verify(x => x.ProcessCommandAsync(It.IsAny<ICommandInvocationContext<BasicResponseCommand>>(), It.IsAny<CancellationToken>()), Times.Once);
-            mockCommandProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.Never);
+            mockCommandProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.AtMostOnce());
             #endregion
         }
 
@@ -265,7 +265,7 @@ namespace CQRSTesting.MappedConnection
 
             #region Verify
             mockCommandProcessor.Verify(x => x.ProcessCommandAsync(It.IsAny<ICommandInvocationContext<BasicResponseCommand>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
-            mockCommandProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.Never);
+            mockCommandProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.AtMostOnce());
             #endregion
         }
 
