@@ -8,50 +8,42 @@ namespace MQContract.Middleware
 {
     internal class MiddlewareCollection
     {
-        private static readonly Type[] validMiddlewareTypes = [
-            typeof(IAfterDecodeMiddleware),
-            typeof(IAfterDecodeSpecificTypeMiddleware<>),
-            typeof(IAfterEncodeMiddleware),
-            typeof(IBeforeDecodeMiddleware),
-            typeof(IBeforeEncodeMiddleware),
-            typeof(IBeforeEncodeSpecificTypeMiddleware<>)
-        ];
         public enum InjectionPositions
         {
             Pre,
             Post
         };
 
-        private readonly ConcurrentBag<object> collection = [];
-        private readonly ConcurrentDictionary<(Type middlewareType,InjectionPositions position), IEnumerable<object>> injectableItems = [];
-        private readonly ConcurrentDictionary<Type, object> cache = [];
+        private readonly ConcurrentBag<IMiddleware> collection = [];
+        private readonly ConcurrentDictionary<(Type middlewareType,InjectionPositions position), IEnumerable<IMiddleware>> injectableItems = [];
+        private readonly ConcurrentDictionary<Type, IEnumerable<IMiddleware>> cache = [];
         private readonly ILogger? logger;
 
-        public MiddlewareCollection(ILogger? logger,ChannelMapper? channelMapper,IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
+        public MiddlewareCollection(ILogger? logger,ChannelMapper? channelMapper, MessageContext messageContext,IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
         {
             this.logger=logger;
             collection.Add(new ChannelMappingMiddleware(channelMapper));
             var compressionMiddleware = new CompressionMiddleware();
             RegisterInjectionMiddleware<IAfterEncodeMiddleware>(compressionMiddleware, InjectionPositions.Post);
             RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(compressionMiddleware, InjectionPositions.Pre);
-            var encryptionMiddleware = new EncryptionMiddleware(defaultMessageEncryptor, serviceProvider);
+            var encryptionMiddleware = new EncryptionMiddleware(messageContext, defaultMessageEncryptor, serviceProvider);
             RegisterInjectionMiddleware<IAfterEncodeMiddleware>(encryptionMiddleware, InjectionPositions.Post);
             RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(encryptionMiddleware, InjectionPositions.Pre);
         }
 
         public void RegisterMiddlewareInstance(object element)
         {
-            if (!Array.Exists(element.GetType().GetInterfaces(), (i) => validMiddlewareTypes.Contains((i.IsGenericType ? i.GetGenericTypeDefinition() : i))))
+            if (!(element is IMiddleware middleware))
                 throw new InvalidMiddlewareException(element.GetType());
             logger?.LogDebugChecked("Registering middleware of type {Type}", element.GetType());
-            collection.Add(element);
+            collection.Add(middleware);
             cache.Clear();
         }
 
         public void RegisterInjectionMiddleware<TMiddleware>(TMiddleware middleware,InjectionPositions position)
             where TMiddleware : IMiddleware
         {
-            if (!injectableItems.TryGetValue((typeof(TMiddleware), position), out IEnumerable<object>? list))
+            if (!injectableItems.TryGetValue((typeof(TMiddleware), position), out IEnumerable<IMiddleware>? list))
             {
                 list = [];
                 injectableItems.TryAdd((typeof(TMiddleware), position), list);
@@ -68,9 +60,12 @@ namespace MQContract.Middleware
         }
 
         public (IEnumerable<TGenericHandler> genericHandlers, IEnumerable<TSpecificHandler> specificHandlers) GetHandlers<TGenericHandler, TSpecificHandler>()
+            where TGenericHandler : IMiddleware
+            where TSpecificHandler : IMiddleware
             => (GetHandlers<TGenericHandler>(), GetHandlers<TSpecificHandler>());
 
         public IEnumerable<THandler> GetHandlers<THandler>()
+            where THandler : IMiddleware
         {
             if (!cache.TryGetValue(typeof(THandler), out var handlers))
             {
@@ -87,10 +82,10 @@ namespace MQContract.Middleware
                         .. (postItems ?? []).OfType<THandler>()
                     ];
                 }
-                cache.TryAdd(typeof(THandler), enumHandlers);
-                handlers = enumHandlers;
+                handlers = enumHandlers.OfType<IMiddleware>();
+                cache.TryAdd(typeof(THandler), handlers);
             }
-            return (IEnumerable<THandler>)handlers;
+            return handlers.OfType<THandler>();
         }
     }
 }

@@ -11,6 +11,12 @@ namespace MQContract.CQRS.Interfaces
         /// <summary>
         /// Called to execute a command of the given type
         /// </summary>
+        /// <example>
+        /// <code>
+        /// var context = new Context();
+        /// await cqrsConnection.ExecuteCommandAsync(new CreateUserCommand("user123", "John", "john@example.com"), context);
+        /// </code>
+        /// </example>
         /// <typeparam name="TCommand">The type of command to execute</typeparam>
         /// <param name="command">The command to execute</param>
         /// <param name="context">The context to use if desired</param>
@@ -35,6 +41,12 @@ namespace MQContract.CQRS.Interfaces
         /// <summary>
         /// Called to execute a query of the given type
         /// </summary>
+        /// <example>
+        /// <code>
+        /// var context = new Context();
+        /// var user = await cqrsConnection.ExecuteQueryAsync&lt;GetUserQuery, User&gt;(new GetUserQuery("user123"), context, TimeSpan.FromSeconds(10));
+        /// </code>
+        /// </example>
         /// <typeparam name="TQuery">The type of query to execute</typeparam>
         /// <typeparam name="TQueryResponse">The type of response to expect</typeparam>
         /// <param name="query">The query to execute</param>

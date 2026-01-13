@@ -1,6 +1,7 @@
 ﻿using MQContract.Interfaces;
 using MQContract.Messages;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace MQContract.Connections
 {
@@ -11,13 +12,13 @@ namespace MQContract.Connections
     {
         private readonly ConcurrentDictionary<(string? connectionName, object? dataType), ResiliencePolicy?> resilliancePolicies = [];
 
-        private ResiliencePolicy BuildPolicy((int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
+        private ResiliencePolicy BuildPolicy(string name, (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
         {
             if (retryPolicy==null && circuitBreakPolicy == null)
                 throw new InvalidPolicyArgumentsException([nameof(retryPolicy), nameof(circuitBreakPolicy)]);
             if (retryPolicy is not null && circuitBreakPolicy is not null && retryPolicy.Value.retryCount>circuitBreakPolicy.Value.handledEventsAllowedBeforeBreaking)
                 throw new InvalidRetryCircuitBreakTriggersException(nameof(retryPolicy.Value.retryCount), nameof(circuitBreakPolicy.Value.handledEventsAllowedBeforeBreaking));
-            return new(logger, retryPolicy, circuitBreakPolicy);
+            return new(name, Logger, retryPolicy, circuitBreakPolicy);
         }
 
         protected TContractConnection AddPolicy(
@@ -26,7 +27,13 @@ namespace MQContract.Connections
             (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy,
             (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
         {
-            resilliancePolicies.TryAdd((connectionName, key), BuildPolicy(retryPolicy, circuitBreakPolicy));
+            var keyName = (key) switch
+            {
+                (var o) when o is Type t => $"messageType[{t.Name}]",
+                (var o) when o is string s => $"messageChannel[{s}]",
+                _ => "default"
+            };
+            resilliancePolicies.TryAdd((connectionName, key), BuildPolicy($"{(connectionName==null ? "" : $"{connectionName}-")}{keyName}", retryPolicy, circuitBreakPolicy));
             foreach(var k in resilliancePolicies.Keys
                 .Where(static k =>!string.IsNullOrWhiteSpace(k.connectionName) && k.dataType is not null && k.dataType is not Type && k.dataType is not string)
                 .ToArray())
@@ -79,28 +86,28 @@ namespace MQContract.Connections
             return null;
         }
 
-        protected async ValueTask<TransmissionResult> ExecuteResilliantTransmissionAsync<TMessage>(Func<CancellationToken, ValueTask<TransmissionResult>> func, string? connectionName, string channel, CancellationToken cancellationToken)
+        protected async ValueTask<TransmissionResult> ExecuteResilliantTransmissionAsync<TMessage>(Func<CancellationToken, ValueTask<TransmissionResult>> func, Activity? activity, string? connectionName, string channel, CancellationToken cancellationToken)
         {
             var policy = GetResilliancePolicy<TMessage>(connectionName, channel);
             if (policy==null)
                 return await func(cancellationToken);
-            return await policy.ExecuteResilliantTransmissionAsync(func, cancellationToken);
+            return await policy.ExecuteResilliantTransmissionAsync(activity, func, cancellationToken);
         }
 
-        protected async ValueTask<QueryResult<TQueryResponse>> ExecuteResilliantTransmissionAsync<TQuery, TQueryResponse>(Func<CancellationToken, ValueTask<QueryResult<TQueryResponse>>> func, string? connectionName, string channel, CancellationToken cancellationToken)
+        protected async ValueTask<QueryResult<TQueryResponse>> ExecuteResilliantTransmissionAsync<TQuery, TQueryResponse>(Func<CancellationToken, ValueTask<QueryResult<TQueryResponse>>> func, Activity? activity, string? connectionName, string channel, CancellationToken cancellationToken)
         {
             var policy = GetResilliancePolicy<TQuery>(connectionName, channel);
             if (policy==null)
                 return await func(cancellationToken);
-            return await policy.ExecuteResilliantTransmissionAsync<TQueryResponse>(func, cancellationToken);
+            return await policy.ExecuteResilliantTransmissionAsync<TQueryResponse>(activity, func, cancellationToken);
         }
 
-        protected async ValueTask<IEnumerable<TransmissionResult>> ExecuteResilliantTransmissionAsync<TMessage>(Func<IEnumerable<ServiceMessage>, CancellationToken, ValueTask<IEnumerable<TransmissionResult>>> func, string? connectionName, IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+        protected async ValueTask<IEnumerable<TransmissionResult>> ExecuteResilliantTransmissionAsync<TMessage>(Func<IEnumerable<ServiceMessage>, CancellationToken, ValueTask<IEnumerable<TransmissionResult>>> func, Activity? activity, string? connectionName, IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
         {
             var policy = GetResilliancePolicy<TMessage>(connectionName, messages.First().Channel);
             if (policy == null)
                 return await func(messages, cancellationToken);
-            return await policy.ExecuteResilliantTransmissionAsync(func, messages, cancellationToken);
+            return await policy.ExecuteResilliantTransmissionAsync(activity, func, messages, cancellationToken);
         }
     }
 }

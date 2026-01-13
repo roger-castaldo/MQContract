@@ -7,6 +7,12 @@
     /// <remarks>
     /// 
     /// </remarks>
+    /// <example>
+    /// <code>
+    /// [Message(channel: "Arrivals")]
+    /// public record ArrivalAnnouncement(string FirstName, string LastName);
+    /// </code>
+    /// </example>
     /// <param name="channel">The channel to be used</param>
     /// <param name="typeName">The message type to use</param>
     /// <param name="typeVersion">The message version to use</param>

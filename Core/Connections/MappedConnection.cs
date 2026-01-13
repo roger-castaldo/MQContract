@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Attributes;
 using MQContract.Extensions;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
@@ -8,7 +7,6 @@ using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using MQContract.Middleware;
 using System.Diagnostics;
-using System.Reflection;
 
 namespace MQContract.Connections
 {
@@ -154,37 +152,12 @@ namespace MQContract.Connections
             return await ExecuteQueryAsync<TQuery, TQueryResponse>(serviceConnection.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: serviceConnection.ServiceConnectionName, cancellationToken: cancellationToken);
         }
 
-        private static readonly MethodInfo QueryMethod = typeof(IContractConnection).GetMethods()
-            .First(method => Equals(method.Name, nameof(IContractConnection.QueryAsync)) && method.GetGenericArguments().Length==2);
         async ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader,
             CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logger?.LogDebugChecked("Attempting to get response type for QueryResponse for {TQuery} on {Channel} with {ResponseChannel}", typeof(TQuery), channel, responseChannel);
-#pragma warning disable CA2208 // Instantiate argument exceptions correctly
-            var responseType = Utility.GetCustomAttribute<TQuery,QueryMessageAttribute>()?.ResponseType??throw new UnknownResponseTypeException("ResponseType", typeof(TQuery));
-#pragma warning restore CA2208 // Instantiate argument exceptions correctly
-            Logger?.LogInformationChecked("Obtained {ResponseType} for QueryResponse for {TQuery} on {Channel} with {ResponseChannel}", responseType, typeof(TQuery), channel, responseChannel);
-            var methodInfo = QueryMethod.MakeGenericMethod(typeof(TQuery), responseType!);
-            try
-            {
-                return Utility.ConvertResultFromObject(await Utility.InvokeMethodAsync(
-                    methodInfo,
-                    this,
-                    [
-                        message,
-                        timeout,
-                        channel,
-                        responseChannel,
-                        messageHeader,
-                        cancellationToken
-                    ])
-                )!;
-            }
-            catch (TimeoutException)
-            {
-                throw new QueryTimeoutException();
-            }
+            return await messageContext.ExecuteQuery<TQuery>(this, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
         }
 
         protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, MessageFilters<TQuery>? messageFilter, CancellationToken cancellationToken)

@@ -12,9 +12,10 @@ namespace MQContract.Subscriptions
         Func<ReceivedServiceMessage, string, ValueTask<FilteredServiceMessage>> processMessage,
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
+        MessageContext context,
         string? channel = null, string? group = null,
         bool synchronous = false, ILogger? logger = null)
-        : SubscriptionBase<TMessage>(mapChannel, channel, synchronous, logger)
+        : SubscriptionBase<TMessage>(mapChannel, context, channel, synchronous, logger)
     {
         private ManualResetEventSlim? manualResetEvent = new(true);
         private CancellationTokenSource? token = new();

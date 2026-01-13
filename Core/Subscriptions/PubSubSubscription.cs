@@ -6,9 +6,9 @@ using MQContract.Messages;
 namespace MQContract.Subscriptions
 {
     internal sealed class PubSubSubscription<TMessage>(Func<ReceivedServiceMessage, ValueTask<bool>> messageReceived, Action<Exception> errorReceived,
-        Func<string, ValueTask<string>> mapChannel,
+        Func<string, ValueTask<string>> mapChannel, MessageContext context,
         string? channel = null, string? group = null, bool synchronous = false, ILogger? logger = null)
-        : SubscriptionBase<TMessage>(mapChannel, channel, synchronous, logger)
+        : SubscriptionBase<TMessage>(mapChannel, context, channel, synchronous, logger)
     {
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)
         {

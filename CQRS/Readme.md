@@ -82,6 +82,13 @@ Command being defined
 | ---- | ---- | ----------- |
 | channel | [T:MQContract.CQRS.Attributes.CommandAttribute](#T-T-MQContract-CQRS-Attributes-CommandAttribute 'T:MQContract.CQRS.Attributes.CommandAttribute') | The channel to be used |
 
+##### Example
+
+```
+[Command(channel: "UserCommands", typeName: "CreateUser", typeVersion: "1.0.0")]
+public record CreateUserCommand(string UserId, string UserName, string Email) : ICommand;
+```
+
 <a name='M-MQContract-CQRS-Attributes-CommandAttribute-#ctor-System-String,System-String,System-String-'></a>
 ### #ctor(channel,typeName,typeVersion) `constructor`
 
@@ -97,6 +104,13 @@ Command being defined
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to be used |
 | typeName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The command type to use |
 | typeVersion | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The command type version to use |
+
+##### Example
+
+```
+[Command(channel: "UserCommands", typeName: "CreateUser", typeVersion: "1.0.0")]
+public record CreateUserCommand(string UserId, string UserName, string Email) : ICommand;
+```
 
 <a name='T-MQContract-CQRS-CommandCallException'></a>
 ## CommandCallException `type`
@@ -225,6 +239,13 @@ A ValueTask to allow for async execution
 | ---- | ----------- |
 | TCommand | The type of command to execute |
 
+##### Example
+
+```
+var context = new Context();
+await cqrsConnection.ExecuteCommandAsync(new CreateUserCommand("user123", "John", "john@example.com"), context);
+```
+
 <a name='M-MQContract-CQRS-Interfaces-ICQRSConnection-ExecuteCommandAsync``2-``0,MQContract-CQRS-Context,System-Nullable{System-TimeSpan},System-Threading-CancellationToken-'></a>
 ### ExecuteCommandAsync\`\`2(command,context,timeout,cancellationToken) `method`
 
@@ -278,6 +299,13 @@ The exepected result type
 | ---- | ----------- |
 | TQuery | The type of query to execute |
 | TQueryResponse | The type of response to expect |
+
+##### Example
+
+```
+var context = new Context();
+var user = await cqrsConnection.ExecuteQueryAsync<GetUserQuery, User>(new GetUserQuery("user123"), context, TimeSpan.FromSeconds(10));
+```
 
 <a name='M-MQContract-CQRS-Interfaces-ICQRSConnection-RegisterCommandProcessorAsync``1-MQContract-CQRS-Interfaces-Command-ICommandProcessor{``0},System-String-'></a>
 ### RegisterCommandProcessorAsync\`\`1(processor,group) `method`
@@ -493,6 +521,24 @@ Defines a command processor for the given type of command
 | ---- | ----------- |
 | TCommand | The type of command |
 
+##### Example
+
+```
+public class CreateUserProcessor : ICommandProcessor<CreateUserCommand>
+{
+    public async ValueTask ProcessCommandAsync(ICommandInvocationContext<CreateUserCommand> context, CancellationToken cancellationToken)
+    {
+        var command = context.Command;
+        // Process the command (e.g., save to database)
+        Console.WriteLine($"User created: {command.UserName}");
+    }
+    void IProcessor.ErrorRecieved(Exception error)
+    {
+        Console.WriteLine($"Error: {error.Message}");
+    }
+}
+```
+
 <a name='M-MQContract-CQRS-Interfaces-Command-ICommandProcessor`1-ProcessCommandAsync-MQContract-CQRS-Interfaces-Command-ICommandInvocationContext{`0},System-Threading-CancellationToken-'></a>
 ### ProcessCommandAsync(invocationContext,cancellationToken) `method`
 
@@ -612,6 +658,13 @@ WARNING:  THe Contract Connection cannot be a MultiService style connection, it 
 | ---- | ---- | ----------- |
 | contractConnection | [MQContract.Interfaces.IContractConnection](#T-MQContract-Interfaces-IContractConnection 'MQContract.Interfaces.IContractConnection') | The contract connection it will be linked to. |
 | cancelationTokenChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to use for distributing cancelling token Cancel calls |
+
+##### Example
+
+```
+var contractConnection = ContractConnection.Instance(new InMemory.Connection());
+var cqrsConnection = contractConnection.CreateCQRSConnection("CQRSChannel");
+```
 
 <a name='T-MQContract-CQRS-Interfaces-Command-IFilteredCommandProcessor`1'></a>
 ## IFilteredCommandProcessor\`1 `type`
@@ -885,6 +938,24 @@ Defines a query processor for the given type of query that expects the given res
 | TQuery | The type of query |
 | TQueryResponse | The type of response from the query |
 
+##### Example
+
+```
+public class GetUserProcessor : IQueryProcessor<GetUserQuery, User>
+{
+    public async ValueTask<User> ProcessQueryAsync(IQueryInvocationContext<GetUserQuery> context, CancellationToken cancellationToken)
+    {
+        var query = context.Query;
+        // Process the query (e.g., retrieve from database)
+        return new User(query.UserId, "John", "john@example.com");
+    }
+    void IProcessor.ErrorRecieved(Exception error)
+    {
+        Console.WriteLine($"Error: {error.Message}");
+    }
+}
+```
+
 <a name='M-MQContract-CQRS-Interfaces-Query-IQueryProcessor`2-ProcessQueryAsync-MQContract-CQRS-Interfaces-Query-IQueryInvocationContext{`0},System-Threading-CancellationToken-'></a>
 ### ProcessQueryAsync(invocationContext,cancellationToken) `method`
 
@@ -932,6 +1003,13 @@ for the Query being defined
 | ---- | ---- | ----------- |
 | channel | [T:MQContract.CQRS.Attributes.QueryAttribute](#T-T-MQContract-CQRS-Attributes-QueryAttribute 'T:MQContract.CQRS.Attributes.QueryAttribute') | The channel to be used |
 
+##### Example
+
+```
+[Query(channel: "UserQueries", typeName: "GetUser", typeVersion: "1.0.0", responseChannel: "UserResponses")]
+public record GetUserQuery(string UserId) : IQuery;
+```
+
 <a name='M-MQContract-CQRS-Attributes-QueryAttribute-#ctor-System-String,System-String,System-String,System-String,System-Int32-'></a>
 ### #ctor(channel,typeName,typeVersion,responseChannel,responseTimeoutMilliseconds) `constructor`
 
@@ -949,6 +1027,13 @@ for the Query being defined
 | typeVersion | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The query type version to use |
 | responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The responce channel to be used when an underlying service connection does not support QueryResponse or Inbox |
 | responseTimeoutMilliseconds | [System.Int32](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Int32 'System.Int32') | The query response timeout to default to |
+
+##### Example
+
+```
+[Query(channel: "UserQueries", typeName: "GetUser", typeVersion: "1.0.0", responseChannel: "UserResponses")]
+public record GetUserQuery(string UserId) : IQuery;
+```
 
 <a name='T-MQContract-CQRS-QueryCallException'></a>
 ## QueryCallException `type`

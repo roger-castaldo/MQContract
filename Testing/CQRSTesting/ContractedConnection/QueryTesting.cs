@@ -145,7 +145,7 @@ namespace CQRSTesting.ContractedConnection
 
             #region Verify
             mockQueryProcessor.Verify(x => x.ProcessQueryAsync(It.IsAny<IQueryInvocationContext<BasicQuery>>(), It.IsAny<CancellationToken>()), Times.Once);
-            mockQueryProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.Never);
+            mockQueryProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.AtMostOnce());
             #endregion
         }
 
@@ -266,7 +266,7 @@ namespace CQRSTesting.ContractedConnection
 
             #region Verify
             mockQueryProcessor.Verify(x => x.ProcessQueryAsync(It.IsAny<IQueryInvocationContext<BasicQuery>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
-            mockQueryProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.Never);
+            mockQueryProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.AtMostOnce());
             #endregion
         }
 

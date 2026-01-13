@@ -22,10 +22,10 @@ namespace MQContract.Middleware
         private readonly InternalMetricTracker? internalTracker;
         private readonly Channel<MetricEntryValue> channel = Channel.CreateUnbounded<MetricEntryValue>();
 
-        public MetricsMiddleware(Meter? meter, bool useInternal)
+        public MetricsMiddleware(Meter? meter, MessageContext context, bool useInternal)
         {
             if (meter!=null)
-                systemTracker=new(meter!);
+                systemTracker=new(meter!, context);
             if (useInternal)
                 internalTracker=new();
             Start();

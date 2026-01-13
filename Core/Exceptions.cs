@@ -5,8 +5,8 @@
     /// </summary>
     public class MessageConversionException : Exception
     {
-        internal MessageConversionException(Type messageType, Type converterType)
-            : base($"The attempt to convert the incoming message resulted in a null object.[MessageType:{messageType.FullName},ConverterType:{converterType.FullName}]") { }
+        internal MessageConversionException(Type messageType)
+            : base($"The attempt to convert the incoming message resulted in a null object.[MessageType:{messageType.FullName}]") { }
     }
 
     /// <summary>
@@ -150,5 +150,22 @@
     {
         internal ConsumerRegistrationFailedException(string consumerName, Type consumerType, Exception exception)
             : base($"Failed to register a {consumerName} of type {consumerType}", exception) { }
+    }
+
+    /// <summary>
+    /// Thrown when dynamic code is not supported but a call that requires it is made
+    /// </summary>
+    public sealed class DynamicCodeNotSupportedException
+        : Exception
+    {
+        private DynamicCodeNotSupportedException(string message)
+            : base(message) { }
+
+        internal static void ThrowIfDynamicCodeIsBlocked(string message)
+        {
+            if (!DynamicCodeGate.IsSupported)
+                throw new DynamicCodeNotSupportedException(message);
+        }
+
     }
 }

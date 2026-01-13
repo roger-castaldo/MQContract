@@ -4,6 +4,18 @@
     /// Use this attribute to define the Channel, Group and/or IngoreMessageTypeHeader flag
     /// for a given Consumer
     /// </summary>
+    /// <example>
+    /// <code>
+    /// [Consumer(channel: "Arrivals", group: "Group1")]
+    /// public class MyConsumer : IPubSubConsumer&lt;ArrivalAnnouncement&gt;
+    /// {
+    ///     public void MessageReceived(IReceivedMessage&lt;ArrivalAnnouncement&gt; message)
+    ///     {
+    ///         Console.WriteLine($"Received: {message.Message.FirstName}");
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     /// <param name="channel">The channel the consumer will listen on</param>
     /// <param name="group">The group the consumer will register as</param>
     /// <param name="ignoreMessageTypeHeader">A falg to indicate if ignoring the message type is desired</param>

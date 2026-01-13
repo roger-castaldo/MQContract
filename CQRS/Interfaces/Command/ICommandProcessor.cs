@@ -3,6 +3,24 @@
     /// <summary>
     /// Defines a command processor for the given type of command
     /// </summary>
+    /// <example>
+    /// <code>
+    /// public class CreateUserProcessor : ICommandProcessor&lt;CreateUserCommand&gt;
+    /// {
+    ///     public async ValueTask ProcessCommandAsync(ICommandInvocationContext&lt;CreateUserCommand&gt; context, CancellationToken cancellationToken)
+    ///     {
+    ///         var command = context.Command;
+    ///         // Process the command (e.g., save to database)
+    ///         Console.WriteLine($"User created: {command.UserName}");
+    ///     }
+    /// 
+    ///     void IProcessor.ErrorRecieved(Exception error)
+    ///     {
+    ///         Console.WriteLine($"Error: {error.Message}");
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     /// <typeparam name="TCommand">The type of command</typeparam>
     public interface ICommandProcessor<TCommand> : IProcessor
         where TCommand : ICommand

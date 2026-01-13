@@ -125,6 +125,8 @@
   - [RegisterServiceConnection(messageHeaderKey,messageHeaderValue,serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-String,System-String,System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterServiceConnection(System.String,System.String,System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
   - [RegisterServiceConnection\`\`1(serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection``1-System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterServiceConnection``1(System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
 - [IMappedContractConnection](#T-MQContract-Interfaces-IMappedContractConnection 'MQContract.Interfaces.IMappedContractConnection')
+- [IMessageContextContractConnection\`1](#T-MQContract-Interfaces-IMessageContextContractConnection`1 'MQContract.Interfaces.IMessageContextContractConnection`1')
+  - [RegisterMessageContext(messageContext)](#M-MQContract-Interfaces-IMessageContextContractConnection`1-RegisterMessageContext-MQContract-MQContractMessageContext- 'MQContract.Interfaces.IMessageContextContractConnection`1.RegisterMessageContext(MQContract.MQContractMessageContext)')
 - [IMessageConverter\`2](#T-MQContract-Interfaces-Conversion-IMessageConverter`2 'MQContract.Interfaces.Conversion.IMessageConverter`2')
   - [ConvertAsync(source)](#M-MQContract-Interfaces-Conversion-IMessageConverter`2-ConvertAsync-`0- 'MQContract.Interfaces.Conversion.IMessageConverter`2.ConvertAsync(`0)')
 - [IMessageEncoder](#T-MQContract-Interfaces-Encoding-IMessageEncoder 'MQContract.Interfaces.Encoding.IMessageEncoder')
@@ -201,6 +203,22 @@
 - [ISpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-ISpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.ISpecificTypeMiddleware`1')
 - [ISubscription](#T-MQContract-Interfaces-ISubscription 'MQContract.Interfaces.ISubscription')
   - [EndAsync()](#M-MQContract-Interfaces-ISubscription-EndAsync 'MQContract.Interfaces.ISubscription.EndAsync')
+- [InvalidEncoderException](#T-MQContract-InvalidEncoderException 'MQContract.InvalidEncoderException')
+- [InvalidEncryptorException](#T-MQContract-InvalidEncryptorException 'MQContract.InvalidEncryptorException')
+- [MQContractMessageContext](#T-MQContract-MQContractMessageContext 'MQContract.MQContractMessageContext')
+  - [IsMessageCodeGenerated\`\`1()](#M-MQContract-MQContractMessageContext-IsMessageCodeGenerated``1 'MQContract.MQContractMessageContext.IsMessageCodeGenerated``1')
+  - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IMultiServiceContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IMultiServiceContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [TryGetDecodingCallback(messageID,globalMessageEncoder,serviceProvider)](#M-MQContract-MQContractMessageContext-TryGetDecodingCallback-System-String,MQContract-Interfaces-Encoding-IMessageEncoder,System-IServiceProvider- 'MQContract.MQContractMessageContext.TryGetDecodingCallback(System.String,MQContract.Interfaces.Encoding.IMessageEncoder,System.IServiceProvider)')
+  - [TryGetMessageConverter\`\`1(messageID,messageDecode,serviceProvider)](#M-MQContract-MQContractMessageContext-TryGetMessageConverter``1-System-String,System-Func{MQContract-Interfaces-Messages-IEncodedMessage,System-Threading-Tasks-ValueTask{System-Object}},System-IServiceProvider- 'MQContract.MQContractMessageContext.TryGetMessageConverter``1(System.String,System.Func{MQContract.Interfaces.Messages.IEncodedMessage,System.Threading.Tasks.ValueTask{System.Object}},System.IServiceProvider)')
+  - [TryGetMessageEncoder\`\`1(globalMessageEncoder,serviceProvider)](#M-MQContract-MQContractMessageContext-TryGetMessageEncoder``1-MQContract-Interfaces-Encoding-IMessageEncoder,System-IServiceProvider- 'MQContract.MQContractMessageContext.TryGetMessageEncoder``1(MQContract.Interfaces.Encoding.IMessageEncoder,System.IServiceProvider)')
+  - [TryGetMessageEncryptor(messageType,globalEncryptor,serviceProvider)](#M-MQContract-MQContractMessageContext-TryGetMessageEncryptor-System-Type,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider- 'MQContract.MQContractMessageContext.TryGetMessageEncryptor(System.Type,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider)')
+  - [TryGetMessageType(messageType)](#M-MQContract-MQContractMessageContext-TryGetMessageType-System-Type- 'MQContract.MQContractMessageContext.TryGetMessageType(System.Type)')
+- [MQContractMessageContextAttribute](#T-MQContract-Attributes-MQContractMessageContextAttribute 'MQContract.Attributes.MQContractMessageContextAttribute')
+  - [#ctor(locateEncoders,locateConverters,locateEncryptors)](#M-MQContract-Attributes-MQContractMessageContextAttribute-#ctor-System-Boolean,System-Boolean,System-Boolean- 'MQContract.Attributes.MQContractMessageContextAttribute.#ctor(System.Boolean,System.Boolean,System.Boolean)')
+  - [LocateConverters](#P-MQContract-Attributes-MQContractMessageContextAttribute-LocateConverters 'MQContract.Attributes.MQContractMessageContextAttribute.LocateConverters')
+  - [LocateEncoders](#P-MQContract-Attributes-MQContractMessageContextAttribute-LocateEncoders 'MQContract.Attributes.MQContractMessageContextAttribute.LocateEncoders')
+  - [LocateEncryptors](#P-MQContract-Attributes-MQContractMessageContextAttribute-LocateEncryptors 'MQContract.Attributes.MQContractMessageContextAttribute.LocateEncryptors')
 - [MessageAttribute](#T-MQContract-Attributes-MessageAttribute 'MQContract.Attributes.MessageAttribute')
   - [#ctor(channel,typeName,typeVersion)](#M-MQContract-Attributes-MessageAttribute-#ctor-System-String,System-String,System-String- 'MQContract.Attributes.MessageAttribute.#ctor(System.String,System.String,System.String)')
   - [Channel](#P-MQContract-Attributes-MessageAttribute-Channel 'MQContract.Attributes.MessageAttribute.Channel')
@@ -221,6 +239,14 @@
   - [#ctor(originalHeader,appendedHeader)](#M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,MQContract-Messages-MessageHeader- 'MQContract.Messages.MessageHeader.#ctor(MQContract.Messages.MessageHeader,MQContract.Messages.MessageHeader)')
   - [Item](#P-MQContract-Messages-MessageHeader-Item-System-String- 'MQContract.Messages.MessageHeader.Item(System.String)')
   - [Keys](#P-MQContract-Messages-MessageHeader-Keys 'MQContract.Messages.MessageHeader.Keys')
+- [MessageTypeDefinition](#T-MQContract-MQContractMessageContext-MessageTypeDefinition 'MQContract.MQContractMessageContext.MessageTypeDefinition')
+  - [#ctor(Channel,TypeName,TypeVersion,ResponseChannel,ResponseTimeout,ResponseType)](#M-MQContract-MQContractMessageContext-MessageTypeDefinition-#ctor-System-String,System-String,System-Version,System-String,System-Nullable{System-TimeSpan},System-Type- 'MQContract.MQContractMessageContext.MessageTypeDefinition.#ctor(System.String,System.String,System.Version,System.String,System.Nullable{System.TimeSpan},System.Type)')
+  - [Channel](#P-MQContract-MQContractMessageContext-MessageTypeDefinition-Channel 'MQContract.MQContractMessageContext.MessageTypeDefinition.Channel')
+  - [ResponseChannel](#P-MQContract-MQContractMessageContext-MessageTypeDefinition-ResponseChannel 'MQContract.MQContractMessageContext.MessageTypeDefinition.ResponseChannel')
+  - [ResponseTimeout](#P-MQContract-MQContractMessageContext-MessageTypeDefinition-ResponseTimeout 'MQContract.MQContractMessageContext.MessageTypeDefinition.ResponseTimeout')
+  - [ResponseType](#P-MQContract-MQContractMessageContext-MessageTypeDefinition-ResponseType 'MQContract.MQContractMessageContext.MessageTypeDefinition.ResponseType')
+  - [TypeName](#P-MQContract-MQContractMessageContext-MessageTypeDefinition-TypeName 'MQContract.MQContractMessageContext.MessageTypeDefinition.TypeName')
+  - [TypeVersion](#P-MQContract-MQContractMessageContext-MessageTypeDefinition-TypeVersion 'MQContract.MQContractMessageContext.MessageTypeDefinition.TypeVersion')
 - [MultiTransmissionResult](#T-MQContract-Messages-MultiTransmissionResult 'MQContract.Messages.MultiTransmissionResult')
   - [#ctor(ID,Results)](#M-MQContract-Messages-MultiTransmissionResult-#ctor-System-String,System-Collections-Generic-IEnumerable{MQContract-Messages-ChildTransmissionResult}- 'MQContract.Messages.MultiTransmissionResult.#ctor(System.String,System.Collections.Generic.IEnumerable{MQContract.Messages.ChildTransmissionResult})')
   - [HasError](#P-MQContract-Messages-MultiTransmissionResult-HasError 'MQContract.Messages.MultiTransmissionResult.HasError')
@@ -280,6 +306,12 @@
   - [Error](#P-MQContract-Messages-TransmissionResult-Error 'MQContract.Messages.TransmissionResult.Error')
   - [ID](#P-MQContract-Messages-TransmissionResult-ID 'MQContract.Messages.TransmissionResult.ID')
   - [IsError](#P-MQContract-Messages-TransmissionResult-IsError 'MQContract.Messages.TransmissionResult.IsError')
+- [UseMqContractAttribute](#T-MQContract-Attributes-UseMqContractAttribute 'MQContract.Attributes.UseMqContractAttribute')
+  - [#ctor(contractType,encoderType,converters,messageEncryptor)](#M-MQContract-Attributes-UseMqContractAttribute-#ctor-System-Type,System-Type,System-Type[],System-Type- 'MQContract.Attributes.UseMqContractAttribute.#ctor(System.Type,System.Type,System.Type[],System.Type)')
+  - [ContractType](#P-MQContract-Attributes-UseMqContractAttribute-ContractType 'MQContract.Attributes.UseMqContractAttribute.ContractType')
+  - [Converters](#P-MQContract-Attributes-UseMqContractAttribute-Converters 'MQContract.Attributes.UseMqContractAttribute.Converters')
+  - [EncoderType](#P-MQContract-Attributes-UseMqContractAttribute-EncoderType 'MQContract.Attributes.UseMqContractAttribute.EncoderType')
+  - [MessageEncryptor](#P-MQContract-Attributes-UseMqContractAttribute-MessageEncryptor 'MQContract.Attributes.UseMqContractAttribute.MessageEncryptor')
 
 <a name='T-MQContract-Messages-ChildTransmissionResult'></a>
 ## ChildTransmissionResult `type`
@@ -351,6 +383,19 @@ for a given Consumer
 | ---- | ---- | ----------- |
 | channel | [T:MQContract.Attributes.ConsumerAttribute](#T-T-MQContract-Attributes-ConsumerAttribute 'T:MQContract.Attributes.ConsumerAttribute') | The channel the consumer will listen on |
 
+##### Example
+
+```
+[Consumer(channel: "Arrivals", group: "Group1")]
+public class MyConsumer : IPubSubConsumer<ArrivalAnnouncement>
+{
+    public void MessageReceived(IReceivedMessage<ArrivalAnnouncement> message)
+    {
+        Console.WriteLine($"Received: {message.Message.FirstName}");
+    }
+}
+```
+
 <a name='M-MQContract-Attributes-ConsumerAttribute-#ctor-System-String,System-String,System-Boolean-'></a>
 ### #ctor(channel,group,ignoreMessageTypeHeader) `constructor`
 
@@ -366,6 +411,19 @@ for a given Consumer
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel the consumer will listen on |
 | group | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The group the consumer will register as |
 | ignoreMessageTypeHeader | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | A falg to indicate if ignoring the message type is desired |
+
+##### Example
+
+```
+[Consumer(channel: "Arrivals", group: "Group1")]
+public class MyConsumer : IPubSubConsumer<ArrivalAnnouncement>
+{
+    public void MessageReceived(IReceivedMessage<ArrivalAnnouncement> message)
+    {
+        Console.WriteLine($"Received: {message.Message.FirstName}");
+    }
+}
+```
 
 <a name='P-MQContract-Attributes-ConsumerAttribute-Channel'></a>
 ### Channel `property`
@@ -1207,6 +1265,18 @@ A subscription instance that can be ended when desired
 | ---- | ----------- |
 | TMessage | The type of message to listen for |
 
+##### Example
+
+```
+await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
+    (message) => {
+        Console.WriteLine($"Arrival: {message.Message.FirstName}");
+        return ValueTask.CompletedTask;
+    },
+    (error) => Console.WriteLine($"Error: {error.Message}")
+);
+```
+
 <a name='M-MQContract-Interfaces-IBaseContractConnection-SubscribeAsync``1-System-Action{MQContract-Interfaces-IReceivedMessage{``0}},System-Action{System-Exception},System-String,System-String,System-Boolean,MQContract-Messages-MessageFilters{``0},System-Threading-CancellationToken-'></a>
 ### SubscribeAsync\`\`1(messageReceived,errorReceived,channel,group,ignoreMessageHeader,messageFilters,cancellationToken) `method`
 
@@ -1878,6 +1948,13 @@ A result indicating the tranmission results
 | ---- | ----------- |
 | TMessage | The type of message to send |
 
+##### Example
+
+```
+var result = await contractConnection.PublishAsync(new ArrivalAnnouncement("John", "Doe"));
+Console.WriteLine($"Published ID: {result.ID}");
+```
+
 <a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
 
@@ -1937,6 +2014,13 @@ only used when the underlying connection does not support a QueryResponse style 
 | ---- | ----------- |
 | TQuery | The type of message to send for the query |
 | TQueryResponse | The type of message to expect back for the response |
+
+##### Example
+
+```
+var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("John", "Doe"));
+Console.WriteLine($"Response: {response.Result}");
+```
 
 <a name='T-MQContract-Interfaces-IContractMetric'></a>
 ## IContractMetric `type`
@@ -2322,6 +2406,40 @@ MQContract.Interfaces
 ##### Summary
 
 The representation of a Mapped Contract Connection which is built to use 1 or more service connections for the calls
+
+<a name='T-MQContract-Interfaces-IMessageContextContractConnection`1'></a>
+## IMessageContextContractConnection\`1 `type`
+
+##### Namespace
+
+MQContract.Interfaces
+
+##### Summary
+
+Houses the message context pieces for a given contract connection
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TContractConnection | The underlying type that is being represented here which must be IBaseContractConnection, CC is used for method chaining. |
+
+<a name='M-MQContract-Interfaces-IMessageContextContractConnection`1-RegisterMessageContext-MQContract-MQContractMessageContext-'></a>
+### RegisterMessageContext(messageContext) `method`
+
+##### Summary
+
+Called to register a Message Context with the given connection
+
+##### Returns
+
+The Contract Connection instance to allow chaining calls
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageContext | [MQContract.MQContractMessageContext](#T-MQContract-MQContractMessageContext 'MQContract.MQContractMessageContext') | The Message Context (that the code generator has built upon) to register |
 
 <a name='T-MQContract-Interfaces-Conversion-IMessageConverter`2'></a>
 ## IMessageConverter\`2 `type`
@@ -3594,6 +3712,317 @@ A task that is ending the subscription and closing off the resources for it
 
 This method has no parameters.
 
+<a name='T-MQContract-InvalidEncoderException'></a>
+## InvalidEncoderException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown when the type specified in a UseMQContract for the encoder does not match the contract type
+
+<a name='T-MQContract-InvalidEncryptorException'></a>
+## InvalidEncryptorException `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Thrown when the type specified in a UseMQContract for the encryptor does not match the contract type
+
+<a name='T-MQContract-MQContractMessageContext'></a>
+## MQContractMessageContext `type`
+
+##### Namespace
+
+MQContract
+
+##### Summary
+
+Used to attache messages for the code generator to build up code for to improve performance and potentially handle AOT.  The implementation of this class must be made as 
+partial and none of the virtual calls need to be implemented as the code generator will handle that.
+
+##### Example
+
+using MQContract;
+
+namespace Messages;
+
+[UseMqContractAttribute(typeof(Announcement))]
+public partial class MyMessageContext : MQContractMessageContext { }
+
+<a name='M-MQContract-MQContractMessageContext-IsMessageCodeGenerated``1'></a>
+### IsMessageCodeGenerated\`\`1() `method`
+
+##### Summary
+
+Called to determine if this context handles this particular message type
+
+##### Returns
+
+true if this context instance defines this message type
+
+##### Parameters
+
+This method has no parameters.
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to check for |
+
+##### Remarks
+
+This will be implemented by the code generator
+
+<a name='M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
+### TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to attempt to execute a Query call with an unkown return type
+
+##### Returns
+
+null or the Query attempt against the given connection
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| contractConnection | [MQContract.Interfaces.IContractConnection](#T-MQContract-Interfaces-IContractConnection 'MQContract.Interfaces.IContractConnection') | An instance of the connection to invoke it against |
+| message | [System.Object](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Object 'System.Object') | The query message |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The query timeout |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to use |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The response channel to use |
+| messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message header to use |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to query with |
+
+##### Remarks
+
+This will be implemented by the code generator
+
+<a name='M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IMultiServiceContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
+### TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
+
+##### Summary
+
+Called to attempt to execute a Query call with an unkown return type
+
+##### Returns
+
+null or the Query attempt against the given connection
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| contractConnection | [MQContract.Interfaces.IMultiServiceContractConnection](#T-MQContract-Interfaces-IMultiServiceContractConnection 'MQContract.Interfaces.IMultiServiceContractConnection') | An instance of the connection to invoke it against |
+| message | [System.Object](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Object 'System.Object') | The query message |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The query timeout |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to use |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The response channel to use |
+| messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message header to use |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to query with |
+
+##### Remarks
+
+This will be implemented by the code generator
+
+<a name='M-MQContract-MQContractMessageContext-TryGetDecodingCallback-System-String,MQContract-Interfaces-Encoding-IMessageEncoder,System-IServiceProvider-'></a>
+### TryGetDecodingCallback(messageID,globalMessageEncoder,serviceProvider) `method`
+
+##### Summary
+
+Called to attempt to get the DecodingCallback for a given message
+
+##### Returns
+
+null or an instance of a decode callback
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message type id of the service message |
+| globalMessageEncoder | [MQContract.Interfaces.Encoding.IMessageEncoder](#T-MQContract-Interfaces-Encoding-IMessageEncoder 'MQContract.Interfaces.Encoding.IMessageEncoder') | The global message encoder specified for this contract if any |
+| serviceProvider | [System.IServiceProvider](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.IServiceProvider 'System.IServiceProvider') | An instance of the ServiceProvider used for DI if available |
+
+##### Remarks
+
+This will be implemented by the code generator
+
+<a name='M-MQContract-MQContractMessageContext-TryGetMessageConverter``1-System-String,System-Func{MQContract-Interfaces-Messages-IEncodedMessage,System-Threading-Tasks-ValueTask{System-Object}},System-IServiceProvider-'></a>
+### TryGetMessageConverter\`\`1(messageID,messageDecode,serviceProvider) `method`
+
+##### Summary
+
+Called to obtain a Message Converter to convert from the given message type id to the destination
+
+##### Returns
+
+null or an instance of a conversion callback
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message type id of the service message |
+| messageDecode | [System.Func{MQContract.Interfaces.Messages.IEncodedMessage,System.Threading.Tasks.ValueTask{System.Object}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{MQContract.Interfaces.Messages.IEncodedMessage,System.Threading.Tasks.ValueTask{System.Object}}') | The service message decode call back obtained in another call to be able to decode the service message |
+| serviceProvider | [System.IServiceProvider](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.IServiceProvider 'System.IServiceProvider') | An instance of the ServiceProvider used for DI if available |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to convert to |
+
+##### Remarks
+
+This will be implemented by the code generator
+
+<a name='M-MQContract-MQContractMessageContext-TryGetMessageEncoder``1-MQContract-Interfaces-Encoding-IMessageEncoder,System-IServiceProvider-'></a>
+### TryGetMessageEncoder\`\`1(globalMessageEncoder,serviceProvider) `method`
+
+##### Summary
+
+Called to attempt to get the MessageEncoder specified for a given message.
+
+##### Returns
+
+null or an instance of an encoder to use
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| globalMessageEncoder | [MQContract.Interfaces.Encoding.IMessageEncoder](#T-MQContract-Interfaces-Encoding-IMessageEncoder 'MQContract.Interfaces.Encoding.IMessageEncoder') | The global message encoder specified for this contract if any |
+| serviceProvider | [System.IServiceProvider](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.IServiceProvider 'System.IServiceProvider') | An instance of the ServiceProvider used for DI if available |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to locate the encoder for |
+
+##### Remarks
+
+This will be implemented by the code generator
+
+<a name='M-MQContract-MQContractMessageContext-TryGetMessageEncryptor-System-Type,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider-'></a>
+### TryGetMessageEncryptor(messageType,globalEncryptor,serviceProvider) `method`
+
+##### Summary
+
+Called to obtain a Message Encryptor for a given message type
+
+##### Returns
+
+null or an instance of an encryptor for the given message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of message to check for |
+| globalEncryptor | [MQContract.Interfaces.Encrypting.IMessageEncryptor](#T-MQContract-Interfaces-Encrypting-IMessageEncryptor 'MQContract.Interfaces.Encrypting.IMessageEncryptor') | The instance of the global encryptor for the connection if supplied |
+| serviceProvider | [System.IServiceProvider](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.IServiceProvider 'System.IServiceProvider') | An instance of the ServiceProvider used for DI if available |
+
+##### Remarks
+
+This will be implemented by the code generator
+
+<a name='M-MQContract-MQContractMessageContext-TryGetMessageType-System-Type-'></a>
+### TryGetMessageType(messageType) `method`
+
+##### Summary
+
+Called to obtain the Message Definition housed if available
+
+##### Returns
+
+null or the definition for the given message type
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of message to locate |
+
+##### Remarks
+
+This will be implemented by the code generator
+
+<a name='T-MQContract-Attributes-MQContractMessageContextAttribute'></a>
+## MQContractMessageContextAttribute `type`
+
+##### Namespace
+
+MQContract.Attributes
+
+##### Summary
+
+Used as part of the Message context for code generation to specify auto scanning settings.  Must be attached to an implementation of MQContractMessageContext.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| locateEncoders | [T:MQContract.Attributes.MQContractMessageContextAttribute](#T-T-MQContract-Attributes-MQContractMessageContextAttribute 'T:MQContract.Attributes.MQContractMessageContextAttribute') | Set to true if you want to automatically scan for encoders for a message when none are specified |
+
+<a name='M-MQContract-Attributes-MQContractMessageContextAttribute-#ctor-System-Boolean,System-Boolean,System-Boolean-'></a>
+### #ctor(locateEncoders,locateConverters,locateEncryptors) `constructor`
+
+##### Summary
+
+Used as part of the Message context for code generation to specify auto scanning settings.  Must be attached to an implementation of MQContractMessageContext.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| locateEncoders | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Set to true if you want to automatically scan for encoders for a message when none are specified |
+| locateConverters | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Set to true if you want to automatically scan for converters for a message when none are specified |
+| locateEncryptors | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Set to true if you want to automatically scan for encryptors for a message when none are specified |
+
+<a name='P-MQContract-Attributes-MQContractMessageContextAttribute-LocateConverters'></a>
+### LocateConverters `property`
+
+##### Summary
+
+Indicates if Converters are to be located when none are specified
+
+<a name='P-MQContract-Attributes-MQContractMessageContextAttribute-LocateEncoders'></a>
+### LocateEncoders `property`
+
+##### Summary
+
+Indicates if Encoders are to be located when none are specified
+
+<a name='P-MQContract-Attributes-MQContractMessageContextAttribute-LocateEncryptors'></a>
+### LocateEncryptors `property`
+
+##### Summary
+
+Indicates if Encryptors are to be located when none are specified
+
 <a name='T-MQContract-Attributes-MessageAttribute'></a>
 ## MessageAttribute `type`
 
@@ -3611,6 +4040,13 @@ Message being defined
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | channel | [T:MQContract.Attributes.MessageAttribute](#T-T-MQContract-Attributes-MessageAttribute 'T:MQContract.Attributes.MessageAttribute') | The channel to be used |
+
+##### Example
+
+```
+[Message(channel: "Arrivals")]
+public record ArrivalAnnouncement(string FirstName, string LastName);
+```
 
 ##### Remarks
 
@@ -3631,6 +4067,13 @@ Message being defined
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to be used |
 | typeName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message type to use |
 | typeVersion | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message version to use |
+
+##### Example
+
+```
+[Message(channel: "Arrivals")]
+public record ArrivalAnnouncement(string FirstName, string LastName);
+```
 
 ##### Remarks
 
@@ -3842,6 +4285,83 @@ The value for the given key or null if not found
 ##### Summary
 
 A list of the available keys in the header
+
+<a name='T-MQContract-MQContractMessageContext-MessageTypeDefinition'></a>
+## MessageTypeDefinition `type`
+
+##### Namespace
+
+MQContract.MQContractMessageContext
+
+##### Summary
+
+Used to house Message Type Definitions that are built both through attributes and other class aspects
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| Channel | [T:MQContract.MQContractMessageContext.MessageTypeDefinition](#T-T-MQContract-MQContractMessageContext-MessageTypeDefinition 'T:MQContract.MQContractMessageContext.MessageTypeDefinition') | The channel that the message is to use by default |
+
+<a name='M-MQContract-MQContractMessageContext-MessageTypeDefinition-#ctor-System-String,System-String,System-Version,System-String,System-Nullable{System-TimeSpan},System-Type-'></a>
+### #ctor(Channel,TypeName,TypeVersion,ResponseChannel,ResponseTimeout,ResponseType) `constructor`
+
+##### Summary
+
+Used to house Message Type Definitions that are built both through attributes and other class aspects
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| Channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel that the message is to use by default |
+| TypeName | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The Type Name used within the Message ID |
+| TypeVersion | [System.Version](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Version 'System.Version') | The Version used within the Message ID |
+| ResponseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The response channel to use if specified |
+| ResponseTimeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The response timeout to use if specified |
+| ResponseType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The response type to use if specified |
+
+<a name='P-MQContract-MQContractMessageContext-MessageTypeDefinition-Channel'></a>
+### Channel `property`
+
+##### Summary
+
+The channel that the message is to use by default
+
+<a name='P-MQContract-MQContractMessageContext-MessageTypeDefinition-ResponseChannel'></a>
+### ResponseChannel `property`
+
+##### Summary
+
+The response channel to use if specified
+
+<a name='P-MQContract-MQContractMessageContext-MessageTypeDefinition-ResponseTimeout'></a>
+### ResponseTimeout `property`
+
+##### Summary
+
+The response timeout to use if specified
+
+<a name='P-MQContract-MQContractMessageContext-MessageTypeDefinition-ResponseType'></a>
+### ResponseType `property`
+
+##### Summary
+
+The response type to use if specified
+
+<a name='P-MQContract-MQContractMessageContext-MessageTypeDefinition-TypeName'></a>
+### TypeName `property`
+
+##### Summary
+
+The Type Name used within the Message ID
+
+<a name='P-MQContract-MQContractMessageContext-MessageTypeDefinition-TypeVersion'></a>
+### TypeVersion `property`
+
+##### Summary
+
+The Version used within the Message ID
 
 <a name='T-MQContract-Messages-MultiTransmissionResult'></a>
 ## MultiTransmissionResult `type`
@@ -4522,3 +5042,64 @@ The unique ID of the message that was transmitted
 ##### Summary
 
 Flag to indicate if the result is an error
+
+<a name='T-MQContract-Attributes-UseMqContractAttribute'></a>
+## UseMqContractAttribute `type`
+
+##### Namespace
+
+MQContract.Attributes
+
+##### Summary
+
+Used to mark a message for a Message Context to be included in the code generation.  Must be attached to an implementation of MQContractMessageContext.
+
+<a name='M-MQContract-Attributes-UseMqContractAttribute-#ctor-System-Type,System-Type,System-Type[],System-Type-'></a>
+### #ctor(contractType,encoderType,converters,messageEncryptor) `constructor`
+
+##### Summary
+
+Primary constructor
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| contractType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of Message(Contract) to link |
+| encoderType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of Encoder to use with it if specifically desired |
+| converters | [System.Type[]](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type[] 'System.Type[]') | The type of Converters to use with it if specifically desired |
+| messageEncryptor | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of Encryptor to use with it if specifically desired |
+
+##### Exceptions
+
+| Name | Description |
+| ---- | ----------- |
+| [System.Exception](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Exception 'System.Exception') |  |
+
+<a name='P-MQContract-Attributes-UseMqContractAttribute-ContractType'></a>
+### ContractType `property`
+
+##### Summary
+
+The Message(Contract) type
+
+<a name='P-MQContract-Attributes-UseMqContractAttribute-Converters'></a>
+### Converters `property`
+
+##### Summary
+
+The type of Converters to use with it if specified
+
+<a name='P-MQContract-Attributes-UseMqContractAttribute-EncoderType'></a>
+### EncoderType `property`
+
+##### Summary
+
+The type of Encoder to use with it if specified
+
+<a name='P-MQContract-Attributes-UseMqContractAttribute-MessageEncryptor'></a>
+### MessageEncryptor `property`
+
+##### Summary
+
+The type of Encryptor to use with it if specified
