@@ -4,6 +4,7 @@ using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using NJsonSchema;
 using System.Buffers.Binary;
+using System.Diagnostics;
 
 
 namespace MQContract.Kafka.Middleware
@@ -82,17 +83,21 @@ namespace MQContract.Kafka.Middleware
 
         private async Task<CachedSchema> CacheSchema(string schemaName, int schemaId, Schema schema)
         {
+            Activity.Current?.AddEvent(new("Building cachable schema"));
             var cacheItem = new CachedSchema(schemaId, schema, (schema.SchemaType == Confluent.SchemaRegistry.SchemaType.Json && validateSchemaAsync==null ? await JsonSchema.FromJsonAsync(schema.SchemaString) : null));
             cache?.Set(schemaName, cacheItem, cacheOptions);
             cache?.Set($"SchemaById_{schemaId}", cacheItem, cacheOptions);
+            Activity.Current?.AddEvent(new("Schema cached"));
             return cacheItem;
         }
 
         private async Task LoadAndCheckSchemaAsync(int schemaId, string messageTypeID, ReadOnlyMemory<byte> data)
         {
+            Activity.Current?.AddEvent(new("Loading schema to check"));
             CachedSchema? cachedSchema = null;
             if (!(cache?.TryGetValue($"SchemaById_{schemaId}", out cachedSchema)??false))
             {
+                Activity.Current?.AddEvent(new("Fetching schema from schema registry"));
                 var schema = await schemaRegistryClient.GetSchemaAsync(schemaId);
                 if (schema!=null)
                     cachedSchema = await CacheSchema(messageTypeID, schemaId, schema);
@@ -105,12 +110,16 @@ namespace MQContract.Kafka.Middleware
 
         async ValueTask<ServiceMessage> IAfterEncodeMiddleware.AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
         {
+            Activity.Current?.AddEvent(new("Checking if schema message should be ignored"));
             if (!IgnoredMessageTypes.Contains(message.MessageTypeID))
             {
+                Activity.Current?.AddEvent(new("Converting schema name"));
                 var schemaName = (mapMessageSchemaName==null ? message.MessageTypeID : await mapMessageSchemaName(messageType, message.Channel, message.MessageTypeID));
+                Activity.Current?.AddEvent(new("Getting schema from cache"));
                 int? schemaId = await GetSchemaIdFromCacheAsync(schemaName);
                 if (schemaId==null && autoRegisterSchema)
                 {
+                    Activity.Current?.AddEvent(new("Registering Schema"));
                     var builtSchema = new Schema(await ExtractSchemaAsync(messageType), registerSchemaType);
                     schemaId = await schemaRegistryClient.RegisterSchemaAsync(schemaName, builtSchema);
                     await CacheSchema(schemaName, schemaId.Value, builtSchema);
@@ -121,6 +130,7 @@ namespace MQContract.Kafka.Middleware
                     throw new MissingSchemaException(message.MessageTypeID);
                 else if (schemaId!=null)
                 {
+                    Activity.Current?.AddEvent(new("Schema validated adding magic byte"));
                     var data = new byte[message.Data.Length+5];
                     data[0] = MagicByte;
                     BinaryPrimitives.WriteInt32BigEndian(data.AsSpan(1, 4), schemaId.Value);
@@ -141,15 +151,20 @@ namespace MQContract.Kafka.Middleware
         {
             int? schemaId = null;
             if (cache?.TryGetValue(schemaName, out CachedSchema? cachedSchema)??false)
+            {
+                Activity.Current?.AddEvent(new("Schema found in cache"));
                 schemaId = cachedSchema!.Id;
+            }
             else
             {
                 try
                 {
+                    Activity.Current?.AddEvent(new("Fetching latest schema from schema registry"));
                     var schemaResult = await schemaRegistryClient.GetLatestSchemaAsync(schemaName);
                     if (schemaResult!=null)
                     {
                         schemaId = schemaResult.Id;
+                        Activity.Current?.AddEvent(new("Caching fetched schema"));
                         await CacheSchema(schemaName, schemaId.Value, schemaResult.Schema);
                     }
                 }
@@ -172,11 +187,14 @@ namespace MQContract.Kafka.Middleware
 
         async ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)
         {
+            Activity.Current?.AddEvent(new("Checking if schema message should be ignored"));
             if (!IgnoredMessageTypes.Contains(messageTypeID))
             {
+                Activity.Current?.AddEvent(new("Extracting schema id from header"));
                 var schemaId = message.MessageHeader[SchemaIdHeader];
                 if (message.Data.Span[0]==MagicByte)
                 {
+                    Activity.Current?.AddEvent(new("Extracting schema id from magic byte"));
                     var otherSchemaId = BinaryPrimitives.ReadInt32BigEndian(message.Data.Slice(1, 4).Span).ToString();
                     message=new(message.MessageHeader, message.Data.Slice(5));
                     if (schemaId!=otherSchemaId)
@@ -192,6 +210,7 @@ namespace MQContract.Kafka.Middleware
 
         private async ValueTask<bool> ValidateSchemaAsync(CachedSchema cachedSchema, Stream dataStream)
         {
+            Activity.Current?.AddEvent(new("Validating schema"));
             if (validateSchemaAsync!=null)
                 return await validateSchemaAsync(cachedSchema.Schema, dataStream);
             else if (cachedSchema.CompiledSchema!=null)

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MQContract.Interfaces.Encrypting;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Loader;
 
@@ -9,11 +10,13 @@ namespace MQContract
     {
         internal IMessageEncryptor? GetMessageEncryptor(Type messageType, IMessageEncryptor? globalEncryptor, IServiceProvider? serviceProvider)
         {
-            foreach(var context in contexts)
+            Activity.Current?.AddEvent(new("Attempting to locate encryptor from context"));
+            var result = contexts.FirstOrDefault(context=>context.IsMessageCodeGenerated(messageType))?
+                .TryGetMessageEncryptor(messageType, globalEncryptor, serviceProvider);
+            if (result!=null)
             {
-                var result = context.TryGetMessageEncryptor(messageType, globalEncryptor, serviceProvider);
-                if (result!=null)
-                    return result;
+                Activity.Current?.AddEvent(new("Located encryptor from context"));
+                return result;
             }
             if (DynamicCodeGate.IsSupported)
                 return ExtractEncryptorThroughReflection(messageType, globalEncryptor, serviceProvider);

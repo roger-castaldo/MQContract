@@ -33,10 +33,12 @@ namespace MQContract.Kafka
 
         internal static Headers ExtractHeaders(ServiceMessage message)
         {
+            Activity.Current?.AddEvent(new("Converting Kafka Headers"));
             var result = new Headers();
             foreach (var key in message.Header.Keys)
                 result.Add(key, EncodeHeaderValue(message.Header[key]!));
             result.Add(MESSAGE_TYPE_HEADER, EncodeHeaderValue(message.MessageTypeID));
+            Activity.Current?.AddEvent(new("Headers converted"));
             return result;
         }
 
@@ -55,17 +57,27 @@ namespace MQContract.Kafka
 
         async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
         {
+            Activity.Current?.AddEvent(new("Publishing message through Kafka"));
             try
             {
-                var result = await producer.ProduceAsync(message.Channel, new Message<string, byte[]>()
+                Activity.Current?.AddEvent(new("Producing Message"));
+                var resultSource = new TaskCompletionSource<TransmissionResult>();
+                producer.Produce(message.Channel, new Message<string, byte[]>()
                 {
                     Key=message.ID,
                     Headers=ExtractHeaders(message),
                     Value=message.Data.ToArray()
-                }, cancellationToken);
-                if (!Equals(result.Status, PersistenceStatus.Persisted))
-                    return new(message.ID, Error: new(new PersistenceFailedException(), false));
-                return new TransmissionResult(result.Key);
+                }, 
+                (result) =>
+                {
+                    if (!Equals(result.Status, PersistenceStatus.Persisted))
+                        resultSource.TrySetResult(new(message.ID, Error: new(new PersistenceFailedException(), false)));
+                    else
+                        resultSource.TrySetResult(new TransmissionResult(result.Key));
+                });
+                var result = await resultSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+                Activity.Current?.AddEvent(new("Returning transmission result"));
+                return result;
             }
             catch (Exception ex)
             {
@@ -87,7 +99,7 @@ namespace MQContract.Kafka
                 GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
                 AutoOffsetReset = (isReply ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest),
                 EnableAutoOffsetStore = false,
-                EnableAutoCommit = true
+                EnableAutoCommit = false
             });
             if (isReply)
                 builder.SetPartitionsAssignedHandler((c, partitions) =>

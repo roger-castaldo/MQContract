@@ -46,12 +46,10 @@ namespace MQContract
 
         public (Func<TMessage, ValueTask<byte[]>> encodeMessage, Func<Stream, ValueTask<TMessage?>> decodeMessage) GetEncodingCallbacks<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
         {
-            foreach(var context in contexts)
-            {
-                var specificEncoder = context.TryGetMessageEncoder<TMessage>(globalMessageEncoder, serviceProvider);
-                if (specificEncoder!=null)
+            var specificEncoder = contexts.FirstOrDefault(context=>context.IsMessageCodeGenerated<TMessage>())?
+                .TryGetMessageEncoder<TMessage>(globalMessageEncoder, serviceProvider);
+            if (specificEncoder!=null)
                     return ProduceCallbacks<TMessage>(specificEncoder);
-            }
             if (DynamicCodeGate.IsSupported)
                 return ProduceCallbacks<TMessage>(ExtractEncoderThroughReflection<TMessage>(globalMessageEncoder, serviceProvider));
             return ProduceCallbacks<TMessage>((globalMessageEncoder == null ? new JsonEncoder<TMessage>() : globalMessageEncoder));

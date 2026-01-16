@@ -220,8 +220,8 @@ namespace {contractContext.Target.ContainingNamespace};
 
         ValueTask<EncryptionResult> IMessageEncryptor.EncryptAsync(byte[] data)
             => ValueTask.FromResult<EncryptionResult>(new(null,data));
-    }}    public override sealed bool IsMessageCodeGenerated<TMessage>() 
-        => (typeof(TMessage)) switch {{
+    }}    public override sealed bool IsMessageCodeGenerated(Type messageType) 
+        => (messageType) switch {{
 {string.Join(LineBreak, generatedSwitches)}
             _ => false
         }};

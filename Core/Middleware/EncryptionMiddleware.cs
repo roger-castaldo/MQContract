@@ -2,6 +2,7 @@
 using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace MQContract.Middleware
 {
@@ -33,7 +34,9 @@ namespace MQContract.Middleware
 
         async ValueTask<ServiceMessage> IAfterEncodeMiddleware.AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
         {
+            context.Activity?.AddEvent(new("Executing Encryptor for message type"));
             var encryptionResult = await GetEncryptor(messageType).EncryptAsync(message.Data.ToArray());
+            context.Activity?.AddEvent(new("Building encrypted message"));
             return new(
                 message.ID,
                 message.MessageTypeID,
@@ -45,10 +48,12 @@ namespace MQContract.Middleware
 
         async ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)
         {
+            context.Activity?.AddEvent(new("Executing Decryptor for message type"));
             using var dataStream = await GetEncryptor((Type)context[ExpectedTypeKey]!).DecryptAsync(new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true), message.MessageHeader);
             using var ms = new MemoryStream();
             await dataStream.CopyToAsync(ms);
             ms.TryGetBuffer(out ArraySegment<byte> buffer);
+            context.Activity?.AddEvent(new("Building decrypted message"));
             return new(message.MessageHeader, buffer.AsMemory(0, (int)ms.Length));
         }
     }

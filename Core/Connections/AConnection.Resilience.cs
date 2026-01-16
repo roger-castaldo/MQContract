@@ -88,9 +88,15 @@ namespace MQContract.Connections
 
         protected async ValueTask<TransmissionResult> ExecuteResilliantTransmissionAsync<TMessage>(Func<CancellationToken, ValueTask<TransmissionResult>> func, Activity? activity, string? connectionName, string channel, CancellationToken cancellationToken)
         {
+            activity?.AddEvent(new("Locating Resilience Policy"));
             var policy = GetResilliancePolicy<TMessage>(connectionName, channel);
+            activity?.AddEvent(new("Resilience Policy Located"));
             if (policy==null)
+            {
+                activity?.AddEvent(new("No Resilience Policy Found, Executing Transmission Directly"));
                 return await func(cancellationToken);
+            }
+            activity?.AddEvent(new("Executing Resilient Transmission"));
             return await policy.ExecuteResilliantTransmissionAsync(activity, func, cancellationToken);
         }
 

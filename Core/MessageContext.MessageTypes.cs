@@ -42,18 +42,11 @@ namespace MQContract
         {
             if (!cache.TryGetValue(messageType, out var messageDefinition))
             {
-                var found = false;
-                foreach(var context in contexts)
-                {
-                    var def = context.TryGetMessageType(messageType);
-                    if (def!=null)
-                    {
-                        messageDefinition = def.Value;
-                        found=true;
-                        break;
-                    }
-                }
-                if (!found)
+                var def = contexts.FirstOrDefault(context=>context.IsMessageCodeGenerated(messageType))?
+                    .TryGetMessageType(messageType);
+                if (def!=null)
+                    messageDefinition = def.Value;
+                else
                 {
                     var queryAttribute = messageType.GetCustomAttribute<QueryMessageAttribute>();
                     var messageAttribute = (queryAttribute==null ? messageType.GetCustomAttribute<MessageAttribute>() : (MessageAttribute)queryAttribute);

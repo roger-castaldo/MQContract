@@ -206,6 +206,7 @@
 - [InvalidEncoderException](#T-MQContract-InvalidEncoderException 'MQContract.InvalidEncoderException')
 - [InvalidEncryptorException](#T-MQContract-InvalidEncryptorException 'MQContract.InvalidEncryptorException')
 - [MQContractMessageContext](#T-MQContract-MQContractMessageContext 'MQContract.MQContractMessageContext')
+  - [IsMessageCodeGenerated(messageType)](#M-MQContract-MQContractMessageContext-IsMessageCodeGenerated-System-Type- 'MQContract.MQContractMessageContext.IsMessageCodeGenerated(System.Type)')
   - [IsMessageCodeGenerated\`\`1()](#M-MQContract-MQContractMessageContext-IsMessageCodeGenerated``1 'MQContract.MQContractMessageContext.IsMessageCodeGenerated``1')
   - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
   - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IMultiServiceContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IMultiServiceContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
@@ -3755,6 +3756,27 @@ namespace Messages;
 [UseMqContractAttribute(typeof(Announcement))]
 public partial class MyMessageContext : MQContractMessageContext { }
 
+<a name='M-MQContract-MQContractMessageContext-IsMessageCodeGenerated-System-Type-'></a>
+### IsMessageCodeGenerated(messageType) `method`
+
+##### Summary
+
+Called to determine if this context handles this particular message type
+
+##### Returns
+
+true if this context instance defines this message type
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messageType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of message to check for |
+
+##### Remarks
+
+This will be implemented by the code generator
+
 <a name='M-MQContract-MQContractMessageContext-IsMessageCodeGenerated``1'></a>
 ### IsMessageCodeGenerated\`\`1() `method`
 
@@ -3775,10 +3797,6 @@ This method has no parameters.
 | Name | Description |
 | ---- | ----------- |
 | TMessage | The type of message to check for |
-
-##### Remarks
-
-This will be implemented by the code generator
 
 <a name='M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`

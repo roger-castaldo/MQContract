@@ -104,12 +104,16 @@ namespace MQContract.Connections
             using var scope = SetScope();
             var (genericHandlers, specificHandlers) = middleware.GetHandlers<IBeforeEncodeMiddleware,IBeforeEncodeSpecificTypeMiddleware<TMessage>>();
             var result = new EncodableMessage<TMessage>(messageHeader, message, channel);
+            Activity.Current?.AddEvent(new("Before Before Message Encode Generic middleware being called"));
             Logger?.LogDebugChecked("Executing generic Before Message Encode middleware for message of type {Type}", typeof(TMessage));
             foreach (var handler in genericHandlers)
                 result = await handler.BeforeMessageEncodeAsync<TMessage>(context,result);
+            Activity.Current?.AddEvent(new("After Before Message Encode Generic middleware being called"));
             Logger?.LogDebugChecked("Executing specific for type Before Message Encode middleware for message of type {Type}", typeof(TMessage));
+            Activity.Current?.AddEvent(new("Before Before Message Encode Specific middleware being called"));
             foreach (var handler in specificHandlers)
                 result = await handler.BeforeMessageEncodeAsync(context, result);
+            Activity.Current?.AddEvent(new("After Before Message Encode Specific middleware being called"));
             return result;
         }
 
@@ -118,8 +122,10 @@ namespace MQContract.Connections
             using var scope = SetScope(message.ID);
             var genericHandlers = middleware.GetHandlers<IAfterEncodeMiddleware>();
             Logger?.LogDebugChecked("Executing generic After Message Encode middleware for message of type {Type}", typeof(TMessage));
+            Activity.Current?.AddEvent(new("Before After Message Encode Generic middleware being called"));
             foreach (var handler in genericHandlers)
                 message = await handler.AfterMessageEncodeAsync(typeof(TMessage), context, message);
+            Activity.Current?.AddEvent(new("After After Message Encode Generic middleware being called"));
             return message;
         }
 
@@ -129,22 +135,29 @@ namespace MQContract.Connections
             var genericHandlers = middleware.GetHandlers<IBeforeDecodeMiddleware>();
             var result = new DecodableMessage(messageHeader, data);
             Logger?.LogDebugChecked("Executing generic Before Message Decode middleware");
+            Activity.Current?.AddEvent(new("Before Before Message Decode Generic middleware being called"));
             foreach (var handler in genericHandlers)
                 result = await handler.BeforeMessageDecodeAsync(context, id, messageTypeID, messageChannel, result);
+            Activity.Current?.AddEvent(new("After Before Message Decode Generic middleware being called"));
             return result;
         }
 
         private async ValueTask<DecodedMessage<TMessage>> AfterMessageDecodeAsync<TMessage>(IContext context, TMessage message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
         {
             using var scope = SetScope(ID);
+            Activity.Current?.AddEvent(new("Getting required handlers"));
             var (genericHandlers, specificHandlers) = middleware.GetHandlers<IAfterDecodeMiddleware,IAfterDecodeSpecificTypeMiddleware<TMessage>>();
             var result = new DecodedMessage<TMessage>(messageHeader, message);
             Logger?.LogDebugChecked("Executing generic After Message Decode middleware for message of type {Type}", typeof(TMessage));
+            Activity.Current?.AddEvent(new("Before After Message Decode Generic middleware being called"));
             foreach (var handler in genericHandlers)
                 result = await handler.AfterMessageDecodeAsync<TMessage>(context, ID, result, receivedTimestamp, processedTimeStamp);
+            Activity.Current?.AddEvent(new("After After Message Decode Generic middleware being called"));
             Logger?.LogDebugChecked("Executing specific for type After Message Decode middleware for message of type {Type}", typeof(TMessage));
+            Activity.Current?.AddEvent(new("Before After Message Decode Specific middleware being called"));
             foreach (var handler in specificHandlers)
                 result = await handler.AfterMessageDecodeAsync(context, ID, result, receivedTimestamp, processedTimeStamp);
+            Activity.Current?.AddEvent(new("After After Message Decode Specific middleware being called"));
             return result;
         }
 
@@ -163,6 +176,7 @@ namespace MQContract.Connections
         {
             using var scope = SetScope(message.ID);
             Logger?.LogDebugChecked("Filtering Service Message message of type {Type} by headers", typeof(TMessage));
+            activity?.AddEvent(new("Running service message filter"));
             var filterResult = (messageFilters!=null && messageFilters.HeaderFilter!=null ? await messageFilters.HeaderFilter(message.Header) : MessageFilterResult.Allow);
             if (filterResult != MessageFilterResult.Allow)
             {
@@ -174,9 +188,12 @@ namespace MQContract.Connections
             }
             Logger?.LogDebugChecked("Decoding Service Message message of type {Type}", typeof(TMessage));
             var context = new Middleware.Context(mapType, activity, expectedType:typeof(TMessage));
+            activity?.AddEvent(new("Before Decode message"));
             var decodableMessage = await BeforeMessageDecodeAsync(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
+            activity?.AddEvent(new("Decoding service message"));
             var taskMessage = await messageFactory.ConvertMessageAsync(Logger, new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, decodableMessage.MessageHeader, decodableMessage.Data, message.Acknowledge))
                                 ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(TMessage).FullName}");
+            activity?.AddEvent(new("Running decoded message filter"));
             filterResult = (messageFilters!=null && messageFilters.MessageFilter!=null ? await messageFilters.MessageFilter(taskMessage, decodableMessage.MessageHeader) : MessageFilterResult.Allow);
             if (filterResult != MessageFilterResult.Allow)
             {
@@ -186,6 +203,7 @@ namespace MQContract.Connections
                 ])));
                 return DecodeServiceMessageResult<TMessage>.ProduceResult(filterResult);
             }
+            activity?.AddEvent(new("After Decode message being called"));
             var decodedMessage = await AfterMessageDecodeAsync<TMessage>(context, taskMessage!, message.ID, decodableMessage.MessageHeader, message.ReceivedTimestamp, DateTime.Now);
             return DecodeServiceMessageResult<TMessage>.ProduceResult(decodedMessage.Message, decodedMessage.MessageHeader);
         }
@@ -247,11 +265,15 @@ namespace MQContract.Connections
                 async (serviceMessage) =>
                 {
                     using var activity = StartActivity(Constants.ConsumeActivityName, messageHeader: serviceMessage.Header, serviceConnection: serviceConnection, connectionName: serviceConnectionName);
+                    activity?.AddEvent(new("Service message recieved"));
                     try
                     {
                         var decodedResult = await DecodeServiceMessageAsync<TMessage>(ChannelMapper.MapTypes.PublishSubscription, messageFactory, serviceMessage, activity, messageFilters);
                         if (decodedResult.FilterResult == MessageFilterResult.Allow)
+                        {
+                            activity?.AddEvent(new("Service message filtered and allowed"));
                             await messageReceived(new ReceivedMessage<TMessage>(serviceMessage.ID, decodedResult.Message!, decodedResult.Header!, serviceMessage.ReceivedTimestamp, DateTime.Now, activity));
+                        }
                         activity?.SetStatus(ActivityStatusCode.Ok);
                         return !Equals(decodedResult.FilterResult, MessageFilterResult.DropAndDontAcknowledge);
                     }
@@ -317,7 +339,9 @@ namespace MQContract.Connections
         #region PubSub
         protected async ValueTask<TransmissionResult> PublishMessageAsync<TMessage>(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
         {
+            activity?.AddEvent(new("Waiting for publish lock"));
             await publishLock.WaitAsync(cancellationToken);
+            activity?.AddEvent(new("Publish lock achieved"));
             var result = await ExecuteResilliantTransmissionAsync<TMessage>(
                 (ct) => serviceConnection.PublishAsync(
                     serviceMessage,
@@ -329,6 +353,7 @@ namespace MQContract.Connections
                 cancellationToken
             );
             publishLock.Release();
+            activity?.AddEvent(new("Publish lock released"));
             OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
             activity?.SetStatus(result.IsError ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
