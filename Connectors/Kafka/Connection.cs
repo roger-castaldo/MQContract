@@ -11,12 +11,66 @@ namespace MQContract.Kafka
     /// <summary>
     /// This is the MessageServiceConnection implementation for using Kafka
     /// </summary>
-    /// <param name="clientConfig">The Kafka Client Configuration to provide</param>
-    public sealed class Connection(ClientConfig clientConfig) : IPingableMessageServiceConnection
+    public sealed class Connection : IPingableMessageServiceConnection, IAsyncDisposable
     {
-        private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
+        private readonly record struct MessageInstance(string ID, string Channel, Message<string, byte[]> Message);
 
-        private readonly IProducer<string, byte[]> producer = new ProducerBuilder<string, byte[]>(clientConfig).Build();
+        private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
+        private bool disposedValue;
+
+        private readonly ClientConfig clientConfig;
+        private readonly IProducer<string, byte[]> producer;
+        private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
+
+        /// <summary>
+        /// Default Constructor
+        /// </summary>
+        /// <param name="clientConfig">The Kafka Client Configuration to provide</param>
+        public Connection(ClientConfig clientConfig)
+        {
+            this.clientConfig = clientConfig;
+            producer = new ProducerBuilder<string, byte[]>(clientConfig).Build();
+            batchedMessageStream = new(
+                (serviceMessage,_) => ValueTask.FromResult(new MessageInstance(
+                    serviceMessage.ID,
+                    serviceMessage.Channel,
+                    new Message<string, byte[]>()
+                    {
+                        Key=serviceMessage.ID,
+                        Headers=ExtractHeaders(serviceMessage),
+                        Value=serviceMessage.Data.ToArray()
+                    }
+                )),
+                async (messageInstance, cancellationToken) =>
+                {
+                    Activity.Current?.AddEvent(new("Publishing message through Kafka"));
+                    try
+                    {
+                        Activity.Current?.AddEvent(new("Producing Message"));
+                        var resultSource = new TaskCompletionSource<TransmissionResult>();
+                        producer.Produce(messageInstance.Channel, messageInstance.Message,
+                        (result) =>
+                        {
+                            if (!Equals(result.Status, PersistenceStatus.Persisted))
+                                resultSource.TrySetResult(new(messageInstance.ID, Error: new(new PersistenceFailedException(), false)));
+                            else
+                                resultSource.TrySetResult(new TransmissionResult(result.Key));
+                        });
+                        var result = await resultSource.Task.WaitAsync(cancellationToken);
+                        Activity.Current?.AddEvent(new("Returning transmission result"));
+                        return result;
+                    }
+                    catch (Exception ex)
+                    {
+                        return new TransmissionResult(messageInstance.ID, Error: new(ex, ex switch
+                        {
+                            ProduceException<string, byte[]> => ((ProduceException<string, byte[]>)ex).Error.IsFatal,
+                            _ => false
+                        }));
+                    }
+                }
+            );
+        }
 
         /// <summary>
         /// Houses the supplied client configuration
@@ -55,41 +109,13 @@ namespace MQContract.Kafka
             );
         }
 
-        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-        {
-            Activity.Current?.AddEvent(new("Publishing message through Kafka"));
-            try
-            {
-                Activity.Current?.AddEvent(new("Producing Message"));
-                var resultSource = new TaskCompletionSource<TransmissionResult>();
-                producer.Produce(message.Channel, new Message<string, byte[]>()
-                {
-                    Key=message.ID,
-                    Headers=ExtractHeaders(message),
-                    Value=message.Data.ToArray()
-                }, 
-                (result) =>
-                {
-                    if (!Equals(result.Status, PersistenceStatus.Persisted))
-                        resultSource.TrySetResult(new(message.ID, Error: new(new PersistenceFailedException(), false)));
-                    else
-                        resultSource.TrySetResult(new TransmissionResult(result.Key));
-                });
-                var result = await resultSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
-                Activity.Current?.AddEvent(new("Returning transmission result"));
-                return result;
-            }
-            catch (Exception ex)
-            {
-                return new TransmissionResult(message.ID, Error: new(ex, ex switch
-                {
-                    ProduceException<string, byte[]> => ((ProduceException<string, byte[]>)ex).Error.IsFatal,
-                    _ => false
-                }));
-            }
-        }
+        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
 
-        private static readonly Regex regReplyGroup = new Regex(@"^reply-[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$", RegexOptions.Compiled|RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
+
+        private static readonly Regex regReplyGroup = new(@"^reply-[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$", RegexOptions.Compiled|RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
@@ -99,16 +125,15 @@ namespace MQContract.Kafka
                 GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
                 AutoOffsetReset = (isReply ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest),
                 EnableAutoOffsetStore = false,
-                EnableAutoCommit = false
+                EnableAutoCommit = true
             });
             if (isReply)
                 builder.SetPartitionsAssignedHandler((c, partitions) =>
-                    partitions.Select(partition =>
+                    [.. partitions.Select(partition =>
                     {
                         var watermark = c.QueryWatermarkOffsets(partition, TimeSpan.FromSeconds(5));
                         return new TopicPartitionOffset(partition, ((watermark.High-watermark.Low) >= 1 ? new Offset(watermark.High-1) : Offset.Beginning));
-                    })
-                    .ToArray()
+                    })]
                 );
             var consumer = builder.Build();
             consumer.Subscribe(channel);
@@ -131,10 +156,18 @@ namespace MQContract.Kafka
             throw new UnableToPingException();
         }
 
-        ValueTask IMessageServiceConnection.CloseAsync()
+        async ValueTask IMessageServiceConnection.CloseAsync()
+            => await ((IAsyncDisposable)this).DisposeAsync();
+
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
-            producer.Dispose();
-            return ValueTask.CompletedTask;
+            if (!disposedValue)
+            {
+                disposedValue=true;
+                await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
+                producer.Dispose();
+            }
+            GC.SuppressFinalize(this);
         }
     }
 }

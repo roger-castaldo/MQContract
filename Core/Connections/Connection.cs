@@ -18,8 +18,6 @@ namespace MQContract.Connections
         AConnection<IContractedConnection>(defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, logger, channelMapper),
         IContractedConnection
     {
-        private readonly SemaphoreSlim publishLock = new(1, 1);
-
         ValueTask<PingResult> IContractConnection.PingAsync()
             => (serviceConnection is IPingableMessageServiceConnection pingableService ? pingableService.PingAsync() : throw new PingNotSupportedException());
 
@@ -35,7 +33,6 @@ namespace MQContract.Connections
                 await asyncDisposable.DisposeAsync().ConfigureAwait(true);
             else if (serviceConnection is IDisposable disposable)
                 disposable.Dispose();
-            publishLock.Dispose();
         }
 
         #region PubSub
@@ -68,7 +65,7 @@ namespace MQContract.Connections
                 channel: channel, 
                 messageHeader: messageHeader
             );
-            return await PublishMessageAsync<TMessage>(publishLock, serviceMessage, serviceConnection, activity, null, cancellationToken);
+            return await PublishMessageAsync<TMessage>(serviceMessage, serviceConnection, activity, null, cancellationToken);
         }
 
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
@@ -90,7 +87,7 @@ namespace MQContract.Connections
                         messageHeader: m.messageHeader
                     )
                 );
-            var result = await BulkPublishAsync<TMessage>(publishLock, serviceMessages, serviceConnection, activity, cancellationToken);
+            var result = await BulkPublishAsync<TMessage>(serviceMessages, serviceConnection, activity, cancellationToken);
             activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;

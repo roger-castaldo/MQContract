@@ -6,10 +6,10 @@ namespace MQContract.Connections
 {
     internal class ServiceConnectionList : IAsyncDisposable
     {
-        public record ServiceConnection(string ServiceConnectionName, IMessageServiceConnection MessageServiceConnection, SemaphoreSlim PublishLock);
+        public record ServiceConnection(string ServiceConnectionName, IMessageServiceConnection MessageServiceConnection);
 
-        private sealed record ServiceConnectionEntry(Func<(string channel, Type messageType, MessageHeader messageHeader), bool> CheckCallback, string ServiceConnectionName, IMessageServiceConnection MessageServiceConnection, SemaphoreSlim PublishLock)
-            : ServiceConnection(ServiceConnectionName, MessageServiceConnection, PublishLock), IAsyncDisposable
+        private sealed record ServiceConnectionEntry(Func<(string channel, Type messageType, MessageHeader messageHeader), bool> CheckCallback, string ServiceConnectionName, IMessageServiceConnection MessageServiceConnection)
+            : ServiceConnection(ServiceConnectionName, MessageServiceConnection), IAsyncDisposable
         {
             async ValueTask IAsyncDisposable.DisposeAsync()
             {
@@ -17,7 +17,6 @@ namespace MQContract.Connections
                     await asyncDisposable.DisposeAsync();
                 else if (MessageServiceConnection is IDisposable disposable)
                     disposable.Dispose();
-                PublishLock.Dispose();
             }
         }
 
@@ -30,7 +29,7 @@ namespace MQContract.Connections
         {
             if (messageServiceConnection.MaxMessageBodySize!=null)
                 MaxMessageBodySize = (MaxMessageBodySize==null ? messageServiceConnection.MaxMessageBodySize : Math.Min((uint)MaxMessageBodySize!, (uint)messageServiceConnection.MaxMessageBodySize!));
-            connections.Add(new(checkCallback, serviceConnectionName, messageServiceConnection, new SemaphoreSlim(1,1)));
+            connections.Add(new(checkCallback, serviceConnectionName, messageServiceConnection));
         }
 
         public async ValueTask<IEnumerable<ServiceConnection>> GetAsync(string channel, Type messageType, MessageHeader messageHeader)

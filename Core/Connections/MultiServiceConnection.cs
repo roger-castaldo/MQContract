@@ -55,7 +55,7 @@ namespace MQContract.Connections
                 .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () =>
                 {
                     OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                    var result = await PublishMessageAsync<TMessage>(c.PublishLock, serviceMessage, c.MessageServiceConnection, activity, c.ServiceConnectionName, cancellationToken);
+                    var result = await PublishMessageAsync<TMessage>(serviceMessage, c.MessageServiceConnection, activity, c.ServiceConnectionName, cancellationToken);
                     return result;
                 }));
             activity?.SetStatus(results.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
@@ -86,7 +86,7 @@ namespace MQContract.Connections
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
                 OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                var result = await BulkPublishAsync<TMessage>(c.PublishLock, serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
+                var result = await BulkPublishAsync<TMessage>(serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
             activity?.SetStatus(Array.Exists(transmissionResults, mtr => mtr.Any(r => r.HasError)) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);

@@ -18,7 +18,6 @@ namespace MQContract.Connections
         AMappableConnection<IMappedContractConnection>(defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, logger, channelMapper),
         IMappedContractConnection
     {
-        private readonly SemaphoreSlim publishLock = new(1, 1);
         ValueTask<PingResult> IContractConnection.PingAsync()
         {
             using var scope = SetScope();
@@ -34,7 +33,6 @@ namespace MQContract.Connections
 
         protected override async ValueTask InternalDisposeAsync()
         {
-            publishLock.Dispose();
             await base.InternalDisposeAsync();
         }
 
@@ -101,7 +99,7 @@ namespace MQContract.Connections
             );
             var serviceConnection = await GetConnectionAsync(serviceMessage.Channel, typeof(TMessage), serviceMessage.Header);
             OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
-            return await PublishMessageAsync<TMessage>(publishLock, serviceMessage, serviceConnection.MessageServiceConnection, activity, serviceConnection.ServiceConnectionName, cancellationToken);
+            return await PublishMessageAsync<TMessage>(serviceMessage, serviceConnection.MessageServiceConnection, activity, serviceConnection.ServiceConnectionName, cancellationToken);
         }
 
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
@@ -124,7 +122,7 @@ namespace MQContract.Connections
                 );
             var serviceConnection = await GetConnectionAsync(serviceMessages.First().Channel, typeof(TMessage), serviceMessages.First().Header);
             OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
-            var result = await BulkPublishAsync<TMessage>(publishLock, serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken, connectionName: serviceConnection.ServiceConnectionName);
+            var result = await BulkPublishAsync<TMessage>(serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken, connectionName: serviceConnection.ServiceConnectionName);
             activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;

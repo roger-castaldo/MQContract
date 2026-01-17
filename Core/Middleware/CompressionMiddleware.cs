@@ -1,6 +1,5 @@
 ﻿using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
-using System.Diagnostics;
 using System.IO.Compression;
 
 namespace MQContract.Middleware

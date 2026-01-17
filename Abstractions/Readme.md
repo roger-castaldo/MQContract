@@ -69,8 +69,6 @@
   - [BeforeMessageEncodeAsync\`\`1(context,message)](#M-MQContract-Interfaces-Middleware-IBeforeEncodeMiddleware-BeforeMessageEncodeAsync``1-MQContract-Interfaces-Middleware-IContext,MQContract-Interfaces-Middleware-EncodableMessage{``0}- 'MQContract.Interfaces.Middleware.IBeforeEncodeMiddleware.BeforeMessageEncodeAsync``1(MQContract.Interfaces.Middleware.IContext,MQContract.Interfaces.Middleware.EncodableMessage{``0})')
 - [IBeforeEncodeSpecificTypeMiddleware\`1](#T-MQContract-Interfaces-Middleware-IBeforeEncodeSpecificTypeMiddleware`1 'MQContract.Interfaces.Middleware.IBeforeEncodeSpecificTypeMiddleware`1')
   - [BeforeMessageEncodeAsync(context,message)](#M-MQContract-Interfaces-Middleware-IBeforeEncodeSpecificTypeMiddleware`1-BeforeMessageEncodeAsync-MQContract-Interfaces-Middleware-IContext,MQContract-Interfaces-Middleware-EncodableMessage{`0}- 'MQContract.Interfaces.Middleware.IBeforeEncodeSpecificTypeMiddleware`1.BeforeMessageEncodeAsync(MQContract.Interfaces.Middleware.IContext,MQContract.Interfaces.Middleware.EncodableMessage{`0})')
-- [IBulkPublishableMessageServiceConnection](#T-MQContract-Interfaces-Service-IBulkPublishableMessageServiceConnection 'MQContract.Interfaces.Service.IBulkPublishableMessageServiceConnection')
-  - [BulkPublishAsync(messages,cancellationToken)](#M-MQContract-Interfaces-Service-IBulkPublishableMessageServiceConnection-BulkPublishAsync-System-Collections-Generic-IEnumerable{MQContract-Messages-ServiceMessage},System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IBulkPublishableMessageServiceConnection.BulkPublishAsync(System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage},System.Threading.CancellationToken)')
 - [IConsumerContractConnection\`1](#T-MQContract-Interfaces-IConsumerContractConnection`1 'MQContract.Interfaces.IConsumerContractConnection`1')
   - [AutoRegisterAllConsumersAsync(assembly,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection`1-AutoRegisterAllConsumersAsync-System-Reflection-Assembly,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection`1.AutoRegisterAllConsumersAsync(System.Reflection.Assembly,System.Threading.CancellationToken)')
   - [RegisterPubSubAsyncConsumerAsync(consumerType,channel,group,ignoreMessageHeader,cancellationToken)](#M-MQContract-Interfaces-IConsumerContractConnection`1-RegisterPubSubAsyncConsumerAsync-System-Type,System-String,System-String,System-Boolean,System-Threading-CancellationToken- 'MQContract.Interfaces.IConsumerContractConnection`1.RegisterPubSubAsyncConsumerAsync(System.Type,System.String,System.String,System.Boolean,System.Threading.CancellationToken)')
@@ -139,6 +137,7 @@
   - [Filter](#P-MQContract-Interfaces-Consumers-IMessageFilteredConsumer`1-Filter 'MQContract.Interfaces.Consumers.IMessageFilteredConsumer`1.Filter')
 - [IMessageServiceConnection](#T-MQContract-Interfaces-Service-IMessageServiceConnection 'MQContract.Interfaces.Service.IMessageServiceConnection')
   - [MaxMessageBodySize](#P-MQContract-Interfaces-Service-IMessageServiceConnection-MaxMessageBodySize 'MQContract.Interfaces.Service.IMessageServiceConnection.MaxMessageBodySize')
+  - [BulkPublishAsync(messages,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-BulkPublishAsync-System-Collections-Generic-IEnumerable{MQContract-Messages-ServiceMessage},System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.BulkPublishAsync(System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage},System.Threading.CancellationToken)')
   - [CloseAsync()](#M-MQContract-Interfaces-Service-IMessageServiceConnection-CloseAsync 'MQContract.Interfaces.Service.IMessageServiceConnection.CloseAsync')
   - [PublishAsync(message,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-PublishAsync-MQContract-Messages-ServiceMessage,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.PublishAsync(MQContract.Messages.ServiceMessage,System.Threading.CancellationToken)')
   - [SubscribeAsync(messageReceived,errorReceived,channel,group,cancellationToken)](#M-MQContract-Interfaces-Service-IMessageServiceConnection-SubscribeAsync-System-Func{MQContract-Messages-ReceivedServiceMessage,System-Threading-Tasks-ValueTask},System-Action{System-Exception},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.Service.IMessageServiceConnection.SubscribeAsync(System.Func{MQContract.Messages.ReceivedServiceMessage,System.Threading.Tasks.ValueTask},System.Action{System.Exception},System.String,System.String,System.Threading.CancellationToken)')
@@ -1463,35 +1462,6 @@ The message, channel and header to allow for changes if desired
 | context | [MQContract.Interfaces.Middleware.IContext](#T-MQContract-Interfaces-Middleware-IContext 'MQContract.Interfaces.Middleware.IContext') | A shared context that exists from the start of this encoding instance |
 | message | [MQContract.Interfaces.Middleware.EncodableMessage{\`0}](#T-MQContract-Interfaces-Middleware-EncodableMessage{`0} 'MQContract.Interfaces.Middleware.EncodableMessage{`0}') | The message being encoded including headers and channel |
 
-<a name='T-MQContract-Interfaces-Service-IBulkPublishableMessageServiceConnection'></a>
-## IBulkPublishableMessageServiceConnection `type`
-
-##### Namespace
-
-MQContract.Interfaces.Service
-
-##### Summary
-
-Used to implement a service that supports bulk message publishing
-
-<a name='M-MQContract-Interfaces-Service-IBulkPublishableMessageServiceConnection-BulkPublishAsync-System-Collections-Generic-IEnumerable{MQContract-Messages-ServiceMessage},System-Threading-CancellationToken-'></a>
-### BulkPublishAsync(messages,cancellationToken) `method`
-
-##### Summary
-
-Implements a publish call to publish the given messages in bulk
-
-##### Returns
-
-A transmission result instance indicating the result for each message
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| messages | [System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage}') | The message to publish |
-| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
-
 <a name='T-MQContract-Interfaces-IConsumerContractConnection`1'></a>
 ## IConsumerContractConnection\`1 `type`
 
@@ -2629,6 +2599,24 @@ being able to run against 1 or more Message services.
 ##### Summary
 
 Maximum supported message body size in bytes
+
+<a name='M-MQContract-Interfaces-Service-IMessageServiceConnection-BulkPublishAsync-System-Collections-Generic-IEnumerable{MQContract-Messages-ServiceMessage},System-Threading-CancellationToken-'></a>
+### BulkPublishAsync(messages,cancellationToken) `method`
+
+##### Summary
+
+Implements a publish call to publish the given messages in bulk
+
+##### Returns
+
+A transmission result instance indicating the result for each message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messages | [System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{MQContract.Messages.ServiceMessage}') | The message to publish |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
 <a name='M-MQContract-Interfaces-Service-IMessageServiceConnection-CloseAsync'></a>
 ### CloseAsync() `method`

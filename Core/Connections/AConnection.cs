@@ -337,10 +337,9 @@ namespace MQContract.Connections
         #endregion
 
         #region PubSub
-        protected async ValueTask<TransmissionResult> PublishMessageAsync<TMessage>(SemaphoreSlim publishLock, ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
+        protected async ValueTask<TransmissionResult> PublishMessageAsync<TMessage>(ServiceMessage serviceMessage, IMessageServiceConnection serviceConnection, Activity? activity, string? connectionName, CancellationToken cancellationToken)
         {
             activity?.AddEvent(new("Waiting for publish lock"));
-            await publishLock.WaitAsync(cancellationToken);
             activity?.AddEvent(new("Publish lock achieved"));
             var result = await ExecuteResilliantTransmissionAsync<TMessage>(
                 (ct) => serviceConnection.PublishAsync(
@@ -352,66 +351,34 @@ namespace MQContract.Connections
                 serviceMessage.Channel,
                 cancellationToken
             );
-            publishLock.Release();
             activity?.AddEvent(new("Publish lock released"));
             OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, serviceMessage, result, serviceConnection, connectionName);
             activity?.SetStatus(result.IsError ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;
         }
-        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<TMessage>(SemaphoreSlim publishLock, IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken, string? connectionName = null)
+        protected async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync<TMessage>(IEnumerable<ServiceMessage> serviceMessages, IMessageServiceConnection serviceConnection, Activity? activity, CancellationToken cancellationToken, string? connectionName = null)
         {
             IEnumerable<TransmissionResult> result;
-            await publishLock.WaitAsync(cancellationToken);
             using var scope = SetScope();
             Logger?.LogDebugChecked("Executing bulk publish");
-            if (serviceConnection is IBulkPublishableMessageServiceConnection bulkPublishableMessageServiceConnection)
+            result = await ExecuteResilliantTransmissionAsync<TMessage>(
+                serviceConnection.BulkPublishAsync,
+                activity,
+                connectionName,
+                serviceMessages,
+                cancellationToken
+            );
+            if (activity!=null)
             {
-                Logger?.LogInformationChecked("Executing bulk publish against a service connection that supports bulk publish");
-                result = await ExecuteResilliantTransmissionAsync<TMessage>(
-                    bulkPublishableMessageServiceConnection.BulkPublishAsync,
-                    activity,
-                    connectionName,
-                    serviceMessages,
-                    cancellationToken
-                );
-                if (activity!=null)
-                {
-                    foreach (var res in result)
-                        activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
-                            new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",true),
-                            new(OpenTelemetryMiddleware.MessageIdKey,res.ID),
-                            OpenTelemetryMiddleware.CreateMessagePublishStatusTag(res),
-                            OpenTelemetryMiddleware.CreateConnectionTypeTag(serviceConnection)
-                       ])));
-                }
+                foreach (var res in result)
+                    activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
+                        new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",true),
+                        new(OpenTelemetryMiddleware.MessageIdKey,res.ID),
+                        OpenTelemetryMiddleware.CreateMessagePublishStatusTag(res),
+                        OpenTelemetryMiddleware.CreateConnectionTypeTag(serviceConnection)
+                    ])));
             }
-            else
-            {
-                Logger?.LogInformationChecked("Executing bulk publish against a service connection that does not support bulk publish");
-                result = await serviceMessages
-                    .WhenAll(async message =>
-                    {
-                        var result = await ExecuteResilliantTransmissionAsync<TMessage>(
-                            (ct) => serviceConnection.PublishAsync(
-                                message,
-                                ct
-                            ),
-                            activity,
-                            connectionName,
-                            message.Channel,
-                            cancellationToken
-                        );
-                        activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
-                            new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",false),
-                            new(OpenTelemetryMiddleware.MessageIdKey,message.ID),
-                            OpenTelemetryMiddleware.CreateMessagePublishStatusTag(result),
-                            OpenTelemetryMiddleware.CreateConnectionTypeTag(serviceConnection)
-                        ])));
-                        return result;
-                    });
-            }
-            publishLock.Release();
             return result;
         }
         #endregion

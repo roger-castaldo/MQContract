@@ -1,7 +1,5 @@
-﻿using Confluent.Kafka;
-using MQContract.Interfaces.Service;
+﻿using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using System.Diagnostics;
 
 namespace MQContract.Kafka.Subscriptions
 {
@@ -19,28 +17,19 @@ namespace MQContract.Kafka.Subscriptions
                 {
                     try
                     {
-                        var msg = consumer.Consume(TimeSpan.FromMinutes(5));
-                        if (msg==null && !cancelToken.IsCancellationRequested)
-                            msg = consumer.Consume(cancellationToken: cancelToken.Token);
-                        if (msg!=null)
-                        {
-                            Activity.Current?.AddEvent(new("Message received from Kafka"));
-                            var headers = Connection.ExtractHeaders(msg.Message.Headers, out var messageTypeID);
-                            Activity.Current?.AddEvent(new("Invoking Message Callback"));
-                            await messageReceived(new ReceivedServiceMessage(
-                                msg.Message.Key ?? string.Empty,
-                                messageTypeID ?? string.Empty,
-                                channel,
-                                headers,
-                                msg.Message.Value,
-                                Acknowledge: () =>
-                                {
-                                    consumer.StoreOffset(msg.TopicPartitionOffset);
-                                    consumer.Commit();
-                                    return ValueTask.CompletedTask;
-                                }
-                            )).ConfigureAwait(false);
-                        }
+                        var msg = consumer.Consume(cancellationToken: cancelToken.Token);
+                        var headers = Connection.ExtractHeaders(msg.Message.Headers, out var messageTypeID);
+                        await messageReceived(new ReceivedServiceMessage(
+                            msg.Message.Key??string.Empty,
+                            messageTypeID??string.Empty,
+                            channel,
+                            headers,
+                            msg.Message.Value,
+                            Acknowledge: () => {
+                                consumer.StoreOffset(msg);
+                                return ValueTask.CompletedTask;
+                            }
+                        )).ConfigureAwait(false);
                     }
                     catch (OperationCanceledException)
                     {
@@ -51,17 +40,18 @@ namespace MQContract.Kafka.Subscriptions
                         errorReceived(ex);
                     }
                 }
-
                 consumer.Close();
             });
         }
 
         public async ValueTask EndAsync()
         {
-            try { 
-                await cancelToken.CancelAsync(); 
-            } 
-            catch {
+            try
+            {
+                await cancelToken.CancelAsync();
+            }
+            catch
+            {
                 //ignoring the error as the goal is to call cancel and not care about the error
             }
         }
@@ -77,7 +67,8 @@ namespace MQContract.Kafka.Subscriptions
                 {
                     consumer.Close();
                 }
-                catch {
+                catch
+                {
                     //ignoring error here as we are attempting to dispose the resource
                 }
                 consumer.Dispose();

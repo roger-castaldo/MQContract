@@ -2,7 +2,6 @@
 using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace MQContract.Middleware
 {
