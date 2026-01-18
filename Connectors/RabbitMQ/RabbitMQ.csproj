@@ -13,6 +13,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <PackageReference Include="RabbitMQ.Client" Version="7.*" />
 	</ItemGroup>
 

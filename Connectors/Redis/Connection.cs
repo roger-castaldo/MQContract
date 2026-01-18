@@ -12,7 +12,10 @@ namespace MQContract.Redis
     /// </summary>
     public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
     {
+        private readonly record struct MessageInstance(string ID, string Channel, NameValueEntry[] Data);
+
         private readonly Guid connectionID = Guid.NewGuid();
+        private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
         private bool disposedValue;
 
         /// <summary>
@@ -32,6 +35,27 @@ namespace MQContract.Redis
         {
             ConnectionMultiplexer = ConnectionMultiplexer.Connect(configuration);
             Database = ConnectionMultiplexer.GetDatabase();
+            batchedMessageStream = new(
+                async (serviceMessage, _) => new MessageInstance(
+                    serviceMessage.ID,
+                    serviceMessage.Channel,
+                    ConvertMessage(serviceMessage)
+                ),
+                async (messageInstance, cancellationToken) =>
+                {
+                    try
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            return new TransmissionResult(messageInstance.ID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
+                        _ = await Database.StreamAddAsync(messageInstance.Channel, messageInstance.Data);
+                        return new TransmissionResult(messageInstance.ID);
+                    }
+                    catch (Exception e)
+                    {
+                        return new TransmissionResult(messageInstance.ID, Error: new(e));
+                    }
+                }
+            );
         }
 
         /// <summary>
@@ -60,7 +84,10 @@ namespace MQContract.Redis
         public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
 
         async ValueTask IMessageServiceConnection.CloseAsync()
-            => await ConnectionMultiplexer.CloseAsync();
+        {
+            await batchedMessageStream.DisposeAsync();
+            await ConnectionMultiplexer.CloseAsync();
+        }
 
         private const string MESSAGE_TYPE_KEY = "_MessageTypeID";
         private const string MESSAGE_ID_KEY = "_MessageID";
@@ -127,18 +154,11 @@ namespace MQContract.Redis
             );
         }
 
-        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-        {
-            try
-            {
-                _ = await Database.StreamAddAsync(message.Channel, ConvertMessage(message));
-                return new(message.ID);
-            }
-            catch (Exception e)
-            {
-                return new(message.ID, Error: new(e));
-            }
-        }
+        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
+
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
@@ -188,7 +208,8 @@ namespace MQContract.Redis
             if (!disposedValue)
             {
                 disposedValue=true;
-                await ConnectionMultiplexer.DisposeAsync();
+                await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
+                await ConnectionMultiplexer.DisposeAsync().ConfigureAwait(true);
             }
             GC.SuppressFinalize(this);
         }

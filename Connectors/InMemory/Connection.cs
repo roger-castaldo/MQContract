@@ -8,7 +8,7 @@ namespace MQContract.InMemory
     /// <summary>
     /// Used as an in memory connection messaging system where all transmission are done through Channels within the connection.  You must use the same underlying connection.
     /// </summary>
-    public class Connection : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection, IPingableMessageServiceConnection
+    public class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection
     {
         private readonly ConcurrentDictionary<string, MessageChannel> channels = [];
         private readonly string inboxChannel = $"_inbox/{Guid.NewGuid()}";
@@ -48,7 +48,7 @@ namespace MQContract.InMemory
         ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
             => GetChannel(message.Channel).PublishAsync(message, cancellationToken);
 
-        ValueTask<IEnumerable<TransmissionResult>> IBulkPublishableMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
             => GetChannel(messages.First().Channel).BulkPublishAsync(messages, cancellationToken);
 
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)

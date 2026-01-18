@@ -19,18 +19,12 @@ MQContract.ApachePulsar
 
 This is the MessageServiceConnection implemenation for using ApaxhePulsar
 
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| pulsarClientBuilder | [T:MQContract.ApachePulsar.Connection](#T-T-MQContract-ApachePulsar-Connection 'T:MQContract.ApachePulsar.Connection') | An instance of a pulsar client builder used to build the underlying client connection |
-
 <a name='M-MQContract-ApachePulsar-Connection-#ctor-DotPulsar-Abstractions-IPulsarClientBuilder-'></a>
 ### #ctor(pulsarClientBuilder) `constructor`
 
 ##### Summary
 
-This is the MessageServiceConnection implemenation for using ApaxhePulsar
+Default constructor
 
 ##### Parameters
 

@@ -43,7 +43,14 @@ namespace MQContract.ActiveMQ
             session = ActiveMQConnection.CreateSession();
             producer = session.CreateProducer();
             batchedMessageStream = new(
-                async (serviceMessage, _) => new MessageInstance(serviceMessage.ID, await ProduceMessage(serviceMessage), GetTopic(serviceMessage.Channel)),
+                async (serviceMessage, _) => {
+                    var msg = await session.CreateBytesMessageAsync(serviceMessage.Data.ToArray());
+                    msg.NMSMessageId=serviceMessage.ID;
+                    msg.Properties[MESSAGE_TYPE_HEADER] = serviceMessage.MessageTypeID;
+                    foreach (var key in serviceMessage.Header.Keys)
+                        msg.Properties[key] = serviceMessage.Header[key];
+                    return new MessageInstance(serviceMessage.ID, msg, GetTopic(serviceMessage.Channel));
+                },
                 async (messageInstance, cancellationToken) =>
                 {
                     try
@@ -67,16 +74,6 @@ namespace MQContract.ActiveMQ
         }
 
         uint? IMessageServiceConnection.MaxMessageBodySize => 4*1024*1024;
-
-        private async ValueTask<IBytesMessage> ProduceMessage(ServiceMessage message)
-        {
-            var msg = await session.CreateBytesMessageAsync(message.Data.ToArray());
-            msg.NMSMessageId=message.ID;
-            msg.Properties[MESSAGE_TYPE_HEADER] = message.MessageTypeID;
-            foreach (var key in message.Header.Keys)
-                msg.Properties[key] = message.Header[key];
-            return msg;
-        }
 
         private static MessageHeader ExtractHeaders(IPrimitiveMap properties, out string? messageTypeID)
         {

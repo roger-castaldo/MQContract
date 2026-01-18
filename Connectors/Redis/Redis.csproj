@@ -9,6 +9,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="StackExchange.Redis" Version="2.*" />
 	</ItemGroup>
 

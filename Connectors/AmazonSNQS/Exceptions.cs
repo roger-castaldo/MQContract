@@ -50,7 +50,7 @@ namespace MQContract.AmazonSNQS
         internal NoClientsSetException()
             : base("Both the sqsClient and snsClient are null, unable to publish any messages") { }
 
-        internal static void ThrowIfBothNull(AmazonSimpleNotificationServiceClient? snsClient , AmazonSQSClient? sqsClient)
+        internal static void ThrowIfBothNull(object? snsClient , object? sqsClient)
         {
             if (snsClient==null && sqsClient==null)
                 throw new TransmissionException(new NoClientsSetException(),true);

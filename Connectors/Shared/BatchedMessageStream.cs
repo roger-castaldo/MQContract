@@ -14,10 +14,7 @@ internal class BatchedMessageStream<TServiceMessage> : IAsyncDisposable
         public Task<IEnumerable<TransmissionResult>> Result => completionSource.Task;
 
         internal void ProcessResults(IEnumerable<Task<TransmissionResult>> results)
-        {
-            var completionCall = completionSource;
-            _ = Task.Run(async () => completionCall.TrySetResult(await Task.WhenAll(results)));
-        }
+            => _ = Task.Run(async () => completionSource.TrySetResult(await Task.WhenAll(results)));
     }
 
     private readonly Channel<MessageBatch<TServiceMessage>> channel = Channel.CreateBounded<MessageBatch<TServiceMessage>>(new BoundedChannelOptions(10)
@@ -67,6 +64,8 @@ internal class BatchedMessageStream<TServiceMessage> : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         channel.Writer.TryComplete();
-        await cancelToken.CancelAsync();
+        if (!cancelToken.IsCancellationRequested)
+            await cancelToken.CancelAsync();
+
     }
 }

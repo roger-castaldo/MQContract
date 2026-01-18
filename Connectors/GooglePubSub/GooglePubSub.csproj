@@ -6,6 +6,9 @@
 		<RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
 		<Title>GooglePubSub Connector for MQContract</Title>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Google.Cloud.PubSub.V1" Version="3.*" />

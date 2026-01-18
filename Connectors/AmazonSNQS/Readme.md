@@ -25,15 +25,13 @@ MQContract.AmazonSNQS
 ##### Summary
 
 This is the MessageServiceConnection implementation for using Amazon SNS/SQS
-`snsClientConfiguration``sqsClientConfiguration`
 
 <a name='M-MQContract-AmazonSNQS-Connection-#ctor-System-Nullable{System-ValueTuple{Amazon-Runtime-AWSCredentials,Amazon-SimpleNotificationService-AmazonSimpleNotificationServiceConfig}},System-Nullable{System-ValueTuple{Amazon-Runtime-AWSCredentials,Amazon-SQS-AmazonSQSConfig}}-'></a>
 ### #ctor() `constructor`
 
 ##### Summary
 
-This is the MessageServiceConnection implementation for using Amazon SNS/SQS
-`snsClientConfiguration``sqsClientConfiguration`
+Default constructor
 
 ##### Parameters
 

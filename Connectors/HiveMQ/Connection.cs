@@ -10,12 +10,14 @@ namespace MQContract.HiveMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using HiveMQ
     /// </summary>
-    public sealed class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IDisposable
+    public sealed class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
     {
+        private readonly record struct MessageInstance(string ID, MQTT5PublishMessage Message);
         private readonly HiveMQClientOptions clientOptions;
         private readonly Guid connectionID = Guid.NewGuid();
         private long lastPingTimestamp = long.MinValue;
         private TimeSpan lastPingDuration = TimeSpan.MaxValue;
+        private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
 
         /// <summary>
         /// Houses the underlying HiveMQ client that is being used by the connection
@@ -42,6 +44,23 @@ namespace MQContract.HiveMQ
             {
                 lastPingDuration = Stopwatch.GetElapsedTime(lastPingTimestamp);
             };
+            batchedMessageStream = new(
+                async (serviceMessage, cancellationToken) => new(serviceMessage.ID, ConvertMessage(serviceMessage)),
+                async (message, cancellationToken) =>
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        return ProduceFromException(message.ID, new OperationCanceledException("Transmission cancelled"));
+                    try
+                    {
+                        _ = await Client.PublishAsync(message.Message, cancellationToken);
+                    }
+                    catch (Exception e)
+                    {
+                        return ProduceFromException(message.ID, e);
+                    }
+                    return new(message.ID);
+                }
+            );
         }
 
         uint? IMessageServiceConnection.MaxMessageBodySize => (uint?)clientOptions.ClientMaximumPacketSize;
@@ -52,7 +71,10 @@ namespace MQContract.HiveMQ
         public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
 
         async ValueTask IMessageServiceConnection.CloseAsync()
-            => await Client.DisconnectAsync();
+        {
+            await batchedMessageStream.DisposeAsync();
+            await Client.DisconnectAsync();
+        }
 
         private const string MessageID = "_ID";
         private const string MessageTypeID = "_MessageTypeID";
@@ -91,18 +113,10 @@ namespace MQContract.HiveMQ
         private static TransmissionResult ProduceFromException(string messageID, Exception e)
             => new(messageID, Error: new(e));
 
-        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-        {
-            try
-            {
-                _ = await Client.PublishAsync(ConvertMessage(message), cancellationToken);
-            }
-            catch (Exception e)
-            {
-                return ProduceFromException(message.ID, e);
-            }
-            return new(message.ID);
-        }
+        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
@@ -193,8 +207,9 @@ namespace MQContract.HiveMQ
         ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
             => ValueTask.FromResult<PingResult>(new(clientOptions.Host, string.Empty, lastPingDuration));
 
-        void IDisposable.Dispose()
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
+            await batchedMessageStream.DisposeAsync();
             ((IDisposable)Client).Dispose();
         }
     }
