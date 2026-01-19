@@ -8,10 +8,10 @@ namespace MQContract.InMemory
     {
         private readonly ConcurrentDictionary<string, MessageGroup> groups = [];
 
-        private async ValueTask<bool> Publish(InternalServiceMessage message, CancellationToken cancellationToken)
+        private async ValueTask<IEnumerable<TransmissionResult>> Publish(IEnumerable<InternalServiceMessage> messages, CancellationToken cancellationToken)
         {
-            var results = await groups.Values.ToArray().WhenAll(grp => grp.PublishMessageAsync(message, cancellationToken));
-            return Array.TrueForAll(results.ToArray(), t => t) && results.Any();
+            var results = await groups.Values.ToArray().WhenAll(grp => grp.PublishMessagesAsync(messages, cancellationToken));
+            return messages.Select((msg, idx) => new TransmissionResult(msg.ID, Error: Array.TrueForAll(results.Select(r => r.ElementAt(idx)).ToArray(), t => t) ? null : new(new TransmissionResultException(), true)));
         }
 
         public void Close()
@@ -23,46 +23,16 @@ namespace MQContract.InMemory
         }
 
         internal async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-        {
-            if (!await Publish(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data), cancellationToken))
-                return new(message.ID, Error: new(new TransmissionResultException(), true));
-            return new(message.ID);
-        }
+            => (await Publish([new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data)], cancellationToken)).First();
 
         internal async ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)
-        => await Publish(message, cancellationToken);
+            => (await Publish([message], cancellationToken)).First();
 
         internal async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
-        {
-            var messageIDs = messages.Select(m => m.ID).ToArray();
-            var grps = groups.Values.ToArray();
-            var results = (await messages
-                .WhenAll(async (message) =>
-                {
-                    try
-                    {
-                        var messageResults = (
-                        await grps
-                            .WhenAll(grp => grp.PublishMessageAsync(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data), cancellationToken))
-                        ).ToArray();
-                        return new TransmissionResult(message.ID, Error: Array.TrueForAll(messageResults, mr => mr) ? null : new(new TransmissionResultException(), true));
-                    }
-                    catch
-                    {
-                        return new TransmissionResult(message.ID, Error: new(new TransmissionResultException(), true));
-                    }
-                })
-                ).OrderBy(res=>Array.IndexOf(messageIDs,res.ID))
-                .ToArray();
-            return results;
-        }
+            => await Publish(messages.Select(m => new InternalServiceMessage(m.ID, m.MessageTypeID, m.Channel, m.Header, m.Data)), cancellationToken);
 
         internal async ValueTask<TransmissionResult> QueryAsync(ServiceMessage message, string inbox, Guid correlationID, CancellationToken cancellationToken)
-        {
-            if (!await Publish(new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data, correlationID, inbox), cancellationToken))
-                return new(message.ID, new(new TransmissionResultException(), true));
-            return new(message.ID);
-        }
+            => (await Publish([new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data, correlationID, inbox)], cancellationToken)).First();
 
         private MessageGroup GetGroup(string? group)
         {
