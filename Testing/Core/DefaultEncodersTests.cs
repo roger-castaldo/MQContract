@@ -42,8 +42,8 @@ namespace AutomatedTesting
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeAsync<byte[]>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName);
-            var result = await contractConnection.PublishAsync<byte[]>(testMessage, ChannelName);
+            var subscription = await contractConnection.SubscribeAsync<byte[]>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<byte[]>(testMessage, ChannelName, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -94,8 +94,8 @@ namespace AutomatedTesting
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeAsync<string>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName);
-            var result = await contractConnection.PublishAsync<string>(testMessage, ChannelName);
+            var subscription = await contractConnection.SubscribeAsync<string>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<string>(testMessage, ChannelName, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -109,7 +109,7 @@ namespace AutomatedTesting
             using var ms = new MemoryStream();
             using var writer = new StreamWriter(ms);
             await writer.WriteAsync(testMessage);
-            await writer.FlushAsync();
+            await writer.FlushAsync(TestContext.CancellationToken);
             Assert.IsTrue(Enumerable.SequenceEqual<byte>(ms.ToArray(), serviceMessages[0].Data.ToArray()));
             #endregion
 
@@ -349,10 +349,12 @@ namespace AutomatedTesting
             foreach (var d in values)
             {
                 foreach (var b in decimal.GetBits(d))
-                    await ms.WriteAsync(BitConverter.GetBytes(b));
+                    await ms.WriteAsync(BitConverter.GetBytes(b), cancellationToken: TestContext.CancellationToken);
             }
 
             await BitConverterTypeTest<decimal>(values,ms.ToArray());
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

@@ -36,7 +36,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group:TestGroup,
                 ignoreMessageHeader:ignoreMessageHeader,
                 messageFilters:messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -70,7 +70,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -103,7 +103,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -138,7 +138,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -172,7 +172,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -205,7 +205,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -243,7 +243,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -277,7 +277,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -310,7 +310,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -348,7 +348,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -382,7 +382,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -415,7 +415,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -427,5 +427,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 ignoreMessageHeader, It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

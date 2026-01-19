@@ -61,9 +61,9 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             {
                 messages.Add(msg);
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -126,13 +126,13 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var subscription1 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
-                channel: channelName);
+                channel: channelName, cancellationToken: TestContext.CancellationToken);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription2 = await contractConnection.SubscribeQueryAsyncResponseAsync<NoChannelMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
-                channel: channelName);
+                channel: channelName, cancellationToken: TestContext.CancellationToken);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
 
@@ -173,12 +173,12 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var subscription1 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { },
-                group: groupName);
+                group: groupName, cancellationToken: TestContext.CancellationToken);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var subscription2 = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
-                (error) => { });
+                (error) => { }, cancellationToken: TestContext.CancellationToken);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
 
@@ -215,7 +215,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<NoChannelMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
-                (error) => { })
+                (error) => { }, cancellationToken: TestContext.CancellationToken)
             );
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
@@ -249,7 +249,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var exception = await Assert.ThrowsExactlyAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
-                (error) => { })
+                (error) => { }, cancellationToken: TestContext.CancellationToken)
             );
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             #endregion
@@ -286,7 +286,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 _ = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
                 {
                     return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(new(msg.Message.TypeName), null));
-                }, (error) => { })
+                }, (error) => { }, cancellationToken: TestContext.CancellationToken)
             );
             #endregion
 
@@ -323,7 +323,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<BasicQueryMessage, BasicResponseMessage>(
                 (msg) => ValueTask.FromResult<QueryResponseMessage<BasicResponseMessage>>(null),
                 (error) => { }
-            );
+, cancellationToken: TestContext.CancellationToken);
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             await subscription.EndAsync();
             #endregion
@@ -381,13 +381,13 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             {
                 messages.Add(msg);
                 return new(responseMessage, null);
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage>(message1);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage>(message1, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             stopwatch.Restart();
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage>(message2);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage>(message2, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -468,9 +468,9 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
             {
                 throw exception;
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -519,7 +519,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
             {
                 throw new NotImplementedException();
-            }, (error) => { });
+            }, (error) => { }, cancellationToken: TestContext.CancellationToken);
             await subscription.EndAsync();
             #endregion
 
@@ -555,7 +555,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
             {
                 throw new NotImplementedException();
-            }, (error) => { });
+            }, (error) => { }, cancellationToken: TestContext.CancellationToken);
             await subscription.DisposeAsync();
             #endregion
 
@@ -588,7 +588,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
             {
                 throw new NotImplementedException();
-            }, (error) => { });
+            }, (error) => { }, cancellationToken: TestContext.CancellationToken);
             await subscription.DisposeAsync();
             #endregion
 
@@ -622,7 +622,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var subscription = await contractConnection.SubscribeQueryResponseAsync<BasicQueryMessage, BasicResponseMessage>((msg) =>
             {
                 throw new NotImplementedException();
-            }, (error) => { });
+            }, (error) => { }, cancellationToken: TestContext.CancellationToken);
             subscription.Dispose();
             #endregion
 
@@ -684,9 +684,9 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             {
                 messages.Add(msg);
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
-            }, (error) => exceptions.Add(error), ignoreMessageHeader: true);
+            }, (error) => exceptions.Add(error), ignoreMessageHeader: true, cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -758,9 +758,9 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             {
                 messages.Add(msg);
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -888,7 +888,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                         (_, false, false) => MessageFilterResult.DropAndDontAcknowledge,
                         (_, false, true) => MessageFilterResult.DropAndAcknowledge,
                     })
-            ));
+            ), cancellationToken: TestContext.CancellationToken);
             QueryResult<object>? result = null;
             Exception? error = null;
             var messageHeader = new MessageHeader([
@@ -896,9 +896,9 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
             ]);
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader:messageHeader, timeout: TimeSpan.FromMilliseconds(500));
+                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader:messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
             else
-                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500)));
+                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -929,5 +929,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

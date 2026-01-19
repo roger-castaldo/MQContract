@@ -26,7 +26,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -62,7 +62,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -120,7 +120,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -168,7 +168,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -191,5 +191,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             serviceConnection2.Verify(x => x.PingAsync(), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }
