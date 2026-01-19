@@ -12,7 +12,6 @@ namespace MQContract.Middleware
 
         async ValueTask<ServiceMessage> IAfterEncodeMiddleware.AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
         {
-            context.Activity?.AddEvent(new("Compression Middleware : AfterMessageEncodeAsync"));
             if (context is Context c && message.Data.Length>c.MaxMessageSize)
             {
                 using var ms = new MemoryStream();
@@ -34,7 +33,6 @@ namespace MQContract.Middleware
 
         async ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)
         {
-            context.Activity?.AddEvent(new("Compression Middleware : BeforeMessageDecodeAsync"));
             if (messageTypeID.StartsWith("C-") || bool.Parse(message.MessageHeader[CompressedHeader]??"false"))
             {
                 using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);

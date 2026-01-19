@@ -8,6 +8,9 @@ namespace BenchMark.PublishBenchmarks
     {
         uint? IMessageServiceConnection.MaxMessageBodySize => 1024 * 1024;
 
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => ValueTask.FromResult(messages.Select(m => new TransmissionResult(m.ID)));
+
         ValueTask IMessageServiceConnection.CloseAsync()
             => ValueTask.CompletedTask;
 

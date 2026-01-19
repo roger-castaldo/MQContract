@@ -43,10 +43,8 @@ namespace MQContract.Kafka
                 )),
                 async (messageInstance, cancellationToken) =>
                 {
-                    Activity.Current?.AddEvent(new("Publishing message through Kafka"));
                     try
                     {
-                        Activity.Current?.AddEvent(new("Producing Message"));
                         var resultSource = new TaskCompletionSource<TransmissionResult>();
                         producer.Produce(messageInstance.Channel, messageInstance.Message,
                         (result) =>
@@ -57,7 +55,6 @@ namespace MQContract.Kafka
                                 resultSource.TrySetResult(new TransmissionResult(result.Key));
                         });
                         var result = await resultSource.Task.WaitAsync(cancellationToken);
-                        Activity.Current?.AddEvent(new("Returning transmission result"));
                         return result;
                     }
                     catch (Exception ex)
@@ -87,12 +84,10 @@ namespace MQContract.Kafka
 
         internal static Headers ExtractHeaders(ServiceMessage message)
         {
-            Activity.Current?.AddEvent(new("Converting Kafka Headers"));
             var result = new Headers();
             foreach (var key in message.Header.Keys)
                 result.Add(key, EncodeHeaderValue(message.Header[key]!));
             result.Add(MESSAGE_TYPE_HEADER, EncodeHeaderValue(message.MessageTypeID));
-            Activity.Current?.AddEvent(new("Headers converted"));
             return result;
         }
 
@@ -125,7 +120,14 @@ namespace MQContract.Kafka
                 GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
                 AutoOffsetReset = (isReply ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest),
                 EnableAutoOffsetStore = false,
-                EnableAutoCommit = true
+                EnableAutoCommit = true,
+                // responsiveness tuning
+                FetchMinBytes = 1,               // don't wait for larger batches on the broker
+                FetchWaitMaxMs = 50,            // wait at most 50ms for FetchMinBytes to be satisfied
+                MaxPartitionFetchBytes = (int?)(clientConfig.MessageMaxBytes) ?? 1024 * 1024, // limit per-partition fetch size
+                QueuedMinMessages = 1,          // start delivering to the application with fewer queued messages
+                AutoCommitIntervalMs = 1000,    // commit offsets to broker more frequently (still relying on StoreOffset)
+                SocketKeepaliveEnable = true
             });
             if (isReply)
                 builder.SetPartitionsAssignedHandler((c, partitions) =>
