@@ -5,7 +5,7 @@ using System.Threading.Channels;
 
 namespace MQContract.InMemory
 {
-    internal class MessageChannel
+    internal class MessageChannel : IDisposable
     {
         private readonly Channel<InternalServiceMessage> channel = Channel.CreateBounded<InternalServiceMessage>(new BoundedChannelOptions(10)
         {
@@ -23,7 +23,7 @@ namespace MQContract.InMemory
                 while (await channel.Reader.WaitToReadAsync(cancelToken.Token))
                 {
                     var message = await channel.Reader.ReadAsync(cancelToken.Token);
-                    await groups.Values.ToArray().Select(grp => grp.PublishMessageAsync(message, cancelToken.Token)).WhenAll().ConfigureAwait(false);
+                    await groups.Values.Select(grp => grp.PublishMessageAsync(message, cancelToken.Token)).WhenAll().ConfigureAwait(false);
                 }
             });
         }
@@ -120,5 +120,10 @@ namespace MQContract.InMemory
                 (error) => { },
                 null
             );
+
+        public void Dispose()
+        {
+            ((IDisposable)cancelToken).Dispose();
+        }
     }
 }
