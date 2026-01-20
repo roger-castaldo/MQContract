@@ -15,6 +15,7 @@ namespace MQContract.InMemory
         });
         private readonly ConcurrentDictionary<string, MessageGroup> groups = [];
         private readonly CancellationTokenSource cancelToken = new();
+        private bool disposedValue;
 
         public MessageChannel()
         {
@@ -29,12 +30,7 @@ namespace MQContract.InMemory
         }
 
         public void Close()
-        {
-            channel.Writer.TryComplete();
-            if (!cancelToken.IsCancellationRequested)
-                cancelToken.Cancel();
-            groups.Clear();
-        }
+            => ((IDisposable)this).Dispose();
 
         private async ValueTask<TransmissionResult> TryPublishAsync(InternalServiceMessage serviceMessage, CancellationToken cancellationToken)
         {
@@ -121,9 +117,27 @@ namespace MQContract.InMemory
                 null
             );
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    channel.Writer.TryComplete();
+                    if (!cancelToken.IsCancellationRequested)
+                        cancelToken.Cancel();
+                    groups.Clear();
+                    ((IDisposable)cancelToken).Dispose();
+                }
+                disposedValue=true;
+            }
+        }
+
         public void Dispose()
         {
-            ((IDisposable)cancelToken).Dispose();
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }
