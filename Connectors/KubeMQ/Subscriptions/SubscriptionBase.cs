@@ -44,7 +44,8 @@ namespace MQContract.KubeMQ.Subscriptions
                             else
                                 break;
                         }
-                    }catch(Exception e)
+                    }
+                    catch (Exception e)
                     {
                         await ProcessErrorAsync(e);
                     }
@@ -98,7 +99,8 @@ namespace MQContract.KubeMQ.Subscriptions
                     await client.DisposeAsync();
                     cancelToken.Dispose();
                 }
-                catch {
+                catch
+                {
                     //ignoring error here as we are doing some cleanup
                 }
             }

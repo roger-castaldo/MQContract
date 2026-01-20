@@ -26,7 +26,7 @@ namespace MQContract.Connections
         private readonly MiddlewareCollection middleware;
         private readonly ConcurrentDictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
         private readonly ConcurrentDictionary<string, IServiceSubscription> inboxSubscriptions = [];
-        private readonly ConcurrentDictionary<(Type messageType,bool ignoreMessageHeader), IMessageTypeFactory> typeFactories = [];
+        private readonly ConcurrentDictionary<(Type messageType, bool ignoreMessageHeader), IMessageTypeFactory> typeFactories = [];
         private readonly ConcurrentBag<ISubscription> consumerSubscriptions = [];
         protected readonly ILogger? Logger;
         private readonly IMessageEncoder? defaultMessageEncoder;
@@ -37,7 +37,8 @@ namespace MQContract.Connections
         IMessageEncryptor? defaultMessageEncryptor = null,
         IServiceProvider? serviceProvider = null,
         ILogger? logger = null,
-        ChannelMapper? channelMapper = null){
+        ChannelMapper? channelMapper = null)
+        {
             this.defaultMessageEncoder = defaultMessageEncoder;
             this.serviceProvider = serviceProvider;
             this.channelMapper = channelMapper;
@@ -49,7 +50,7 @@ namespace MQContract.Connections
 
         protected IMessageFactory<TMessage> GetMessageFactory<TMessage>(bool ignoreMessageHeader = false)
         {
-            if (!typeFactories.TryGetValue((typeof(TMessage),ignoreMessageHeader),out var result))
+            if (!typeFactories.TryGetValue((typeof(TMessage), ignoreMessageHeader), out var result))
             {
                 result = new MessageTypeFactory<TMessage>(defaultMessageEncoder, serviceProvider, ignoreMessageHeader, messageContext);
                 typeFactories.TryAdd((typeof(TMessage), ignoreMessageHeader), result);
@@ -102,11 +103,11 @@ namespace MQContract.Connections
         private async ValueTask<EncodableMessage<TMessage>> BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader)
         {
             using var scope = SetScope();
-            var (genericHandlers, specificHandlers) = middleware.GetHandlers<IBeforeEncodeMiddleware,IBeforeEncodeSpecificTypeMiddleware<TMessage>>();
+            var (genericHandlers, specificHandlers) = middleware.GetHandlers<IBeforeEncodeMiddleware, IBeforeEncodeSpecificTypeMiddleware<TMessage>>();
             var result = new EncodableMessage<TMessage>(messageHeader, message, channel);
             Logger?.LogDebugChecked("Executing generic Before Message Encode middleware for message of type {Type}", typeof(TMessage));
             foreach (var handler in genericHandlers)
-                result = await handler.BeforeMessageEncodeAsync<TMessage>(context,result);
+                result = await handler.BeforeMessageEncodeAsync<TMessage>(context, result);
             Logger?.LogDebugChecked("Executing specific for type Before Message Encode middleware for message of type {Type}", typeof(TMessage));
             foreach (var handler in specificHandlers)
                 result = await handler.BeforeMessageEncodeAsync(context, result);
@@ -137,7 +138,7 @@ namespace MQContract.Connections
         private async ValueTask<DecodedMessage<TMessage>> AfterMessageDecodeAsync<TMessage>(IContext context, TMessage message, string ID, MessageHeader messageHeader, DateTime receivedTimestamp, DateTime processedTimeStamp)
         {
             using var scope = SetScope(ID);
-            var (genericHandlers, specificHandlers) = middleware.GetHandlers<IAfterDecodeMiddleware,IAfterDecodeSpecificTypeMiddleware<TMessage>>();
+            var (genericHandlers, specificHandlers) = middleware.GetHandlers<IAfterDecodeMiddleware, IAfterDecodeSpecificTypeMiddleware<TMessage>>();
             var result = new DecodedMessage<TMessage>(messageHeader, message);
             Logger?.LogDebugChecked("Executing generic After Message Decode middleware for message of type {Type}", typeof(TMessage));
             foreach (var handler in genericHandlers)
@@ -159,7 +160,7 @@ namespace MQContract.Connections
             );
         }
 
-        protected async ValueTask<DecodeServiceMessageResult<TMessage>> DecodeServiceMessageAsync<TMessage>(ChannelMapper.MapTypes mapType, IMessageFactory<TMessage> messageFactory, ReceivedServiceMessage message, Activity? activity,MessageFilters<TMessage>? messageFilters)
+        protected async ValueTask<DecodeServiceMessageResult<TMessage>> DecodeServiceMessageAsync<TMessage>(ChannelMapper.MapTypes mapType, IMessageFactory<TMessage> messageFactory, ReceivedServiceMessage message, Activity? activity, MessageFilters<TMessage>? messageFilters)
         {
             using var scope = SetScope(message.ID);
             Logger?.LogDebugChecked("Filtering Service Message message of type {Type} by headers", typeof(TMessage));
@@ -173,7 +174,7 @@ namespace MQContract.Connections
                 return DecodeServiceMessageResult<TMessage>.ProduceResult(filterResult);
             }
             Logger?.LogDebugChecked("Decoding Service Message message of type {Type}", typeof(TMessage));
-            var context = new Middleware.Context(mapType, activity, expectedType:typeof(TMessage));
+            var context = new Middleware.Context(mapType, activity, expectedType: typeof(TMessage));
             var decodableMessage = await BeforeMessageDecodeAsync(context, message.ID, message.Header, message.MessageTypeID, message.Channel, message.Data);
             var taskMessage = await messageFactory.ConvertMessageAsync(Logger, new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, decodableMessage.MessageHeader, decodableMessage.Data, message.Acknowledge))
                                 ??throw new InvalidCastException($"Unable to convert incoming message {message.MessageTypeID} to {typeof(TMessage).FullName}");
@@ -322,7 +323,7 @@ namespace MQContract.Connections
                     serviceMessage,
                     ct
                 ),
-                activity, 
+                activity,
                 connectionName,
                 serviceMessage.Channel,
                 cancellationToken
@@ -448,9 +449,9 @@ namespace MQContract.Connections
             try
             {
                 var decodeResult = await DecodeServiceMessageAsync<TQueryResult>(
-                    ChannelMapper.MapTypes.QueryResponse, 
-                    GetMessageFactory<TQueryResult>(true), 
-                    new(queryResult.ID, queryResult.MessageTypeID, responseChannel, queryResult.Header, queryResult.Data), 
+                    ChannelMapper.MapTypes.QueryResponse,
+                    GetMessageFactory<TQueryResult>(true),
+                    new(queryResult.ID, queryResult.MessageTypeID, responseChannel, queryResult.Header, queryResult.Data),
                     activity,
                     null
                 );

@@ -296,7 +296,8 @@ namespace CQRSTesting.MappedConnection
 
             if (!Equals(headerValue, checkValue))
                 mockQueryProcessor.As<IContextFilteredProcessor>().SetupGet(x => x.Filter)
-                    .Returns((Context context) => {
+                    .Returns((Context context) =>
+                    {
                         if (!Equals(context[headerKey], checkValue))
                         {
                             dropped=true;
@@ -306,7 +307,8 @@ namespace CQRSTesting.MappedConnection
                     });
             if (Equals(headerValue, checkValue))
                 mockQueryProcessor.As<IFilteredQueryProcessor<BasicQuery, BasicQueryResponse>>().SetupGet(x => x.Filter)
-                    .Returns((BasicQuery command, Context context) => {
+                    .Returns((BasicQuery command, Context context) =>
+                    {
                         (var isDropped, var result) = (Equals(context[messageHeaderKey], messageHeaderCheckValue), Equals(command.Name, messageCheckValue)) switch
                         {
                             (true, true) => (false, MessageFilterResult.Allow),
@@ -383,7 +385,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<QueryCallException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery,BasicQueryResponse>(command, cancellationToken: TestContext.CancellationToken));
+            var error = await Assert.ThrowsAsync<QueryCallException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert

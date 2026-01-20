@@ -28,11 +28,12 @@ internal class BatchedMessageStream<TServiceMessage> : IAsyncDisposable
     private readonly Func<ServiceMessage, CancellationToken, ValueTask<TServiceMessage>> convert;
 
     public BatchedMessageStream(Func<ServiceMessage, CancellationToken, ValueTask<TServiceMessage>> convert,
-    Func<TServiceMessage, CancellationToken, Task<TransmissionResult>> transmit){
+    Func<TServiceMessage, CancellationToken, Task<TransmissionResult>> transmit)
+    {
         this.convert = convert;
         _ = Task.Run(async () =>
         {
-            while(await channel.Reader.WaitToReadAsync(cancelToken.Token))
+            while (await channel.Reader.WaitToReadAsync(cancelToken.Token))
             {
                 var request = await channel.Reader.ReadAsync(cancelToken.Token);
                 var results = request.Items.Select(req => transmit(req, request.CancellationToken));
@@ -43,14 +44,14 @@ internal class BatchedMessageStream<TServiceMessage> : IAsyncDisposable
 
     public async ValueTask<TransmissionResult> TransmitAsync(ServiceMessage serviceMessage, CancellationToken cancellationToken)
     {
-        var batch = new MessageBatch<TServiceMessage>([await convert(serviceMessage,cancellationToken)], cancellationToken);
-        await channel.Writer.WriteAsync(batch,cancellationToken);
+        var batch = new MessageBatch<TServiceMessage>([await convert(serviceMessage, cancellationToken)], cancellationToken);
+        await channel.Writer.WriteAsync(batch, cancellationToken);
         return (await batch.Result).First();
     }
 
     public async ValueTask<IEnumerable<TransmissionResult>> TransmitAsync(IEnumerable<ServiceMessage> serviceMessages, CancellationToken cancellationToken)
     {
-        var batch = new MessageBatch<TServiceMessage>(await Task.WhenAll(serviceMessages.Select(message=>convert(message,cancellationToken).AsTask())),cancellationToken);
+        var batch = new MessageBatch<TServiceMessage>(await Task.WhenAll(serviceMessages.Select(message => convert(message, cancellationToken).AsTask())), cancellationToken);
         await channel.Writer.WriteAsync(batch, cancellationToken);
         return await batch.Result;
     }

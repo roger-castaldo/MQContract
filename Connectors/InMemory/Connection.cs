@@ -18,7 +18,8 @@ namespace MQContract.InMemory
         /// <summary>
         /// Default constructor
         /// </summary>
-        public Connection() {
+        public Connection()
+        {
             batchedMessageStream = new(
                 async (serviceMessage, _) => serviceMessage,
                 async (serviceMessage, cancellationToken) => await GetChannel(serviceMessage.Channel).PublishAsync(serviceMessage, cancellationToken)
@@ -62,7 +63,7 @@ namespace MQContract.InMemory
             => GetChannel(channel).RegisterQuerySubscriptionAsync(messageReceived, errorReceived,
                 async (response) => await GetChannel(inboxChannel).PublishAsync(response, cancellationToken), group, cancellationToken);
 
-        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage,ValueTask> messageReceived, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
             => GetChannel(inboxChannel).EstablishInboxSubscriptionAsync(messageReceived, cancellationToken);
         ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
             => GetChannel(message.Channel).QueryAsync(message, inboxChannel, correlationID, cancellationToken);

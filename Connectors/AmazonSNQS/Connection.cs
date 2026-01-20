@@ -60,7 +60,7 @@ namespace MQContract.AmazonSNQS
                             return new(sqsResult.MessageId??message.ID);
                         }
                     }
-                    return new(message.ID, Error:new(new NoChannelFoundException(message.Channel), true));
+                    return new(message.ID, Error: new(new NoChannelFoundException(message.Channel), true));
                 }
             );
         }

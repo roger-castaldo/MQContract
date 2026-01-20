@@ -28,12 +28,12 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #endregion
 
             #region Assert
-            Assert.AreEqual(HealthStatus.Healthy,checkResult.Status);
+            Assert.AreEqual(HealthStatus.Healthy, checkResult.Status);
             Assert.AreEqual(Constants.HealthyDescription, checkResult.Description);
             Assert.AreEqual(pingResult.Host, checkResult.Data["Host"]);
             Assert.AreEqual(pingResult.Version, checkResult.Data["Version"]);
             Assert.AreEqual(pingResult.ResponseTime, checkResult.Data["ResponseTime"]);
-            Assert.AreEqual(healthCheck,contractConnection.HealthCheck);
+            Assert.AreEqual(healthCheck, contractConnection.HealthCheck);
             #endregion
 
             #region Verify

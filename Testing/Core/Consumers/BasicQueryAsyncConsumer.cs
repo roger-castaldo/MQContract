@@ -5,7 +5,7 @@ using MQContract.Interfaces.Consumers;
 
 namespace AutomatedTesting.Consumers
 {
-    [Consumer(channel:"AsyncBasicQueryMessage",group:"AsyncBasicQueryMessageGroup")]
+    [Consumer(channel: "AsyncBasicQueryMessage", group: "AsyncBasicQueryMessageGroup")]
     internal class BasicQueryAsyncConsumer : IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>
     {
         void IBaseConsumer.ErrorRecieved(Exception error)

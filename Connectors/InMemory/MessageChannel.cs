@@ -1,7 +1,6 @@
 ﻿using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Collections.Concurrent;
-using System.Threading;
 using System.Threading.Channels;
 
 namespace MQContract.InMemory
@@ -22,7 +21,7 @@ namespace MQContract.InMemory
             _ = Task.Run(async () =>
             {
                 while (await channel.Reader.WaitToReadAsync(cancelToken.Token))
-                { 
+                {
                     var message = await channel.Reader.ReadAsync(cancelToken.Token);
                     await groups.Values.ToArray().Select(grp => grp.PublishMessageAsync(message, cancelToken.Token)).WhenAll().ConfigureAwait(false);
                 }
@@ -44,7 +43,8 @@ namespace MQContract.InMemory
             try
             {
                 await channel.Writer.WriteAsync(serviceMessage, cancellationToken);
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return new(serviceMessage.ID, Error: new(ex, true));
             }
@@ -54,11 +54,8 @@ namespace MQContract.InMemory
         internal ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
             => TryPublishAsync(new InternalServiceMessage(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data), cancellationToken);
 
-        internal ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)
-        {
-            channel.Writer.TryWrite(message);
-            return ValueTask.CompletedTask;
-        }
+        internal async ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)
+            => await channel.Writer.WriteAsync(message, cancellationToken);
 
         internal ValueTask<TransmissionResult> QueryAsync(ServiceMessage message, string inbox, Guid correlationID, CancellationToken cancellationToken)
             => TryPublishAsync(new InternalServiceMessage(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data, correlationID, inbox), cancellationToken);
@@ -77,7 +74,7 @@ namespace MQContract.InMemory
             return grp;
         }
 
-        private ValueTask<IServiceSubscription> CreateSubscription(Func<InternalServiceMessage, ValueTask> processMessage, Action<Exception> errorReceived, string? group, CancellationToken cancellationToken)
+        private ValueTask<IServiceSubscription> CreateSubscription(Func<InternalServiceMessage, ValueTask> processMessage, Action<Exception> errorReceived, string? group)
         {
             var sub = new Subscription(GetGroup(group), async (recievedMessage) =>
             {
@@ -94,7 +91,7 @@ namespace MQContract.InMemory
             return ValueTask.FromResult<IServiceSubscription>(sub);
         }
 
-        internal async ValueTask<IServiceSubscription?> RegisterQuerySubscriptionAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, Action<InternalServiceMessage> publishResponse, string? group, CancellationToken cancellationToken)
+        internal async ValueTask<IServiceSubscription?> RegisterQuerySubscriptionAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, Action<InternalServiceMessage> publishResponse, string? group, CancellationToken _)
             => await CreateSubscription(
                 async (recievedMessage) =>
                 {
@@ -103,19 +100,17 @@ namespace MQContract.InMemory
                         publishResponse(new(result!.ID, result.MessageTypeID, recievedMessage.ReplyChannel!, result.Header, result.Data, recievedMessage.CorrelationID));
                 },
                 errorReceived,
-                group,
-                cancellationToken
+                group
             );
 
-        internal async ValueTask<IServiceSubscription?> RegisterSubscriptionAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string? group, CancellationToken cancellationToken)
+        internal async ValueTask<IServiceSubscription?> RegisterSubscriptionAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string? group, CancellationToken _)
             => await CreateSubscription(
                 (receivedMessage) => messageReceived(new(receivedMessage.ID, receivedMessage.MessageTypeID, receivedMessage.Channel, receivedMessage.Header, receivedMessage.Data)),
                 errorReceived,
-                group,
-                cancellationToken
+                group
             );
 
-        internal async ValueTask<IServiceSubscription> EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
+        internal async ValueTask<IServiceSubscription> EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken _)
             => await CreateSubscription(
                 async (receivedMessage) =>
                 {
@@ -123,8 +118,7 @@ namespace MQContract.InMemory
                         await messageReceived(new(receivedMessage.ID, receivedMessage.MessageTypeID, receivedMessage.Channel, receivedMessage.Header, receivedMessage.CorrelationID.Value, receivedMessage.Data));
                 },
                 (error) => { },
-                null,
-                cancellationToken
+                null
             );
     }
 }

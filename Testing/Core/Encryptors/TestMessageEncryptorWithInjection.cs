@@ -19,7 +19,7 @@ namespace AutomatedTesting.Encryptors
         }
 
         public ValueTask<EncryptionResult> EncryptAsync(byte[] data)
-            => ValueTask.FromResult<EncryptionResult>(new (
+            => ValueTask.FromResult<EncryptionResult>(new(
                 new Dictionary<string, string?>([
                     new(HeaderKey,injectableService.Name)
                 ]),

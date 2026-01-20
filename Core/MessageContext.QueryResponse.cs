@@ -8,7 +8,7 @@ namespace MQContract
     {
         public ValueTask<QueryResult<object>> ExecuteQuery<TQuery>(IContractConnection contractConnection, TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
-            var resultTask = contexts.FirstOrDefault(context=>context.IsMessageCodeGenerated<TQuery>())?
+            var resultTask = contexts.FirstOrDefault(context => context.IsMessageCodeGenerated<TQuery>())?
                 .TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, messageHeader, cancellationToken);
             if (resultTask.HasValue)
                 return resultTask.Value;

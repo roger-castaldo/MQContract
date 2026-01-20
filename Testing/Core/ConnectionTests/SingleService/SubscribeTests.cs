@@ -909,7 +909,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             var message = new BasicMessage("TestSubscribeAsyncWithNoExtendedAspects");
             var exception = new NullReferenceException("TestSubscribeAsyncWithNoExtendedAspects");
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object,defaultMessageEncoder: globalEncoder.Object);
+            var contractConnection = ContractConnection.Instance(serviceConnection.Object, defaultMessageEncoder: globalEncoder.Object);
             #endregion
 
             #region Act
@@ -1134,15 +1134,15 @@ namespace AutomatedTesting.ConnectionTests.SingleService
         }
 
         [TestMethod]
-        [DataRow("headerValue","differentHeaderValue","messageHeaderValue","messageHeaderValue","messageValue","messageValue",true)]
+        [DataRow("headerValue", "differentHeaderValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "messageValue", true)]
         [DataRow("headerValue", "differentHeaderValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "messageValue", false)]
         [DataRow("headerValue", "headerValue", "messageHeaderValue", "differentMessageHeaderValue", "messageValue", "messageValue", true)]
         [DataRow("headerValue", "headerValue", "messageHeaderValue", "differentMessageHeaderValue", "messageValue", "messageValue", false)]
         [DataRow("headerValue", "headerValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "differentMessageValue", true)]
         [DataRow("headerValue", "headerValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "differentMessageValue", false)]
         [DataRow("headerValue", "headerValue", "messageHeaderValue", "messageHeaderValue", "messageValue", "messageValue", true)]
-        public async Task TestSubscribeAsyncWithFiltering(string headerValue,string checkValue, string messageHeaderValue,string messageHeaderCheckValue,
-            string messageValue,string messageCheckValue,bool acknowledgeDrop)
+        public async Task TestSubscribeAsyncWithFiltering(string headerValue, string checkValue, string messageHeaderValue, string messageHeaderCheckValue,
+            string messageValue, string messageCheckValue, bool acknowledgeDrop)
         {
             #region Arrange
             var headerKey = "testHeader";
@@ -1193,10 +1193,10 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                         (false, false) => MessageFilterResult.DropAndDontAcknowledge,
                         (false, true) => MessageFilterResult.DropAndAcknowledge
                     }),
-                MessageFilter: (serviceMessage,header) =>
-                    ValueTask.FromResult<MessageFilterResult>((Equals(header[messageHeaderKey], messageHeaderCheckValue), Equals(serviceMessage.Name,messageCheckValue), acknowledgeDrop) switch
+                MessageFilter: (serviceMessage, header) =>
+                    ValueTask.FromResult<MessageFilterResult>((Equals(header[messageHeaderKey], messageHeaderCheckValue), Equals(serviceMessage.Name, messageCheckValue), acknowledgeDrop) switch
                     {
-                        (true,true, _) => MessageFilterResult.Allow,
+                        (true, true, _) => MessageFilterResult.Allow,
                         (false, _, false) => MessageFilterResult.DropAndDontAcknowledge,
                         (false, _, true) => MessageFilterResult.DropAndAcknowledge,
                         (_, false, false) => MessageFilterResult.DropAndDontAcknowledge,
@@ -1214,7 +1214,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.IsNotNull(result);
             Assert.HasCount(1, actions);
             Assert.HasCount(1, serviceMessages);
-            if (Equals(headerValue, checkValue) && Equals(messageHeaderValue,messageHeaderCheckValue) && Equals(messageValue,messageCheckValue))
+            if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
             {
                 Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
                 Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);

@@ -13,7 +13,8 @@ namespace MQContract.CQRS.Contexts
         private readonly Activity? activity;
         private readonly ICQRSConnection connection;
 
-        protected AInvocationContext(IReceivedMessage<TMessage> receivedMessage, CqrsConnection connection){
+        protected AInvocationContext(IReceivedMessage<TMessage> receivedMessage, CqrsConnection connection)
+        {
             context = new(receivedMessage.Headers);
             Message = receivedMessage.Message;
             cancellationTokenSource = connection.RegisterInvocation(context);

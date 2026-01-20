@@ -15,11 +15,11 @@ namespace MQContract.Middleware
         };
 
         private readonly ConcurrentBag<IMiddleware> collection = [];
-        private readonly ConcurrentDictionary<(Type middlewareType,InjectionPositions position), IEnumerable<IMiddleware>> injectableItems = [];
+        private readonly ConcurrentDictionary<(Type middlewareType, InjectionPositions position), IEnumerable<IMiddleware>> injectableItems = [];
         private readonly ConcurrentDictionary<Type, IEnumerable<IMiddleware>> cache = [];
         private readonly ILogger? logger;
 
-        public MiddlewareCollection(ILogger? logger,ChannelMapper? channelMapper, MessageContext messageContext,IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
+        public MiddlewareCollection(ILogger? logger, ChannelMapper? channelMapper, MessageContext messageContext, IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
         {
             this.logger=logger;
             collection.Add(new ChannelMappingMiddleware(channelMapper));
@@ -40,7 +40,7 @@ namespace MQContract.Middleware
             cache.Clear();
         }
 
-        public void RegisterInjectionMiddleware<TMiddleware>(TMiddleware middleware,InjectionPositions position)
+        public void RegisterInjectionMiddleware<TMiddleware>(TMiddleware middleware, InjectionPositions position)
             where TMiddleware : IMiddleware
         {
             if (!injectableItems.TryGetValue((typeof(TMiddleware), position), out IEnumerable<IMiddleware>? list))

@@ -1,5 +1,4 @@
-﻿using Amazon.SimpleNotificationService;
-using Amazon.SQS;
+﻿using Amazon.SQS;
 
 namespace MQContract.AmazonSNQS
 {
@@ -9,7 +8,7 @@ namespace MQContract.AmazonSNQS
     public class SqsClientNullException : ArgumentNullException
     {
         internal SqsClientNullException()
-            : base("sqsClient","The connection must have an SQSClient in order to create a subscription") { }
+            : base("sqsClient", "The connection must have an SQSClient in order to create a subscription") { }
 
         internal static void ThrowIfNull(AmazonSQSClient? sqsClient)
         {
@@ -26,7 +25,7 @@ namespace MQContract.AmazonSNQS
         internal UnableToLocateQueueException(string channel)
             : base("queue", $"Unable to locate the queue for {channel}") { }
 
-        internal static void ThrowIfNullOrWhitespace(string? queue,string channel)
+        internal static void ThrowIfNullOrWhitespace(string? queue, string channel)
         {
             if (string.IsNullOrWhiteSpace(queue))
                 throw new UnableToLocateQueueException(channel);
@@ -50,10 +49,10 @@ namespace MQContract.AmazonSNQS
         internal NoClientsSetException()
             : base("Both the sqsClient and snsClient are null, unable to publish any messages") { }
 
-        internal static void ThrowIfBothNull(object? snsClient , object? sqsClient)
+        internal static void ThrowIfBothNull(object? snsClient, object? sqsClient)
         {
             if (snsClient==null && sqsClient==null)
-                throw new TransmissionException(new NoClientsSetException(),true);
+                throw new TransmissionException(new NoClientsSetException(), true);
         }
     }
 
@@ -63,7 +62,8 @@ namespace MQContract.AmazonSNQS
     public class NoChannelFoundException : ArgumentOutOfRangeException
     {
         internal NoChannelFoundException(string channel)
-            : base(nameof(channel), "Unable to locate a Topic or Queue for the given channel") {
+            : base(nameof(channel), "Unable to locate a Topic or Queue for the given channel")
+        {
             Channel=channel;
         }
 

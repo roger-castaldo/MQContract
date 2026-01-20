@@ -119,7 +119,7 @@ namespace CodeGenTesting
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(Announcement), mockMessageEncryptor.Object, null));
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(Announcement), mockMessageEncryptor.Object, mockServiceProvider.Object));
 
-            Assert.AreEqual("CodeGenTesting.MyAutoMessageContext+NonEncryptor",context.TryGetMessageEncryptor(typeof(PartyAnnouncement), null, null)?.GetType().ToString());
+            Assert.AreEqual("CodeGenTesting.MyAutoMessageContext+NonEncryptor", context.TryGetMessageEncryptor(typeof(PartyAnnouncement), null, null)?.GetType().ToString());
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(PartyAnnouncement), mockMessageEncryptor.Object, null));
             Assert.AreEqual(mockMessageEncryptor.Object, context.TryGetMessageEncryptor(typeof(PartyAnnouncement), mockMessageEncryptor.Object, mockServiceProvider.Object));
 
@@ -198,7 +198,7 @@ namespace CodeGenTesting
             };
 
             //Assert
-            foreach(var call in announcementCalls)
+            foreach (var call in announcementCalls)
             {
                 Assert.IsNotNull(call);
                 Assert.AreEqual(announcement, await call(announcementMessage));
@@ -266,12 +266,12 @@ namespace CodeGenTesting
             //Assert
             Assert.IsNull(context.TryGetMessageConverter<Prompt>(announcementMessage.MessageTypeID, context.TryGetDecodingCallback(announcementMessage.MessageTypeID, null, null)!, null));
             Assert.IsNull(context.TryGetMessageConverter<Prompt>(announcementMessage.MessageTypeID, context.TryGetDecodingCallback(announcementMessage.MessageTypeID, null, null)!, mockServiceProvider.Object));
-            
+
             Assert.IsNotNull(announcementToParty);
             Assert.AreEqual(partyFromAnnouncement, await announcementToParty(announcementMessage));
             Assert.IsNotNull(announcementToPartyWithService);
             Assert.AreEqual(partyFromAnnouncement, await announcementToPartyWithService(announcementMessage));
-            
+
             Assert.IsNotNull(announcementToDirect);
             Assert.AreEqual(directFromAnnouncement, await announcementToDirect(announcementMessage));
             Assert.IsNotNull(announcementToDirectWithService);
@@ -292,8 +292,8 @@ namespace CodeGenTesting
         [DataRow(100, null, null, null, null)]
         [DataRow(null, "otherChannel", null, null, null)]
         [DataRow(null, null, "replyChannel", null, null)]
-        [DataRow(null, null, null, "somekey","somevalue")]
-        public async Task CheckContractConnectionQuery(int? timeout, string? channel, string? responseChannel, string? headerKey,string? headerValue)
+        [DataRow(null, null, null, "somekey", "somevalue")]
+        public async Task CheckContractConnectionQuery(int? timeout, string? channel, string? responseChannel, string? headerKey, string? headerValue)
         {
             //Arrange
             var context = new MyAutoMessageContext();
@@ -314,7 +314,7 @@ namespace CodeGenTesting
             if (!string.IsNullOrWhiteSpace(headerKey))
                 header = new MessageHeader([new KeyValuePair<string, string>(headerKey!, headerValue!)]);
             //Act
-            var call = context.TryExecuteQuery<Prompt>(mockConnection.Object, prompt, messageTimeout , channel, responseChannel, header, new CancellationToken());
+            var call = context.TryExecuteQuery<Prompt>(mockConnection.Object, prompt, messageTimeout, channel, responseChannel, header, new CancellationToken());
             Assert.IsTrue(call.HasValue);
             var result = await call.Value.AsTask();
 

@@ -7,7 +7,7 @@ namespace BenchMark
 {
     [UseMqContractAttribute(typeof(Announcement))]
     [UseMqContractAttribute(typeof(AnnouncementCommand))]
-    [UseMqContractAttribute(typeof(EncodedAnnouncement),encoderType:typeof(EncodedAnnouncementEncoder))]
+    [UseMqContractAttribute(typeof(EncodedAnnouncement), encoderType: typeof(EncodedAnnouncementEncoder))]
     internal partial class MyMessageContext : MQContractMessageContext
     {
     }

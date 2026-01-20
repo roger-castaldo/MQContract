@@ -84,7 +84,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel:channel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.BulkPublishAsync<BasicMessage>(testMessages, channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion

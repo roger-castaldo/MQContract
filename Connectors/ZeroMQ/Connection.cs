@@ -21,7 +21,7 @@ namespace MQContract.ZeroMQ
 
         private sealed record Subscription : IServiceSubscription
         {
-            public Func<(ReceivedInboxServiceMessage message,string? responseAddress),ValueTask> Action { get; private init; }
+            public Func<(ReceivedInboxServiceMessage message, string? responseAddress), ValueTask> Action { get; private init; }
             public Guid ID { get; private init; }
             private readonly Action<Guid> removeSubscription;
 
@@ -209,13 +209,14 @@ namespace MQContract.ZeroMQ
                     await pingResponse.Task.WaitAsync(PongTimeout);
                     return new(string.Join(',', servers), typeof(NetMQPoller).Assembly.GetName().Version?.ToString()??string.Empty, Stopwatch.GetElapsedTime(start));
                 }
-                finally {
+                finally
+                {
                     pingResponse = null;
                 }
             }
             else if (poller.IsRunning)
                 return new("self", typeof(NetMQPoller).Assembly.GetName().Version?.ToString()??string.Empty, TimeSpan.Zero);
-            throw new PingFailedException("Unable to ping due to lack of connections and no subscribers");    
+            throw new PingFailedException("Unable to ping due to lack of connections and no subscribers");
         }
 
         ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
@@ -225,8 +226,8 @@ namespace MQContract.ZeroMQ
             => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-            =>ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
-                async (msg)=> await messageReceived((ReceivedServiceMessage)msg.message).ConfigureAwait(false),
+            => ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
+                async (msg) => await messageReceived((ReceivedServiceMessage)msg.message).ConfigureAwait(false),
                 channel
             ));
 
@@ -234,7 +235,7 @@ namespace MQContract.ZeroMQ
         {
             UndefinedInboxException.ThrowIfNullOrWhiteSpace(inboxAddress);
             return ValueTask.FromResult<IServiceSubscription>(RegisterSubscription(
-                (msg) =>messageReceived(msg.message),
+                (msg) => messageReceived(msg.message),
                 INBOX_CHANNEL
             ));
         }
@@ -247,7 +248,8 @@ namespace MQContract.ZeroMQ
 
         ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
-                async (msg) => {
+                async (msg) =>
+                {
                     var response = await messageReceived(msg.message);
                     if (response!=null)
                         SendMessageToDestination(MessageMapper.Map(response, msg.message.CorrelationID, msg.responseAddress, INBOX_CHANNEL), msg.responseAddress!);

@@ -10,7 +10,7 @@
         {
             var bits = new int[BitsPerDecimal];
             for (var i = 0; i<bits.Length; i++)
-                bits[i] = BitConverter.ToInt32(value.Slice(i*sizeof(int),4));
+                bits[i] = BitConverter.ToInt32(value.Slice(i*sizeof(int), 4));
 
             return new decimal(bits);
         }

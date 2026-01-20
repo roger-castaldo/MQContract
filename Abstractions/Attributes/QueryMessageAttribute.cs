@@ -14,8 +14,8 @@
     /// <param name="responseType">The expected response type for the query</param>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class QueryMessageAttribute(string? channel = null, string? typeName = null, string? typeVersion = null,
-        string? responseChannel=null,int responseTimeoutMilliseconds=60*1000,Type? responseType=null) 
-        : MessageAttribute(channel,typeName,typeVersion)
+        string? responseChannel = null, int responseTimeoutMilliseconds = 60*1000, Type? responseType = null)
+        : MessageAttribute(channel, typeName, typeVersion)
     {
         /// <summary>
         /// The Response Channel defined for the given query

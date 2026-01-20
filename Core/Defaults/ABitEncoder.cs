@@ -35,7 +35,7 @@ namespace MQContract.Defaults
         {
             using var stream = new MemoryStream();
             using var writer = new BinaryWriter(stream);
-            foreach(var item in message)
+            foreach (var item in message)
                 writer.Write(ConvertValue(item));
             writer.Flush();
             return ValueTask.FromResult(stream.ToArray());

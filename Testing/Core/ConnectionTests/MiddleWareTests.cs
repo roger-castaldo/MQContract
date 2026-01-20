@@ -200,7 +200,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware(()=>((IMiddleware)new ChannelChangeMiddleware()));
+                .RegisterMiddleware(() => ((IMiddleware)new ChannelChangeMiddleware()));
             #endregion
 
             #region Act
@@ -447,7 +447,7 @@ namespace AutomatedTesting.ContractConnectionTests
             mockMiddleware.Setup(x => x.AfterMessageDecodeAsync(It.IsAny<IContext>(), It.IsAny<string>(), It.IsAny<DecodedMessage<BasicMessage>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .Returns((IContext context, string ID, DecodedMessage<BasicMessage> message, DateTime recievedTimestamp, DateTime processedTimeStamp) =>
                 {
-                    return ValueTask.FromResult<DecodedMessage<BasicMessage>>(new(headers,message.Message));
+                    return ValueTask.FromResult<DecodedMessage<BasicMessage>>(new(headers, message.Message));
                 });
 
 

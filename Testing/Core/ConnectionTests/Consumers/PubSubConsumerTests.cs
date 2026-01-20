@@ -124,7 +124,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Assert
-            
+
             #endregion
 
             #region Verify
@@ -278,7 +278,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Assert
-            
+
             #endregion
 
             #region Verify

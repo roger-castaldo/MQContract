@@ -36,7 +36,7 @@ namespace MQContract.Attributes
         {
             if (encoderType!=null && !encoderType.GetInterfaces().Any(t => Equals(t, typeof(IMessageTypeEncoder<>).MakeGenericType(contractType))))
                 throw new InvalidEncoderException(contractType);
-            if (messageEncryptor!=null && !messageEncryptor.GetInterfaces().Any(t=>Equals(t,typeof(IMessageTypeEncoder<>).MakeGenericType(contractType))))
+            if (messageEncryptor!=null && !messageEncryptor.GetInterfaces().Any(t => Equals(t, typeof(IMessageTypeEncoder<>).MakeGenericType(contractType))))
                 throw new InvalidEncryptorException(contractType);
             ContractType = contractType;
             EncoderType = encoderType;

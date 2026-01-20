@@ -42,7 +42,7 @@ namespace MQContract
         {
             if (!cache.TryGetValue(messageType, out var messageDefinition))
             {
-                var def = contexts.FirstOrDefault(context=>context.IsMessageCodeGenerated(messageType))?
+                var def = contexts.FirstOrDefault(context => context.IsMessageCodeGenerated(messageType))?
                     .TryGetMessageType(messageType);
                 if (def!=null)
                     messageDefinition = def.Value;

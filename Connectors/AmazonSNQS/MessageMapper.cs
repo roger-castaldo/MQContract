@@ -45,7 +45,7 @@ namespace MQContract.AmazonSNQS
             return Convert.ToBase64String(ms.ToArray());
         }
 
-        public static PublishRequest Map(ServiceMessage message,Topic topic)
+        public static PublishRequest Map(ServiceMessage message, Topic topic)
             => new()
             {
                 TopicArn=topic.TopicArn,
@@ -55,12 +55,12 @@ namespace MQContract.AmazonSNQS
         public static SendMessageRequest Map(ServiceMessage message, string queueURL)
             => new(queueURL, ServiceMessageToString(message));
 
-        public static ReceivedServiceMessage Map(Amazon.SQS.Model.Message message,Func<ValueTask> acknowledge)
+        public static ReceivedServiceMessage Map(Amazon.SQS.Model.Message message, Func<ValueTask> acknowledge)
         {
             var doc = JsonDocument.Parse(message.Body);
             if (!doc.RootElement.TryGetProperty("Message", out var contentElement))
                 throw new InvalidQueueMessageException();
-            using var ms = new MemoryStream(Convert.FromBase64String(contentElement.GetString()!),false);
+            using var ms = new MemoryStream(Convert.FromBase64String(contentElement.GetString()!), false);
             using var br = new BinaryReader(ms);
             var messageID = ReadString(br)!;
             var messageTypeID = ReadString(br)!;

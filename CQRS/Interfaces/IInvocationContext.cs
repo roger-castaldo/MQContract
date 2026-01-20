@@ -58,7 +58,7 @@ namespace MQContract.CQRS.Interfaces
         /// <param name="command">The command to execute</param>
         /// <param name="timeout">The timeout to allow for the execution, if not specified the underlying contract connection defaults will apply</param>
         /// <returns>The exepected result type</returns>
-        ValueTask<TCommandResult?> ExecuteCommandAsync<TCommand, TCommandResult>(TCommand command, TimeSpan? timeout=null)
+        ValueTask<TCommandResult?> ExecuteCommandAsync<TCommand, TCommandResult>(TCommand command, TimeSpan? timeout = null)
             where TCommand : ICommand<TCommandResult>;
         /// <summary>
         /// Called to execute a query of the given type through the current context

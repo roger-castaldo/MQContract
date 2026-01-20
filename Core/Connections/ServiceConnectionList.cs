@@ -52,7 +52,7 @@ namespace MQContract.Connections
                 disposedValue=true;
                 await Task.WhenAll(connections
                     .DistinctBy(ss => ss.ServiceConnectionName)
-                    .Select(ss=>((IAsyncDisposable)ss).DisposeAsync().AsTask()));
+                    .Select(ss => ((IAsyncDisposable)ss).DisposeAsync().AsTask()));
                 connections.Clear();
                 GC.SuppressFinalize(this);
             }

@@ -7,10 +7,10 @@ namespace MQContract
     {
         private static readonly ConcurrentDictionary<(Type objectType, Type attributeType), Attribute?> attributeCache = [];
 
-        internal static TAttribute? GetCustomAttribute<TAttribute>(Type type,bool inherit = false)
+        internal static TAttribute? GetCustomAttribute<TAttribute>(Type type, bool inherit = false)
             where TAttribute : Attribute
         {
-            if (!attributeCache.TryGetValue((type, typeof(TAttribute)),out var att))
+            if (!attributeCache.TryGetValue((type, typeof(TAttribute)), out var att))
             {
                 att = type.GetCustomAttribute<TAttribute>(inherit);
                 attributeCache.TryAdd((type, typeof(TAttribute)), att);

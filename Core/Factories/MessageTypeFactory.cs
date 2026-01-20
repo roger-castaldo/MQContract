@@ -38,8 +38,8 @@ namespace MQContract.Factories
 
             return new ServiceMessage(
                 Guid.NewGuid().ToString(),
-                messageID, 
-                channel??string.Empty, 
+                messageID,
+                channel??string.Empty,
                 messageHeader,
                 await encodeMessage(message)
             );
@@ -54,7 +54,8 @@ namespace MQContract.Factories
             if (Equals(ErrorServiceMessage.MessageTypeID, message.MessageTypeID))
                 throw ErrorServiceMessage.DecodeError(message.Data);
             TMessage? result;
-            if (IgnoreMessageHeader || string.Equals(messageID, message.MessageTypeID, StringComparison.InvariantCultureIgnoreCase)) {
+            if (IgnoreMessageHeader || string.Equals(messageID, message.MessageTypeID, StringComparison.InvariantCultureIgnoreCase))
+            {
                 using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
                 result = await decodeMessage(ms);
             }

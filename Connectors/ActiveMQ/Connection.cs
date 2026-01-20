@@ -20,7 +20,7 @@ namespace MQContract.ActiveMQ
 
         private readonly ISession session;
         private readonly IMessageProducer producer;
-        private readonly ConcurrentDictionary<(string channel,string group),ConsumerInstance> consumerInstances = [];
+        private readonly ConcurrentDictionary<(string channel, string group), ConsumerInstance> consumerInstances = [];
         private readonly ConcurrentDictionary<string, ITopic> topicMap = [];
         private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
 
@@ -43,7 +43,8 @@ namespace MQContract.ActiveMQ
             session = ActiveMQConnection.CreateSession();
             producer = session.CreateProducer();
             batchedMessageStream = new(
-                async (serviceMessage, _) => {
+                async (serviceMessage, _) =>
+                {
                     var msg = await session.CreateBytesMessageAsync(serviceMessage.Data.ToArray());
                     msg.NMSMessageId=serviceMessage.ID;
                     msg.Properties[MESSAGE_TYPE_HEADER] = serviceMessage.MessageTypeID;

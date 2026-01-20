@@ -260,63 +260,63 @@ namespace AutomatedTesting
         public async Task TestDoubleEncoder()
         {
             var binaryData = RandomNumberGenerator.GetBytes(sizeof(double)*3);
-            await BitConverterTypeTest<double>([BitConverter.ToDouble(binaryData,0),BitConverter.ToDouble(binaryData,sizeof(double)),BitConverter.ToDouble(binaryData,sizeof(double)*2)], binaryData);
+            await BitConverterTypeTest<double>([BitConverter.ToDouble(binaryData, 0), BitConverter.ToDouble(binaryData, sizeof(double)), BitConverter.ToDouble(binaryData, sizeof(double)*2)], binaryData);
         }
 
         [TestMethod]
         public async Task TestFloatEncoder()
         {
             var binaryData = RandomNumberGenerator.GetBytes(sizeof(float)*3);
-            await BitConverterTypeTest<float>([BitConverter.ToSingle(binaryData),BitConverter.ToSingle(binaryData,sizeof(float)),BitConverter.ToSingle(binaryData,sizeof(float)*2)], binaryData);
+            await BitConverterTypeTest<float>([BitConverter.ToSingle(binaryData), BitConverter.ToSingle(binaryData, sizeof(float)), BitConverter.ToSingle(binaryData, sizeof(float)*2)], binaryData);
         }
 
         [TestMethod]
         public async Task TestHalfEncoder()
         {
             var binaryData = RandomNumberGenerator.GetBytes(2*3);
-            await BitConverterTypeTest<Half>([BitConverter.ToHalf(binaryData),BitConverter.ToHalf(binaryData,2),BitConverter.ToHalf(binaryData,4)], binaryData);
+            await BitConverterTypeTest<Half>([BitConverter.ToHalf(binaryData), BitConverter.ToHalf(binaryData, 2), BitConverter.ToHalf(binaryData, 4)], binaryData);
         }
 
         [TestMethod]
         public async Task TestIntEncoder()
         {
             var binaryData = RandomNumberGenerator.GetBytes(sizeof(int)*3);
-            await BitConverterTypeTest<int>([BitConverter.ToInt32(binaryData), BitConverter.ToInt32(binaryData,sizeof(int)), BitConverter.ToInt32(binaryData,sizeof(int)*2)], binaryData);
+            await BitConverterTypeTest<int>([BitConverter.ToInt32(binaryData), BitConverter.ToInt32(binaryData, sizeof(int)), BitConverter.ToInt32(binaryData, sizeof(int)*2)], binaryData);
         }
 
         [TestMethod]
         public async Task TestLongEncoder()
         {
             var binaryData = RandomNumberGenerator.GetBytes(sizeof(long)*3);
-            await BitConverterTypeTest<long>([BitConverter.ToInt64(binaryData), BitConverter.ToInt64(binaryData,sizeof(long)), BitConverter.ToInt64(binaryData,sizeof(long)*2)], binaryData);
+            await BitConverterTypeTest<long>([BitConverter.ToInt64(binaryData), BitConverter.ToInt64(binaryData, sizeof(long)), BitConverter.ToInt64(binaryData, sizeof(long)*2)], binaryData);
         }
 
         [TestMethod]
         public async Task TestShortEncoder()
         {
             var binaryData = RandomNumberGenerator.GetBytes(sizeof(short)*3);
-            await BitConverterTypeTest<short>([BitConverter.ToInt16(binaryData), BitConverter.ToInt16(binaryData,sizeof(short)), BitConverter.ToInt16(binaryData,sizeof(short)*2)], binaryData);
+            await BitConverterTypeTest<short>([BitConverter.ToInt16(binaryData), BitConverter.ToInt16(binaryData, sizeof(short)), BitConverter.ToInt16(binaryData, sizeof(short)*2)], binaryData);
         }
 
         [TestMethod]
         public async Task TestUIntEncoder()
         {
             var binaryData = RandomNumberGenerator.GetBytes(sizeof(uint) * 3);
-            await BitConverterTypeTest<uint>([BitConverter.ToUInt32(binaryData), BitConverter.ToUInt32(binaryData,sizeof(uint)), BitConverter.ToUInt32(binaryData,sizeof(uint)*2)], binaryData);
+            await BitConverterTypeTest<uint>([BitConverter.ToUInt32(binaryData), BitConverter.ToUInt32(binaryData, sizeof(uint)), BitConverter.ToUInt32(binaryData, sizeof(uint)*2)], binaryData);
         }
 
         [TestMethod]
         public async Task TestULongEncoder()
         {
             var binaryData = RandomNumberGenerator.GetBytes(sizeof(ulong) * 3);
-            await BitConverterTypeTest<ulong>([BitConverter.ToUInt64(binaryData), BitConverter.ToUInt64(binaryData,sizeof(ulong)), BitConverter.ToUInt64(binaryData,sizeof(ulong)*2)], binaryData);
+            await BitConverterTypeTest<ulong>([BitConverter.ToUInt64(binaryData), BitConverter.ToUInt64(binaryData, sizeof(ulong)), BitConverter.ToUInt64(binaryData, sizeof(ulong)*2)], binaryData);
         }
 
         [TestMethod]
         public async Task TestUShortEncoder()
         {
             var binaryData = RandomNumberGenerator.GetBytes(sizeof(ushort)*3);
-            await BitConverterTypeTest<ushort>([BitConverter.ToUInt16(binaryData), BitConverter.ToUInt16(binaryData,sizeof(ushort)), BitConverter.ToUInt16(binaryData,sizeof(ushort)*2)], binaryData);
+            await BitConverterTypeTest<ushort>([BitConverter.ToUInt16(binaryData), BitConverter.ToUInt16(binaryData, sizeof(ushort)), BitConverter.ToUInt16(binaryData, sizeof(ushort)*2)], binaryData);
         }
 
         [TestMethod]
@@ -352,7 +352,7 @@ namespace AutomatedTesting
                     await ms.WriteAsync(BitConverter.GetBytes(b), cancellationToken: TestContext.CancellationToken);
             }
 
-            await BitConverterTypeTest<decimal>(values,ms.ToArray());
+            await BitConverterTypeTest<decimal>(values, ms.ToArray());
         }
 
         public TestContext TestContext { get; set; }

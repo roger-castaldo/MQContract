@@ -46,9 +46,9 @@
     /// <summary>
     /// Thrown when a Ping Attempt fails
     /// </summary>
-    public sealed class PingFailedException(string message) 
+    public sealed class PingFailedException(string message)
         : Exception(message)
-    {}
+    { }
 
     /// <summary>
     /// Thrown when the type specified in a UseMQContract for the encoder does not match the contract type
@@ -57,7 +57,7 @@
         : Exception
     {
         internal InvalidEncoderException(Type contractType)
-            : base($"Cannot link an encoder type that does not implement the interface IMessageTypeEncoder<{contractType.Name}>") 
+            : base($"Cannot link an encoder type that does not implement the interface IMessageTypeEncoder<{contractType.Name}>")
         { }
     }
 

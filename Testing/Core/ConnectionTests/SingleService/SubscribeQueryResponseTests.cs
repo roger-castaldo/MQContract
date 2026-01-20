@@ -896,7 +896,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
             ]);
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader:messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
+                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
             else
                 error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken));
             #endregion

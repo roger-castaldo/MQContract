@@ -23,7 +23,7 @@
     /// </example>
     /// <typeparam name="TQuery">The type of query</typeparam>
     /// <typeparam name="TQueryResponse">The type of response from the query</typeparam>
-    public interface IQueryProcessor<TQuery,TQueryResponse> : IProcessor
+    public interface IQueryProcessor<TQuery, TQueryResponse> : IProcessor
         where TQuery : IQuery
     {
         /// <summary>

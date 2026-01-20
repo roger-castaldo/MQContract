@@ -22,7 +22,7 @@ namespace CQRSTesting.ContractedConnection
             var mockCommandProcessor = new Mock<ICommandProcessor<BasicCommand>>();
 
             mockCommandProcessor.Setup(x => x.ProcessCommandAsync(It.IsAny<ICommandInvocationContext<BasicCommand>>(), It.IsAny<CancellationToken>()))
-                .Returns((ICommandInvocationContext<BasicCommand>  context, CancellationToken cancellationToken) =>
+                .Returns((ICommandInvocationContext<BasicCommand> context, CancellationToken cancellationToken) =>
                 {
                     receivedCommands.Add(context.Command);
                     return ValueTask.CompletedTask;
@@ -48,7 +48,7 @@ namespace CQRSTesting.ContractedConnection
 
             #region Verify
             mockCommandProcessor.Verify(x => x.ProcessCommandAsync(It.IsAny<ICommandInvocationContext<BasicCommand>>(), It.IsAny<CancellationToken>()), Times.Once);
-            mockCommandProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()),Times.Never);
+            mockCommandProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.Never);
             #endregion
         }
 
@@ -78,7 +78,7 @@ namespace CQRSTesting.ContractedConnection
             #endregion
 
             #region Act
-            await cqrsConnection.ExecuteCommandAsync<BasicCommand>(command,context:context, TestContext.CancellationToken);
+            await cqrsConnection.ExecuteCommandAsync<BasicCommand>(command, context: context, TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -87,8 +87,8 @@ namespace CQRSTesting.ContractedConnection
             Assert.AreEqual(command, receivedContexts[0].Command);
             Assert.HasCount(1, receivedContexts[0].Keys);
             Assert.IsNull(receivedContexts[0].CausationId);
-            Assert.AreEqual(context.CorrelationId,receivedContexts[0].CorrelationId);
-            Assert.AreEqual(context.MessageId,receivedContexts[0].MessageId);
+            Assert.AreEqual(context.CorrelationId, receivedContexts[0].CorrelationId);
+            Assert.AreEqual(context.MessageId, receivedContexts[0].MessageId);
             Assert.AreEqual(context[context.Keys.First()], receivedContexts[0][receivedContexts[0].Keys.First()]);
             #endregion
 
@@ -124,7 +124,7 @@ namespace CQRSTesting.ContractedConnection
             #endregion
 
             #region Act
-            await cqrsConnection.ExecuteCommandAsync<BasicCommand>(command,cancellationToken: cancellationTokenSource.Token);
+            await cqrsConnection.ExecuteCommandAsync<BasicCommand>(command, cancellationToken: cancellationTokenSource.Token);
             await Task.Delay(TimeSpan.FromMilliseconds(500), TestContext.CancellationToken).ConfigureAwait(false);
             cancellationTokenSource.Cancel();
             await Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken).ConfigureAwait(false);
@@ -168,7 +168,7 @@ namespace CQRSTesting.ContractedConnection
             var cqrsConnection = await contractConnection.CreateCQRSConnection()
                 .RegisterCommandProcessorAsync<BasicCommand>(mockCommandProcessor.Object);
 
-            
+
             var context = new Context();
             #endregion
 
@@ -280,7 +280,8 @@ namespace CQRSTesting.ContractedConnection
 
             if (!Equals(headerValue, checkValue))
                 mockCommandProcessor.As<IContextFilteredProcessor>().SetupGet(x => x.Filter)
-                    .Returns((Context context) => {
+                    .Returns((Context context) =>
+                    {
                         if (!Equals(context[headerKey], checkValue))
                         {
                             dropped=true;
@@ -289,8 +290,9 @@ namespace CQRSTesting.ContractedConnection
                         return ValueTask.FromResult<MessageFilterResult>(MessageFilterResult.Allow);
                     });
             if (Equals(headerValue, checkValue))
-                mockCommandProcessor.As<IFilteredCommandProcessor<BasicCommand>>().SetupGet(x=>x.Filter)
-                    .Returns((BasicCommand command, Context context) => {
+                mockCommandProcessor.As<IFilteredCommandProcessor<BasicCommand>>().SetupGet(x => x.Filter)
+                    .Returns((BasicCommand command, Context context) =>
+                    {
                         (var isDropped, var result) = (Equals(context[messageHeaderKey], messageHeaderCheckValue), Equals(command.Name, messageCheckValue)) switch
                         {
                             (true, true) => (false, MessageFilterResult.Allow),
@@ -312,7 +314,7 @@ namespace CQRSTesting.ContractedConnection
             #endregion
 
             #region Act
-            await cqrsConnection.ExecuteCommandAsync<BasicCommand>(command, context:context, TestContext.CancellationToken);
+            await cqrsConnection.ExecuteCommandAsync<BasicCommand>(command, context: context, TestContext.CancellationToken);
             await Task.Delay(TimeSpan.FromSeconds(1), TestContext.CancellationToken).ConfigureAwait(false);
             #endregion
 
@@ -355,7 +357,7 @@ namespace CQRSTesting.ContractedConnection
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<CommandCallException>(async()=>await cqrsConnection.ExecuteCommandAsync<BasicCommand>(command, cancellationToken: TestContext.CancellationToken));
+            var error = await Assert.ThrowsAsync<CommandCallException>(async () => await cqrsConnection.ExecuteCommandAsync<BasicCommand>(command, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert

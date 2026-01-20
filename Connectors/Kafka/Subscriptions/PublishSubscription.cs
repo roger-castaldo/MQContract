@@ -25,7 +25,8 @@ namespace MQContract.Kafka.Subscriptions
                             channel,
                             headers,
                             msg.Message.Value,
-                            Acknowledge: () => {
+                            Acknowledge: () =>
+                            {
                                 consumer.StoreOffset(msg);
                                 return ValueTask.CompletedTask;
                             }

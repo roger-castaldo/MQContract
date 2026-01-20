@@ -4,7 +4,6 @@ using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 using NJsonSchema;
 using System.Buffers.Binary;
-using System.Diagnostics;
 
 
 namespace MQContract.Kafka.Middleware
@@ -23,12 +22,12 @@ namespace MQContract.Kafka.Middleware
     /// <param name="validateSchemaAsync">An alternative call to validate the schema and the incoming message content, otherwise it will default through NJsonSchema</param>
     public class SchemaValidationMiddleware(ISchemaRegistryClient schemaRegistryClient,
         IMemoryCache? cache = null,
-        bool failOnMissingSchema=true,
-        bool autoRegisterSchema=true,
+        bool failOnMissingSchema = true,
+        bool autoRegisterSchema = true,
         Confluent.SchemaRegistry.SchemaType registerSchemaType = Confluent.SchemaRegistry.SchemaType.Json,
-        Func<Type,string,string,ValueTask<string>>? mapMessageSchemaName = null,
-        Func<Type,ValueTask<string>>? extractSchemaAsync = null,
-        Func<Schema,Stream,ValueTask<bool>>? validateSchemaAsync = null
+        Func<Type, string, string, ValueTask<string>>? mapMessageSchemaName = null,
+        Func<Type, ValueTask<string>>? extractSchemaAsync = null,
+        Func<Schema, Stream, ValueTask<bool>>? validateSchemaAsync = null
     ) : IAfterEncodeMiddleware, IBeforeDecodeMiddleware
     {
         private const string SchemaIdHeader = "_kafkaSchemaId";
@@ -73,7 +72,7 @@ namespace MQContract.Kafka.Middleware
             "IEnumerable<ushort>-0.0.0.0"
         ];
 
-        private sealed record CachedSchema(int Id,Schema Schema, JsonSchema? CompiledSchema);
+        private sealed record CachedSchema(int Id, Schema Schema, JsonSchema? CompiledSchema);
 
         private readonly MemoryCacheEntryOptions cacheOptions = new MemoryCacheEntryOptions
         {
@@ -100,7 +99,7 @@ namespace MQContract.Kafka.Middleware
             }
             if (cachedSchema == null && failOnMissingSchema)
                 throw new MissingSchemaException(messageTypeID);
-            else if (cachedSchema!=null && !(await ValidateSchemaAsync(cachedSchema, new MemoryStream(data.ToArray(),0,data.Length,false,true))))
+            else if (cachedSchema!=null && !(await ValidateSchemaAsync(cachedSchema, new MemoryStream(data.ToArray(), 0, data.Length, false, true))))
                 throw new SchemaValidationFailedException(schemaId, messageTypeID);
         }
 

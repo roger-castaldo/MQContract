@@ -8,7 +8,7 @@
         internal PersistenceFailedException()
             : base("Persistence Failed") { }
     }
-    
+
     /// <summary>
     /// Thrown when the service is unable to find a schema for a given message and it is set to fail when missing
     /// </summary>
@@ -23,8 +23,8 @@
     /// </summary>
     public class SchemaValidationFailedException : Exception
     {
-        internal SchemaValidationFailedException(int schemaId,string messageType)
-            : base($"The schema with id {schemaId} failed to validate against the message type {messageType}"){}
+        internal SchemaValidationFailedException(int schemaId, string messageType)
+            : base($"The schema with id {schemaId} failed to validate against the message type {messageType}") { }
     }
 
     /// <summary>

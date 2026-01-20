@@ -153,7 +153,7 @@ namespace MQContract.RabbitMQ
 
         internal static ReceivedServiceMessage ConvertMessage(BasicDeliverEventArgs eventArgs, string channel, Func<ValueTask> acknowledge, out Guid? messageId)
         {
-            using var ms = new MemoryStream(eventArgs.Body.ToArray(),0,eventArgs.Body.Length,false,true);
+            using var ms = new MemoryStream(eventArgs.Body.ToArray(), 0, eventArgs.Body.Length, false, true);
             using var br = new BinaryReader(ms);
             var flag = br.ReadByte();
             if (flag==1)

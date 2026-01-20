@@ -11,7 +11,7 @@ const string ServiceURL = "http://localhost:4566";
 const string QueueAttributeName = "QueueArn";
 
 var mapper = new ChannelMapper();
-mapper.AddQueryResponseMap("Greeting.Response","Greeting_Response");
+mapper.AddQueryResponseMap("Greeting.Response", "Greeting_Response");
 
 var credentials = new Amazon.Runtime.BasicAWSCredentials("test", "test");
 
@@ -19,7 +19,7 @@ var config = new AmazonSQSConfig { ServiceURL = ServiceURL };
 
 var snsConfig = new AmazonSimpleNotificationServiceConfig { ServiceURL = ServiceURL };
 
-var serviceConnection = new Connection(snsClientConfiguration:(credentials,snsConfig),sqsClientConfiguration:(credentials,config));
+var serviceConnection = new Connection(snsClientConfiguration: (credentials, snsConfig), sqsClientConfiguration: (credentials, config));
 
 var arrivalsSNSResponse = await serviceConnection.SNSClient!.CreateTopicAsync("Arrivals");
 var storedArrivalsSNSResponse = await serviceConnection.SNSClient!.CreateTopicAsync("StoredArrivals");

@@ -5,7 +5,7 @@ using MQContract.Messages;
 
 namespace MQContract.AmazonSNQS
 {
-    internal class Subscription(AmazonSQSClient sqsClient,string queueUrl, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, CancellationToken connectionCancellationToken) 
+    internal class Subscription(AmazonSQSClient sqsClient, string queueUrl, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, CancellationToken connectionCancellationToken)
         : IServiceSubscription, IAsyncDisposable
     {
         protected readonly CancellationTokenSource cancelToken = new();
@@ -20,7 +20,8 @@ namespace MQContract.AmazonSNQS
                     if (!cancelToken.IsCancellationRequested)
                         cancelToken.Cancel();
                 }
-                catch { 
+                catch
+                {
                     //exception is ignored here because the cancellation token may have been disposed of already
                 }
             });
@@ -35,7 +36,7 @@ namespace MQContract.AmazonSNQS
                             QueueUrl = queueUrl,
                             MaxNumberOfMessages = 1,
                             WaitTimeSeconds = 5
-                        },cancelToken.Token);
+                        }, cancelToken.Token);
 
                         foreach (var msg in receiveResponse.Messages?? [])
                         {
@@ -44,7 +45,8 @@ namespace MQContract.AmazonSNQS
                                 await sqsClient.DeleteMessageAsync(queueUrl, msg.ReceiptHandle);
                             })).ConfigureAwait(false);
                         }
-                    }catch(Exception error)
+                    }
+                    catch (Exception error)
                     {
                         errorReceived(error);
                     }
@@ -63,7 +65,7 @@ namespace MQContract.AmazonSNQS
             if (!disposedValue)
             {
                 disposedValue=true;
-                await((IServiceSubscription)this).EndAsync();
+                await ((IServiceSubscription)this).EndAsync();
                 cancelToken.Dispose();
             }
         }

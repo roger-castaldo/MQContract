@@ -46,10 +46,10 @@ namespace MQContract
 
         public (Func<TMessage, ValueTask<byte[]>> encodeMessage, Func<Stream, ValueTask<TMessage?>> decodeMessage) GetEncodingCallbacks<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
         {
-            var specificEncoder = contexts.FirstOrDefault(context=>context.IsMessageCodeGenerated<TMessage>())?
+            var specificEncoder = contexts.FirstOrDefault(context => context.IsMessageCodeGenerated<TMessage>())?
                 .TryGetMessageEncoder<TMessage>(globalMessageEncoder, serviceProvider);
             if (specificEncoder!=null)
-                    return ProduceCallbacks<TMessage>(specificEncoder);
+                return ProduceCallbacks<TMessage>(specificEncoder);
             if (DynamicCodeGate.IsSupported)
                 return ProduceCallbacks<TMessage>(ExtractEncoderThroughReflection<TMessage>(globalMessageEncoder, serviceProvider));
             return ProduceCallbacks<TMessage>((globalMessageEncoder == null ? new JsonEncoder<TMessage>() : globalMessageEncoder));
@@ -57,7 +57,7 @@ namespace MQContract
 
         public Func<IEncodedMessage, ValueTask<object?>> GetDecodingCallback(string messageID, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
         {
-            foreach(var context in contexts)
+            foreach (var context in contexts)
             {
                 var specificEncoder = context.TryGetDecodingCallback(messageID, globalMessageEncoder, serviceProvider);
                 if (specificEncoder!=null)
@@ -84,7 +84,8 @@ namespace MQContract
                             [ms]
                         );
                     };
-                },
+                }
+                ,
                 (not null, null, true) => () =>
                 {
                     var jEncoder = Activator.CreateInstance(typeof(JsonEncoder<>).MakeGenericType(messageType))!;
@@ -98,7 +99,8 @@ namespace MQContract
                             [ms]
                         );
                     };
-                },
+                }
+                ,
                 (_, not null, false) => () =>
                 {
                     return async (IEncodedMessage message) =>
@@ -106,7 +108,8 @@ namespace MQContract
                         using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
                         return await globalMessageEncoder.DecodeAsync<object>(ms);
                     };
-                },
+                }
+                ,
                 _ => () =>
                 {
                     var jEncoder = new JsonEncoder<object>();
@@ -119,7 +122,7 @@ namespace MQContract
             };
             return produce();
         }
-        
+
 
         [RequiresDynamicCode("Uses unbounded reflection to discover encoders, if AOT and no usage of UseMqContractAttribute to autogenerate code for the encoders used")]
         private Func<IEncodedMessage, ValueTask<object?>> ExtractDecodeThroughReflection(string messageID, IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
@@ -148,16 +151,17 @@ namespace MQContract
                     {
                         return assembly.GetTypes()
                         .Where(t => !t.IsInterface && !t.IsAbstract
-                            && Array.Exists(t.GetInterfaces(), iface => {
-                                    if (iface.IsGenericType
-                                    && iface.GetGenericTypeDefinition() == typeof(IMessageTypeEncoder<>)
-                                    && string.Equals(MessageID(iface.GetGenericArguments()[0]), messageID, StringComparison.InvariantCultureIgnoreCase))
+                            && Array.Exists(t.GetInterfaces(), iface =>
+                            {
+                                if (iface.IsGenericType
+                                && iface.GetGenericTypeDefinition() == typeof(IMessageTypeEncoder<>)
+                                && string.Equals(MessageID(iface.GetGenericArguments()[0]), messageID, StringComparison.InvariantCultureIgnoreCase))
                                 {
                                     messageType = iface.GetGenericArguments()[0];
                                     return true;
                                 }
                                 return false;
-                                }));
+                            }));
                     }
                     catch (Exception)
                     {

@@ -5,7 +5,7 @@ using MQContract.Interfaces.Consumers;
 
 namespace AutomatedTesting.Consumers
 {
-    [Consumer(channel:"AsyncBasicMessage",group:"AsyncBasicMessageGroup")]
+    [Consumer(channel: "AsyncBasicMessage", group: "AsyncBasicMessageGroup")]
     internal class BasicMessageAsyncConsumer : IPubSubAsyncConsumer<BasicMessage>
     {
         private static readonly List<IReceivedMessage<BasicMessage>> messages = [];

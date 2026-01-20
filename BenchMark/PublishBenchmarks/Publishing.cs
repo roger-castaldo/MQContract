@@ -30,7 +30,7 @@ namespace BenchMark.PublishBenchmarks
 
         private static async Task ExecuteOperationsAsync(Func<Task> operation)
         {
-            for(var x=0;x<Constants.PublishCount; x++)
+            for (var x = 0; x<Constants.PublishCount; x++)
                 await operation();
         }
 

@@ -36,7 +36,7 @@ namespace MQContract.HiveMQ
             connectTask.Wait();
             if (connectTask.Result.ReasonCode!=HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
                 throw new ConnectionFailedException(connectTask.Result.ReasonString);
-            Client.OnPingReqSent += (obj,e) =>
+            Client.OnPingReqSent += (obj, e) =>
             {
                 lastPingTimestamp = Stopwatch.GetTimestamp();
             };

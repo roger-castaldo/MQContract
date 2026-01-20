@@ -14,7 +14,7 @@ namespace MQContract.Extensions
 #pragma warning restore CA2254 // Template should be a static expression
         }
 
-        public static void LogInformationChecked(this ILogger logger,string message, params object?[] args)
+        public static void LogInformationChecked(this ILogger logger, string message, params object?[] args)
         {
             if (logger.IsEnabled(LogLevel.Information))
 #pragma warning disable CA2254 // Template should be a static expression

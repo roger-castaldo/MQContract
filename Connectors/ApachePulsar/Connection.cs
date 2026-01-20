@@ -1,7 +1,6 @@
 ﻿using DotPulsar;
 using DotPulsar.Abstractions;
 using DotPulsar.Exceptions;
-using System;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Buffers;
@@ -15,7 +14,7 @@ namespace MQContract.ApachePulsar
     /// </summary>
     public sealed class Connection : IPingableMessageServiceConnection, IAsyncDisposable
     {
-        private readonly record struct MessageInstance(string ID,string Channel, MessageMetadata MessageMetadata, ReadOnlyMemory<byte> Data);
+        private readonly record struct MessageInstance(string ID, string Channel, MessageMetadata MessageMetadata, ReadOnlyMemory<byte> Data);
         private const string MessageTypeID = "_MessageTypeID";
 
         private readonly ConcurrentDictionary<string, IProducer<byte[]>> producers = new();
@@ -116,14 +115,14 @@ namespace MQContract.ApachePulsar
             {
                 var start = Stopwatch.GetTimestamp();
                 await using var producer = PulsarClient.CreateProducer<byte[]>(new("non-persistent://public/default/heartbeat", Schema.ByteArray));
-                _ = await producer.Send(new(),new byte[0]); // empty payload
+                _ = await producer.Send(new(), new byte[0]); // empty payload
                 return new(PulsarClient.ServiceUrl.ToString(), string.Empty, Stopwatch.GetElapsedTime(start));
             }
             catch
             {
                 throw new PingFailedException("Unable to create a producer and publish to the heartbeat path");
             }
-            
+
         }
 
         async ValueTask IAsyncDisposable.DisposeAsync()

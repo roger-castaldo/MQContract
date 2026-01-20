@@ -31,7 +31,7 @@ namespace MQContract.Kafka
             this.clientConfig = clientConfig;
             producer = new ProducerBuilder<string, byte[]>(clientConfig).Build();
             batchedMessageStream = new(
-                (serviceMessage,_) => ValueTask.FromResult(new MessageInstance(
+                (serviceMessage, _) => ValueTask.FromResult(new MessageInstance(
                     serviceMessage.ID,
                     serviceMessage.Channel,
                     new Message<string, byte[]>()
@@ -154,7 +154,7 @@ namespace MQContract.Kafka
             var start = Stopwatch.GetTimestamp();
             var metaData = adminClient.GetMetadata(TimeSpan.FromMinutes(1));
             if (metaData.Brokers.Count>0)
-                return ValueTask.FromResult<PingResult>(new(metaData.OriginatingBrokerName,string.Empty,Stopwatch.GetElapsedTime(start)));
+                return ValueTask.FromResult<PingResult>(new(metaData.OriginatingBrokerName, string.Empty, Stopwatch.GetElapsedTime(start)));
             throw new UnableToPingException();
         }
 

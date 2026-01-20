@@ -178,7 +178,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async ()=>await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly, TestContext.CancellationToken));
+            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly, TestContext.CancellationToken));
             #endregion
 
             #region Assert

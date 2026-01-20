@@ -31,7 +31,7 @@
         /// <param name="invocationContext">The current invocation context for this command instance</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>A ValueTask for async purposes</returns>
-        ValueTask ProcessCommandAsync(ICommandInvocationContext<TCommand> invocationContext,CancellationToken cancellationToken);
+        ValueTask ProcessCommandAsync(ICommandInvocationContext<TCommand> invocationContext, CancellationToken cancellationToken);
     }
 
     /// <summary>

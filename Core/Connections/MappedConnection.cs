@@ -94,7 +94,7 @@ namespace MQContract.Connections
                 false,
                 activity,
                 maxMessageSize: MaxMessageBodySize,
-                channel: channel, 
+                channel: channel,
                 messageHeader: messageHeader
             );
             var serviceConnection = await GetConnectionAsync(serviceMessage.Channel, typeof(TMessage), serviceMessage.Header);
@@ -116,7 +116,7 @@ namespace MQContract.Connections
                         false,
                         activity,
                         maxMessageSize: MaxMessageBodySize,
-                        channel: channel, 
+                        channel: channel,
                         messageHeader: m.messageHeader
                     )
                 );
@@ -136,13 +136,13 @@ namespace MQContract.Connections
             Logger?.LogDebugChecked("Executing QueryResponse of {TQuery}, expecting {TQueryResponse} on {Channel} with {ResponseChannel}", typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
             using var activity = StartActivity(Constants.PublishQueryActivityName);
             var serviceMessage = await ProduceServiceMessageAsync<TQuery>(
-                ChannelMapper.MapTypes.Query, 
-                GetMessageFactory<TQuery>(), 
-                message, 
-                false, 
-                activity, 
+                ChannelMapper.MapTypes.Query,
+                GetMessageFactory<TQuery>(),
+                message,
+                false,
+                activity,
                 maxMessageSize: MaxMessageBodySize,
-                channel: channel, 
+                channel: channel,
                 messageHeader: messageHeader
             );
             var serviceConnection = await GetConnectionAsync(serviceMessage.Channel, typeof(TQuery), serviceMessage.Header);
