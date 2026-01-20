@@ -12,7 +12,7 @@ namespace BenchMark.InMemoryBenchmarks
         private static readonly Announcement testMessage = new("The quick brown fox");
         private static readonly AnnouncementCommand testCommand = new("The quick brown fox");
 
-        [Benchmark(Baseline =true)]
+        [Benchmark(Baseline = true)]
         public async Task RunAsSubscription()
         {
             var count = Constants.PublishCount;
@@ -47,8 +47,8 @@ namespace BenchMark.InMemoryBenchmarks
             var count = Constants.PublishCount;
             var completionSource = new TaskCompletionSource();
             await using var contractConnection = ContractConnection.Instance(new MQContract.InMemory.Connection());
-            await contractConnection.RegisterPubSubAsyncConsumerAsync<Announcement,AnnouncementConsumer>(new AnnouncementConsumer(count,completionSource),channel:channel);
-            
+            await contractConnection.RegisterPubSubAsyncConsumerAsync<Announcement, AnnouncementConsumer>(new AnnouncementConsumer(count, completionSource), channel: channel);
+
             await Task.WhenAll(Enumerable.Range(0, Constants.PublishCount)
                 .Select(c => contractConnection.PublishAsync<Announcement>(testMessage, channel: channel).AsTask())
             );

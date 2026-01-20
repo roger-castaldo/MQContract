@@ -11,7 +11,7 @@ namespace MQContract
     internal partial class MessageContext
     {
         [ExcludeFromCodeCoverage(Justification = "Simple record class used as a key in a dictionary, nothing to test")]
-        private readonly record struct ConverterKey(string MessageID,Type MessageType);
+        private readonly record struct ConverterKey(string MessageID, Type MessageType);
         private readonly record struct ConverterInstance(object Instance, Type ConverterType, Type SourceType, Type DestinationType);
 
         private readonly ConcurrentDictionary<ConverterKey, Func<IEncodedMessage, ValueTask<object?>>?> cachedConverters = [];
@@ -22,7 +22,7 @@ namespace MQContract
             if (!cachedConverters.TryGetValue(key, out var converter))
             {
                 var messageDecode = GetDecodingCallback(messageID, globalMessageEncoder, serviceProvider);
-                foreach(var context in contexts)
+                foreach (var context in contexts)
                 {
                     converter = context.TryGetMessageConverter<TMessage>(messageID, messageDecode, serviceProvider);
                     if (converter!=null)
@@ -35,7 +35,7 @@ namespace MQContract
 
         internal void PrimeConverters<TMessage>(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider)
         {
-            if (!contexts.Any(context=>context.IsMessageCodeGenerated<TMessage>()) && DynamicCodeGate.IsSupported)
+            if (!contexts.Any(context => context.IsMessageCodeGenerated<TMessage>()) && DynamicCodeGate.IsSupported)
                 ExtractConvertersThroughReflection<TMessage>(globalMessageEncoder, serviceProvider);
         }
 
@@ -57,7 +57,7 @@ namespace MQContract
                         return [];
                     }
                 });
-            foreach(var primaryConverter in GetConvertersForMessageType(typeof(TMessage), types, serviceProvider))
+            foreach (var primaryConverter in GetConvertersForMessageType(typeof(TMessage), types, serviceProvider))
             {
                 var pkey = ExtractConverterKey<TMessage>(primaryConverter.SourceType);
                 cachedConverters.TryRemove(pkey, out _);
@@ -100,14 +100,14 @@ namespace MQContract
             => new(MessageID(sourceType).ToUpperInvariant(), typeof(TMessage));
 
         private static IEnumerable<ConverterInstance> GetConvertersForMessageType(Type messageType, IEnumerable<Type> types, IServiceProvider? serviceProvider)
-            => types.SelectMany(t=>
+            => types.SelectMany(t =>
                     t.GetInterfaces()
                     .Where(iface =>
                         iface.IsGenericType &&
                         iface.GetGenericTypeDefinition() == typeof(IMessageConverter<,>) &&
                         iface.GetGenericArguments()[1] == messageType)
-                    .Select(iface=>new ConverterInstance(
-                        (serviceProvider==null ? Activator.CreateInstance(t) : ActivatorUtilities.CreateInstance(serviceProvider,t))!,
+                    .Select(iface => new ConverterInstance(
+                        (serviceProvider==null ? Activator.CreateInstance(t) : ActivatorUtilities.CreateInstance(serviceProvider, t))!,
                         iface,
                         iface.GetGenericArguments()[0],
                         iface.GetGenericArguments()[1]

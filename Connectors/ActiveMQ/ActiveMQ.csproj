@@ -6,6 +6,9 @@
 	  <RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
 	  <Title>ActiveMQ Connector for MQContract</Title>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
+  </ItemGroup>
 
   <ItemGroup>
 	  <PackageReference Include="Apache.NMS.AMQP" Version="2.*" />

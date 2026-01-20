@@ -5,7 +5,7 @@ using MQContract.Interfaces.Service;
 
 namespace MQContract.HiveMQ
 {
-    internal class Subscription(HiveMQClientOptions clientOptions, Func<MQTT5PublishMessage,ValueTask> messageReceived, string channel, string? group) : IServiceSubscription, IAsyncDisposable
+    internal class Subscription(HiveMQClientOptions clientOptions, Func<MQTT5PublishMessage, ValueTask> messageReceived, string channel, string? group) : IServiceSubscription, IAsyncDisposable
     {
         private readonly HiveMQClient client = new(CloneOptions(clientOptions, channel));
         private bool isOpen = false;

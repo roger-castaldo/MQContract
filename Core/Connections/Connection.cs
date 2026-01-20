@@ -18,8 +18,6 @@ namespace MQContract.Connections
         AConnection<IContractedConnection>(defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, logger, channelMapper),
         IContractedConnection
     {
-        private readonly SemaphoreSlim publishLock = new(1, 1);
-
         ValueTask<PingResult> IContractConnection.PingAsync()
             => (serviceConnection is IPingableMessageServiceConnection pingableService ? pingableService.PingAsync() : throw new PingNotSupportedException());
 
@@ -35,7 +33,6 @@ namespace MQContract.Connections
                 await asyncDisposable.DisposeAsync().ConfigureAwait(true);
             else if (serviceConnection is IDisposable disposable)
                 disposable.Dispose();
-            publishLock.Dispose();
         }
 
         #region PubSub
@@ -59,38 +56,38 @@ namespace MQContract.Connections
             Logger?.LogDebugChecked("Publishing message {T} on {Channel}", typeof(TMessage), channel);
             using var activity = StartActivity(Constants.PublishActivityName, serviceConnection: serviceConnection);
             var serviceMessage = await ProduceServiceMessageAsync<TMessage>(
-                ChannelMapper.MapTypes.Publish, 
-                GetMessageFactory<TMessage>(), 
-                message, 
-                false, 
-                activity, 
+                ChannelMapper.MapTypes.Publish,
+                GetMessageFactory<TMessage>(),
+                message,
+                false,
+                activity,
                 maxMessageSize: serviceConnection.MaxMessageBodySize,
-                channel: channel, 
+                channel: channel,
                 messageHeader: messageHeader
             );
-            return await PublishMessageAsync<TMessage>(publishLock, serviceMessage, serviceConnection, activity, null, cancellationToken);
+            return await PublishMessageAsync<TMessage>(serviceMessage, serviceConnection, activity, null, cancellationToken);
         }
 
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logger?.LogDebugChecked("Bulk Publishing messages {T} on {Channel}", typeof(TMessage), channel);
-            using var activity = StartActivity(Constants.BulkPublishActivityName, serviceConnection:serviceConnection);
+            using var activity = StartActivity(Constants.BulkPublishActivityName, serviceConnection: serviceConnection);
             activity?.SetTag(Constants.BulkPublishCountTag, messages.Count());
             var serviceMessages = await
                 messages.WhenAll(m =>
                     ProduceServiceMessageAsync<TMessage>(
-                        ChannelMapper.MapTypes.Publish, 
-                        GetMessageFactory<TMessage>(), 
-                        m.message, 
-                        false, 
-                        activity, 
-                        maxMessageSize:serviceConnection.MaxMessageBodySize,
-                        channel:channel, 
+                        ChannelMapper.MapTypes.Publish,
+                        GetMessageFactory<TMessage>(),
+                        m.message,
+                        false,
+                        activity,
+                        maxMessageSize: serviceConnection.MaxMessageBodySize,
+                        channel: channel,
                         messageHeader: m.messageHeader
                     )
                 );
-            var result = await BulkPublishAsync<TMessage>(publishLock, serviceMessages, serviceConnection, activity, cancellationToken);
+            var result = await BulkPublishAsync<TMessage>(serviceMessages, serviceConnection, activity, cancellationToken);
             activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
             activity?.Stop();
             return result;
@@ -104,13 +101,13 @@ namespace MQContract.Connections
             Logger?.LogDebugChecked("Executing QueryResponse of {TQuery}, expecting {TQueryResponse} on {Channel} with {ResponseChannel}", typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
             using var activity = StartActivity(Constants.PublishQueryActivityName, serviceConnection: serviceConnection);
             var serviceMessage = await ProduceServiceMessageAsync<TQuery>(
-                ChannelMapper.MapTypes.Query, 
-                GetMessageFactory<TQuery>(), 
-                message, 
-                false, 
-                activity, 
+                ChannelMapper.MapTypes.Query,
+                GetMessageFactory<TQuery>(),
+                message,
+                false,
+                activity,
                 maxMessageSize: serviceConnection.MaxMessageBodySize,
-                channel: channel, 
+                channel: channel,
                 messageHeader: messageHeader
             );
             return await ExecuteQueryAsync<TQuery, TQueryResponse>(serviceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken);
@@ -131,15 +128,15 @@ namespace MQContract.Connections
             var queryMessageFactory = GetMessageFactory<TQuery>(ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<TQueryResponse>();
             return await CreateSubscriptionAsync<TQuery, TQueryResponse>(
-                queryMessageFactory, 
-                responseMessageFactory, 
-                serviceConnection, 
-                messageReceived, 
-                errorReceived, 
-                channel, 
-                group, 
-                synchronous, 
-                null, 
+                queryMessageFactory,
+                responseMessageFactory,
+                serviceConnection,
+                messageReceived,
+                errorReceived,
+                channel,
+                group,
+                synchronous,
+                null,
                 messageFilter,
                 cancellationToken
             );

@@ -40,7 +40,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command);
+            var result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -83,7 +83,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context);
+            var result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -117,7 +117,7 @@ namespace CQRSTesting.MappedConnection
             mockQueryProcessor.Setup(x => x.ProcessQueryAsync(It.IsAny<IQueryInvocationContext<BasicQuery>>(), It.IsAny<CancellationToken>()))
                 .Returns(async (IQueryInvocationContext<BasicQuery> context, CancellationToken cancellationToken) =>
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+                    await Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken).ConfigureAwait(false);
                     if (!cancellationToken.IsCancellationRequested)
                         receivedQuerys.Add(context.Query);
                     return new(context.Query.Name);
@@ -132,8 +132,8 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            _ = Task.Delay(TimeSpan.FromSeconds(1))
-                .ContinueWith((tsk) => cancellationTokenSource.Cancel());
+            _ = Task.Delay(TimeSpan.FromSeconds(1), TestContext.CancellationToken)
+                .ContinueWith((tsk) => cancellationTokenSource.Cancel(), TestContext.CancellationToken);
             var err = await Assert.ThrowsAsync<QueryCallException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, cancellationToken: cancellationTokenSource.Token));
             #endregion
 
@@ -184,7 +184,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context);
+            var result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -234,7 +234,7 @@ namespace CQRSTesting.MappedConnection
                     }
                     else
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken).ConfigureAwait(false);
                         if (!cancellationToken.IsCancellationRequested)
                             receivedQuerys.Add(context.Query);
                         return new BasicQueryResponse(context.Query.Name);
@@ -252,8 +252,8 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            _ = Task.Delay(TimeSpan.FromSeconds(1))
-                .ContinueWith((tsk) => cancellationTokenSource.Cancel());
+            _ = Task.Delay(TimeSpan.FromSeconds(1), TestContext.CancellationToken)
+                .ContinueWith((tsk) => cancellationTokenSource.Cancel(), TestContext.CancellationToken);
             var err = await Assert.ThrowsAsync<QueryCallException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, cancellationToken: cancellationTokenSource.Token));
             #endregion
 
@@ -296,7 +296,8 @@ namespace CQRSTesting.MappedConnection
 
             if (!Equals(headerValue, checkValue))
                 mockQueryProcessor.As<IContextFilteredProcessor>().SetupGet(x => x.Filter)
-                    .Returns((Context context) => {
+                    .Returns((Context context) =>
+                    {
                         if (!Equals(context[headerKey], checkValue))
                         {
                             dropped=true;
@@ -306,7 +307,8 @@ namespace CQRSTesting.MappedConnection
                     });
             if (Equals(headerValue, checkValue))
                 mockQueryProcessor.As<IFilteredQueryProcessor<BasicQuery, BasicQueryResponse>>().SetupGet(x => x.Filter)
-                    .Returns((BasicQuery command, Context context) => {
+                    .Returns((BasicQuery command, Context context) =>
+                    {
                         (var isDropped, var result) = (Equals(context[messageHeaderKey], messageHeaderCheckValue), Equals(command.Name, messageCheckValue)) switch
                         {
                             (true, true) => (false, MessageFilterResult.Allow),
@@ -332,9 +334,9 @@ namespace CQRSTesting.MappedConnection
 
             #region Act
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context);
+                result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context, cancellationToken: TestContext.CancellationToken);
             else
-                error = await Assert.ThrowsAsync<QueryTimeoutException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context, timeout: TimeSpan.FromMilliseconds(500)));
+                error = await Assert.ThrowsAsync<QueryTimeoutException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context, timeout: TimeSpan.FromMilliseconds(500), TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -383,7 +385,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<QueryCallException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery,BasicQueryResponse>(command));
+            var error = await Assert.ThrowsAsync<QueryCallException>(async () => await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -434,7 +436,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context);
+            var result = await cqrsConnection.ExecuteQueryAsync<BasicQuery, BasicQueryResponse>(command, context: context, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -455,5 +457,7 @@ namespace CQRSTesting.MappedConnection
             mockQueryProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.Never);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

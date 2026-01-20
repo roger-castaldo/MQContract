@@ -8,10 +8,23 @@ namespace MQContract.InMemory
     /// <summary>
     /// Used as an in memory connection messaging system where all transmission are done through Channels within the connection.  You must use the same underlying connection.
     /// </summary>
-    public class Connection : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection, IPingableMessageServiceConnection
+    public class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
     {
         private readonly ConcurrentDictionary<string, MessageChannel> channels = [];
         private readonly string inboxChannel = $"_inbox/{Guid.NewGuid()}";
+
+        private readonly BatchedMessageStream<ServiceMessage> batchedMessageStream;
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public Connection()
+        {
+            batchedMessageStream = new(
+                async (serviceMessage, _) => serviceMessage,
+                async (serviceMessage, cancellationToken) => await GetChannel(serviceMessage.Channel).PublishAsync(serviceMessage, cancellationToken)
+            );
+        }
         /// <summary>
         /// Default timeout for a given QueryResponse call
         /// default: 1 minute
@@ -35,21 +48,13 @@ namespace MQContract.InMemory
         }
 
         ValueTask IMessageServiceConnection.CloseAsync()
-        {
-            var keys = channels.Keys.ToArray();
-            foreach (var key in keys)
-            {
-                if (channels.TryRemove(key, out var channel))
-                    channel.Close();
-            }
-            return ValueTask.CompletedTask;
-        }
+            => ((IAsyncDisposable)this).DisposeAsync();
 
         ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-            => GetChannel(message.Channel).PublishAsync(message, cancellationToken);
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
 
-        ValueTask<IEnumerable<TransmissionResult>> IBulkPublishableMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
-            => GetChannel(messages.First().Channel).BulkPublishAsync(messages, cancellationToken);
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => GetChannel(channel).RegisterSubscriptionAsync(messageReceived, errorReceived, group, cancellationToken);
@@ -58,12 +63,24 @@ namespace MQContract.InMemory
             => GetChannel(channel).RegisterQuerySubscriptionAsync(messageReceived, errorReceived,
                 async (response) => await GetChannel(inboxChannel).PublishAsync(response, cancellationToken), group, cancellationToken);
 
-        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage,ValueTask> messageReceived, CancellationToken cancellationToken)
+        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
             => GetChannel(inboxChannel).EstablishInboxSubscriptionAsync(messageReceived, cancellationToken);
         ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
             => GetChannel(message.Channel).QueryAsync(message, inboxChannel, correlationID, cancellationToken);
 
         ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
             => ValueTask.FromResult<PingResult>(new(Assembly.GetEntryAssembly()?.GetName()?.Name??string.Empty, Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString()??string.Empty, TimeSpan.Zero));
+
+        async ValueTask IAsyncDisposable.DisposeAsync()
+        {
+            await batchedMessageStream.DisposeAsync();
+            var keys = channels.Keys.ToArray();
+            foreach (var key in keys)
+            {
+                if (channels.TryRemove(key, out var channel))
+                    channel.Close();
+            }
+            GC.SuppressFinalize(this);
+        }
     }
 }

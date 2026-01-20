@@ -46,7 +46,7 @@ namespace CQRSTesting
         {
             #region Arrange
             var mockConnection = new Mock<ICQRSConnection>();
-            mockConnection.Setup(x => x.RegisterCommandProcessorAsync(It.IsAny<ICommandProcessor<BasicResponseCommand,BasicCommandResponse>>(), It.IsAny<string>()))
+            mockConnection.Setup(x => x.RegisterCommandProcessorAsync(It.IsAny<ICommandProcessor<BasicResponseCommand, BasicCommandResponse>>(), It.IsAny<string>()))
                 .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var mockProcessor = new Mock<ICommandProcessor<BasicResponseCommand, BasicCommandResponse>>();
@@ -56,7 +56,7 @@ namespace CQRSTesting
 
             #region Act
             var result = await connectionTask
-                .RegisterCommandProcessorAsync<BasicResponseCommand,BasicCommandResponse>(mockProcessor.Object, group: Group);
+                .RegisterCommandProcessorAsync<BasicResponseCommand, BasicCommandResponse>(mockProcessor.Object, group: Group);
 
             #endregion
 

@@ -7,6 +7,9 @@
 		<RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
 		<Title>Apache Pulsar Connector for MQContract</Title>
 	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="DotPulsar" Version="4.*" />

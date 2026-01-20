@@ -32,11 +32,11 @@ namespace CoreTesting.ConnectionTests.Consumers
             #region Act
             var result = await connectionTask.RegisterPubSubConsumerAsync(
                 consumer,
-                channel:TestChannel,
-                group:TestGroup,
-                ignoreMessageHeader:ignoreMessageHeader,
-                messageFilters:messageFilters
-            );
+                channel: TestChannel,
+                group: TestGroup,
+                ignoreMessageHeader: ignoreMessageHeader,
+                messageFilters: messageFilters
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -54,7 +54,7 @@ namespace CoreTesting.ConnectionTests.Consumers
         {
             #region Arrange
             var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
-            mockConnection.Setup(x => x.RegisterPubSubConsumerAsync<BasicMessage,BasicMessageConsumer>(It.IsAny<string>(), It.IsAny<string>(),
+            mockConnection.Setup(x => x.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumer>(It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicMessage>>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
 
@@ -65,12 +65,12 @@ namespace CoreTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var result = await connectionTask.RegisterPubSubConsumerAsync<IBaseContractConnection,BasicMessage,BasicMessageConsumer>(
+            var result = await connectionTask.RegisterPubSubConsumerAsync<IBaseContractConnection, BasicMessage, BasicMessageConsumer>(
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -88,7 +88,7 @@ namespace CoreTesting.ConnectionTests.Consumers
         {
             #region Arrange
             var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
-            mockConnection.Setup(x => x.RegisterPubSubConsumerAsync(It.IsAny<Type>(),It.IsAny<string>(), It.IsAny<string>(),
+            mockConnection.Setup(x => x.RegisterPubSubConsumerAsync(It.IsAny<Type>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
 
@@ -103,7 +103,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -138,7 +138,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -172,7 +172,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -205,7 +205,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -223,7 +223,7 @@ namespace CoreTesting.ConnectionTests.Consumers
         {
             #region Arrange
             var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
-            mockConnection.Setup(x => x.RegisterQueryResponseConsumerAsync<BasicQueryMessage,BasicResponseMessage, IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>
+            mockConnection.Setup(x => x.RegisterQueryResponseConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>
                 (It.IsAny<IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicQueryMessage>>(), It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
@@ -236,14 +236,14 @@ namespace CoreTesting.ConnectionTests.Consumers
 
             #region Act
             var result = await connectionTask
-                .RegisterQueryResponseConsumerAsync<IBaseContractConnection,BasicQueryMessage,BasicResponseMessage,BasicQueryConsumer>
+                .RegisterQueryResponseConsumerAsync<IBaseContractConnection, BasicQueryMessage, BasicResponseMessage, BasicQueryConsumer>
             (
                 consumer,
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -277,7 +277,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -310,7 +310,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -348,7 +348,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -382,7 +382,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
                 messageFilters: messageFilters
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -415,7 +415,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader
-            );
+, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -427,5 +427,7 @@ namespace CoreTesting.ConnectionTests.Consumers
                 ignoreMessageHeader, It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

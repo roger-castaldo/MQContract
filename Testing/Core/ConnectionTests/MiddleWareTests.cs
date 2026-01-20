@@ -32,7 +32,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -65,7 +65,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -122,7 +122,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -167,7 +167,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -200,11 +200,11 @@ namespace AutomatedTesting.ContractConnectionTests
                 .ReturnsAsync(transmissionResult);
 
             var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware(()=>((IMiddleware)new ChannelChangeMiddleware()));
+                .RegisterMiddleware(() => ((IMiddleware)new ChannelChangeMiddleware()));
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -237,7 +237,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -270,7 +270,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -315,7 +315,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -363,7 +363,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -402,7 +402,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -447,7 +447,7 @@ namespace AutomatedTesting.ContractConnectionTests
             mockMiddleware.Setup(x => x.AfterMessageDecodeAsync(It.IsAny<IContext>(), It.IsAny<string>(), It.IsAny<DecodedMessage<BasicMessage>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .Returns((IContext context, string ID, DecodedMessage<BasicMessage> message, DateTime recievedTimestamp, DateTime processedTimeStamp) =>
                 {
-                    return ValueTask.FromResult<DecodedMessage<BasicMessage>>(new(headers,message.Message));
+                    return ValueTask.FromResult<DecodedMessage<BasicMessage>>(new(headers, message.Message));
                 });
 
 
@@ -461,8 +461,8 @@ namespace AutomatedTesting.ContractConnectionTests
             {
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
-            }, (error) => { });
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel);
+            }, (error) => { }, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -476,5 +476,7 @@ namespace AutomatedTesting.ContractConnectionTests
             mockMiddleware.Verify(x => x.AfterMessageDecodeAsync(It.IsAny<IContext>(), It.IsAny<string>(), It.IsAny<DecodedMessage<BasicMessage>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

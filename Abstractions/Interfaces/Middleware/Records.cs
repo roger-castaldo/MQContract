@@ -7,7 +7,7 @@ namespace MQContract.Interfaces.Middleware
     /// </summary>
     /// <param name="MessageHeader">The headers supplied with the message</param>
     /// <param name="Data">The message data</param>
-    public readonly record struct DecodableMessage(MessageHeader MessageHeader,ReadOnlyMemory<byte> Data);
+    public readonly record struct DecodableMessage(MessageHeader MessageHeader, ReadOnlyMemory<byte> Data);
 
     /// <summary>
     /// Represents a decoded message that will run through the middleware

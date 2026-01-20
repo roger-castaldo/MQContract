@@ -20,13 +20,13 @@
     /// <param name="group">The group the consumer will register as</param>
     /// <param name="ignoreMessageTypeHeader">A falg to indicate if ignoring the message type is desired</param>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class ConsumerAttribute(string? channel=null,string? group=null,bool ignoreMessageTypeHeader=false) : Attribute
+    public class ConsumerAttribute(string? channel = null, string? group = null, bool ignoreMessageTypeHeader = false) : Attribute
     {
         /// <summary>
         /// The channel to register the consumer on
         /// </summary>
         public string? Channel => channel;
-        
+
         /// <summary>
         /// The group to register the consumer to
         /// </summary>

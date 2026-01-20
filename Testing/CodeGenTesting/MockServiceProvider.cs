@@ -10,7 +10,7 @@ namespace CodeGenTesting
             {
                 var result = new Mock<IServiceProvider>();
                 var mockInjection = new Mock<IServiceInjection>();
-                result.Setup(x=>x.GetService(typeof(IServiceInjection)))
+                result.Setup(x => x.GetService(typeof(IServiceInjection)))
                     .Returns(mockInjection.Object);
                 return result;
             }

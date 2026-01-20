@@ -11,15 +11,17 @@ namespace MQContract.ZeroMQ
     /// <summary>
     /// This is the MessageServiceConnection implementation for using ZeroMQ
     /// </summary>
-    public sealed class Connection : IPingableMessageServiceConnection, IInboxQueryableMessageServiceConnection, IDisposable
+    public sealed class Connection : IPingableMessageServiceConnection, IInboxQueryableMessageServiceConnection, IAsyncDisposable
     {
+        private readonly record struct MessageInstance(string ID, byte[] Frame);
+
         private static readonly byte[] PingMessage = System.Text.UTF8Encoding.UTF8.GetBytes("PING");
         private static readonly byte[] PongMessage = System.Text.UTF8Encoding.UTF8.GetBytes("PONG");
         private static readonly TimeSpan PongTimeout = TimeSpan.FromMinutes(1);
 
         private sealed record Subscription : IServiceSubscription
         {
-            public Func<(ReceivedInboxServiceMessage message,string? responseAddress),ValueTask> Action { get; private init; }
+            public Func<(ReceivedInboxServiceMessage message, string? responseAddress), ValueTask> Action { get; private init; }
             public Guid ID { get; private init; }
             private readonly Action<Guid> removeSubscription;
 
@@ -46,6 +48,7 @@ namespace MQContract.ZeroMQ
         private string? inboxAddress = null;
         private readonly List<string> servers = [];
         private TaskCompletionSource? pingResponse = null;
+        private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
         private bool disposedValue;
 
         private static void SendMessageToDestination(byte[] message, string address)
@@ -70,6 +73,15 @@ namespace MQContract.ZeroMQ
         public Connection()
         {
             subscriberConnection.SubscribeToAnyTopic();
+            batchedMessageStream = new(
+                async (serviceMessage, _) => new(serviceMessage.ID, MessageMapper.Map(serviceMessage)),
+                async (message, cancellationToken) =>
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        return new TransmissionResult(message.ID, new(new OperationCanceledException("Transmission cancelled"), true));
+                    return new TransmissionResult(message.ID, await PublishMessageAsync(message.Frame));
+                }
+            );
         }
 
         private void SetupPoller()
@@ -176,12 +188,12 @@ namespace MQContract.ZeroMQ
             return error;
         }
 
-        ValueTask IMessageServiceConnection.CloseAsync()
+        async ValueTask IMessageServiceConnection.CloseAsync()
         {
+            await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
             poller.Stop();
             publishConnection.Close();
             subscriberConnection.Close();
-            return ValueTask.CompletedTask;
         }
 
         async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
@@ -197,21 +209,25 @@ namespace MQContract.ZeroMQ
                     await pingResponse.Task.WaitAsync(PongTimeout);
                     return new(string.Join(',', servers), typeof(NetMQPoller).Assembly.GetName().Version?.ToString()??string.Empty, Stopwatch.GetElapsedTime(start));
                 }
-                finally {
+                finally
+                {
                     pingResponse = null;
                 }
             }
             else if (poller.IsRunning)
                 return new("self", typeof(NetMQPoller).Assembly.GetName().Version?.ToString()??string.Empty, TimeSpan.Zero);
-            throw new PingFailedException("Unable to ping due to lack of connections and no subscribers");    
+            throw new PingFailedException("Unable to ping due to lack of connections and no subscribers");
         }
 
-        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-            => new(message.ID,await PublishMessageAsync(MessageMapper.Map(message)));
+        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
+
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-            =>ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
-                async (msg)=> await messageReceived((ReceivedServiceMessage)msg.message).ConfigureAwait(false),
+            => ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
+                async (msg) => await messageReceived((ReceivedServiceMessage)msg.message).ConfigureAwait(false),
                 channel
             ));
 
@@ -219,7 +235,7 @@ namespace MQContract.ZeroMQ
         {
             UndefinedInboxException.ThrowIfNullOrWhiteSpace(inboxAddress);
             return ValueTask.FromResult<IServiceSubscription>(RegisterSubscription(
-                (msg) =>messageReceived(msg.message),
+                (msg) => messageReceived(msg.message),
                 INBOX_CHANNEL
             ));
         }
@@ -232,7 +248,8 @@ namespace MQContract.ZeroMQ
 
         ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
             => ValueTask.FromResult<IServiceSubscription?>(RegisterSubscription(
-                async (msg) => {
+                async (msg) =>
+                {
                     var response = await messageReceived(msg.message);
                     if (response!=null)
                         SendMessageToDestination(MessageMapper.Map(response, msg.message.CorrelationID, msg.responseAddress, INBOX_CHANNEL), msg.responseAddress!);
@@ -240,11 +257,12 @@ namespace MQContract.ZeroMQ
                 channel
             ));
 
-        void IDisposable.Dispose()
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             if (!disposedValue)
             {
                 disposedValue=true;
+                await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
                 if (poller.IsRunning)
                     poller.Stop();
                 if (!publishConnection.IsDisposed)

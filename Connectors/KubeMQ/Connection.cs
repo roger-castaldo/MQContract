@@ -56,6 +56,7 @@ namespace MQContract.KubeMQ
         private readonly ConnectionOptions connectionOptions;
         private readonly KubeClient client;
         private readonly List<StoredChannelOptions> storedChannelOptions = [];
+        private readonly BatchedMessageStream<Event> batchedMessageStream;
         private bool disposedValue;
 
         /// <summary>
@@ -86,6 +87,56 @@ namespace MQContract.KubeMQ
                 pingResult.ServerStartTime,
                 pingResult.ServerUpTime
             );
+            batchedMessageStream = new(
+                async (serviceMessage, _) => new Event()
+                {
+                    Body=ByteString.CopyFrom(serviceMessage.Data.ToArray()),
+                    Metadata=serviceMessage.MessageTypeID,
+                    Channel=serviceMessage.Channel,
+                    ClientID=connectionOptions.ClientId,
+                    EventID=serviceMessage.ID,
+                    Store=storedChannelOptions.Exists(sco => Equals(serviceMessage.Channel, sco.ChannelName)),
+                    Tags={ ConvertMessageHeader(serviceMessage.Header) }
+                },
+                async (kubeEvent, cancellationToken) =>
+                {
+                    try
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            return new TransmissionResult(kubeEvent.EventID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
+                        var res = await client.SendEventAsync(kubeEvent, connectionOptions.GrpcMetadata, cancellationToken);
+                        return new TransmissionResult(res.EventID, Error: string.IsNullOrWhiteSpace(res.Error) ? null : new(new Exception(res.Error), false));
+                    }
+                    catch (RpcException ex)
+                    {
+                        connectionOptions.Logger?.LogError(ex, "RPC error occured on Send in send Message:{ErrorMessage}, Status: {StatusCode}", ex.Message, ex.Status);
+                        return new TransmissionResult(kubeEvent.EventID, Error: new(ex, ex.StatusCode switch
+                        {
+                            StatusCode.Aborted => true,
+                            StatusCode.AlreadyExists => true,
+                            StatusCode.Cancelled => true,
+                            StatusCode.DataLoss => true,
+                            StatusCode.DeadlineExceeded => false,
+                            StatusCode.FailedPrecondition => true,
+                            StatusCode.Internal => true,
+                            StatusCode.InvalidArgument => true,
+                            StatusCode.NotFound => true,
+                            StatusCode.OutOfRange => true,
+                            StatusCode.PermissionDenied => true,
+                            StatusCode.ResourceExhausted => false,
+                            StatusCode.Unauthenticated => true,
+                            StatusCode.Unavailable => false,
+                            StatusCode.Unimplemented => true,
+                            _ => true
+                        })
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        connectionOptions.Logger?.LogError(ex, "Exception occured in Send Message:{ErrorMessage}", ex.Message);
+                        return new TransmissionResult(kubeEvent.EventID, Error: new(ex));
+                    }
+                });
         }
 
         /// <summary>
@@ -156,52 +207,10 @@ namespace MQContract.KubeMQ
         internal static MessageHeader ConvertMessageHeader(MapField<string, string> header)
             => new(header.AsEnumerable());
 
-        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var res = await client.SendEventAsync(new Event()
-                {
-                    Body=ByteString.CopyFrom(message.Data.ToArray()),
-                    Metadata=message.MessageTypeID,
-                    Channel=message.Channel,
-                    ClientID=connectionOptions.ClientId,
-                    EventID=message.ID,
-                    Store=storedChannelOptions.Exists(sco => Equals(message.Channel, sco.ChannelName)),
-                    Tags={ ConvertMessageHeader(message.Header) }
-                }, connectionOptions.GrpcMetadata, cancellationToken);
-                return new TransmissionResult(res.EventID, Error: string.IsNullOrWhiteSpace(res.Error) ? null : new(new Exception(res.Error), false));
-            }
-            catch (RpcException ex)
-            {
-                connectionOptions.Logger?.LogError(ex, "RPC error occured on Send in send Message:{ErrorMessage}, Status: {StatusCode}", ex.Message, ex.Status);
-                return new TransmissionResult(message.ID, Error: new(ex, ex.StatusCode switch
-                {
-                    StatusCode.Aborted => true,
-                    StatusCode.AlreadyExists => true,
-                    StatusCode.Cancelled => true,
-                    StatusCode.DataLoss => true,
-                    StatusCode.DeadlineExceeded => false,
-                    StatusCode.FailedPrecondition => true,
-                    StatusCode.Internal => true,
-                    StatusCode.InvalidArgument => true,
-                    StatusCode.NotFound => true,
-                    StatusCode.OutOfRange => true,
-                    StatusCode.PermissionDenied => true,
-                    StatusCode.ResourceExhausted => false,
-                    StatusCode.Unauthenticated => true,
-                    StatusCode.Unavailable => false,
-                    StatusCode.Unimplemented => true,
-                    _ => true
-                })
-                );
-            }
-            catch (Exception ex)
-            {
-                connectionOptions.Logger?.LogError(ex, "Exception occured in Send Message:{ErrorMessage}", ex.Message);
-                return new TransmissionResult(message.ID, Error: new(ex));
-            }
-        }
+        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         async ValueTask<ServiceQueryResult> IQueryResponseMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {

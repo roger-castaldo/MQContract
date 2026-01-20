@@ -11,15 +11,18 @@ namespace MQContract.ActiveMQ
     /// <summary>
     /// This is the MessageServiceConnection implemenation for using ActiveMQ
     /// </summary>
-    public sealed class Connection : IPingableMessageServiceConnection, IAsyncDisposable, IDisposable
+    public sealed class Connection : IPingableMessageServiceConnection, IAsyncDisposable
     {
+        private readonly record struct MessageInstance(string ID, IBytesMessage Message, IDestination Topic);
+
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private bool disposedValue;
 
         private readonly ISession session;
         private readonly IMessageProducer producer;
-        private readonly ConcurrentDictionary<(string channel,string group),ConsumerInstance> consumerInstances = [];
+        private readonly ConcurrentDictionary<(string channel, string group), ConsumerInstance> consumerInstances = [];
         private readonly ConcurrentDictionary<string, ITopic> topicMap = [];
+        private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
 
         /// <summary>
         /// Underlying connection used to connection to ActiveMQ.  Exposed here for additional control if required.
@@ -39,19 +42,39 @@ namespace MQContract.ActiveMQ
             ActiveMQConnection.Start();
             session = ActiveMQConnection.CreateSession();
             producer = session.CreateProducer();
+            batchedMessageStream = new(
+                async (serviceMessage, _) =>
+                {
+                    var msg = await session.CreateBytesMessageAsync(serviceMessage.Data.ToArray());
+                    msg.NMSMessageId=serviceMessage.ID;
+                    msg.Properties[MESSAGE_TYPE_HEADER] = serviceMessage.MessageTypeID;
+                    foreach (var key in serviceMessage.Header.Keys)
+                        msg.Properties[key] = serviceMessage.Header[key];
+                    return new MessageInstance(serviceMessage.ID, msg, GetTopic(serviceMessage.Channel));
+                },
+                async (messageInstance, cancellationToken) =>
+                {
+                    try
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            return new TransmissionResult(messageInstance.ID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
+                        await producer.SendAsync(messageInstance.Topic, messageInstance.Message);
+                        return new TransmissionResult(messageInstance.ID);
+                    }
+                    catch (Exception ex)
+                    {
+                        return new TransmissionResult(messageInstance.ID, Error: new(ex, ex switch
+                        {
+                            IllegalStateException => true,
+                            InvalidDestinationException => true,
+                            MessageFormatException => true,
+                            _ => false
+                        }));
+                    }
+                });
         }
 
         uint? IMessageServiceConnection.MaxMessageBodySize => 4*1024*1024;
-
-        private async ValueTask<IBytesMessage> ProduceMessage(ServiceMessage message)
-        {
-            var msg = await session.CreateBytesMessageAsync(message.Data.ToArray());
-            msg.NMSMessageId=message.ID;
-            msg.Properties[MESSAGE_TYPE_HEADER] = message.MessageTypeID;
-            foreach (var key in message.Header.Keys)
-                msg.Properties[key] = message.Header[key];
-            return msg;
-        }
 
         private static MessageHeader ExtractHeaders(IPrimitiveMap properties, out string? messageTypeID)
         {
@@ -86,24 +109,11 @@ namespace MQContract.ActiveMQ
             return topic;
         }
 
-        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-        {
-            try
-            {
-                await producer.SendAsync(GetTopic(message.Channel), await ProduceMessage(message));
-                return new TransmissionResult(message.ID);
-            }
-            catch (Exception ex)
-            {
-                return new TransmissionResult(message.ID, Error: new(ex, ex switch
-                {
-                    IllegalStateException => true,
-                    InvalidDestinationException => true,
-                    MessageFormatException => true,
-                    _ => false
-                }));
-            }
-        }
+        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
+
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         private async ValueTask<ConsumerInstance> CreateInstance(string channel, string group)
         {
@@ -129,7 +139,7 @@ namespace MQContract.ActiveMQ
         }
 
         async ValueTask IMessageServiceConnection.CloseAsync()
-            => await ActiveMQConnection.StopAsync();
+            => await ((IAsyncDisposable)this).DisposeAsync();
 
         async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
         {
@@ -146,32 +156,16 @@ namespace MQContract.ActiveMQ
             }
         }
 
-        private void DisposeComponents()
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             if (!disposedValue)
             {
                 disposedValue=true;
+                await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
+                await ActiveMQConnection.StopAsync().ConfigureAwait(true);
                 producer.Dispose();
                 session.Dispose();
                 ActiveMQConnection.Dispose();
-            }
-        }
-
-        async ValueTask IAsyncDisposable.DisposeAsync()
-        {
-            if (!disposedValue)
-                await ActiveMQConnection.StopAsync().ConfigureAwait(true);
-
-            DisposeComponents();
-            GC.SuppressFinalize(this);
-        }
-
-        void IDisposable.Dispose()
-        {
-            if (!disposedValue)
-            {
-                ActiveMQConnection.Stop();
-                DisposeComponents();
             }
             GC.SuppressFinalize(this);
         }

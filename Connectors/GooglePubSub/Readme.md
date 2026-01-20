@@ -20,18 +20,12 @@ MQContract.GooglePubSub
 
 This is the MessageServiceConnection implementation for using GooglePubSub
 
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| projectId | [T:MQContract.GooglePubSub.Connection](#T-T-MQContract-GooglePubSub-Connection 'T:MQContract.GooglePubSub.Connection') | The project id to connect to through the PubSub Connections |
-
 <a name='M-MQContract-GooglePubSub-Connection-#ctor-System-String,Google-Cloud-PubSub-V1-PublisherServiceApiClientBuilder,Google-Cloud-PubSub-V1-SubscriberServiceApiClientBuilder-'></a>
 ### #ctor(projectId,publisherServiceBuilder,subscriberServiceBuilder) `constructor`
 
 ##### Summary
 
-This is the MessageServiceConnection implementation for using GooglePubSub
+Default constructor for creating instance
 
 ##### Parameters
 

@@ -16,7 +16,7 @@ namespace BenchMark.Encoders
         };
 
         async ValueTask<EncodedAnnouncement?> IMessageTypeEncoder<EncodedAnnouncement>.DecodeAsync(Stream stream)
-            => await JsonSerializer.DeserializeAsync<EncodedAnnouncement?>(stream,options:JsonOptions);
+            => await JsonSerializer.DeserializeAsync<EncodedAnnouncement?>(stream, options: JsonOptions);
 
         ValueTask<byte[]> IMessageTypeEncoder<EncodedAnnouncement>.EncodeAsync(EncodedAnnouncement message)
             => ValueTask.FromResult<byte[]>(JsonSerializer.SerializeToUtf8Bytes<EncodedAnnouncement>(message, options: JsonOptions));

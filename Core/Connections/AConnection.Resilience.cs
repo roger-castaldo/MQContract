@@ -34,10 +34,10 @@ namespace MQContract.Connections
                 _ => "default"
             };
             resilliancePolicies.TryAdd((connectionName, key), BuildPolicy($"{(connectionName==null ? "" : $"{connectionName}-")}{keyName}", retryPolicy, circuitBreakPolicy));
-            foreach(var k in resilliancePolicies.Keys
-                .Where(static k =>!string.IsNullOrWhiteSpace(k.connectionName) && k.dataType is not null && k.dataType is not Type && k.dataType is not string)
+            foreach (var k in resilliancePolicies.Keys
+                .Where(static k => !string.IsNullOrWhiteSpace(k.connectionName) && k.dataType is not null && k.dataType is not Type && k.dataType is not string)
                 .ToArray())
-                resilliancePolicies.TryRemove(k,out _);
+                resilliancePolicies.TryRemove(k, out _);
             return (TContractConnection)(IBaseContractConnection)this;
         }
 
@@ -76,7 +76,8 @@ namespace MQContract.Connections
 
             foreach (var key in keys)
             {
-                if (resilliancePolicies.TryGetValue(key, out policy)) {
+                if (resilliancePolicies.TryGetValue(key, out policy))
+                {
                     resilliancePolicies.TryAdd((connectionName, (channel, msgType)), policy);
                     return policy;
                 }

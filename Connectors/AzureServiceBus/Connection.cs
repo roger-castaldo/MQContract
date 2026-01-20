@@ -14,8 +14,8 @@ namespace MQContract.AzureServiceBus
     /// In order to use the InboxQueryable capabilites that have been built here you should have a QueryResponse.Inbox Topic and subsequent Subscription 
     /// with RequiresSession as true
     /// </remarks>
-    public sealed class Connection(ServiceBusClient client,string? pingableQueue = null) 
-        : IInboxQueryableMessageServiceConnection, IBulkPublishableMessageServiceConnection,IPingableMessageServiceConnection, IAsyncDisposable
+    public sealed class Connection(ServiceBusClient client, string? pingableQueue = null)
+        : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
     {
         private const string INBOX_CHANNEL_NAME = "QueryResponse.Inbox";
         private readonly Guid InboxSessionID = Guid.NewGuid();
@@ -81,10 +81,10 @@ namespace MQContract.AzureServiceBus
             return new(message.ID);
         }
 
-        async ValueTask<IEnumerable<TransmissionResult>> IBulkPublishableMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+        async ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
         {
             await using var sender = client.CreateSender(messages.First().Channel);
-            using var messageBatch = await sender.CreateMessageBatchAsync();
+            using var messageBatch = await sender.CreateMessageBatchAsync(cancellationToken);
             foreach (var message in messages)
             {
                 if (!messageBatch.TryAddMessage(ConvertMessage(message)))
@@ -199,7 +199,9 @@ namespace MQContract.AzureServiceBus
             {
                 await using var receiver = client.CreateReceiver(pingableQueue??"pingable");
                 _ = await receiver.PeekMessageAsync();
-            }catch (ServiceBusException ex) when(ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound){
+            }
+            catch (ServiceBusException ex) when (ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound)
+            {
                 return new(string.Empty, string.Empty, Stopwatch.GetElapsedTime(start));
             }
             catch

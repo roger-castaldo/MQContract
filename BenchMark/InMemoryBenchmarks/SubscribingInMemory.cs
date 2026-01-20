@@ -32,7 +32,7 @@ namespace BenchMark.InMemoryBenchmarks
                     return ValueTask.CompletedTask;
                 },
                 (err) => { },
-                channel:channel
+                channel: channel
             ).AsTask();
             subTask.Wait();
             subscription = subTask.Result;
@@ -50,7 +50,7 @@ namespace BenchMark.InMemoryBenchmarks
         {
             var count = MessageCount;
             for (var x = 0; x<count; x++)
-                await contractConnection!.PublishAsync<Announcement>(testMessage,channel: channel);
+                await contractConnection!.PublishAsync<Announcement>(testMessage, channel: channel);
             await completionSource!.Task;
         }
     }

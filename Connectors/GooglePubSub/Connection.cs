@@ -11,44 +11,103 @@ namespace MQContract.GooglePubSub
     /// <summary>
     /// This is the MessageServiceConnection implementation for using GooglePubSub
     /// </summary>
-    /// <param name="projectId">The project id to connect to through the PubSub Connections</param>
-    /// <param name="publisherServiceBuilder">Used for building publishers</param>
-    /// <param name="subscriberServiceBuilder">Used for building subscribers</param>
-    public sealed class Connection(string projectId, PublisherServiceApiClientBuilder publisherServiceBuilder, SubscriberServiceApiClientBuilder subscriberServiceBuilder) :
-        IPingableMessageServiceConnection
+    public sealed class Connection :
+        IPingableMessageServiceConnection, IAsyncDisposable
     {
+        private readonly record struct MessageInstance(string ID, PublishRequest Request);
         private const string MessageTypeID = "_MessageTypeID";
+
+        private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
 
         /// <summary>
         /// Houses the project id that was supplied in the constructor
         /// </summary>
-        public string ProjectId => projectId;
+        public string ProjectId { get; private init; }
         /// <summary>
         /// Houses the Publisher Service API Client used in the underlying service
         /// </summary>
-        public PublisherServiceApiClient PublisherServiceApi => publisherServiceBuilder.Build();
+        public PublisherServiceApiClient PublisherServiceApi { get; private init; }
         /// <summary>
         /// Houses the Subscriber Service API Client used in the underlying service
         /// </summary>
-        public SubscriberServiceApiClient SubscriberServiceApi => subscriberServiceBuilder.Build();
+        public SubscriberServiceApiClient SubscriberServiceApi { get; private init; }
+
+        /// <summary>
+        /// Default constructor for creating instance
+        /// </summary>
+        /// <param name="projectId">The project id to connect to through the PubSub Connections</param>
+        /// <param name="publisherServiceBuilder">Used for building publishers</param>
+        /// <param name="subscriberServiceBuilder">Used for building subscribers</param>
+        public Connection(string projectId, PublisherServiceApiClientBuilder publisherServiceBuilder, SubscriberServiceApiClientBuilder subscriberServiceBuilder)
+        {
+            ProjectId = projectId;
+            PublisherServiceApi = publisherServiceBuilder.Build();
+            SubscriberServiceApi = subscriberServiceBuilder.Build();
+            batchedMessageStream = new(
+                async (serviceMessage, _) =>
+                {
+                    var message = new PubsubMessage()
+                    {
+                        Data = ByteString.CopyFrom(serviceMessage.Data.ToArray()),
+                        MessageId=serviceMessage.ID
+                    };
+                    message.Attributes.Add(MessageTypeID, serviceMessage.MessageTypeID);
+                    foreach (var key in serviceMessage.Header.Keys)
+                        message.Attributes.Add(key, serviceMessage.Header[key]!);
+                    var result = new PublishRequest()
+                    {
+                        TopicAsTopicName = TopicName.FromProjectTopic(projectId, serviceMessage.Channel)
+                    };
+                    result.Messages.Add(message);
+                    return new(serviceMessage.ID, result);
+                },
+                async (message, cancellationToken) =>
+                {
+                    try
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            return new TransmissionResult(message.ID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
+                        _ = await PublisherServiceApi.PublishAsync(message.Request, cancellationToken);
+                        return new TransmissionResult(message.ID);
+                    }
+                    catch (RpcException rpc)
+                    {
+                        return new TransmissionResult(message.ID, Error: new(rpc, rpc.StatusCode switch
+                        {
+                            StatusCode.Aborted => true,
+                            StatusCode.AlreadyExists => true,
+                            StatusCode.Cancelled => true,
+                            StatusCode.DataLoss => true,
+                            StatusCode.DeadlineExceeded => false,
+                            StatusCode.FailedPrecondition => true,
+                            StatusCode.Internal => true,
+                            StatusCode.InvalidArgument => true,
+                            StatusCode.NotFound => true,
+                            StatusCode.OutOfRange => true,
+                            StatusCode.PermissionDenied => true,
+                            StatusCode.ResourceExhausted => false,
+                            StatusCode.Unauthenticated => true,
+                            StatusCode.Unavailable => false,
+                            StatusCode.Unimplemented => true,
+                            _ => true
+                        }));
+                    }
+                    catch (GoogleApiException google)
+                    {
+                        return new(message.ID, Error: new(google, true));
+                    }
+                    catch (Exception ex)
+                    {
+                        return new(message.ID, Error: new(ex, false));
+                    }
+                }
+            );
+        }
 
         uint? IMessageServiceConnection.MaxMessageBodySize => 10*1024*1024; // 10MB limt according to current google definition
 
         ValueTask IMessageServiceConnection.CloseAsync()
-            => ValueTask.CompletedTask;
-
-        private static PubsubMessage ConvertMessage(ServiceMessage message)
-        {
-            var result = new PubsubMessage()
-            {
-                Data = ByteString.CopyFrom(message.Data.ToArray()),
-                MessageId=message.ID
-            };
-            result.Attributes.Add(MessageTypeID, message.MessageTypeID);
-            foreach (var key in message.Header.Keys)
-                result.Attributes.Add(key, message.Header[key]!);
-            return result;
-        }
+            => batchedMessageStream.DisposeAsync();
 
         internal static ReceivedServiceMessage ConvertMessage(ReceivedMessage message, string channel, Func<ValueTask> acknowledge)
             => new(
@@ -62,59 +121,16 @@ namespace MQContract.GooglePubSub
                 acknowledge
             );
 
-        private PublishRequest ProduceRequest(IEnumerable<PubsubMessage> message, string channel)
-        {
-            var result = new PublishRequest()
-            {
-                TopicAsTopicName = TopicName.FromProjectTopic(projectId, channel)
-            };
-            result.Messages.AddRange(message);
-            return result;
-        }
-
-        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-        {
-            try
-            {
-                _ = await PublisherServiceApi.PublishAsync(ProduceRequest([ConvertMessage(message)], message.Channel), cancellationToken);
-            }
-            catch (RpcException rpc)
-            {
-                return new TransmissionResult(message.ID, Error: new(rpc, rpc.StatusCode switch
-                {
-                    StatusCode.Aborted => true,
-                    StatusCode.AlreadyExists => true,
-                    StatusCode.Cancelled => true,
-                    StatusCode.DataLoss => true,
-                    StatusCode.DeadlineExceeded => false,
-                    StatusCode.FailedPrecondition => true,
-                    StatusCode.Internal => true,
-                    StatusCode.InvalidArgument => true,
-                    StatusCode.NotFound => true,
-                    StatusCode.OutOfRange => true,
-                    StatusCode.PermissionDenied => true,
-                    StatusCode.ResourceExhausted => false,
-                    StatusCode.Unauthenticated => true,
-                    StatusCode.Unavailable => false,
-                    StatusCode.Unimplemented => true,
-                    _ => true
-                }));
-            }
-            catch (GoogleApiException google)
-            {
-                return new(message.ID, Error: new(google, true));
-            }catch (Exception ex)
-            {
-                return new(message.ID, Error: new(ex, false));
-            }
-            return new(message.ID);
-        }
+        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             IServiceSubscription? result;
-            var subscriptionName = new SubscriptionName(projectId, group??channel);
-            var topicName = new TopicName(projectId, channel);
+            var subscriptionName = new SubscriptionName(ProjectId, group??channel);
+            var topicName = new TopicName(ProjectId, channel);
             var createSubscription = false;
             try
             {
@@ -142,18 +158,21 @@ namespace MQContract.GooglePubSub
             var start = Stopwatch.GetTimestamp();
             try
             {
-                await PublisherServiceApi.GetTopicAsync(TopicName.FromProjectTopic(projectId, "ping"));
-                return new(projectId, string.Empty, Stopwatch.GetElapsedTime(start));
+                await PublisherServiceApi.GetTopicAsync(TopicName.FromProjectTopic(ProjectId, "ping"));
+                return new(ProjectId, string.Empty, Stopwatch.GetElapsedTime(start));
             }
             catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
             {
                 // Means the connection worked but resource doesn’t exist — still a good "ping"
-                return new(projectId, string.Empty, Stopwatch.GetElapsedTime(start));
+                return new(ProjectId, string.Empty, Stopwatch.GetElapsedTime(start));
             }
             catch
             {
                 throw new PingFailedException("Unable to make a call against the Google PubSub services");
             }
         }
+
+        ValueTask IAsyncDisposable.DisposeAsync()
+            => batchedMessageStream.DisposeAsync();
     }
 }

@@ -5,7 +5,7 @@ namespace MQContract.ZeroMQ
 {
     internal static class MessageMapper
     {
-        private static void WriteString(string? value,BinaryWriter binaryWriter)
+        private static void WriteString(string? value, BinaryWriter binaryWriter)
         {
             if (value == null)
                 binaryWriter.Write(0);
@@ -34,7 +34,7 @@ namespace MQContract.ZeroMQ
             else
             {
 
-                WriteString(inboxAddress,bw);
+                WriteString(inboxAddress, bw);
                 bw.Write(correlationId.Value.ToByteArray());
             }
             bw.Write(message.Header.Keys.Count());
@@ -49,9 +49,9 @@ namespace MQContract.ZeroMQ
             return ms.ToArray();
         }
 
-        public static (ReceivedInboxServiceMessage recievedMessage,string? inboxAddress) Map(byte[] data)
+        public static (ReceivedInboxServiceMessage recievedMessage, string? inboxAddress) Map(byte[] data)
         {
-            using var ms = new MemoryStream(data,0,data.Length,false,true);
+            using var ms = new MemoryStream(data, 0, data.Length, false, true);
             using var br = new BinaryReader(ms);
             var id = ReadString(br)!;
             var channel = ReadString(br)!;
@@ -63,10 +63,10 @@ namespace MQContract.ZeroMQ
             var headLength = br.ReadInt32();
             var headers = new Dictionary<string, string?>();
             while (headLength>headers.Count)
-                headers.Add(ReadString(br)!,ReadString(br));
+                headers.Add(ReadString(br)!, ReadString(br));
             var messageContent = br.ReadBytes(br.ReadInt32());
             return (
-                new ReceivedInboxServiceMessage(id,messageTypeID,channel,new(headers),correlationId??Guid.Empty,messageContent),
+                new ReceivedInboxServiceMessage(id, messageTypeID, channel, new(headers), correlationId??Guid.Empty, messageContent),
                 inboxAddress
             );
         }

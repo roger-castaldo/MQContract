@@ -6,7 +6,7 @@ namespace BenchMark.PublishBenchmarks
     [MemoryDiagnoser]
     public class PublishingWithMiddleware
     {
-        
+
         public const string ChannelName = "sample";
         private const string MessageContent = "The quick brown fox";
 
@@ -54,7 +54,7 @@ namespace BenchMark.PublishBenchmarks
                         retryPolicy: (3, (int cnt) => TimeSpan.FromMilliseconds(100)),
                         circuitBreakPolicy: (3, TimeSpan.FromSeconds(1))
                     );
-            for (var x=0;x<Constants.PublishCount/10; x++)
+            for (var x = 0; x<Constants.PublishCount/10; x++)
                 _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
         }
     }

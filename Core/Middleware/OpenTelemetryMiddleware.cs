@@ -9,7 +9,7 @@ namespace MQContract.Middleware
     [MiddlewareInjectionOrder<IAfterEncodeMiddleware>(postIndex: 3)]
     [MiddlewareInjectionOrder<IBeforeDecodeMiddleware>(preIndex: 1)]
     [MiddlewareInjectionOrder<IAfterDecodeMiddleware>(postIndex: 3)]
-    internal class OpenTelemetryMiddleware(string sourceName,bool linkActivitiesAcrossSystems)
+    internal class OpenTelemetryMiddleware(string sourceName, bool linkActivitiesAcrossSystems)
         : IBeforeEncodeMiddleware, IAfterEncodeMiddleware, IBeforeDecodeMiddleware, IAfterDecodeMiddleware
     {
         private readonly ActivitySource activitySource = new(sourceName);

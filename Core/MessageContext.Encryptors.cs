@@ -9,12 +9,10 @@ namespace MQContract
     {
         internal IMessageEncryptor? GetMessageEncryptor(Type messageType, IMessageEncryptor? globalEncryptor, IServiceProvider? serviceProvider)
         {
-            foreach(var context in contexts)
-            {
-                var result = context.TryGetMessageEncryptor(messageType, globalEncryptor, serviceProvider);
-                if (result!=null)
-                    return result;
-            }
+            var result = contexts.FirstOrDefault(context => context.IsMessageCodeGenerated(messageType))?
+                .TryGetMessageEncryptor(messageType, globalEncryptor, serviceProvider);
+            if (result!=null)
+                return result;
             if (DynamicCodeGate.IsSupported)
                 return ExtractEncryptorThroughReflection(messageType, globalEncryptor, serviceProvider);
             return null;

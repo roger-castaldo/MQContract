@@ -8,24 +8,20 @@ namespace MQContract
     {
         public ValueTask<QueryResult<object>> ExecuteQuery<TQuery>(IContractConnection contractConnection, TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
-            foreach(var context in contexts)
-            {
-                var resultTask = context.TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, messageHeader, cancellationToken);
-                if (resultTask.HasValue)
-                    return resultTask.Value;
-            }
+            var resultTask = contexts.FirstOrDefault(context => context.IsMessageCodeGenerated<TQuery>())?
+                .TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, messageHeader, cancellationToken);
+            if (resultTask.HasValue)
+                return resultTask.Value;
             DynamicCodeNotSupportedException.ThrowIfDynamicCodeIsBlocked("Unable to execute query due to dynamic code not supported and query type not defined in context");
             return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
         }
 
         public ValueTask<IEnumerable<QueryResult<object>>> ExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
-            foreach (var context in contexts)
-            {
-                var resultTask = context.TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, messageHeader, cancellationToken);
-                if (resultTask.HasValue)
-                    return resultTask.Value;
-            }
+            var resultTask = contexts.FirstOrDefault(context => context.IsMessageCodeGenerated<TQuery>())?
+                .TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, messageHeader, cancellationToken);
+            if (resultTask.HasValue)
+                return resultTask.Value;
             DynamicCodeNotSupportedException.ThrowIfDynamicCodeIsBlocked("Unable to execute query due to dynamic code not supported and query type not defined in context");
             return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
         }

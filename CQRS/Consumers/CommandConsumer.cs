@@ -14,7 +14,7 @@ namespace MQContract.CQRS.Consumers
         async ValueTask IPubSubAsyncConsumer<TCommand>.MessageReceivedAsync(IReceivedMessage<TCommand> message)
         {
             await using var context = new CommandInvocationContext<TCommand>(message, connection);
-            await commandProcessor.ProcessCommandAsync(context,context.CancellationTokenSource.Token);
+            await commandProcessor.ProcessCommandAsync(context, context.CancellationTokenSource.Token);
         }
     }
 }

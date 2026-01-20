@@ -56,9 +56,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 receivedMessages.Add(msg);
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -139,9 +139,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 receivedMessages.Add(msg);
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var error = await Assert.ThrowsExactlyAsync<QueryTimeoutException>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, timeout: TimeSpan.FromSeconds(2)));
+            var error = await Assert.ThrowsExactlyAsync<QueryTimeoutException>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, timeout: TimeSpan.FromSeconds(2), cancellationToken: TestContext.CancellationToken));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -221,9 +221,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 receivedMessages.Add(msg);
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -356,7 +356,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                         (_, false, false) => MessageFilterResult.DropAndDontAcknowledge,
                         (_, false, true) => MessageFilterResult.DropAndAcknowledge,
                     })
-            ));
+            ), cancellationToken: TestContext.CancellationToken);
             IEnumerable<QueryResult<object>> result = [];
             Exception? error = null;
             var messageHeader = new MessageHeader([
@@ -364,9 +364,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
             ]);
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500));
+                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
             else
-                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500)));
+                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -401,5 +401,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

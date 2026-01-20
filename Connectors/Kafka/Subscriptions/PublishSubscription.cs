@@ -25,7 +25,8 @@ namespace MQContract.Kafka.Subscriptions
                             channel,
                             headers,
                             msg.Message.Value,
-                            Acknowledge:()=>{
+                            Acknowledge: () =>
+                            {
                                 consumer.StoreOffset(msg);
                                 return ValueTask.CompletedTask;
                             }
@@ -46,10 +47,12 @@ namespace MQContract.Kafka.Subscriptions
 
         public async ValueTask EndAsync()
         {
-            try { 
-                await cancelToken.CancelAsync(); 
-            } 
-            catch {
+            try
+            {
+                await cancelToken.CancelAsync();
+            }
+            catch
+            {
                 //ignoring the error as the goal is to call cancel and not care about the error
             }
         }
@@ -65,7 +68,8 @@ namespace MQContract.Kafka.Subscriptions
                 {
                     consumer.Close();
                 }
-                catch {
+                catch
+                {
                     //ignoring error here as we are attempting to dispose the resource
                 }
                 consumer.Dispose();

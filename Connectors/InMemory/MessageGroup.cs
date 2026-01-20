@@ -23,19 +23,16 @@ namespace MQContract.InMemory
                 removeMe();
         }
 
-        public async ValueTask<bool> PublishMessageAsync(InternalServiceMessage message,CancellationToken cancellationToken)
+        public async ValueTask PublishMessageAsync(InternalServiceMessage message, CancellationToken cancellationToken)
         {
-            var success = false;
             if (index>=channels.Count)
                 index=0;
             if (index<channels.Count)
             {
                 var key = channels.Keys.ElementAt(index);
-                await channels[key].Writer.WriteAsync(message,cancellationToken);
+                await channels[key].Writer.WriteAsync(message, cancellationToken);
                 index++;
-                success=true;
             }
-            return success;
         }
 
         internal void Close()
@@ -43,6 +40,7 @@ namespace MQContract.InMemory
             var channelsToClose = channels.Values.ToArray();
             foreach (var channel in channelsToClose)
                 channel.Writer.TryComplete();
+            channels.Clear();
         }
     }
 }

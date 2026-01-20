@@ -7,6 +7,10 @@
 	  <RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
 	  <Title>KubeMQ Connector for MQContract</Title>
   </PropertyGroup>
+	
+  <ItemGroup>
+    <Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
+  </ItemGroup>
 
   <ItemGroup>
 	  <PackageReference Include="Google.Protobuf" Version="3.*" />

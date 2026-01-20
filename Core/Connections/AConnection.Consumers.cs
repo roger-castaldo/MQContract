@@ -36,7 +36,7 @@ namespace MQContract.Connections
             catch (Exception err)
             {
                 Logger?.LogErrorChecked(err, "An error occured attempting to register a {ConsumerName} of type {ConsumerType}", consumerName, consumerType);
-                throw new ConsumerRegistrationFailedException(consumerName,consumerType,err);
+                throw new ConsumerRegistrationFailedException(consumerName, consumerType, err);
             }
             consumerSubscriptions.Add(subscription);
             return (TContractConnection)(IBaseContractConnection)this;
@@ -74,10 +74,10 @@ namespace MQContract.Connections
         protected abstract ConnectionHealthCheck? ProduceConnectionHealthCheck();
         IHealthCheck? IBaseContractConnection.HealthCheck => healthCheck??=ProduceConnectionHealthCheck();
 
-        private static MessageFilters<TMessage>? ExtractFilter<TMessage,TConsumer>(TConsumer consumer)
+        private static MessageFilters<TMessage>? ExtractFilter<TMessage, TConsumer>(TConsumer consumer)
         {
-            Func<MessageHeader, ValueTask<MessageFilterResult>>? headerFilter=null;
-            Func<TMessage, MessageHeader, ValueTask<MessageFilterResult>>? messageFilter=null;
+            Func<MessageHeader, ValueTask<MessageFilterResult>>? headerFilter = null;
+            Func<TMessage, MessageHeader, ValueTask<MessageFilterResult>>? messageFilter = null;
             if (consumer is IHeaderFilteredConsumer headerFilteredConsumer)
                 headerFilter = headerFilteredConsumer.Filter;
             if (consumer is IMessageFilteredConsumer<TMessage> messageFilteredConsumer)

@@ -9,12 +9,12 @@ namespace MQContract.Connections
         private const string UnHealthyDescription = "MQContract service connection unavailable";
         private const string DegradedDescription = "1 or more service connection(s) are unavailable";
 
-        private sealed record ServicePingResult(string ServiceName,PingResult? Result = null,Exception? Error = null);
+        private sealed record ServicePingResult(string ServiceName, PingResult? Result = null, Exception? Error = null);
 
         private readonly IPingableMessageServiceConnection? connection;
         private readonly ServiceConnectionList? serviceConnectionList;
 
-        public ConnectionHealthCheck(IMessageServiceConnection? connection=null, ServiceConnectionList? serviceConnectionList = null)
+        public ConnectionHealthCheck(IMessageServiceConnection? connection = null, ServiceConnectionList? serviceConnectionList = null)
         {
             if (serviceConnectionList!=null && !serviceConnectionList.FullList.Any(conn => conn.MessageServiceConnection is IPingableMessageServiceConnection))
                 throw new ArgumentOutOfRangeException(nameof(serviceConnectionList), "No Pingable service connections provided, cannot provide health checks");
@@ -32,7 +32,7 @@ namespace MQContract.Connections
                 { "ResponseTime",result.ResponseTime }
             };
 
-        private static IReadOnlyDictionary<string,object> MapServicePingResult(ServicePingResult servicePingResult)
+        private static IReadOnlyDictionary<string, object> MapServicePingResult(ServicePingResult servicePingResult)
             => (servicePingResult.Error==null ? MapPing(servicePingResult.Result!) : new Dictionary<string, object>() { { "Error", servicePingResult.Error.Message } });
 
         async Task<HealthCheckResult> IHealthCheck.CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken)
@@ -52,7 +52,7 @@ namespace MQContract.Connections
             else
             {
                 var results = await Task.WhenAll(serviceConnectionList!.FullList
-                    .Where(conn=>conn.MessageServiceConnection is IPingableMessageServiceConnection)
+                    .Where(conn => conn.MessageServiceConnection is IPingableMessageServiceConnection)
                     .Select(async (conn) =>
                     {
                         try
@@ -60,7 +60,7 @@ namespace MQContract.Connections
                             var result = await ((IPingableMessageServiceConnection)conn.MessageServiceConnection).PingAsync();
                             return new ServicePingResult(conn.ServiceConnectionName, Result: result);
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             return new ServicePingResult(conn.ServiceConnectionName, Error: e);
                         }

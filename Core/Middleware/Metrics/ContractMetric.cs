@@ -40,7 +40,7 @@ namespace MQContract.Middleware.Metrics
         { }
 
         public IContractMetric ToReadonly()
-            => new ReadonlyContractMetric(Messages, MessageBytes, MessageBytesAverage, MessageBytesMin, MessageBytesMax, 
+            => new ReadonlyContractMetric(Messages, MessageBytes, MessageBytesAverage, MessageBytesMin, MessageBytesMax,
                 MessageConversionDuration, MessageConversionAverage, MessageConversionMin, MessageConversionMax);
     }
 }

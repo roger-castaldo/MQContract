@@ -24,7 +24,7 @@ namespace MQContract.Connections
                 .Select(ss => ss.MessageServiceConnection)
                 .OfType<IPingableMessageServiceConnection>()
                 .WhenAll(pmc => pmc.PingAsync());
-            
+
         IMultiServiceContractConnection IMultiServiceContractConnection.RegisterServiceConnection(string serviceConnectionName, IMessageServiceConnection messageServiceConnection)
             => RegisterServiceConnection(pars => true, serviceConnectionName, messageServiceConnection);
 
@@ -41,13 +41,13 @@ namespace MQContract.Connections
             Logger?.LogDebugChecked("Publishing message {TMessage} on {Channel}", typeof(TMessage), channel);
             using var activity = StartActivity(Constants.PublishActivityName);
             var serviceMessage = await ProduceServiceMessageAsync<TMessage>(
-                ChannelMapper.MapTypes.Publish, 
-                GetMessageFactory<TMessage>(), 
-                message, 
-                false, 
+                ChannelMapper.MapTypes.Publish,
+                GetMessageFactory<TMessage>(),
+                message,
+                false,
                 activity,
                 maxMessageSize: MaxMessageBodySize,
-                channel: channel, 
+                channel: channel,
                 messageHeader: messageHeader
             );
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(TMessage), serviceMessage.Header);
@@ -55,7 +55,7 @@ namespace MQContract.Connections
                 .WhenAll(c => AwaitTransmission(c.ServiceConnectionName, async () =>
                 {
                     OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                    var result = await PublishMessageAsync<TMessage>(c.PublishLock, serviceMessage, c.MessageServiceConnection, activity, c.ServiceConnectionName, cancellationToken);
+                    var result = await PublishMessageAsync<TMessage>(serviceMessage, c.MessageServiceConnection, activity, c.ServiceConnectionName, cancellationToken);
                     return result;
                 }));
             activity?.SetStatus(results.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
@@ -72,13 +72,13 @@ namespace MQContract.Connections
             var serviceMessages = await
             messages.WhenAll(m =>
                     ProduceServiceMessageAsync<TMessage>(
-                        ChannelMapper.MapTypes.Publish, 
-                        GetMessageFactory<TMessage>(), 
-                        m.message, 
-                        false, 
-                        activity, 
+                        ChannelMapper.MapTypes.Publish,
+                        GetMessageFactory<TMessage>(),
+                        m.message,
+                        false,
+                        activity,
                         maxMessageSize: MaxMessageBodySize,
-                        channel: channel, 
+                        channel: channel,
                         messageHeader: m.messageHeader
                     )
             );
@@ -86,7 +86,7 @@ namespace MQContract.Connections
             var transmissionResults = await Task.WhenAll(connections.Select(c => Task<MultiTransmissionResult>.Run(async () =>
             {
                 OpenTelemetryMiddleware.AssignConnectionType(activity, c.MessageServiceConnection, c.ServiceConnectionName);
-                var result = await BulkPublishAsync<TMessage>(c.PublishLock, serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
+                var result = await BulkPublishAsync<TMessage>(serviceMessages, c.MessageServiceConnection, activity, cancellationToken, connectionName: c.ServiceConnectionName);
                 return result.Select((res, index) => new MultiTransmissionResult(serviceMessages.ElementAt(index).ID, [new(c.ServiceConnectionName, res.Error)]));
             })));
             activity?.SetStatus(Array.Exists(transmissionResults, mtr => mtr.Any(r => r.HasError)) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
@@ -125,13 +125,13 @@ namespace MQContract.Connections
             Logger?.LogDebugChecked("Executing QueryResponse of {TQuery}, expecting {TQueryResponse} on {Channel} with {ResponseChannel}", typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
             using var activity = StartActivity(Constants.PublishQueryActivityName);
             var serviceMessage = await ProduceServiceMessageAsync<TQuery>(
-                ChannelMapper.MapTypes.Query, 
-                GetMessageFactory<TQuery>(), 
-                message, 
-                false, 
-                activity, 
+                ChannelMapper.MapTypes.Query,
+                GetMessageFactory<TQuery>(),
+                message,
+                false,
+                activity,
                 maxMessageSize: MaxMessageBodySize,
-                channel: channel, 
+                channel: channel,
                 messageHeader: messageHeader
             );
             var connections = await GetConnectionsAsync(serviceMessage.Channel, typeof(TQuery), serviceMessage.Header);

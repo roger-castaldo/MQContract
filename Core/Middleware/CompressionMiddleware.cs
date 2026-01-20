@@ -4,9 +4,9 @@ using System.IO.Compression;
 
 namespace MQContract.Middleware
 {
-    [MiddlewareInjectionOrder<IAfterEncodeMiddleware>(postIndex:1)]
-    [MiddlewareInjectionOrder<IBeforeDecodeMiddleware>(preIndex:3)]
-    internal class CompressionMiddleware : IAfterEncodeMiddleware,IBeforeDecodeMiddleware
+    [MiddlewareInjectionOrder<IAfterEncodeMiddleware>(postIndex: 1)]
+    [MiddlewareInjectionOrder<IBeforeDecodeMiddleware>(preIndex: 3)]
+    internal class CompressionMiddleware : IAfterEncodeMiddleware, IBeforeDecodeMiddleware
     {
         private const string CompressedHeader = "_isCompressed";
 

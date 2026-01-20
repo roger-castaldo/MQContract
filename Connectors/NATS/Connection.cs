@@ -13,14 +13,16 @@ namespace MQContract.NATS
     /// <summary>
     /// This is the MessageServiceConnection implementation for using NATS.io
     /// </summary>
-    public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable, IDisposable
+    public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
     {
+        private readonly record struct MessageInstance(string ID, string Channel, ReadOnlyMemory<byte> Data, NatsHeaders? Headers);
         private const string MESSAGE_IDENTIFIER_HEADER = "_MessageID";
         private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
         private const string QUERY_RESPONSE_ERROR_TYPE = "NatsQueryError";
 
         private readonly List<SubscriptionConsumerConfig> subscriptionConsumerConfigs = [];
         private readonly ILogger? logger;
+        private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
         private bool disposedValue;
 
         /// <summary>
@@ -42,6 +44,37 @@ namespace MQContract.NATS
             NatsJSContext = new(NatsConnection);
             logger = options.LoggerFactory?.CreateLogger("NatsServiceConnection");
             ProcessConnection().Wait();
+            batchedMessageStream = new(
+                async (serviceMessage, _) => new MessageInstance(
+                    serviceMessage.ID,
+                    serviceMessage.Channel,
+                    serviceMessage.Data,
+                    ExtractHeader(serviceMessage)
+                ),
+                async (messageInstance, cancellationToken) =>
+                {
+                    try
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            return new TransmissionResult(messageInstance.ID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
+                        await NatsConnection.PublishAsync<byte[]>(
+                            messageInstance.Channel,
+                            messageInstance.Data.ToArray(),
+                            headers: messageInstance.Headers,
+                            cancellationToken: cancellationToken
+                        );
+                        return new TransmissionResult(messageInstance.ID);
+                    }
+                    catch (Exception ex)
+                    {
+                        return new TransmissionResult(messageInstance.ID, Error: new(ex, ex switch
+                        {
+                            NatsPayloadTooLargeException => true,
+                            _ => false
+                        }));
+                    }
+                }
+            );
         }
 
         private async Task ProcessConnection()
@@ -141,27 +174,10 @@ namespace MQContract.NATS
             ]));
         }
 
-        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-        {
-            try
-            {
-                await NatsConnection.PublishAsync<byte[]>(
-                        message.Channel,
-                        message.Data.ToArray(),
-                        headers: ExtractHeader(message),
-                        cancellationToken: cancellationToken
-                    );
-                return new TransmissionResult(message.ID);
-            }
-            catch (Exception ex)
-            {
-                return new TransmissionResult(message.ID, Error: new(ex, ex switch
-                {
-                    NatsPayloadTooLargeException => true,
-                    _ => false
-                }));
-            }
-        }
+        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         async ValueTask<ServiceQueryResult> IQueryResponseMessageServiceConnection.QueryAsync(ServiceMessage message, TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -252,30 +268,17 @@ namespace MQContract.NATS
         }
 
         ValueTask IMessageServiceConnection.CloseAsync()
-            => NatsConnection.DisposeAsync();
+            => ((IAsyncDisposable)this).DisposeAsync();
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
-            await NatsConnection.DisposeAsync().ConfigureAwait(true);
-
-            Dispose(disposing: false);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
-        {
             if (!disposedValue)
             {
-                if (disposing)
-                    NatsConnection.DisposeAsync().AsTask().Wait();
                 disposedValue=true;
+                await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
+                await NatsConnection.DisposeAsync().ConfigureAwait(true);
             }
-        }
 
-        void IDisposable.Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

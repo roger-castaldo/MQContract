@@ -3,7 +3,7 @@ using MQContract.Interfaces.Service;
 
 namespace MQContract.ActiveMQ.Subscriptions
 {
-    internal class SubscriptionBase(Func<IMessage,ValueTask> messageReceived, Action<Exception> errorReceived, ConsumerInstance consumer) : IServiceSubscription
+    internal class SubscriptionBase(Func<IMessage, ValueTask> messageReceived, Action<Exception> errorReceived, ConsumerInstance consumer) : IServiceSubscription
     {
         private bool disposedValue;
         protected readonly CancellationTokenSource cancelToken = new();

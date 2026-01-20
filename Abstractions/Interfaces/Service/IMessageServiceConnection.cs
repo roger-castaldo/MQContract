@@ -21,6 +21,14 @@ namespace MQContract.Interfaces.Service
         /// <returns>A transmission result instance indicating the result</returns>
         ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken = new CancellationToken());
         /// <summary>
+        /// Implements a publish call to publish the given messages in bulk
+        /// </summary>
+        /// <param name="messages">The message to publish</param>
+        /// <param name="cancellationToken">A cancellation token</param>
+        /// 
+        /// <returns>A transmission result instance indicating the result for each message</returns>
+        ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken = new CancellationToken());
+        /// <summary>
         /// Implements a call to create a subscription to a given channel as a member of a given group
         /// </summary>
         /// <param name="messageReceived">The callback to invoke when a message is received</param>

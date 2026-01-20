@@ -134,10 +134,10 @@ namespace AutomatedTesting.ContractConnectionTests
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>(
                 (msg) => ValueTask.CompletedTask,
                 (error) => { },
-                channel: channel);
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel);
+                channel: channel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
             _ = await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1));
-            await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
+            await Task.Delay(TimeSpan.FromSeconds(10), TestContext.CancellationToken).ConfigureAwait(true);
             IContractMetric?[] sentMetrics = [
                 contractConnection.GetSnapshot(true),
                 contractConnection.GetSnapshot(typeof(BasicMessage),true),
@@ -226,9 +226,9 @@ namespace AutomatedTesting.ContractConnectionTests
             {
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => { },
-            channel: channel);
-            _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, channel: channel);
-            await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
+            channel: channel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, channel: channel, cancellationToken: TestContext.CancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(10), TestContext.CancellationToken).ConfigureAwait(true);
             IContractMetric?[] querySentMetrics = [
                 contractConnection.GetSnapshot(typeof(BasicQueryMessage),true),
                 contractConnection.GetSnapshot<BasicQueryMessage>(true)
@@ -321,5 +321,7 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Verify(x => x.QueryAsync(It.IsAny<ServiceMessage>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

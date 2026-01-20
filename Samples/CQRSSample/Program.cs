@@ -24,10 +24,11 @@ Console.WriteLine("Executing GetUserQuery...");
 try
 {
     var user = await cqrsConnection.ExecuteQueryAsync<GetUserQuery, User>(new GetUserQuery("user123"), context, TimeSpan.FromSeconds(10));
-    Console.WriteLine($"Retrieved user: {user.UserName}, {user.Email}");
-}catch(QueryCallException e)
-{ 
-    Console.WriteLine($"Query error: {e.Error.Message}"); 
+    Console.WriteLine($"Retrieved user: {user?.UserName}, {user?.Email}");
+}
+catch (QueryCallException e)
+{
+    Console.WriteLine($"Query error: {e.Error.Message}");
 }
 
 Console.WriteLine("CQRS sample completed.");

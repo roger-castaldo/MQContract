@@ -63,9 +63,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -147,9 +147,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
-            }, (error) => { });
+            }, (error) => { }, cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -198,8 +198,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { }, channel: channelName);
-            var subscription2 = await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }, channel: channelName);
+            var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { }, channel: channelName, cancellationToken: TestContext.CancellationToken);
+            var subscription2 = await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }, channel: channelName, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -234,8 +234,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { }, group: groupName);
-            var subscription2 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { });
+            var subscription1 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { }, group: groupName, cancellationToken: TestContext.CancellationToken);
+            var subscription2 = await contractConnection.SubscribeAsync<BasicMessage>((msg) => ValueTask.CompletedTask, (error) => { }, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -267,7 +267,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }));
+            var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.SubscribeAsync<NoChannelMessage>((msg) => ValueTask.CompletedTask, (error) => { }, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -296,7 +296,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExactlyAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }));
+            var exception = await Assert.ThrowsExactlyAsync<SubscriptionFailedException>(async () => await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -328,7 +328,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { });
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }, cancellationToken: TestContext.CancellationToken);
             await subscription.EndAsync();
             #endregion
 
@@ -361,7 +361,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { });
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }, cancellationToken: TestContext.CancellationToken);
             await subscription.DisposeAsync();
             #endregion
 
@@ -391,7 +391,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { });
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }, cancellationToken: TestContext.CancellationToken);
             await subscription.DisposeAsync();
             #endregion
 
@@ -422,7 +422,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { });
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>(msg => ValueTask.CompletedTask, err => { }, cancellationToken: TestContext.CancellationToken);
             subscription.Dispose();
             #endregion
 
@@ -477,13 +477,13 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
             {
                 messages.Add(msg);
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.PublishAsync<BasicMessage>(message1);
+            var result1 = await contractConnection.PublishAsync<BasicMessage>(message1, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             stopwatch.Restart();
-            var result2 = await contractConnection.PublishAsync<BasicMessage>(message2);
+            var result2 = await contractConnection.PublishAsync<BasicMessage>(message2, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -559,9 +559,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) =>
             {
                 throw exception;
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -623,9 +623,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Act
             var messages = new List<IReceivedMessage<BasicMessage>>();
             var exceptions = new List<Exception>();
-            var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => { return ValueTask.CompletedTask; }, (error) => exceptions.Add(error));
+            var subscription = await contractConnection.SubscribeAsync<BasicMessage>((msg) => { return ValueTask.CompletedTask; }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -692,9 +692,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -779,9 +779,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -856,9 +856,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<NoChannelMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel);
+            var result = await contractConnection.PublishAsync<NoChannelMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -920,7 +920,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                     return ValueTask.FromResult(transmissionResult);
                 });
             globalEncoder.Setup(x => x.DecodeAsync<BasicMessage>(It.IsAny<Stream>()))
-                .Returns(async (Stream stream) => await JsonSerializer.DeserializeAsync<BasicMessage>(stream));
+                .Returns(async (Stream stream) => await JsonSerializer.DeserializeAsync<BasicMessage>(stream, cancellationToken: TestContext.CancellationToken));
             globalEncoder.Setup(x => x.EncodeAsync<BasicMessage>(It.IsAny<BasicMessage>()))
                 .Returns((BasicMessage message) => ValueTask.FromResult(JsonSerializer.SerializeToUtf8Bytes(message)));
 
@@ -938,9 +938,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -1017,9 +1017,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicQueryMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel);
+            var result = await contractConnection.PublishAsync<BasicQueryMessage>(message, channel: typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -1100,9 +1100,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             {
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
-            }, (error) => exceptions.Add(error));
+            }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -1226,11 +1226,11 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                         (_, false, false) => MessageFilterResult.DropAndDontAcknowledge,
                         (_, false, true) => MessageFilterResult.DropAndAcknowledge,
                     })
-            ));
+            ), cancellationToken: TestContext.CancellationToken);
             var result = await contractConnection.PublishAsync<BasicMessage>(message, messageHeader: new([
                 new KeyValuePair<string,string>(headerKey,headerValue),
                 new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
-            ]));
+            ]), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -1258,6 +1258,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection.Verify(x => x.PublishAsync(It.IsAny<ServiceMessage>(), It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }
 

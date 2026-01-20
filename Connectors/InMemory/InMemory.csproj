@@ -10,6 +10,7 @@
 
 	<ItemGroup>
 	  <Compile Include="..\..\Core\EnumerableExtensions.cs" Link="EnumerableExtensions.cs" />
+	  <Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

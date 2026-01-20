@@ -117,7 +117,7 @@ namespace MQContract.Generators
                                 descriptor: MultipleEncoders,
                                 location: contract.Contract.Locations.First(),
                                 contract.Contract.ToDisplayString(),
-                                string.Join(", ",contract.Encoders.Select(enc=>enc.ToDisplayString()))
+                                string.Join(", ", contract.Encoders.Select(enc => enc.ToDisplayString()))
                             ));
                     }
                     else
@@ -220,8 +220,8 @@ namespace {contractContext.Target.ContainingNamespace};
 
         ValueTask<EncryptionResult> IMessageEncryptor.EncryptAsync(byte[] data)
             => ValueTask.FromResult<EncryptionResult>(new(null,data));
-    }}    public override sealed bool IsMessageCodeGenerated<TMessage>() 
-        => (typeof(TMessage)) switch {{
+    }}    public override sealed bool IsMessageCodeGenerated(Type messageType) 
+        => (messageType) switch {{
 {string.Join(LineBreak, generatedSwitches)}
             _ => false
         }};
@@ -330,12 +330,12 @@ namespace {contractContext.Target.ContainingNamespace};
 
         private IEnumerable<ITypeSymbol>? RecursivelyLocateConverters(ITypeSymbol destination, IEnumerable<ContractConverter> converters, List<ITypeSymbol> currentList)
         {
-            foreach(var converter in converters.Where(con=>con.Contracts.Any(pair=>SymbolEqualityComparer.Default.Equals(pair.to, destination))))
+            foreach (var converter in converters.Where(con => con.Contracts.Any(pair => SymbolEqualityComparer.Default.Equals(pair.to, destination))))
             {
                 if (!currentList.Contains(converter.Converter))
                 {
                     currentList.Add(converter.Converter);
-                    foreach(var source in converter.Contracts.Select(c=>c.from))
+                    foreach (var source in converter.Contracts.Select(c => c.from))
                         RecursivelyLocateConverters(source, converters, currentList);
                 }
             }
@@ -367,13 +367,15 @@ namespace {contractContext.Target.ContainingNamespace};
                 var preBracket = name.Substring(0, name.IndexOf("<")+1);
                 var betweenBrackets = name.Substring(preBracket.Length, name.Length-1-preBracket.Length);
                 return $"{preBracket}{FixInternalBrackets(betweenBrackets)}>";
-            }else if (name.Contains(","))
+            }
+            else if (name.Contains(","))
             {
                 var splt = name.Split(',');
                 for (var x = 0; x<splt.Length; x++)
                     splt[x]=FixInternalBrackets(splt[x]);
                 return string.Join(",", splt);
-            }else if (name.Contains('.'))
+            }
+            else if (name.Contains('.'))
                 return name.Substring(name.LastIndexOf('.')+1);
             return name;
         }
@@ -381,14 +383,15 @@ namespace {contractContext.Target.ContainingNamespace};
         private string GetMessageIDUpperInvariant(ITypeSymbol contract)
         {
             var att = GetMessageAttribute(contract);
-            return $"{GetMessageName(att,contract)}-{((string?)att?.ConstructorArguments[2].Value)??"0.0.0.0"}".ToUpperInvariant();
+            return $"{GetMessageName(att, contract)}-{((string?)att?.ConstructorArguments[2].Value)??"0.0.0.0"}".ToUpperInvariant();
         }
 
         private void GeneratePrimaryConverters(Dictionary<string, string> encoderCalls, ITypeSymbol contract, IEnumerable<ContractConverter> converters)
         {
-            foreach (var converter in converters.Where(con=>con.Contracts.Any(c=> SymbolEqualityComparer.Default.Equals(c.to, contract))))
+            foreach (var converter in converters.Where(con => con.Contracts.Any(c => SymbolEqualityComparer.Default.Equals(c.to, contract))))
             {
-                foreach (var conversion in converter.Contracts.Where(c => SymbolEqualityComparer.Default.Equals(c.to, contract))) {
+                foreach (var conversion in converter.Contracts.Where(c => SymbolEqualityComparer.Default.Equals(c.to, contract)))
+                {
                     var switchStatement = $"(\"{GetMessageIDUpperInvariant(conversion.from)}\", Type t) when t == typeof({contract.ToDisplayString()})";
                     encoderCalls.Remove(switchStatement);
                     encoderCalls.Add(switchStatement, BuildEncoderChain(converter, conversion, []));
@@ -406,7 +409,7 @@ namespace {contractContext.Target.ContainingNamespace};
                     if (!encoderCalls.ContainsKey(switchStatement))
                     {
                         encoderCalls.Add(switchStatement, BuildEncoderChain(con, conversion, previousSteps));
-                        GenerateChainedConverter(encoderCalls, conversion.from, contract, new ContractConverterPair[] { new(con.Converter, conversion.from, conversion.to) }.Concat(previousSteps),converterDefinitions);
+                        GenerateChainedConverter(encoderCalls, conversion.from, contract, new ContractConverterPair[] { new(con.Converter, conversion.from, conversion.to) }.Concat(previousSteps), converterDefinitions);
                     }
                 }
             }
@@ -419,7 +422,7 @@ namespace {contractContext.Target.ContainingNamespace};
                 {{
                     IMessageConverter<{conversion.from.ToDisplayString()},{conversion.to.ToDisplayString()}> step0 = (sp == null ? Activator.CreateInstance<{con.Converter.ToDisplayString()}>() : ActivatorUtilities.CreateInstance<{con.Converter.ToDisplayString()}>(sp!))!;");
             var idx = 1;
-            foreach(var pair in previousSteps)
+            foreach (var pair in previousSteps)
             {
                 sb.AppendLine($"                    IMessageConverter<{pair.From.ToDisplayString()},{pair.To.ToDisplayString()}> step{idx} = (sp == null ? Activator.CreateInstance<{pair.Converter.ToDisplayString()}>() : ActivatorUtilities.CreateInstance<{pair.Converter.ToDisplayString()}>(sp!))!;");
                 idx++;
@@ -429,14 +432,14 @@ namespace {contractContext.Target.ContainingNamespace};
                         if (msg==null) return null;
                         var msg0 = await step0.ConvertAsync(msg);");
             idx=0;
-            foreach(var pair in previousSteps)
+            foreach (var pair in previousSteps)
             {
                 sb.AppendLine($@"                        var msg{idx+1} = await step{idx+1}.ConvertAsync(msg{idx});
                         if (msg{idx+1}==null) return null;");
                 idx++;
             }
-                        
-sb.Append(@$"                        return msg{idx};
+
+            sb.Append(@$"                        return msg{idx};
                     }};
                     return func;
                 }}");

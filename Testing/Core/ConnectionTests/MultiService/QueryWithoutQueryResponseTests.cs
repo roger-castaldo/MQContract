@@ -27,7 +27,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
             var acknowledged = false;
 
@@ -62,7 +62,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -80,7 +80,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
-            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             Assert.IsTrue(acknowledged);
             #endregion
@@ -103,7 +103,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var headerKey = "MyHeaderKey";
             var headerValue = "MyHeaderValue";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -132,7 +132,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, messageHeader: new([new KeyValuePair<string, string>(headerKey, headerValue)]), responseChannel: responseChannel);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, messageHeader: new([new KeyValuePair<string, string>(headerKey, headerValue)]), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -150,7 +150,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(4, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
-            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             Assert.AreEqual(1, result.First().Header.Keys.Count());
             Assert.AreEqual(headerValue, result.First().Header[headerKey]);
@@ -172,7 +172,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -208,7 +208,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -226,7 +226,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
-            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             #endregion
 
@@ -246,7 +246,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = typeof(BasicQueryMessage).GetCustomAttribute<QueryMessageAttribute>()?.ResponseChannel;
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -275,7 +275,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -293,7 +293,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(3, messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
-            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             #endregion
 
@@ -322,7 +322,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExactlyAsync<QueryExecutionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel));
+            var error = await Assert.ThrowsExactlyAsync<QueryExecutionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -352,7 +352,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await contractConnection.QueryAsync<BasicResponseMessage, BasicResponseMessage>(testMessage, channel: "Test"));
+            var error = await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await contractConnection.QueryAsync<BasicResponseMessage, BasicResponseMessage>(testMessage, channel: "Test", cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -397,7 +397,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExactlyAsync<QueryTimeoutException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, timeout: defaultTimeout));
+            var error = await Assert.ThrowsExactlyAsync<QueryTimeoutException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, timeout: defaultTimeout, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -423,7 +423,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
             var acknowledged = false;
 
@@ -459,7 +459,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -477,7 +477,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual((withLinking ? 5 : 3), messages[0].Header.Keys.Count());
             Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
-            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray())));
+            Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             Assert.IsTrue(acknowledged);
             Assert.HasCount(2, capturedActivities);
@@ -524,7 +524,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -560,7 +560,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
+            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -602,7 +602,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -638,8 +638,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            _ = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
-            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
+            _ = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -681,7 +681,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -717,8 +717,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
-            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
+            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -769,7 +769,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -805,8 +805,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
-            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
+            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -855,7 +855,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var responseMessage = new BasicResponseMessage("testResponse");
             var responseChannel = "BasicQuery.Response";
             using var ms = new MemoryStream();
-            await JsonSerializer.SerializeAsync(ms, responseMessage);
+            await JsonSerializer.SerializeAsync(ms, responseMessage, cancellationToken: TestContext.CancellationToken);
             var responseData = (ReadOnlyMemory<byte>)ms.ToArray();
 
             var mockSubscription = new Mock<IServiceSubscription>();
@@ -902,8 +902,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
-            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel);
+            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -940,5 +940,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             mockSubscription.Verify(x => x.EndAsync(), Times.Exactly(6));
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

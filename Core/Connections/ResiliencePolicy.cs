@@ -26,7 +26,7 @@ namespace MQContract.Connections
                       .WaitAndRetryAsync(retryPolicy.Value.retryCount, retryPolicy.Value.sleepDurationProvider, (outcome, timeSpan, retryAttempt, context) =>
                       {
                           var activity = (Activity?)context[ActivityContextKey];
-                          foreach(var result in outcome.Result.Where(r=>r.IsError && !r.Error!.IsFatal))
+                          foreach (var result in outcome.Result.Where(r => r.IsError && !r.Error!.IsFatal))
                           {
                               activity?.AddEvent(new(
                                   "Resilliant Retry Triggered",
@@ -42,7 +42,7 @@ namespace MQContract.Connections
 
         private static AsyncPolicy<IEnumerable<TResult>>? BuildCircuitBreakPolicy<TResult>(string name, (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy)
             where TResult : TransmissionResult
-            => (circuitBreakPolicy==null ? 
+            => (circuitBreakPolicy==null ?
                 null :
                 Policy.HandleResult<IEnumerable<TResult>>(results => results.Any(r => r.IsError && !r.Error!.IsFatal))
                     .CircuitBreakerAsync(circuitBreakPolicy.Value.handledEventsAllowedBeforeBreaking, circuitBreakPolicy.Value.durationOfBreak, (outcome, timespan, context) =>
@@ -88,7 +88,7 @@ namespace MQContract.Connections
                             {
                                 foreach (var result in delegateResult.Result.Where(r => r.IsError))
                                     logger?.LogDebugChecked("Retry fallback has been triggered for {MessageID}", result.ID);
-                                return Task.FromResult(delegateResult.Result.Select(instance => new TransmissionResult(instance.ID,(instance.IsError ? new ErrorMessage(new ResilienceException(ResilienceTypes.Retry, instance.Error!.Exception)) : null))));
+                                return Task.FromResult(delegateResult.Result.Select(instance => new TransmissionResult(instance.ID, (instance.IsError ? new ErrorMessage(new ResilienceException(ResilienceTypes.Retry, instance.Error!.Exception)) : null))));
                             },
                             onFallbackAsync: (delegateResult, cancellationToken) =>
                             {
@@ -122,7 +122,7 @@ namespace MQContract.Connections
                             {
                                 foreach (var result in delegateResult.Result.Where(r => r.IsError))
                                     logger?.LogDebugChecked("Retry fallback has been triggered for {MessageID}", result.ID);
-                                return Task.FromResult(delegateResult.Result.Select(instance => new QueryResult<TQueryResult>(instance.ID,instance.Header,instance.Result, (instance.IsError ? new ErrorMessage(new ResilienceException(ResilienceTypes.Retry, instance.Error!.Exception)) : null))));
+                                return Task.FromResult(delegateResult.Result.Select(instance => new QueryResult<TQueryResult>(instance.ID, instance.Header, instance.Result, (instance.IsError ? new ErrorMessage(new ResilienceException(ResilienceTypes.Retry, instance.Error!.Exception)) : null))));
                             },
                             onFallbackAsync: (delegateResult, cancellationToken) =>
                             {
@@ -148,7 +148,7 @@ namespace MQContract.Connections
         private void AddExecutingEvent(Activity? current)
             => current?.AddEvent(new(
                     "Executing Resilience Policy",
-                    tags:new([
+                    tags: new([
                         new(PolicyNameTag,name)
                     ])
                 ));

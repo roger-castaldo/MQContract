@@ -30,7 +30,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly);
+            await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly, TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -76,7 +76,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            await contractConnection.AutoRegisterAllConsumersAsync();
+            await contractConnection.AutoRegisterAllConsumersAsync(cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -133,7 +133,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly));
+            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly, TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -178,7 +178,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async ()=>await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly));
+            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly, TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -224,7 +224,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly));
+            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly, TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -269,7 +269,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly));
+            var exception = await Assert.ThrowsAsync<ConsumerRegistrationFailedException>(async () => await contractConnection.AutoRegisterAllConsumersAsync(GetType().Assembly, TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -284,5 +284,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                     It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

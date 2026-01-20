@@ -28,7 +28,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -66,7 +66,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -127,7 +127,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -176,7 +176,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -199,5 +199,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             serviceConnection2.Verify(x => x.PingAsync(), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

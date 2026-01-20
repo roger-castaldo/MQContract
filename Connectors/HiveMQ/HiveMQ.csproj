@@ -9,6 +9,9 @@
 	<ItemGroup>
 	  <Content Remove="C:\Users\Roger Castaldo\.nuget\packages\hivemqtt\0.23.0\contentFiles\any\net8.0\NLog.config" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="HiveMQtt" Version="0.2*" />

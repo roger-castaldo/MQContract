@@ -77,10 +77,18 @@ namespace MQContract
         /// <summary>
         /// Called to determine if this context handles this particular message type
         /// </summary>
-        /// <remarks>This will be implemented by the code generator</remarks>
         /// <typeparam name="TMessage">The type of message to check for</typeparam>
         /// <returns>true if this context instance defines this message type</returns>
-        public virtual bool IsMessageCodeGenerated<TMessage>()
+        public bool IsMessageCodeGenerated<TMessage>()
+            => IsMessageCodeGenerated(typeof(TMessage));
+
+        /// <summary>
+        /// Called to determine if this context handles this particular message type
+        /// </summary>
+        /// <remarks>This will be implemented by the code generator</remarks>
+        /// <param name="messageType">The type of message to check for</param>
+        /// <returns>true if this context instance defines this message type</returns>
+        public virtual bool IsMessageCodeGenerated(Type messageType)
             => false;
 
         /// <summary>

@@ -1,5 +1,5 @@
-using MQContract.CQRS.Interfaces.Query;
 using Messages;
+using MQContract.CQRS.Interfaces.Query;
 
 namespace CQRSSample
 {

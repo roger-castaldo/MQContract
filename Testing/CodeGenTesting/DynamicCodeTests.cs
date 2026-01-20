@@ -91,7 +91,7 @@ namespace CodeGenTesting
             var nonDecodedMessage = (JsonElement?)(await nonDecoder(new DummyEncodedMessage("", nonData)));
             var gloalNonDecodedMessage = (JsonElement?)(await globalNonDecoder(new DummyEncodedMessage("", nonData)));
             var partyDecodedMessage = await partyDecoder(new DummyEncodedMessage("", partyData));
-            
+
 
             //Assert
             Assert.AreEqual(nonMessage.Message, nonDecodedMessage?.GetProperty("Message").GetString());

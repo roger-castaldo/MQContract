@@ -11,7 +11,7 @@ namespace MQContract.CQRS
         /// The error that occured while attempting to execute a given command
         /// </summary>
         public ErrorMessage Error { get; private init; }
-        
+
         internal CommandCallException(ErrorMessage errorMessage)
             : base()
         {

@@ -29,7 +29,7 @@ namespace MQContract.CQRS
         internal Context(MessageHeader messageHeader)
         {
             this.messageHeader = messageHeader;
-            if(string.IsNullOrWhiteSpace(this.messageHeader[MessageIdHeaderKey]))
+            if (string.IsNullOrWhiteSpace(this.messageHeader[MessageIdHeaderKey]))
                 properties.Add(MessageIdHeaderKey, Guid.NewGuid().ToString());
         }
 
@@ -85,15 +85,15 @@ namespace MQContract.CQRS
         internal MessageHeader AsMessageHeader()
             => new(messageHeader, properties);
 
-        internal Dictionary<string,string?> AsDictionary()
+        internal Dictionary<string, string?> AsDictionary()
         {
             var header = AsMessageHeader();
             return new(
                 header.Keys
                 .Where(k => !string.IsNullOrWhiteSpace(header[k]))
-                .Select(k=>new KeyValuePair<string,string?>(k,header[k]!))
+                .Select(k => new KeyValuePair<string, string?>(k, header[k]!))
             );
         }
-                
+
     }
 }

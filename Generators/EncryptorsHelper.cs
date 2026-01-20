@@ -21,7 +21,7 @@ namespace MQContract.Generators
 
                         List<ITypeSymbol> contracts = [];
 
-                        foreach(var iface in classSymbol.AllInterfaces)
+                        foreach (var iface in classSymbol.AllInterfaces)
                         {
                             if (!iface.IsGenericType || iface.Name!="IMessageTypeEncryptor")
                                 continue;

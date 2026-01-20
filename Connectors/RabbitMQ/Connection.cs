@@ -12,10 +12,12 @@ namespace MQContract.RabbitMQ
     /// </summary>
     public sealed class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
     {
+        private readonly record struct MessageInstance(string ID, string Channel, BasicProperties Props, ReadOnlyMemory<byte> Data);
         private const string InboxExchange = "_Inbox";
 
         private readonly IChannel channel;
         private readonly string inboxChannel;
+        private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
         private bool disposedValue;
 
         /// <summary>
@@ -39,6 +41,31 @@ namespace MQContract.RabbitMQ
             channel = channelTask.Result;
             MaxMessageBodySize = factory.MaxInboundMessageBodySize;
             inboxChannel = $"{InboxExchange}.{factory.ClientProvidedName}";
+            batchedMessageStream = new(
+                async (serviceMessage, cancellationToken) =>
+                {
+                    var (props, data) = ConvertMessage(serviceMessage);
+                    return new MessageInstance(serviceMessage.ID, serviceMessage.Channel, props, data);
+                },
+                async (messageInstance, cancellationToken) =>
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        return new TransmissionResult(messageInstance.ID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
+                    try
+                    {
+                        await channel.BasicPublishAsync<BasicProperties>(messageInstance.Channel, string.Empty, true, messageInstance.Props, messageInstance.Data, cancellationToken);
+                        return new TransmissionResult(messageInstance.ID);
+                    }
+                    catch (Exception e)
+                    {
+                        return new TransmissionResult(messageInstance.ID, Error: new(e, e switch
+                        {
+                            PublishException => true,
+                            _ => false
+                        }));
+                    }
+                }
+            );
         }
 
         /// <summary>
@@ -126,7 +153,7 @@ namespace MQContract.RabbitMQ
 
         internal static ReceivedServiceMessage ConvertMessage(BasicDeliverEventArgs eventArgs, string channel, Func<ValueTask> acknowledge, out Guid? messageId)
         {
-            using var ms = new MemoryStream(eventArgs.Body.ToArray(),0,eventArgs.Body.Length,false,true);
+            using var ms = new MemoryStream(eventArgs.Body.ToArray(), 0, eventArgs.Body.Length, false, true);
             using var br = new BinaryReader(ms);
             var flag = br.ReadByte();
             if (flag==1)
@@ -151,25 +178,10 @@ namespace MQContract.RabbitMQ
             );
         }
 
-        async ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-        {
-            TransmissionResult result;
-            try
-            {
-                (var props, var data) = ConvertMessage(message);
-                await channel.BasicPublishAsync<BasicProperties>(message.Channel, string.Empty, true, props, data, cancellationToken);
-                result = new TransmissionResult(message.ID);
-            }
-            catch (Exception e)
-            {
-                result = new TransmissionResult(message.ID, Error: new(e, e switch
-                {
-                    PublishException => true,
-                    _ => false
-                }));
-            }
-            return result;
-        }
+        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(message, cancellationToken);
+        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
 
         private async Task<Subscription> ProduceSubscriptionAsync(string channel, string? group, Func<BasicDeliverEventArgs, IChannel, Func<ValueTask>, ValueTask> messageReceived, Action<Exception> errorReceived)
         {
@@ -282,10 +294,11 @@ namespace MQContract.RabbitMQ
             if (!disposedValue)
             {
                 disposedValue=true;
-                await channel.CloseAsync();
-                await channel.DisposeAsync();
-                await RabbitMQConnection.CloseAsync();
-                await RabbitMQConnection.DisposeAsync();
+                await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
+                await channel.CloseAsync().ConfigureAwait(true);
+                await channel.DisposeAsync().ConfigureAwait(true);
+                await RabbitMQConnection.CloseAsync().ConfigureAwait(true);
+                await RabbitMQConnection.DisposeAsync().ConfigureAwait(true);
             }
         }
     }

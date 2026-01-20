@@ -135,7 +135,7 @@ namespace MQContract.Subscriptions
             }
 
             Logger?.LogInformationChecked("Returning valid service response for message with ID: {MessageID}", message.ID);
-            return new(response?.ServiceMessage ?? (Equals(response?.FilterResult,MessageFilterResult.Allow) ? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()) : null), response?.Activity);
+            return new(response?.ServiceMessage ?? (Equals(response?.FilterResult, MessageFilterResult.Allow) ? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()) : null), response?.Activity);
         }
 
         protected override void InternalDispose()

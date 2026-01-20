@@ -66,8 +66,8 @@ namespace MQContract.Middleware
         }
 
         async ValueTask<DecodedMessage<TMessage>> IAfterDecodeMiddleware.AfterMessageDecodeAsync<TMessage>(IContext context, string ID, DecodedMessage<TMessage> message, DateTime receivedTimestamp, DateTime processedTimeStamp)
-        { 
-            await AddStat(typeof(TMessage), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageReceivedSizeKey]??0, GetDuration(context));   
+        {
+            await AddStat(typeof(TMessage), (string?)context[MessageReceivedChannelKey]??string.Empty, false, (int?)context[MessageReceivedSizeKey]??0, GetDuration(context));
             context[MessageReceivedChannelKey]=null;
             context[MessageReceivedSizeKey]=null;
             return message;

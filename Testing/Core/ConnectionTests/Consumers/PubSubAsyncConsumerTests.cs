@@ -65,8 +65,8 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            contractConnection = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object);
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            contractConnection = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, cancellationToken: TestContext.CancellationToken);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
@@ -121,11 +121,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object, channel: mappedChannel, group: mappedGroup);
+            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object, channel: mappedChannel, group: mappedGroup, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
-            
+
             #endregion
 
             #region Verify
@@ -159,7 +159,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, BasicMessageAsyncConsumer>();
+            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, BasicMessageAsyncConsumer>(cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -198,11 +198,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, BasicMessageAsyncConsumer>(channel: mappedChannel, group: mappedGroup);
+            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, BasicMessageAsyncConsumer>(channel: mappedChannel, group: mappedGroup, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
-            
+
             #endregion
 
             #region Verify
@@ -236,7 +236,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(BasicMessageAsyncConsumer));
+            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(BasicMessageAsyncConsumer), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -275,11 +275,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(BasicMessageAsyncConsumer), channel: mappedChannel, group: mappedGroup);
+            _ = await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(BasicMessageAsyncConsumer), channel: mappedChannel, group: mappedGroup, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
-            
+
             #endregion
 
             #region Verify
@@ -305,7 +305,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<InvalidConsumerTypeException>(async () => await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(PubSubAsyncConsumerTests)));
+            var error = await Assert.ThrowsAsync<InvalidConsumerTypeException>(async () => await contractConnection.RegisterPubSubAsyncConsumerAsync(typeof(PubSubAsyncConsumerTests), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -375,8 +375,8 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            contractConnection = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object);
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            contractConnection = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, cancellationToken: TestContext.CancellationToken);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
@@ -481,8 +481,8 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            contractConnection = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object);
-            var result = await contractConnection.PublishAsync<BasicMessage>(message);
+            contractConnection = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<BasicMessage>(message, cancellationToken: TestContext.CancellationToken);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
@@ -599,11 +599,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                         (_, false, false) => MessageFilterResult.DropAndDontAcknowledge,
                         (_, false, true) => MessageFilterResult.DropAndAcknowledge,
                     })
-            ));
+            ), cancellationToken: TestContext.CancellationToken);
             var result = await contractConnection.PublishAsync<BasicMessage>(message, messageHeader: new([
                 new KeyValuePair<string,string>(headerKey,headerValue),
                 new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
-            ]));
+            ]), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -709,11 +709,11 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Act
-            contractConnection = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object);
+            contractConnection = await contractConnection.RegisterPubSubAsyncConsumerAsync<BasicMessage, IPubSubAsyncConsumer<BasicMessage>>(mockConsumer.Object, cancellationToken: TestContext.CancellationToken);
             var result = await contractConnection.PublishAsync<BasicMessage>(message, messageHeader: new([
                 new KeyValuePair<string,string>(headerKey,headerValue),
                 new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
-            ]));
+            ]), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -731,7 +731,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             }
             else
             {
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken: TestContext.CancellationToken);
                 Assert.IsEmpty(messages);
             }
             Assert.AreEqual(acknowledgeDrop, acknowledged);
@@ -742,5 +742,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             serviceSubscription.Verify(x => x.EndAsync(), Times.Once);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

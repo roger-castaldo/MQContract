@@ -24,16 +24,16 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
-            Assert.AreEqual(HealthStatus.Healthy,checkResult.Status);
+            Assert.AreEqual(HealthStatus.Healthy, checkResult.Status);
             Assert.AreEqual(Constants.HealthyDescription, checkResult.Description);
             Assert.AreEqual(pingResult.Host, checkResult.Data["Host"]);
             Assert.AreEqual(pingResult.Version, checkResult.Data["Version"]);
             Assert.AreEqual(pingResult.ResponseTime, checkResult.Data["ResponseTime"]);
-            Assert.AreEqual(healthCheck,contractConnection.HealthCheck);
+            Assert.AreEqual(healthCheck, contractConnection.HealthCheck);
             #endregion
 
             #region Verify
@@ -57,7 +57,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #region Act
             var healthCheck = contractConnection.HealthCheck;
             Assert.IsNotNull(healthCheck);
-            var checkResult = await healthCheck.CheckHealthAsync(new());
+            var checkResult = await healthCheck.CheckHealthAsync(new(), cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -93,5 +93,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             #region Verify
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }
