@@ -5,7 +5,7 @@ namespace MQContract;
 
 internal class BatchedMessageStream<TServiceMessage> : IAsyncDisposable
 {
-    private class MessageBatch<TMessage>(IEnumerable<TMessage> items, CancellationToken cancellationToken)
+    private sealed class MessageBatch<TMessage>(IEnumerable<TMessage> items, CancellationToken cancellationToken)
     {
         private readonly TaskCompletionSource<IEnumerable<TransmissionResult>> completionSource = new();
 
@@ -24,25 +24,19 @@ internal class BatchedMessageStream<TServiceMessage> : IAsyncDisposable
         FullMode=BoundedChannelFullMode.Wait
     });
     private readonly CancellationTokenSource cancelToken = new();
+    private bool disposedValue;
     private readonly Func<ServiceMessage, CancellationToken, ValueTask<TServiceMessage>> convert;
-    private readonly Func<TServiceMessage, CancellationToken, Task<TransmissionResult>> transmit;
 
     public BatchedMessageStream(Func<ServiceMessage, CancellationToken, ValueTask<TServiceMessage>> convert,
     Func<TServiceMessage, CancellationToken, Task<TransmissionResult>> transmit){
         this.convert = convert;
-        this.transmit = transmit;
         _ = Task.Run(async () =>
         {
-            while (!cancelToken.IsCancellationRequested)
+            while(await channel.Reader.WaitToReadAsync(cancelToken.Token))
             {
-                try
-                {
-                    var request = await channel.Reader.ReadAsync(cancelToken.Token);
-                    var results = request.Items.Select(req => transmit(req,request.CancellationToken));
-                    request.ProcessResults(results);
-                }
-                catch 
-                {}
+                var request = await channel.Reader.ReadAsync(cancelToken.Token);
+                var results = request.Items.Select(req => transmit(req, request.CancellationToken));
+                request.ProcessResults(results);
             }
         });
     }
@@ -63,9 +57,13 @@ internal class BatchedMessageStream<TServiceMessage> : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        channel.Writer.TryComplete();
-        if (!cancelToken.IsCancellationRequested)
-            await cancelToken.CancelAsync();
-
+        if (!disposedValue)
+        {
+            disposedValue = true;
+            channel.Writer.TryComplete();
+            if (!cancelToken.IsCancellationRequested)
+                await cancelToken.CancelAsync().ConfigureAwait(true);
+            cancelToken.Dispose();
+        }
     }
 }

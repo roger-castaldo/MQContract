@@ -347,7 +347,7 @@ namespace MQContract.Connections
             if (activity!=null)
             {
                 foreach (var res in result)
-                    activity?.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
+                    activity.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
                         new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",true),
                         new(OpenTelemetryMiddleware.MessageIdKey,res.ID),
                         OpenTelemetryMiddleware.CreateMessagePublishStatusTag(res),

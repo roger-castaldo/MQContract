@@ -39,7 +39,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand,BasicCommandResponse>(command);
+            var result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand,BasicCommandResponse>(command, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -82,7 +82,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context);
+            var result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -116,7 +116,7 @@ namespace CQRSTesting.MappedConnection
             mockCommandProcessor.Setup(x => x.ProcessCommandAsync(It.IsAny<ICommandInvocationContext<BasicResponseCommand>>(), It.IsAny<CancellationToken>()))
                 .Returns(async (ICommandInvocationContext<BasicResponseCommand> context, CancellationToken cancellationToken) =>
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+                    await Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken).ConfigureAwait(false);
                     if (!cancellationToken.IsCancellationRequested)
                         receivedCommands.Add(context.Command);
                     return new(context.Command.Name);
@@ -131,8 +131,8 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            _ = Task.Delay(TimeSpan.FromSeconds(1))
-                .ContinueWith((tsk) => cancellationTokenSource.Cancel());
+            _ = Task.Delay(TimeSpan.FromSeconds(1), TestContext.CancellationToken)
+                .ContinueWith((tsk) => cancellationTokenSource.Cancel(), TestContext.CancellationToken);
             var err = await Assert.ThrowsAsync<CommandCallException>(async () => await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, cancellationToken: cancellationTokenSource.Token));
             #endregion
 
@@ -183,7 +183,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context);
+            var result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -233,7 +233,7 @@ namespace CQRSTesting.MappedConnection
                     }
                     else
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken).ConfigureAwait(false);
                         if (!cancellationToken.IsCancellationRequested)
                             receivedCommands.Add(context.Command);
                         return new BasicCommandResponse(context.Command.Name);
@@ -251,8 +251,8 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            _ = Task.Delay(TimeSpan.FromSeconds(1))
-                .ContinueWith((tsk) => cancellationTokenSource.Cancel());
+            _ = Task.Delay(TimeSpan.FromSeconds(1), TestContext.CancellationToken)
+                .ContinueWith((tsk) => cancellationTokenSource.Cancel(), TestContext.CancellationToken);
             var err = await Assert.ThrowsAsync<CommandCallException>(async()=>await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, cancellationToken: cancellationTokenSource.Token));
             #endregion
 
@@ -331,9 +331,9 @@ namespace CQRSTesting.MappedConnection
 
             #region Act
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context);
+                result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context, cancellationToken: TestContext.CancellationToken);
             else
-                error = await Assert.ThrowsAsync<CommandTimeoutException>(async () => await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context, timeout: TimeSpan.FromMilliseconds(500)));
+                error = await Assert.ThrowsAsync<CommandTimeoutException>(async () => await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context, timeout: TimeSpan.FromMilliseconds(500), TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -382,7 +382,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsAsync<CommandCallException>(async () => await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand,BasicCommandResponse>(command));
+            var error = await Assert.ThrowsAsync<CommandCallException>(async () => await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand,BasicCommandResponse>(command, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -433,7 +433,7 @@ namespace CQRSTesting.MappedConnection
             #endregion
 
             #region Act
-            var result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context);
+            var result = await cqrsConnection.ExecuteCommandAsync<BasicResponseCommand, BasicCommandResponse>(command, context: context, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -454,5 +454,7 @@ namespace CQRSTesting.MappedConnection
             mockCommandProcessor.Verify(x => x.ErrorRecieved(It.IsAny<Exception>()), Times.Never);
             #endregion
         }
+
+        public TestContext TestContext { get; set; }
     }
 }

@@ -4,6 +4,7 @@
 ## Contents
 
 - [Connection](#T-MQContract-InMemory-Connection 'MQContract.InMemory.Connection')
+  - [#ctor()](#M-MQContract-InMemory-Connection-#ctor 'MQContract.InMemory.Connection.#ctor')
   - [DefaultTimeout](#P-MQContract-InMemory-Connection-DefaultTimeout 'MQContract.InMemory.Connection.DefaultTimeout')
   - [MaxMessageBodySize](#P-MQContract-InMemory-Connection-MaxMessageBodySize 'MQContract.InMemory.Connection.MaxMessageBodySize')
 - [TransmissionResultException](#T-MQContract-InMemory-TransmissionResultException 'MQContract.InMemory.TransmissionResultException')
@@ -18,6 +19,17 @@ MQContract.InMemory
 ##### Summary
 
 Used as an in memory connection messaging system where all transmission are done through Channels within the connection.  You must use the same underlying connection.
+
+<a name='M-MQContract-InMemory-Connection-#ctor'></a>
+### #ctor() `constructor`
+
+##### Summary
+
+Default constructor
+
+##### Parameters
+
+This constructor has no parameters.
 
 <a name='P-MQContract-InMemory-Connection-DefaultTimeout'></a>
 ### DefaultTimeout `property`

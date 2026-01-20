@@ -3,10 +3,9 @@ using System.Threading.Channels;
 
 namespace MQContract.InMemory
 {
-    internal class MessageGroup(Action removeMe) : IDisposable
+    internal class MessageGroup(Action removeMe)
     {
         private readonly ConcurrentDictionary<Guid, Channel<InternalServiceMessage>> channels = [];
-        private readonly SemaphoreSlim semaphore = new(1, 1);
         private int index = 0;
 
         public (Guid id, Channel<InternalServiceMessage> channel) Register()
@@ -24,36 +23,16 @@ namespace MQContract.InMemory
                 removeMe();
         }
 
-        public async ValueTask<IEnumerable<bool>> PublishMessagesAsync(IEnumerable<InternalServiceMessage> messages, CancellationToken cancellationToken)
+        public async ValueTask PublishMessageAsync(InternalServiceMessage message, CancellationToken cancellationToken)
         {
-            if (channels.IsEmpty)
-                return messages.Select(m => false);
-            await semaphore.WaitAsync(cancellationToken);
-            var results = new List<bool>();
-            foreach (var message in messages)
+            if (index>=channels.Count)
+                index=0;
+            if (index<channels.Count)
             {
-                try
-                {
-                    if (index>=channels.Count)
-                        index=0;
-                    if (index<channels.Count)
-                    {
-                        var key = channels.Keys.ElementAt(index);
-                        await channels[key].Writer.WriteAsync(message, cancellationToken);
-                        index++;
-                        results.Add(true);
-                    }
-                    else
-                        results.Add(false);
-                }
-                catch
-                {
-                    results.Add(false);
-                    continue;
-                }
+                var key = channels.Keys.ElementAt(index);
+                await channels[key].Writer.WriteAsync(message, cancellationToken);
+                index++;
             }
-            semaphore.Release();
-            return results;
         }
 
         internal void Close()
@@ -62,11 +41,6 @@ namespace MQContract.InMemory
             foreach (var channel in channelsToClose)
                 channel.Writer.TryComplete();
             channels.Clear();
-        }
-
-        public void Dispose()
-        {
-            ((IDisposable)semaphore).Dispose();
         }
     }
 }

@@ -124,7 +124,7 @@ namespace MQContract.Kafka
                 // responsiveness tuning
                 FetchMinBytes = 1,               // don't wait for larger batches on the broker
                 FetchWaitMaxMs = 50,            // wait at most 50ms for FetchMinBytes to be satisfied
-                MaxPartitionFetchBytes = (int?)(clientConfig.MessageMaxBytes) ?? 1024 * 1024, // limit per-partition fetch size
+                MaxPartitionFetchBytes = clientConfig.MessageMaxBytes ?? (1024 * 1024), // limit per-partition fetch size
                 QueuedMinMessages = 1,          // start delivering to the application with fewer queued messages
                 AutoCommitIntervalMs = 1000,    // commit offsets to broker more frequently (still relying on StoreOffset)
                 SocketKeepaliveEnable = true

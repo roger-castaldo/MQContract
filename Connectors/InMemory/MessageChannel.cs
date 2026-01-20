@@ -1,38 +1,67 @@
 ﻿using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Channels;
 
 namespace MQContract.InMemory
 {
     internal class MessageChannel
     {
-        private readonly ConcurrentDictionary<string, MessageGroup> groups = [];
-
-        private async ValueTask<IEnumerable<TransmissionResult>> Publish(IEnumerable<InternalServiceMessage> messages, CancellationToken cancellationToken)
+        private readonly Channel<InternalServiceMessage> channel = Channel.CreateBounded<InternalServiceMessage>(new BoundedChannelOptions(10)
         {
-            var results = await groups.Values.ToArray().WhenAll(grp => grp.PublishMessagesAsync(messages, cancellationToken));
-            return messages.Select((msg, idx) => new TransmissionResult(msg.ID, Error: Array.TrueForAll(results.Select(r => r.ElementAt(idx)).ToArray(), t => t) ? null : new(new TransmissionResultException(), true)));
+            SingleReader=true,
+            SingleWriter=false,
+            FullMode=BoundedChannelFullMode.Wait
+        });
+        private readonly ConcurrentDictionary<string, MessageGroup> groups = [];
+        private readonly CancellationTokenSource cancelToken = new();
+
+        public MessageChannel()
+        {
+            _ = Task.Run(async () =>
+            {
+                while (await channel.Reader.WaitToReadAsync(cancelToken.Token))
+                { 
+                    var message = await channel.Reader.ReadAsync(cancelToken.Token);
+                    await groups.Values.ToArray().Select(grp => grp.PublishMessageAsync(message, cancelToken.Token)).WhenAll().ConfigureAwait(false);
+                }
+            });
         }
 
         public void Close()
         {
-            var groupsToClose = groups.Values.ToArray();
+            channel.Writer.TryComplete();
+            if (!cancelToken.IsCancellationRequested)
+                cancelToken.Cancel();
             groups.Clear();
-            foreach (var grp in groupsToClose)
-                grp.Close();
         }
 
-        internal async ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-            => (await Publish([new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data)], cancellationToken)).First();
+        private async ValueTask<TransmissionResult> TryPublishAsync(InternalServiceMessage serviceMessage, CancellationToken cancellationToken)
+        {
+            if (cancelToken.IsCancellationRequested || groups.IsEmpty)
+                return new(serviceMessage.ID, Error: new(new TransmissionResultException(), true));
+            try
+            {
+                await channel.Writer.WriteAsync(serviceMessage, cancellationToken);
+            }catch (Exception ex)
+            {
+                return new(serviceMessage.ID, Error: new(ex, true));
+            }
+            return new(serviceMessage.ID);
+        }
 
-        internal async ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)
-            => (await Publish([message], cancellationToken)).First();
+        internal ValueTask<TransmissionResult> PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+            => TryPublishAsync(new InternalServiceMessage(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data), cancellationToken);
 
-        internal async ValueTask<IEnumerable<TransmissionResult>> BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
-            => await Publish(messages.Select(m => new InternalServiceMessage(m.ID, m.MessageTypeID, m.Channel, m.Header, m.Data)), cancellationToken);
+        internal ValueTask PublishAsync(InternalServiceMessage message, CancellationToken cancellationToken)
+        {
+            channel.Writer.TryWrite(message);
+            return ValueTask.CompletedTask;
+        }
 
-        internal async ValueTask<TransmissionResult> QueryAsync(ServiceMessage message, string inbox, Guid correlationID, CancellationToken cancellationToken)
-            => (await Publish([new(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data, correlationID, inbox)], cancellationToken)).First();
+        internal ValueTask<TransmissionResult> QueryAsync(ServiceMessage message, string inbox, Guid correlationID, CancellationToken cancellationToken)
+            => TryPublishAsync(new InternalServiceMessage(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data, correlationID, inbox), cancellationToken);
 
         private MessageGroup GetGroup(string? group)
         {
@@ -41,7 +70,7 @@ namespace MQContract.InMemory
             {
                 grp = new MessageGroup(() =>
                 {
-                    groups.TryRemove(group,out _);
+                    groups.TryRemove(group, out _);
                 });
                 groups.TryAdd(group, grp);
             }
@@ -86,7 +115,7 @@ namespace MQContract.InMemory
                 cancellationToken
             );
 
-        internal async ValueTask<IServiceSubscription> EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage,ValueTask> messageReceived, CancellationToken cancellationToken)
+        internal async ValueTask<IServiceSubscription> EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
             => await CreateSubscription(
                 async (receivedMessage) =>
                 {
