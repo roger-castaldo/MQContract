@@ -17,13 +17,18 @@ namespace MQContract.RabbitMQ
             var consumer = new AsyncEventingBasicConsumer(connectionChannel);
             consumer.ReceivedAsync+= async (sender, @event) =>
             {
-                await messageReceived(
-                    @event,
-                    connectionChannel,
-                    async () =>
-                    {
-                        await connectionChannel.BasicAckAsync(@event.DeliveryTag, false);
-                    }
+                var ackSource = new TaskCompletionSource();
+                await Task.WhenAny(
+                    messageReceived(
+                        @event,
+                        connectionChannel,
+                        async () =>
+                        {
+                            await connectionChannel.BasicAckAsync(@event.DeliveryTag, false);
+                            ackSource.TrySetResult();
+                        }
+                    ).AsTask(),
+                    ackSource.Task
                 );
             };
 

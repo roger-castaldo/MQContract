@@ -3,7 +3,7 @@ using MQContract.Interfaces.Service;
 
 namespace MQContract.ActiveMQ.Subscriptions
 {
-    internal class SubscriptionBase(Func<IMessage, ValueTask> messageReceived, Action<Exception> errorReceived, ConsumerInstance consumer) : IServiceSubscription
+    internal class SubscriptionBase(Func<IMessage, TaskCompletionSource, ValueTask> messageReceived, Action<Exception> errorReceived, ConsumerInstance consumer) : IServiceSubscription
     {
         private bool disposedValue;
         protected readonly CancellationTokenSource cancelToken = new();
@@ -18,7 +18,13 @@ namespace MQContract.ActiveMQ.Subscriptions
                     {
                         var msg = await consumer.ReceiveAsync();
                         if (msg!=null)
-                            await messageReceived(msg).ConfigureAwait(false);
+                        {
+                            var ackSource = new TaskCompletionSource();
+                            await Task.WhenAll(
+                                messageReceived(msg, ackSource).AsTask(),
+                                ackSource.Task
+                            );
+                        }
                     }
                     catch (Exception ex)
                     {

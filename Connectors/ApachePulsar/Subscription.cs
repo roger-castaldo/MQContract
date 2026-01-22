@@ -1,5 +1,6 @@
 ﻿using DotPulsar;
 using DotPulsar.Abstractions;
+using DotPulsar.Extensions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Text.RegularExpressions;
@@ -12,30 +13,43 @@ namespace MQContract.ApachePulsar
 
         private readonly IConsumer<byte[]> consumer = pulsarClient.CreateConsumer<byte[]>(new(group??Guid.NewGuid().ToString(), channel, Schema.ByteArray)
         {
-            SubscriptionType = (string.IsNullOrEmpty(group) ? SubscriptionType.Exclusive : SubscriptionType.Shared),
+            SubscriptionType = (string.IsNullOrEmpty(group) || regReplyGroup.IsMatch(group??string.Empty) ? SubscriptionType.Exclusive : SubscriptionType.Shared),
             MessagePrefetchCount = 1,
-            InitialPosition = SubscriptionInitialPosition.Latest
+            InitialPosition = (regReplyGroup.IsMatch(group??string.Empty) ? SubscriptionInitialPosition.Latest : SubscriptionInitialPosition.Earliest)
         });
         private readonly CancellationTokenSource cancelToken = new();
         private bool disposedValue;
 
         public void Start()
         {
-            if (regReplyGroup.IsMatch(group??string.Empty))
-                consumer.Seek(MessageId.Latest);
             _ = Task.Run(async () =>
             {
+                //if (regReplyGroup.IsMatch(group??string.Empty))
+                //{
+                //    var latestId = (await consumer.GetLastMessageIds()).FirstOrDefault(id=>Equals(id.Topic,consumer.Topic));
+                //    consumer.Seek(MessageId.Latest);
+                //}
                 while (!cancelToken.IsCancellationRequested)
                 {
                     try
                     {
                         var msg = await consumer.Receive(cancelToken.Token);
                         if (msg!=null)
-                            await messageReceived(Connection.ConvertMessage(
-                                msg,
-                                consumer.Topic,
-                                async () => await consumer.Acknowledge(msg.MessageId, cancelToken.Token)
-                            )).ConfigureAwait(false);
+                        {
+                            var ackSource = new TaskCompletionSource();
+                            await Task.WhenAny(
+                                messageReceived(Connection.ConvertMessage(
+                                    msg,
+                                    consumer.Topic,
+                                    async () =>
+                                    {
+                                        await consumer.Acknowledge(msg.MessageId, cancelToken.Token);
+                                        ackSource.SetResult();
+                                    }
+                                )).AsTask(),
+                                ackSource.Task
+                            );
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -49,7 +63,16 @@ namespace MQContract.ApachePulsar
         async ValueTask IServiceSubscription.EndAsync()
         {
             if (!cancelToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await consumer.Unsubscribe();
+                }
+                catch { 
+                    //ignore
+                }
                 await cancelToken.CancelAsync();
+            }
         }
 
         async ValueTask IAsyncDisposable.DisposeAsync()

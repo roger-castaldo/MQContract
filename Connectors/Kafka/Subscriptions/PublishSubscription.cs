@@ -18,19 +18,23 @@ namespace MQContract.Kafka.Subscriptions
                     try
                     {
                         var msg = consumer.Consume(cancellationToken: cancelToken.Token);
+                        var ackSource = new TaskCompletionSource();
                         var headers = Connection.ExtractHeaders(msg.Message.Headers, out var messageTypeID);
-                        await messageReceived(new ReceivedServiceMessage(
-                            msg.Message.Key??string.Empty,
-                            messageTypeID??string.Empty,
-                            channel,
-                            headers,
-                            msg.Message.Value,
-                            Acknowledge: () =>
-                            {
-                                consumer.StoreOffset(msg);
-                                return ValueTask.CompletedTask;
-                            }
-                        )).ConfigureAwait(false);
+                        _ = await Task.WhenAny(
+                            messageReceived(new ReceivedServiceMessage(
+                                msg.Message.Key??string.Empty,
+                                messageTypeID??string.Empty,
+                                channel,
+                                headers,
+                                msg.Message.Value,
+                                Acknowledge: async () =>
+                                {
+                                    consumer.StoreOffset(msg);
+                                    ackSource.TrySetResult();
+                                }
+                            )).AsTask(),
+                            ackSource.Task
+                        );
                     }
                     catch (OperationCanceledException)
                     {
