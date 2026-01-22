@@ -17,19 +17,23 @@ namespace MQContract.NATS.Subscriptions
 
                     await foreach (var msg in consumer.ConsumeAsync<byte[]>().WithCancellation(CancelToken))
                     {
-                        var success = true;
+                        var ackSource = new TaskCompletionSource();
                         try
                         {
-                            await messageReceived(ExtractMessage(msg)).ConfigureAwait(false);
+                            await Task.WhenAny(
+                                messageReceived(ExtractMessage(msg, async () =>
+                                {
+                                    await msg.AckAsync(cancellationToken: CancelToken);
+                                    ackSource.TrySetResult();
+                                })).AsTask(),
+                                ackSource.Task
+                            );
                         }
                         catch (Exception ex)
                         {
-                            success=false;
                             errorReceived(ex);
                             await msg.NakAsync(cancellationToken: CancelToken);
                         }
-                        if (success)
-                            await msg.AckAsync(cancellationToken: CancelToken);
                     }
                 }
                 catch (NatsJSProtocolException e)

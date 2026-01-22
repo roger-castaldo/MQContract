@@ -21,7 +21,17 @@ namespace MQContract.AzureServiceBus
                     {
                         var msg = await receiver.ReceiveMessageAsync(cancellationToken: cancelToken.Token);
                         if (msg!=null)
-                            await messageRecieved(msg, async () => await receiver.CompleteMessageAsync(msg)).ConfigureAwait(false);
+                        {
+                            var ackSource = new TaskCompletionSource();
+                            await Task.WhenAny(
+                                messageRecieved(msg, async () =>
+                                {
+                                    await receiver.CompleteMessageAsync(msg);
+                                    ackSource.SetResult();
+                                }).AsTask(),
+                                ackSource.Task
+                            );
+                        }
                     }
                     catch (Exception ex)
                     {

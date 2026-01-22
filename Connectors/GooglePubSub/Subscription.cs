@@ -20,11 +20,21 @@ namespace MQContract.GooglePubSub
                     {
                         var msg = await subscriberClientApi.PullAsync(subscriptionName, 1, cancelToken.Token);
                         if (msg!=null)
-                            await messageReceived(Connection.ConvertMessage(
-                                msg.ReceivedMessages[0],
-                                channel,
-                                async () => await subscriberClientApi.AcknowledgeAsync(subscriptionName, [msg.ReceivedMessages[0].AckId], cancelToken.Token)
-                            )).ConfigureAwait(false);
+                        {
+                            var ackSource = new TaskCompletionSource();
+                            await Task.WhenAny(
+                                messageReceived(Connection.ConvertMessage(
+                                    msg.ReceivedMessages[0],
+                                    channel,
+                                    async () =>
+                                    {
+                                        await subscriberClientApi.AcknowledgeAsync(subscriptionName, [msg.ReceivedMessages[0].AckId], cancelToken.Token);
+                                        ackSource.SetResult();
+                                    }
+                                )).AsTask(),
+                                ackSource.Task
+                            );
+                        }
                     }
                     catch (Exception ex)
                     {

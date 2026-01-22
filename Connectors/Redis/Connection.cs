@@ -107,9 +107,11 @@ namespace MQContract.Redis
             .Concat(messageTimeout==null ? [] : [new NameValueEntry(MESSAGE_TIMEOUT_KEY, messageTimeout.ToString())])
             .ToArray();
 
-        internal static (ReceivedServiceMessage receivedMessage, string? replyChannel, TimeSpan? messageTimeout) ConvertMessage(NameValueEntry[] data, string channel, Func<ValueTask>? acknowledge)
+        internal static (ReceivedServiceMessage receivedMessage, string? replyChannel, TimeSpan? messageTimeout, TaskCompletionSource ackSource) ConvertMessage(NameValueEntry[] data, string channel, Func<ValueTask>? acknowledge)
 #pragma warning disable S6580 // Use a format provider when parsing date and time
-            => (
+        {
+            var ackSource = new TaskCompletionSource();
+            return (
                 new(
                     data.First(nve => Equals(nve.Name, MESSAGE_ID_KEY)).Value.ToString(),
                     data.First(nve => Equals(nve.Name, MESSAGE_TYPE_KEY)).Value.ToString(),
@@ -122,13 +124,20 @@ namespace MQContract.Redis
                     )
                     .Select(nve => new KeyValuePair<string, string>(nve.Name!, nve.Value.ToString()))),
                     (byte[])data.First(nve => Equals(nve.Name, MESSAGE_DATA_KEY)).Value!,
-                    acknowledge
+                    Acknowledge: async() =>
+                    {
+                        if (acknowledge!=null)
+                            await acknowledge();
+                        ackSource.TrySetResult();
+                    }
                 ),
                 Array.Find(data, (nve) => Equals(nve.Name, MESSAGE_REPLY_KEY)).Value.ToString(),
                 (Array.Exists(data, nve => Equals(nve.Name, MESSAGE_TIMEOUT_KEY)) ?
                     TimeSpan.Parse(Array.Find(data, (nve) => Equals(nve.Name, MESSAGE_TIMEOUT_KEY)).Value.ToString())
-                    : null)
+                    : null),
+                ackSource
             );
+        }
 #pragma warning restore S6580 // Use a format provider when parsing date and time
 
         internal static string EncodeMessage(ServiceMessage result)

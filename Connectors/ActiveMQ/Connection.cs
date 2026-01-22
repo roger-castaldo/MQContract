@@ -86,7 +86,7 @@ namespace MQContract.ActiveMQ
             return new(result);
         }
 
-        internal static ReceivedServiceMessage ProduceMessage(string channel, IMessage message)
+        internal static ReceivedServiceMessage ProduceMessage(string channel, IMessage message, TaskCompletionSource ackSource)
         {
             var headers = ExtractHeaders(message.Properties, out var messageTypeID);
             return new(
@@ -95,7 +95,11 @@ namespace MQContract.ActiveMQ
                 channel,
                 headers,
                 message.Body<byte[]>(),
-                async () => await message.AcknowledgeAsync()
+                async () =>
+                {
+                    await message.AcknowledgeAsync();
+                    ackSource.TrySetResult();
+                }
             );
         }
 
@@ -133,7 +137,7 @@ namespace MQContract.ActiveMQ
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             group??=Guid.NewGuid().ToString();
-            var result = new SubscriptionBase((msg) => messageReceived(ProduceMessage(channel, msg)), errorReceived, await CreateInstance(channel, group));
+            var result = new SubscriptionBase((msg,ackSource) => messageReceived(ProduceMessage(channel, msg, ackSource)), errorReceived, await CreateInstance(channel, group));
             await result.StartAsync();
             return result;
         }

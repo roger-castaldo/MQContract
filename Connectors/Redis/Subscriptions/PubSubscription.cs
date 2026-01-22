@@ -8,12 +8,15 @@ namespace MQContract.Redis.Subscriptions
     {
         protected override async ValueTask ProcessMessage(StreamEntry streamEntry, string channel, string? group)
         {
-            (var message, _, _) = Connection.ConvertMessage(
+            (var message, _, _, var ackSource) = Connection.ConvertMessage(
                     streamEntry.Values,
                     channel,
                     () => Acknowledge(streamEntry.Id)
                  );
-            await messageReceived(message).ConfigureAwait(false);
+            await Task.WhenAny(
+                messageReceived(message).AsTask(),
+                ackSource.Task
+            );
         }
     }
 }

@@ -40,10 +40,15 @@ namespace MQContract.AmazonSNQS
 
                         foreach (var msg in receiveResponse.Messages?? [])
                         {
-                            await messageReceived(MessageMapper.Map(msg, async () =>
-                            {
-                                await sqsClient.DeleteMessageAsync(queueUrl, msg.ReceiptHandle);
-                            })).ConfigureAwait(false);
+                            var ackSource = new TaskCompletionSource();
+                            await Task.WhenAny(
+                                messageReceived(MessageMapper.Map(msg, async () =>
+                                {
+                                    await sqsClient.DeleteMessageAsync(queueUrl, msg.ReceiptHandle);
+                                    ackSource.TrySetResult();
+                                })).AsTask(),
+                                ackSource.Task
+                            );
                         }
                     }
                     catch (Exception error)

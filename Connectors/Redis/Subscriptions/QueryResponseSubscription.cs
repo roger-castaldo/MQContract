@@ -8,7 +8,7 @@ namespace MQContract.Redis.Subscriptions
     {
         protected override async ValueTask ProcessMessage(StreamEntry streamEntry, string channel, string? group)
         {
-            (var message, var responseChannel, var timeout) = Connection.ConvertMessage(
+            (var message, var responseChannel, var timeout, _) = Connection.ConvertMessage(
                     streamEntry.Values,
                     channel,
                     () => Acknowledge(streamEntry.Id)
