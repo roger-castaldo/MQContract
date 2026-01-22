@@ -24,11 +24,6 @@ namespace MQContract.ApachePulsar
         {
             _ = Task.Run(async () =>
             {
-                //if (regReplyGroup.IsMatch(group??string.Empty))
-                //{
-                //    var latestId = (await consumer.GetLastMessageIds()).FirstOrDefault(id=>Equals(id.Topic,consumer.Topic));
-                //    consumer.Seek(MessageId.Latest);
-                //}
                 while (!cancelToken.IsCancellationRequested)
                 {
                     try
