@@ -138,7 +138,7 @@ namespace MQContract.Connections
                     group,
                     ignoreMessageHeader,
                     messageFilters??AConnection<TContractConnection>.ExtractFilter<TMessage, TConsumer>(consumer),
-                    true,
+                    false,
                     cancellationToken
                 ),
                 channel,
@@ -209,7 +209,7 @@ namespace MQContract.Connections
                     channel,
                     group,
                     ignoreMessageHeader,
-                    true,
+                    false,
                     messageFilters??AConnection<TContractConnection>.ExtractFilter<TQuery, TConsumer>(consumer),
                     cancellationToken
                 ),
