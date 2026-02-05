@@ -1,4 +1,5 @@
 ﻿using Confluent.SchemaRegistry;
+using KafkaSample;
 using Messages;
 using Microsoft.Extensions.Caching.Memory;
 using MQContract.Kafka;
@@ -36,4 +37,4 @@ await SampleExecution.ExecuteSample(serviceConnection, "Kafka", middlewares: [
         mapMessageSchemaName:(messageType,messageChannel,messageTypeId)=>ValueTask.FromResult<string>($"{messageChannel}-{messageTypeId}"),
         cache: cache
     )
-]);
+], messageContext: new MyMessageContext());

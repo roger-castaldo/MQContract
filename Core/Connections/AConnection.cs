@@ -66,7 +66,7 @@ namespace MQContract.Connections
         private TContractConnection RegisterMiddlewareInstance(object element)
         {
             using var scope = SetScope();
-            middleware.RegisterMiddlewareInstance(element);
+            middleware.RegisterMiddlewareInstanceAsync(element, messageContext.Contexts).Wait();
             return (TContractConnection)(IBaseContractConnection)this;
         }
 

@@ -7,6 +7,8 @@ namespace MQContract
     {
         private readonly List<MQContractMessageContext> contexts = [new DefaultMessageContext()];
 
+        public IEnumerable<MQContractMessageContext> Contexts => contexts;
+
         internal void RegisterContext(MQContractMessageContext messageContext)
             => contexts.Add(messageContext);
 

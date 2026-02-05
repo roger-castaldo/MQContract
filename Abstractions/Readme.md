@@ -123,6 +123,8 @@
   - [RegisterServiceConnection(messageHeaderKey,messageHeaderValue,serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection-System-String,System-String,System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterServiceConnection(System.String,System.String,System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
   - [RegisterServiceConnection\`\`1(serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMappableContractConnection`1-RegisterServiceConnection``1-System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMappableContractConnection`1.RegisterServiceConnection``1(System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
 - [IMappedContractConnection](#T-MQContract-Interfaces-IMappedContractConnection 'MQContract.Interfaces.IMappedContractConnection')
+- [IMessageContextAwareMiddleware](#T-MQContract-Interfaces-Middleware-IMessageContextAwareMiddleware 'MQContract.Interfaces.Middleware.IMessageContextAwareMiddleware')
+  - [ProcessMessagesFromMessageContextAsync(messages)](#M-MQContract-Interfaces-Middleware-IMessageContextAwareMiddleware-ProcessMessagesFromMessageContextAsync-System-Collections-Generic-IEnumerable{MQContract-Interfaces-Middleware-MessageContextDefintion}- 'MQContract.Interfaces.Middleware.IMessageContextAwareMiddleware.ProcessMessagesFromMessageContextAsync(System.Collections.Generic.IEnumerable{MQContract.Interfaces.Middleware.MessageContextDefintion})')
 - [IMessageContextContractConnection\`1](#T-MQContract-Interfaces-IMessageContextContractConnection`1 'MQContract.Interfaces.IMessageContextContractConnection`1')
   - [RegisterMessageContext(messageContext)](#M-MQContract-Interfaces-IMessageContextContractConnection`1-RegisterMessageContext-MQContract-MQContractMessageContext- 'MQContract.Interfaces.IMessageContextContractConnection`1.RegisterMessageContext(MQContract.MQContractMessageContext)')
 - [IMessageConverter\`2](#T-MQContract-Interfaces-Conversion-IMessageConverter`2 'MQContract.Interfaces.Conversion.IMessageConverter`2')
@@ -205,6 +207,7 @@
 - [InvalidEncoderException](#T-MQContract-InvalidEncoderException 'MQContract.InvalidEncoderException')
 - [InvalidEncryptorException](#T-MQContract-InvalidEncryptorException 'MQContract.InvalidEncryptorException')
 - [MQContractMessageContext](#T-MQContract-MQContractMessageContext 'MQContract.MQContractMessageContext')
+  - [DefinedMessages](#P-MQContract-MQContractMessageContext-DefinedMessages 'MQContract.MQContractMessageContext.DefinedMessages')
   - [IsMessageCodeGenerated(messageType)](#M-MQContract-MQContractMessageContext-IsMessageCodeGenerated-System-Type- 'MQContract.MQContractMessageContext.IsMessageCodeGenerated(System.Type)')
   - [IsMessageCodeGenerated\`\`1()](#M-MQContract-MQContractMessageContext-IsMessageCodeGenerated``1 'MQContract.MQContractMessageContext.IsMessageCodeGenerated``1')
   - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
@@ -224,6 +227,13 @@
   - [Channel](#P-MQContract-Attributes-MessageAttribute-Channel 'MQContract.Attributes.MessageAttribute.Channel')
   - [TypeName](#P-MQContract-Attributes-MessageAttribute-TypeName 'MQContract.Attributes.MessageAttribute.TypeName')
   - [TypeVersion](#P-MQContract-Attributes-MessageAttribute-TypeVersion 'MQContract.Attributes.MessageAttribute.TypeVersion')
+- [MessageContextDefintion](#T-MQContract-Interfaces-Middleware-MessageContextDefintion 'MQContract.Interfaces.Middleware.MessageContextDefintion')
+  - [#ctor(MessageType,Channel,MessageTypeID,ResponseChannel,ResponseType)](#M-MQContract-Interfaces-Middleware-MessageContextDefintion-#ctor-System-Type,System-String,System-String,System-String,System-Type- 'MQContract.Interfaces.Middleware.MessageContextDefintion.#ctor(System.Type,System.String,System.String,System.String,System.Type)')
+  - [Channel](#P-MQContract-Interfaces-Middleware-MessageContextDefintion-Channel 'MQContract.Interfaces.Middleware.MessageContextDefintion.Channel')
+  - [MessageType](#P-MQContract-Interfaces-Middleware-MessageContextDefintion-MessageType 'MQContract.Interfaces.Middleware.MessageContextDefintion.MessageType')
+  - [MessageTypeID](#P-MQContract-Interfaces-Middleware-MessageContextDefintion-MessageTypeID 'MQContract.Interfaces.Middleware.MessageContextDefintion.MessageTypeID')
+  - [ResponseChannel](#P-MQContract-Interfaces-Middleware-MessageContextDefintion-ResponseChannel 'MQContract.Interfaces.Middleware.MessageContextDefintion.ResponseChannel')
+  - [ResponseType](#P-MQContract-Interfaces-Middleware-MessageContextDefintion-ResponseType 'MQContract.Interfaces.Middleware.MessageContextDefintion.ResponseType')
 - [MessageFilterResult](#T-MQContract-MessageFilterResult 'MQContract.MessageFilterResult')
   - [Allow](#F-MQContract-MessageFilterResult-Allow 'MQContract.MessageFilterResult.Allow')
   - [DropAndAcknowledge](#F-MQContract-MessageFilterResult-DropAndAcknowledge 'MQContract.MessageFilterResult.DropAndAcknowledge')
@@ -2378,6 +2388,34 @@ MQContract.Interfaces
 
 The representation of a Mapped Contract Connection which is built to use 1 or more service connections for the calls
 
+<a name='T-MQContract-Interfaces-Middleware-IMessageContextAwareMiddleware'></a>
+## IMessageContextAwareMiddleware `type`
+
+##### Namespace
+
+MQContract.Interfaces.Middleware
+
+##### Summary
+
+Used to define a MessageContext aware middleware that will handle message contexts being registered and perform actions based on them.
+
+<a name='M-MQContract-Interfaces-Middleware-IMessageContextAwareMiddleware-ProcessMessagesFromMessageContextAsync-System-Collections-Generic-IEnumerable{MQContract-Interfaces-Middleware-MessageContextDefintion}-'></a>
+### ProcessMessagesFromMessageContextAsync(messages) `method`
+
+##### Summary
+
+Called when a MessageContext is registered within the system.
+
+##### Returns
+
+
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messages | [System.Collections.Generic.IEnumerable{MQContract.Interfaces.Middleware.MessageContextDefintion}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{MQContract.Interfaces.Middleware.MessageContextDefintion}') | The messages that a particular MessageContext defines |
+
 <a name='T-MQContract-Interfaces-IMessageContextContractConnection`1'></a>
 ## IMessageContextContractConnection\`1 `type`
 
@@ -3744,6 +3782,13 @@ namespace Messages;
 [UseMqContractAttribute(typeof(Announcement))]
 public partial class MyMessageContext : MQContractMessageContext { }
 
+<a name='P-MQContract-MQContractMessageContext-DefinedMessages'></a>
+### DefinedMessages `property`
+
+##### Summary
+
+Lists the messages that are defined within this context
+
 <a name='M-MQContract-MQContractMessageContext-IsMessageCodeGenerated-System-Type-'></a>
 ### IsMessageCodeGenerated(messageType) `method`
 
@@ -4105,6 +4150,75 @@ The name of the message type used when transmitting
 ##### Summary
 
 The version number to tag this message with during transmission
+
+<a name='T-MQContract-Interfaces-Middleware-MessageContextDefintion'></a>
+## MessageContextDefintion `type`
+
+##### Namespace
+
+MQContract.Interfaces.Middleware
+
+##### Summary
+
+Used to provide message information to a context aware middleware from defined Message Contexts (code generated items)
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| MessageType | [T:MQContract.Interfaces.Middleware.MessageContextDefintion](#T-T-MQContract-Interfaces-Middleware-MessageContextDefintion 'T:MQContract.Interfaces.Middleware.MessageContextDefintion') | The type of the Message |
+
+<a name='M-MQContract-Interfaces-Middleware-MessageContextDefintion-#ctor-System-Type,System-String,System-String,System-String,System-Type-'></a>
+### #ctor(MessageType,Channel,MessageTypeID,ResponseChannel,ResponseType) `constructor`
+
+##### Summary
+
+Used to provide message information to a context aware middleware from defined Message Contexts (code generated items)
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| MessageType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The type of the Message |
+| Channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The default Channel if defined for the message |
+| MessageTypeID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The expected Message Type ID that should define this message |
+| ResponseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The default Response Channel if defined for the message |
+| ResponseType | [System.Type](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Type 'System.Type') | The expected Response Type if defined for the message |
+
+<a name='P-MQContract-Interfaces-Middleware-MessageContextDefintion-Channel'></a>
+### Channel `property`
+
+##### Summary
+
+The default Channel if defined for the message
+
+<a name='P-MQContract-Interfaces-Middleware-MessageContextDefintion-MessageType'></a>
+### MessageType `property`
+
+##### Summary
+
+The type of the Message
+
+<a name='P-MQContract-Interfaces-Middleware-MessageContextDefintion-MessageTypeID'></a>
+### MessageTypeID `property`
+
+##### Summary
+
+The expected Message Type ID that should define this message
+
+<a name='P-MQContract-Interfaces-Middleware-MessageContextDefintion-ResponseChannel'></a>
+### ResponseChannel `property`
+
+##### Summary
+
+The default Response Channel if defined for the message
+
+<a name='P-MQContract-Interfaces-Middleware-MessageContextDefintion-ResponseType'></a>
+### ResponseType `property`
+
+##### Summary
+
+The expected Response Type if defined for the message
 
 <a name='T-MQContract-MessageFilterResult'></a>
 ## MessageFilterResult `type`

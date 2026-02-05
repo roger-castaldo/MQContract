@@ -276,6 +276,14 @@ namespace MQContract.NATS
             {
                 disposedValue=true;
                 await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
+                try
+                {
+                    await NatsConnection.PingAsync().ConfigureAwait(true);
+                }
+                catch
+                {
+                    //nothing to catch here, this is simple to ensure all acks have been flushed back to the server
+                }
                 await NatsConnection.DisposeAsync().ConfigureAwait(true);
             }
 

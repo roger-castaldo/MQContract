@@ -45,6 +45,7 @@ namespace MQContract.Connections
         TContractConnection IMessageContextContractConnection<TContractConnection>.RegisterMessageContext(MQContractMessageContext messageContext)
         {
             this.messageContext.RegisterContext(messageContext);
+            middleware.RegisterMessageContextAsync(messageContext).Wait();
             return (TContractConnection)(IBaseContractConnection)this;
         }
 

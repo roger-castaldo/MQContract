@@ -10,7 +10,7 @@ namespace Messages
 {
     public static class SampleExecution
     {
-        public static async ValueTask ExecuteSample(IMessageServiceConnection serviceConnection, string serviceName, ChannelMapper? mapper = null, IEnumerable<IMiddleware>? middlewares = null)
+        public static async ValueTask ExecuteSample(IMessageServiceConnection serviceConnection, string serviceName, ChannelMapper? mapper = null, IEnumerable<IMiddleware>? middlewares = null, MQContractMessageContext? messageContext=null)
         {
             using var sourceCancel = new CancellationTokenSource();
 
@@ -19,6 +19,8 @@ namespace Messages
                     retryPolicy: (3, (ct) => TimeSpan.FromSeconds(1)),
                     circuitBreakPolicy: (4, TimeSpan.FromSeconds(5))
                 );
+            if (messageContext!=null)
+                contractConnection = contractConnection.RegisterMessageContext(messageContext);
             var healthCheck = contractConnection.HealthCheck;
             Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck!.CheckHealthAsync(new(), sourceCancel.Token))}");
             contractConnection.AddMetrics(null, true)
