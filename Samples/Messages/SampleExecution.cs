@@ -20,14 +20,14 @@ namespace Messages
                     circuitBreakPolicy: (4, TimeSpan.FromSeconds(5))
                 );
             if (messageContext!=null)
-                contractConnection = contractConnection.RegisterMessageContext(messageContext);
+                contractConnection = await contractConnection.RegisterMessageContextAsync(messageContext);
             var healthCheck = contractConnection.HealthCheck;
             Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck!.CheckHealthAsync(new(), sourceCancel.Token))}");
             contractConnection.AddMetrics(null, true)
                 .EnableOpenTelemetry(linkActivitiesAcrossSystems: true);
 
             foreach (var middleware in middlewares?? [])
-                contractConnection = contractConnection.RegisterMiddleware(middleware);
+                contractConnection = await contractConnection.RegisterMiddlewareAsync(middleware);
 
             var announcementSubscription1 = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
                 (announcement) =>

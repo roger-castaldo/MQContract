@@ -27,8 +27,8 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware<ChannelChangeMiddleware>();
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync<ChannelChangeMiddleware>();
             #endregion
 
             #region Act
@@ -60,8 +60,8 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware(typeof(ChannelChangeMiddleware));
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync(typeof(ChannelChangeMiddleware));
             #endregion
 
             #region Act
@@ -79,7 +79,7 @@ namespace AutomatedTesting.ContractConnectionTests
         }
 
         [TestMethod]
-        public void TestRegisterMiddlewareWithInvalidType()
+        public async Task TestRegisterMiddlewareWithInvalidType()
         {
             #region Arrange
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
@@ -90,7 +90,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            var error = Assert.Throws<InvalidMiddlewareException>(() => contractConnection.RegisterMiddleware(typeof(InvalidMiddleware)));
+            var error = await Assert.ThrowsAsync<InvalidMiddlewareException>(async () => await contractConnection.RegisterMiddlewareAsync(typeof(InvalidMiddleware)));
             #endregion
 
             #region Assert
@@ -117,8 +117,8 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware(new ChannelChangeMiddleware());
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync(new ChannelChangeMiddleware());
             #endregion
 
             #region Act
@@ -162,8 +162,8 @@ namespace AutomatedTesting.ContractConnectionTests
                 });
 
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware<IBeforeEncodeMiddleware>(() => mockMiddleware.Object);
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync<IBeforeEncodeMiddleware>(() => mockMiddleware.Object);
             #endregion
 
             #region Act
@@ -199,8 +199,8 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware(() => ((IMiddleware)new ChannelChangeMiddleware()));
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync(() => ((IMiddleware)new ChannelChangeMiddleware()));
             #endregion
 
             #region Act
@@ -232,8 +232,8 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware<ChannelChangeMiddlewareForBasicMessage, BasicMessage>();
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync<ChannelChangeMiddlewareForBasicMessage, BasicMessage>();
             #endregion
 
             #region Act
@@ -265,8 +265,8 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware<BasicMessage>(new ChannelChangeMiddlewareForBasicMessage());
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync<BasicMessage>(new ChannelChangeMiddlewareForBasicMessage());
             #endregion
 
             #region Act
@@ -310,8 +310,8 @@ namespace AutomatedTesting.ContractConnectionTests
                 });
 
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware<IBeforeEncodeSpecificTypeMiddleware<BasicMessage>, BasicMessage>(() => mockMiddleware.Object);
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync<IBeforeEncodeSpecificTypeMiddleware<BasicMessage>, BasicMessage>(() => mockMiddleware.Object);
             #endregion
 
             #region Act
@@ -358,8 +358,8 @@ namespace AutomatedTesting.ContractConnectionTests
                 });
 
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware<BasicMessage>(() => mockMiddleware.Object);
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync<BasicMessage>(() => mockMiddleware.Object);
             #endregion
 
             #region Act
@@ -397,8 +397,8 @@ namespace AutomatedTesting.ContractConnectionTests
             serviceConnection.Setup(x => x.PublishAsync(Capture.In<ServiceMessage>(messages), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(transmissionResult);
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object, serviceProvider: services)
-                .RegisterMiddleware<InjectedChannelChangeMiddleware>();
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object, serviceProvider: services)
+                .RegisterMiddlewareAsync<InjectedChannelChangeMiddleware>();
             #endregion
 
             #region Act
@@ -451,8 +451,8 @@ namespace AutomatedTesting.ContractConnectionTests
                 });
 
 
-            var contractConnection = ContractConnection.Instance(serviceConnection.Object)
-                .RegisterMiddleware<IAfterDecodeSpecificTypeMiddleware<BasicMessage>, BasicMessage>(() => mockMiddleware.Object);
+            var contractConnection = await ContractConnection.Instance(serviceConnection.Object)
+                .RegisterMiddlewareAsync<IAfterDecodeSpecificTypeMiddleware<BasicMessage>, BasicMessage>(() => mockMiddleware.Object);
             #endregion
 
             #region Act

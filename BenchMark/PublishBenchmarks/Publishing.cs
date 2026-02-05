@@ -65,7 +65,7 @@ namespace BenchMark.PublishBenchmarks
         [Benchmark]
         public async Task PublishBasicEncodedMessageWithContext()
         {
-            ((IContractedConnection)contractConnection!).RegisterMessageContext(myMessageContext!);
+            ((IContractedConnection)contractConnection!).RegisterMessageContextAsync(myMessageContext!);
             await ExecuteOperationsAsync(async () =>
             {
                 _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
@@ -75,7 +75,7 @@ namespace BenchMark.PublishBenchmarks
         [Benchmark]
         public async Task PublishDefaultEncodedMessageWithContext()
         {
-            ((IContractedConnection)contractConnection!).RegisterMessageContext(myMessageContext!);
+            ((IContractedConnection)contractConnection!).RegisterMessageContextAsync(myMessageContext!);
             await ExecuteOperationsAsync(async () =>
             {
                 _ = await contractConnection!.PublishAsync<Announcement>(announcement!, channel: ChannelName);
@@ -85,7 +85,7 @@ namespace BenchMark.PublishBenchmarks
         [Benchmark]
         public async Task PublishCustomEncodedMessageWithContext()
         {
-            ((IContractedConnection)contractConnection!).RegisterMessageContext(myMessageContext!);
+            ((IContractedConnection)contractConnection!).RegisterMessageContextAsync(myMessageContext!);
             await ExecuteOperationsAsync(async () =>
             {
                 _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(encodedAnnouncement!, channel: ChannelName);

@@ -81,7 +81,7 @@ namespace BenchMark.InMemoryBenchmarks
         {
             var count = Constants.PublishCount;
             await using var contractConnection = ContractConnection.Instance(new MQContract.InMemory.Connection());
-            contractConnection.RegisterMessageContext(new MyMessageContext());
+            contractConnection.RegisterMessageContextAsync(new MyMessageContext());
             var completionSource = new TaskCompletionSource();
 
             using var subscription = await contractConnection.SubscribeAsync<Announcement>(
@@ -112,7 +112,7 @@ namespace BenchMark.InMemoryBenchmarks
             var count = Constants.PublishCount;
             var completionSource = new TaskCompletionSource();
             await using var contractConnection = ContractConnection.Instance(new MQContract.InMemory.Connection());
-            contractConnection.RegisterMessageContext(new MyMessageContext());
+            contractConnection.RegisterMessageContextAsync(new MyMessageContext());
             await contractConnection.RegisterPubSubAsyncConsumerAsync<Announcement, AnnouncementConsumer>(new AnnouncementConsumer(count, completionSource), channel: channel);
 
             await Task.WhenAll(Enumerable.Range(0, Constants.PublishCount)
@@ -130,7 +130,7 @@ namespace BenchMark.InMemoryBenchmarks
             var count = Constants.PublishCount;
             var completionSource = new TaskCompletionSource();
             await using var contractConnection = ContractConnection.Instance(new MQContract.InMemory.Connection());
-            contractConnection.RegisterMessageContext(new MyMessageContext());
+            contractConnection.RegisterMessageContextAsync(new MyMessageContext());
             var cqrsConnection = contractConnection.CreateCQRSConnection();
             await cqrsConnection.RegisterCommandProcessorAsync<AnnouncementCommand>(new AnnouncementCommandProcessor(count, completionSource));
 

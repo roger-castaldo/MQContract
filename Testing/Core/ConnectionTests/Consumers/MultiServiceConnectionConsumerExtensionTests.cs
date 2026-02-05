@@ -8,7 +8,7 @@ using MQContract.Interfaces.Consumers;
 namespace CoreTesting.ConnectionTests.Consumers
 {
     [TestClass]
-    public class ConsumerExtensionTests
+    public class MultiServiceConnectionConsumerExtensionTests
     {
         private const string TestChannel = "TestConsumerChannel";
         private const string TestGroup = "TestConsumerGroup";
@@ -18,15 +18,15 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterPubSubConsumerAsyncWithInstanceExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterPubSubConsumerAsync(It.IsAny<IPubSubConsumer<BasicMessage>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicMessage>>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var messageFilters = new MessageFilters<BasicMessage>();
             var consumer = new BasicMessageConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
@@ -53,19 +53,19 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterPubSubConsumerAsyncWithGenericExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumer>(It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicMessage>>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var messageFilters = new MessageFilters<BasicMessage>();
             var consumer = new BasicMessageConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
-            var result = await connectionTask.RegisterPubSubConsumerAsync<IBaseContractConnection, BasicMessage, BasicMessageConsumer>(
+            var result = await connectionTask.RegisterPubSubConsumerAsync<BasicMessage, BasicMessageConsumer>(
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
@@ -87,14 +87,14 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterPubSubConsumerAsyncWithTypeExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterPubSubConsumerAsync(It.IsAny<Type>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var consumer = new BasicMessageConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
@@ -120,15 +120,15 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterPubSubAsyncConsumerAsyncWithInstanceExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterPubSubAsyncConsumerAsync(It.IsAny<IPubSubAsyncConsumer<BasicMessage>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicMessage>>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var messageFilters = new MessageFilters<BasicMessage>();
             var AsyncConsumer = new BasicMessageAsyncConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
@@ -155,19 +155,19 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterPubSubAsyncConsumerAsyncWithGenericExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterPubSubAsyncConsumerAsync<BasicMessage, BasicMessageAsyncConsumer>(It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicMessage>>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var messageFilters = new MessageFilters<BasicMessage>();
             var AsyncConsumer = new BasicMessageAsyncConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
-            var result = await connectionTask.RegisterPubSubAsyncConsumerAsync<IBaseContractConnection, BasicMessage, BasicMessageAsyncConsumer>(
+            var result = await connectionTask.RegisterPubSubAsyncConsumerAsync<BasicMessage, BasicMessageAsyncConsumer>(
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
@@ -189,14 +189,14 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterPubSubAsyncConsumerAsyncWithTypeExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterPubSubAsyncConsumerAsync(It.IsAny<Type>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var AsyncConsumer = new BasicMessageAsyncConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
@@ -222,21 +222,21 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterQueryResponseConsumerAsyncWithInstanceExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterQueryResponseConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>
                 (It.IsAny<IQueryResponseConsumer<BasicQueryMessage, BasicResponseMessage>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicQueryMessage>>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var messageFilters = new MessageFilters<BasicQueryMessage>();
             var consumer = new BasicQueryConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
             var result = await connectionTask
-                .RegisterQueryResponseConsumerAsync<IBaseContractConnection, BasicQueryMessage, BasicResponseMessage, BasicQueryConsumer>
+                .RegisterQueryResponseConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryConsumer>
             (
                 consumer,
                 channel: TestChannel,
@@ -260,19 +260,19 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterQueryResponseConsumerAsyncWithGenericExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterQueryResponseConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryConsumer>(It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicQueryMessage>>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var messageFilters = new MessageFilters<BasicQueryMessage>();
             var consumer = new BasicQueryConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
-            var result = await connectionTask.RegisterQueryResponseConsumerAsync<IBaseContractConnection, BasicQueryMessage, BasicResponseMessage, BasicQueryConsumer>(
+            var result = await connectionTask.RegisterQueryResponseConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryConsumer>(
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
@@ -294,14 +294,14 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterQueryResponseConsumerAsyncWithTypeExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterQueryResponseConsumerAsync(It.IsAny<Type>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var consumer = new BasicQueryConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
@@ -327,21 +327,21 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterQueryResponseAsyncConsumerAsyncWithInstanceExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>
                 (It.IsAny<IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicQueryMessage>>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var messageFilters = new MessageFilters<BasicQueryMessage>();
             var AsyncConsumer = new BasicQueryAsyncConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
             var result = await connectionTask
-                .RegisterQueryResponseAsyncConsumerAsync<IBaseContractConnection, BasicQueryMessage, BasicResponseMessage, BasicQueryAsyncConsumer>
+                .RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryAsyncConsumer>
             (
                 AsyncConsumer,
                 channel: TestChannel,
@@ -365,19 +365,19 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterQueryResponseAsyncConsumerAsyncWithGenericExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryAsyncConsumer>(It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<MessageFilters<BasicQueryMessage>>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var messageFilters = new MessageFilters<BasicQueryMessage>();
             var AsyncConsumer = new BasicQueryAsyncConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
-            var result = await connectionTask.RegisterQueryResponseAsyncConsumerAsync<IBaseContractConnection, BasicQueryMessage, BasicResponseMessage, BasicQueryAsyncConsumer>(
+            var result = await connectionTask.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, BasicQueryAsyncConsumer>(
                 channel: TestChannel,
                 group: TestGroup,
                 ignoreMessageHeader: ignoreMessageHeader,
@@ -399,14 +399,14 @@ namespace CoreTesting.ConnectionTests.Consumers
         public async Task TestRegisterQueryResponseAsyncConsumerAsyncWithTypeExtension()
         {
             #region Arrange
-            var mockConnection = new Mock<IConsumerContractConnection<IBaseContractConnection>>();
+            var mockConnection = new Mock<IMultiServiceContractConnection>();
             mockConnection.Setup(x => x.RegisterQueryResponseAsyncConsumerAsync(It.IsAny<Type>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-                .Returns(ValueTask.FromResult((IBaseContractConnection)mockConnection.Object));
+                .Returns(ValueTask.FromResult(mockConnection.Object));
 
             var AsyncConsumer = new BasicQueryAsyncConsumer();
 
-            var connectionTask = new ValueTask<IConsumerContractConnection<IBaseContractConnection>>(mockConnection.Object);
+            var connectionTask = new ValueTask<IMultiServiceContractConnection>(mockConnection.Object);
             #endregion
 
             #region Act
