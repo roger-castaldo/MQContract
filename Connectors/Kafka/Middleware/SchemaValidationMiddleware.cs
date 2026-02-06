@@ -1,5 +1,4 @@
-﻿using Confluent.Kafka;
-using Confluent.SchemaRegistry;
+﻿using Confluent.SchemaRegistry;
 using Microsoft.Extensions.Caching.Memory;
 using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
