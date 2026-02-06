@@ -5,7 +5,6 @@ using MQContract.Messages;
 using NJsonSchema;
 using System.Buffers.Binary;
 
-
 namespace MQContract.Kafka.Middleware
 {
     /// <summary>
@@ -28,11 +27,11 @@ namespace MQContract.Kafka.Middleware
         Func<Type, string, string, ValueTask<string>>? mapMessageSchemaName = null,
         Func<Type, ValueTask<string>>? extractSchemaAsync = null,
         Func<Schema, Stream, ValueTask<bool>>? validateSchemaAsync = null
-    ) : IAfterEncodeMiddleware, IBeforeDecodeMiddleware
+    ) : IAfterEncodeMiddleware, IBeforeDecodeMiddleware, IMessageContextAwareMiddleware
     {
         private const string SchemaIdHeader = "_kafkaSchemaId";
         private const byte MagicByte = 0x00;
-        private readonly static string[] IgnoredMessageTypes = [
+        private readonly static HashSet<string> IgnoredMessageTypes = new(StringComparer.InvariantCultureIgnoreCase){
             "byte[]-0.0.0.0",
             "Byte-0.0.0.0",
             "bool-0.0.0.0",
@@ -70,7 +69,7 @@ namespace MQContract.Kafka.Middleware
             "ushort-0.0.0.0",
             "ushort[]-0.0.0.0",
             "IEnumerable<ushort>-0.0.0.0"
-        ];
+        };
 
         private sealed record CachedSchema(int Id, Schema Schema, JsonSchema? CompiledSchema);
 
@@ -197,6 +196,24 @@ namespace MQContract.Kafka.Middleware
             else if (cachedSchema.CompiledSchema!=null)
                 return cachedSchema.CompiledSchema.Validate(await new StreamReader(dataStream).ReadToEndAsync()).Count==0;
             return false;
+        }
+
+        async ValueTask IMessageContextAwareMiddleware.ProcessMessagesFromMessageContextAsync(IEnumerable<MessageContextDefintion> messages)
+        {
+            await Task.WhenAll(
+                messages.Where(message => !IgnoredMessageTypes.Contains(message.MessageTypeID))
+                .Select(async(message) =>
+                {
+                    var schemaName = (mapMessageSchemaName==null ? message.MessageTypeID : await mapMessageSchemaName(message.MessageType, message.Channel??string.Empty, message.MessageTypeID));
+                    int? schemaId = await GetSchemaIdFromCacheAsync(schemaName);
+                    if (schemaId==null && autoRegisterSchema)
+                    {
+                        var builtSchema = new Schema(await ExtractSchemaAsync(message.MessageType), registerSchemaType);
+                        schemaId = await schemaRegistryClient.RegisterSchemaAsync(schemaName, builtSchema);
+                        await CacheSchema(schemaName, schemaId.Value, builtSchema);
+                    }
+                })
+            );
         }
     }
 }

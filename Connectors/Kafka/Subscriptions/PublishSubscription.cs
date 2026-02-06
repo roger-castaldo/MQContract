@@ -29,7 +29,7 @@ namespace MQContract.Kafka.Subscriptions
                                 msg.Message.Value,
                                 Acknowledge: async () =>
                                 {
-                                    consumer.StoreOffset(msg);
+                                    consumer.Commit(msg);
                                     ackSource.TrySetResult();
                                 }
                             )).AsTask(),

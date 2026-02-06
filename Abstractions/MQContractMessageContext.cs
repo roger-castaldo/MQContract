@@ -2,6 +2,7 @@
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Messages;
+using MQContract.Interfaces.Middleware;
 using MQContract.Messages;
 
 namespace MQContract
@@ -133,5 +134,11 @@ namespace MQContract
         /// <returns>null or the Query attempt against the given connection</returns>
         public virtual ValueTask<IEnumerable<QueryResult<object>>>? TryExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
             => null;
+
+        /// <summary>
+        /// Lists the messages that are defined within this context
+        /// </summary>
+        public virtual IEnumerable<MessageContextDefintion> DefinedMessages 
+            => [];
     }
 }

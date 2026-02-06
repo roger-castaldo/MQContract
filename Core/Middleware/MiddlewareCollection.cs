@@ -31,11 +31,13 @@ namespace MQContract.Middleware
             RegisterInjectionMiddleware<IBeforeDecodeMiddleware>(encryptionMiddleware, InjectionPositions.Pre);
         }
 
-        public void RegisterMiddlewareInstance(object element)
+        public async Task RegisterMiddlewareInstanceAsync(object element,IEnumerable<MQContractMessageContext> contexts)
         {
             if (!(element is IMiddleware middleware))
                 throw new InvalidMiddlewareException(element.GetType());
             logger?.LogDebugChecked("Registering middleware of type {Type}", element.GetType());
+            if (middleware is IMessageContextAwareMiddleware messageContextAwareMiddleware)
+                await Task.WhenAll(contexts.Select(context => messageContextAwareMiddleware.ProcessMessagesFromMessageContextAsync(context.DefinedMessages).AsTask()));
             collection.Add(middleware);
             cache.Clear();
         }
@@ -86,6 +88,14 @@ namespace MQContract.Middleware
                 cache.TryAdd(typeof(THandler), handlers);
             }
             return handlers.OfType<THandler>();
+        }
+
+        public async Task RegisterMessageContextAsync(MQContractMessageContext messageContext)
+        {
+            var tasks = collection
+                .OfType<IMessageContextAwareMiddleware>()
+                .Select(middleware => middleware.ProcessMessagesFromMessageContextAsync(messageContext.DefinedMessages).AsTask());
+            await Task.WhenAll(tasks);
         }
     }
 }

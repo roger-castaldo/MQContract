@@ -225,7 +225,7 @@ namespace CodeGenTesting
             //Arrange
             var mockServiceConnection = new Mock<IMessageServiceConnection>();
             var connection = ContractConnection.Instance(mockServiceConnection.Object);
-            connection.RegisterMessageContext(new MyMessageContext());
+            connection.RegisterMessageContextAsync(new MyMessageContext());
 
             //Act
             var errorWithAssembly = await Assert.ThrowsExactlyAsync<DynamicCodeNotSupportedException>(async () => await connection.AutoRegisterAllConsumersAsync(this.GetType().Assembly));

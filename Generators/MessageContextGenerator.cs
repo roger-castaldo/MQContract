@@ -66,6 +66,7 @@ namespace MQContract.Generators
 
                 var generatedSwitches = new List<string>();
                 var definitionSwitches = new List<string>();
+                var contextDefinitions = new List<string>();
                 var typeSwitches = new List<string>();
                 var idSwitches = new List<string>();
                 var encoderCalls = new Dictionary<string, string>();
@@ -86,7 +87,7 @@ namespace MQContract.Generators
 
                     generatedSwitches.Add($"            (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => true,");
                     definitionSwitches.Add($"            (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => new({(channel==null ? "null" : $"\"{channel}\"")}, \"{name}\",new Version(\"{version??"0.0.0.0"}\"), {(responseChannel==null ? "null" : $"\"{responseChannel}\"")},{(responseTimeout==null ? "null" : $"TimeSpan.FromMilliseconds({responseTimeout})")}, {(responseType == null ? "null" : $"typeof({responseType.ToDisplayString()})")}),");
-
+                    contextDefinitions.Add($"new MessageContextDefintion(typeof({contract.Contract.ToDisplayString()}), {(channel==null ? "null" : $"\"{channel}\"")}, \"{name}-{ version??"0.0.0.0" }\", {(responseChannel==null ? "null" : $"\"{responseChannel}\"")}, {(responseType == null ? "null" : $"typeof({responseType.ToDisplayString()})")})");
 
                     if (contract.Encoders!=null)
                     {
@@ -200,6 +201,7 @@ using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Messages;
 using MQContract.Interfaces.Conversion;
 using MQContract.Interfaces.Encrypting;
+using MQContract.Interfaces.Middleware;
 
 namespace {contractContext.Target.ContainingNamespace};
 
@@ -300,6 +302,9 @@ namespace {contractContext.Target.ContainingNamespace};
             return callback();
         return null;
     }}
+
+    public override sealed IEnumerable<MessageContextDefintion> DefinedMessages 
+        => [{string.Join(",\r\n", contextDefinitions)} ];
 }}", Encoding.UTF8));
             }
         }

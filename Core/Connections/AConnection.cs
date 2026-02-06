@@ -63,42 +63,42 @@ namespace MQContract.Connections
 
         #region Middleware
 
-        private TContractConnection RegisterMiddlewareInstance(object element)
+        private async ValueTask<TContractConnection> RegisterMiddlewareInstanceAsync(object element)
         {
             using var scope = SetScope();
-            middleware.RegisterMiddlewareInstance(element);
+            await middleware.RegisterMiddlewareInstanceAsync(element, messageContext.Contexts);
             return (TContractConnection)(IBaseContractConnection)this;
         }
 
-        private TContractConnection RegisterMiddlewareType(Type type)
-            => RegisterMiddlewareInstance((serviceProvider == null ? Activator.CreateInstance(type) : ActivatorUtilities.CreateInstance(serviceProvider, type))!);
+        private ValueTask<TContractConnection> RegisterMiddlewareTypeAsync(Type type)
+            => RegisterMiddlewareInstanceAsync((serviceProvider == null ? Activator.CreateInstance(type) : ActivatorUtilities.CreateInstance(serviceProvider, type))!);
 
-        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<TMiddleware>()
-            => RegisterMiddlewareType(typeof(TMiddleware));
+        ValueTask<TContractConnection> IMiddlewareContractConnection<TContractConnection>.RegisterMiddlewareAsync<TMiddleware>()
+            => RegisterMiddlewareTypeAsync(typeof(TMiddleware));
 
-        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware(Type middleware)
-            => RegisterMiddlewareType(middleware);
+        ValueTask<TContractConnection> IMiddlewareContractConnection<TContractConnection>.RegisterMiddlewareAsync(Type middleware)
+            => RegisterMiddlewareTypeAsync(middleware);
 
-        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware(IMiddleware instance)
-            => RegisterMiddlewareInstance(instance);
+        ValueTask<TContractConnection> IMiddlewareContractConnection<TContractConnection>.RegisterMiddlewareAsync(IMiddleware instance)
+            => RegisterMiddlewareInstanceAsync(instance);
 
-        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<TMiddleware>(Func<TMiddleware> constructInstance)
-            => RegisterMiddlewareInstance(constructInstance());
+        ValueTask<TContractConnection> IMiddlewareContractConnection<TContractConnection>.RegisterMiddlewareAsync<TMiddleware>(Func<TMiddleware> constructInstance)
+            => RegisterMiddlewareInstanceAsync(constructInstance());
 
-        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware(Func<IMiddleware> constructInstance)
-            => RegisterMiddlewareInstance(constructInstance());
+        ValueTask<TContractConnection> IMiddlewareContractConnection<TContractConnection>.RegisterMiddlewareAsync(Func<IMiddleware> constructInstance)
+            => RegisterMiddlewareInstanceAsync(constructInstance());
 
-        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<TMessage>(Func<ISpecificTypeMiddleware<TMessage>> constructInstance)
-            => RegisterMiddlewareInstance(constructInstance());
+        ValueTask<TContractConnection> IMiddlewareContractConnection<TContractConnection>.RegisterMiddlewareAsync<TMessage>(Func<ISpecificTypeMiddleware<TMessage>> constructInstance)
+            => RegisterMiddlewareInstanceAsync(constructInstance());
 
-        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<TMessage>(ISpecificTypeMiddleware<TMessage> instance)
-            => RegisterMiddlewareInstance(instance);
+        ValueTask<TContractConnection> IMiddlewareContractConnection<TContractConnection>.RegisterMiddlewareAsync<TMessage>(ISpecificTypeMiddleware<TMessage> instance)
+            => RegisterMiddlewareInstanceAsync(instance);
 
-        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<TMiddleware, TMessage>()
-            => RegisterMiddlewareType(typeof(TMiddleware));
+        ValueTask<TContractConnection> IMiddlewareContractConnection<TContractConnection>.RegisterMiddlewareAsync<TMiddleware, TMessage>()
+            => RegisterMiddlewareTypeAsync(typeof(TMiddleware));
 
-        TContractConnection IMiddlewareContractConnection<TContractConnection>.RegisterMiddleware<TMiddleware, TMessage>(Func<TMiddleware> constructInstance)
-            => RegisterMiddlewareInstance(constructInstance());
+        ValueTask<TContractConnection> IMiddlewareContractConnection<TContractConnection>.RegisterMiddlewareAsync<TMiddleware, TMessage>(Func<TMiddleware> constructInstance)
+            => RegisterMiddlewareInstanceAsync(constructInstance());
 
         private async ValueTask<EncodableMessage<TMessage>> BeforeMessageEncodeAsync<TMessage>(IContext context, TMessage message, string? channel, MessageHeader messageHeader)
         {

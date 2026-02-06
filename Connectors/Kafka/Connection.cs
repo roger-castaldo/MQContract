@@ -29,7 +29,24 @@ namespace MQContract.Kafka
         public Connection(ClientConfig clientConfig)
         {
             this.clientConfig = clientConfig;
-            producer = new ProducerBuilder<string, byte[]>(clientConfig).Build();
+            var produceConfig = new ProducerConfig(CloneConfig(clientConfig))
+            {
+                // Reliability
+                Acks = Acks.All,
+                EnableIdempotence = true,
+                MessageSendMaxRetries = 5,
+                RetryBackoffMs = 100,
+
+                // Throughput
+                LingerMs = 10,
+                BatchSize = 131072,
+                CompressionType = CompressionType.Lz4,
+
+                // Ordering / Parallelism
+                MaxInFlight = 5
+            };
+            producer = new ProducerBuilder<string, byte[]>(produceConfig)
+                .Build();
             batchedMessageStream = new(
                 (serviceMessage, _) => ValueTask.FromResult(new MessageInstance(
                     serviceMessage.ID,
@@ -41,7 +58,7 @@ namespace MQContract.Kafka
                         Value=serviceMessage.Data.ToArray()
                     }
                 )),
-                async (messageInstance, cancellationToken) =>
+                (messageInstance, cancellationToken) =>
                 {
                     try
                     {
@@ -54,16 +71,17 @@ namespace MQContract.Kafka
                             else
                                 resultSource.TrySetResult(new TransmissionResult(result.Key));
                         });
-                        var result = await resultSource.Task.WaitAsync(cancellationToken);
-                        return result;
+                        return resultSource.Task;
                     }
                     catch (Exception ex)
                     {
-                        return new TransmissionResult(messageInstance.ID, Error: new(ex, ex switch
-                        {
-                            ProduceException<string, byte[]> => ((ProduceException<string, byte[]>)ex).Error.IsFatal,
-                            _ => false
-                        }));
+                        return Task.FromResult<TransmissionResult>(
+                            new(messageInstance.ID, Error: new(ex, ex switch
+                            {
+                                ProduceException<string, byte[]> => ((ProduceException<string, byte[]>)ex).Error.IsFatal,
+                                _ => false
+                            }))
+                        );
                     }
                 }
             );
@@ -115,12 +133,12 @@ namespace MQContract.Kafka
         ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
         {
             var isReply = regReplyGroup.IsMatch(group??string.Empty);
-            var builder = new ConsumerBuilder<string, byte[]>(new ConsumerConfig(clientConfig)
+            var builder = new ConsumerBuilder<string, byte[]>(new ConsumerConfig(CloneConfig(clientConfig))
             {
                 GroupId=(!string.IsNullOrWhiteSpace(group) ? group : Guid.NewGuid().ToString()),
                 AutoOffsetReset = (isReply ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest),
                 EnableAutoOffsetStore = false,
-                EnableAutoCommit = true,
+                EnableAutoCommit = false,
                 // responsiveness tuning
                 FetchMinBytes = 1,               // don't wait for larger batches on the broker
                 FetchWaitMaxMs = 50,            // wait at most 50ms for FetchMinBytes to be satisfied
@@ -147,6 +165,9 @@ namespace MQContract.Kafka
             subscription.Start();
             return ValueTask.FromResult<IServiceSubscription?>(subscription);
         }
+
+        private static ClientConfig CloneConfig(ClientConfig clientConfig)
+            => new(clientConfig.ToDictionary());
 
         ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
         {
