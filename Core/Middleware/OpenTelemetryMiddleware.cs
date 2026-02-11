@@ -30,6 +30,7 @@ namespace MQContract.Middleware
         private const string MessagePublishStatusKey = $"{KeyBase}.status";
         private const string ConnectionNameKey = $"{KeyBase}.serviceconnectionname";
         private const string ConnectionTypeKey = $"{KeyBase}.serviceconnectiontype";
+        private const string EventLogId = $"{KeyBase}.log.eventid";
 
         #region middleware
 
@@ -135,6 +136,9 @@ namespace MQContract.Middleware
                 CreateConnectionTypeTag(serviceConnection),
                 new(ConnectionNameKey,connectionName)
             ])));
+
+        public static void TagEventID(Activity? activity, int eventId)
+            => activity?.AddTag(EventLogId, eventId);
         #endregion
     }
 }

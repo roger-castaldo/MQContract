@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MQContract.Extensions;
 using MQContract.Interfaces.Service;
+using MQContract.Loggers;
 using MQContract.Messages;
 
 namespace MQContract.Subscriptions
@@ -13,7 +14,7 @@ namespace MQContract.Subscriptions
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogInformationChecked("Establishing underlying service subscription for PubSub subscription.");
+            PubSubLog.EstablishingPubSubServiceSubscription(Logger);
             serviceSubscription = await connection.SubscribeAsync(
                 async serviceMessage => await ProcessMessage(serviceMessage),
                 error => errorReceived(error),
@@ -23,7 +24,7 @@ namespace MQContract.Subscriptions
             );
             if (serviceSubscription==null)
                 return false;
-            Logger?.LogInformationChecked("Successfully established PubSub subscription.");
+            PubSubLog.PubSubSubscriptionEstablishmentSucceeded(Logger);
             return true;
         }
 
@@ -32,18 +33,18 @@ namespace MQContract.Subscriptions
             using var scope = SetScope();
             try
             {
-                Logger?.LogDebugChecked("Processing service message with ID: {MessageID}", serviceMessage.ID);
+                PubSubLog.ProcessingServiceMessage(Logger, serviceMessage.ID);
                 var tsk = messageReceived(serviceMessage);
                 var ack = await tsk.ConfigureAwait(!Synchronous);
                 if (serviceMessage.Acknowledge!=null && ack)
                 {
-                    Logger?.LogDebugChecked("Acknowledging service message with ID: {MessageID}", serviceMessage.ID);
+                    PubSubLog.AcknowledgingServiceMessage(Logger, serviceMessage.ID);
                     await serviceMessage.Acknowledge();
                 }
             }
             catch (Exception e)
             {
-                Logger?.LogErrorChecked(e, "Error occurred while processing service message with ID: {MessageID}", serviceMessage.ID);
+                PubSubLog.ProcessingServiceMessageError(Logger, e, serviceMessage.ID);
                 errorReceived(e);
             }
         }

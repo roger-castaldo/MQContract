@@ -8,6 +8,7 @@ using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Factories;
 using MQContract.Interfaces.Middleware;
 using MQContract.Interfaces.Service;
+using MQContract.Loggers;
 using MQContract.Messages;
 using MQContract.Middleware;
 using MQContract.Subscriptions;
@@ -243,7 +244,7 @@ namespace MQContract.Connections
             string? channel, string? group, bool synchronous, string? serviceConnectionName, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Creating PubSub Subscription for {T} on {Channel} in {Group}.", typeof(TMessage), channel, group);
+            PubSubLog.CreatingPubSubSubscription(Logger, typeof(TMessage), channel, group);
             var subscription = new PubSubSubscription<TMessage>(
                 async (serviceMessage) =>
                 {
@@ -269,24 +270,24 @@ namespace MQContract.Connections
             group: group,
             synchronous: synchronous,
                 logger: Logger);
-            Logger?.LogInformationChecked("Establishing PubSub Subscription connection.");
+            PubSubLog.EstablishingPubSubSubscription(Logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
                 return subscription;
-            Logger?.LogInformationChecked("Establishment of PubSub Subscription connection failed.");
+            PubSubLog.PubSubSubscriptionEstablishmentFailed(Logger);
             throw new SubscriptionFailedException();
         }
 
         ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Creating PubSub subscription for message type {T} on channel {Channel} in group {Group}", typeof(TMessage), channel, group);
+            PubSubLog.CreatingPubSubSubscription(Logger, typeof(TMessage), channel, group);
             return CreateSubscriptionAsync<TMessage>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, messageFilters, false, cancellationToken);
         }
 
         ValueTask<ISubscription> IBaseContractConnection.SubscribeAsync<TMessage>(Action<IReceivedMessage<TMessage>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Creating PubSub subscription for message type {T} on channel {Channel} in group {Group}", typeof(TMessage), channel, group);
+            PubSubLog.CreatingPubSubSubscription(Logger, typeof(TMessage), channel, group);
             return CreateSubscriptionAsync<TMessage>((msg) =>
             {
                 messageReceived(msg);
@@ -299,14 +300,14 @@ namespace MQContract.Connections
         ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryAsyncResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Creating QueryResponse subscription for message query {Q} and response {R} on channel {Channel} in group {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
+            QueryResponseLog.CreatingSubscription(Logger, typeof(TQuery), typeof(TQueryResponse), channel, group);
             return ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(messageReceived, errorReceived, channel, group, ignoreMessageHeader, false, messageFilters, cancellationToken);
         }
 
         ValueTask<ISubscription> IBaseContractConnection.SubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, QueryResponseMessage<TQueryResponse>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Creating QueryResponse subscription for message query {Q} and response {R} on channel {Channel} in group {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
+            QueryResponseLog.CreatingSubscription(Logger, typeof(TQuery), typeof(TQueryResponse), channel, group);
             return ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>((msg) =>
             {
                 var result = messageReceived(msg);
@@ -337,7 +338,8 @@ namespace MQContract.Connections
         {
             IEnumerable<TransmissionResult> result;
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Executing bulk publish");
+            PubSubLog.ExecutingBulkPublish(Logger);
+            OpenTelemetryMiddleware.TagEventID(activity, PubSubLog.ExecutingBulkPublishEventId);
             result = await ExecuteResilliantTransmissionAsync<TMessage>(
                 serviceConnection.BulkPublishAsync,
                 activity,
@@ -349,7 +351,6 @@ namespace MQContract.Connections
             {
                 foreach (var res in result)
                     activity.AddEvent(new(Constants.PublishBulkMessagesMessageEvent, tags: new([
-                        new($"{OpenTelemetryMiddleware.KeyBase}.bulksupported",true),
                         new(OpenTelemetryMiddleware.MessageIdKey,res.ID),
                         OpenTelemetryMiddleware.CreateMessagePublishStatusTag(res),
                         OpenTelemetryMiddleware.CreateConnectionTypeTag(serviceConnection)
@@ -365,19 +366,19 @@ namespace MQContract.Connections
         private async ValueTask<InboxMessageResult> ProcessInboxMessageAsync<TMessage>(string? connectionName, IInboxQueryableMessageServiceConnection inboxMessageServiceConnection, ServiceMessage serviceMessage, TimeSpan timeout, Activity? activity, CancellationToken cancellationToken)
         {
             using var scope = SetScope(serviceMessage.ID);
-            Logger?.LogDebugChecked("Establishing an instance of Inbox Message style handling for a QueryResponse call on {ConnectionName}", connectionName);
+            QueryResponseLog.EstablishingInbox(Logger, connectionName);
             var messageID = Guid.NewGuid();
-            Logger?.LogInformationChecked("Setting up Inbox Message listener with {CorrelationID}", messageID);
+            QueryResponseLog.SettingUpInbox(Logger, messageID);
             if (!inboxSubscriptions.TryGetValue(connectionName??"DEFAULT", out var inboxSubscription))
             {
-                Logger?.LogDebugChecked("Establishing new Inbox Subscription for {ConnectionName}", connectionName);
+                QueryResponseLog.EstablishingNewInbox(Logger, connectionName);
                 inboxSubscription = await inboxMessageServiceConnection.EstablishInboxSubscriptionAsync(
                     async (message) =>
                     {
                         if (message.Acknowledge!=null)
                             await message.Acknowledge();
                         using var scope = SetScope(message.ID);
-                        Logger?.LogInformationChecked("Attempting to process Inbox message with {CorrelationID}", message.CorrelationID);
+                        QueryResponseLog.AttemptingToProcessInboxMessage(Logger, message.CorrelationID);
                         if (inboxResponses.TryGetValue(message.CorrelationID, out var taskCompletionSource))
                         {
                             taskCompletionSource.TrySetResult(new(
@@ -402,12 +403,12 @@ namespace MQContract.Connections
                 if (!tcs.Task.IsCompleted)
                 {
                     using var scope = SetScope(serviceMessage.ID);
-                    Logger?.LogDebugChecked("Inbox Query Message has timed out waiting for the response");
+                    QueryResponseLog.InboxQueryMessageTimedout(Logger);
                     tcs.TrySetException(new QueryTimeoutException());
                 }
             });
             token.CancelAfter(timeout);
-            Logger?.LogInformationChecked("Transmitting Inbox Query request to underlying system with {CorrelationID} and being waiting on response", messageID);
+            QueryResponseLog.TransmittingInboxQuery(Logger, messageID);
             var result = await ExecuteResilliantTransmissionAsync<TMessage>(
                 async (ct) => await inboxMessageServiceConnection.QueryAsync(serviceMessage, messageID, ct),
                 activity,
@@ -420,7 +421,7 @@ namespace MQContract.Connections
             {
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
-                Logger?.LogInformationChecked("Inbox Query tranmission failed cleaning up resources");
+                QueryResponseLog.TransmittingInboxQueryFailed(Logger);
                 inboxResponses.TryRemove(messageID, out _);
                 return new(null, result.Error);
             }
@@ -443,7 +444,7 @@ namespace MQContract.Connections
         protected async ValueTask<QueryResult<TQueryResult>> ProduceResultAsync<TQueryResult>(ServiceQueryResult queryResult, IMessageServiceConnection serviceConnection, string? serviceConnectionName, string responseChannel = "")
         {
             using var scope = SetScope(queryResult.ID);
-            Logger?.LogDebugChecked("Attempting to produce a Query Result of {R} from the Service Message of the type {MessageTypeID}", typeof(TQueryResult), queryResult.MessageTypeID);
+            QueryResponseLog.ProcessingQueryResponse(Logger, typeof(TQueryResult), queryResult.MessageTypeID);
             QueryResult<TQueryResult> result;
             using var activity = StartActivity(Constants.ConsumeQueryResponseActivityName, messageHeader: queryResult.Header, serviceConnection: serviceConnection, connectionName: serviceConnectionName);
             try
@@ -463,7 +464,7 @@ namespace MQContract.Connections
             }
             catch (QueryResponseException qre)
             {
-                Logger?.LogErrorChecked(qre, "A query response exception occured");
+                QueryResponseLog.QueryExceptionOccured(Logger, qre);
                 result = new(
                     queryResult.ID,
                     queryResult.Header,
@@ -473,7 +474,7 @@ namespace MQContract.Connections
             }
             catch (Exception ex)
             {
-                Logger?.LogErrorChecked(ex, "An error occured attempting to convert the Service Message of the type {MessageTypeID} to the Query Result of {R}", queryResult.MessageTypeID, typeof(TQueryResult));
+                QueryResponseLog.ProcessingExceptionOccured(Logger, ex, queryResult.MessageTypeID, typeof(TQueryResult));
                 result = new(
                     queryResult.ID,
                     queryResult.Header,
@@ -489,14 +490,14 @@ namespace MQContract.Connections
         protected async ValueTask<QueryResult<TQueryResponse>> ExecuteQueryAsync<TQuery, TQueryResponse>(IMessageServiceConnection serviceConnection, ServiceMessage serviceMessage, Activity? activity, TimeSpan? timeout = null, string? responseChannel = null, string? connectionName = null, CancellationToken cancellationToken = new CancellationToken())
         {
             using var scope = SetScope(serviceMessage.ID);
-            Logger?.LogDebugChecked("Attempting to execute a Query of {Q} with a response {R}", typeof(TQuery), typeof(TQueryResponse));
+            QueryResponseLog.AttemptingQueryResponse(Logger, typeof(TQuery), typeof(TQueryResponse));
             var realTimeout = timeout??messageContext.QueryResponseTimeout<TQuery>();
             activity?.SetStatus(ActivityStatusCode.Ok);
             try
             {
                 if (serviceConnection is IQueryResponseMessageServiceConnection queryableMessageServiceConnection)
                 {
-                    Logger?.LogInformationChecked("Executing a QueryResponse call on a QueryResponse service connection");
+                    QueryResponseLog.ExecutingQueryResponseOnQueryResponseService(Logger);
                     return await ExecuteResilliantTransmissionAsync<TQuery, TQueryResponse>(
                         async (ct) =>
                         {
@@ -527,7 +528,7 @@ namespace MQContract.Connections
                 }
                 else if (serviceConnection is IInboxQueryableMessageServiceConnection inboxMessageServiceConnection)
                 {
-                    Logger?.LogInformationChecked("Executing a QueryResponse call on an InboxQuery service connection");
+                    QueryResponseLog.ExecutingQueryResponseOnInboxService(Logger);
                     var inboxResult = await ProcessInboxMessageAsync<TQuery>(connectionName, inboxMessageServiceConnection, serviceMessage, realTimeout??inboxMessageServiceConnection.DefaultTimeout, activity, cancellationToken);
                     if (inboxResult.ServiceQueryResult !=null)
                         return await ProduceResultAsync<TQueryResponse>(
@@ -538,7 +539,7 @@ namespace MQContract.Connections
                     activity?.SetStatus(ActivityStatusCode.Error);
                     return new(serviceMessage.ID, new([]), Error: inboxResult.ErrorMessage);
                 }
-                Logger?.LogInformationChecked("Executing a QueryResponse call on a standard PubSub service connection using {ResponseChannel}", responseChannel);
+                QueryResponseLog.ExecutingQueryResponseOnPubSubService(Logger, responseChannel);
                 return await ProcessPubSubQuery<TQuery, TQueryResponse>(serviceConnection, connectionName, responseChannel, realTimeout, serviceMessage, activity, cancellationToken);
             }
             catch (Exception ex)
@@ -549,11 +550,11 @@ namespace MQContract.Connections
             }
         }
 
-        protected async ValueTask<QueryResult<TQueryREsponse>> ProcessPubSubQuery<TQuery, TQueryREsponse>(IMessageServiceConnection serviceConnection, string? connectionName, string? responseChannel, TimeSpan? realTimeout, ServiceMessage serviceMessage, Activity? activity, CancellationToken cancellationToken)
+        protected async ValueTask<QueryResult<TQueryResponse>> ProcessPubSubQuery<TQuery, TQueryResponse>(IMessageServiceConnection serviceConnection, string? connectionName, string? responseChannel, TimeSpan? realTimeout, ServiceMessage serviceMessage, Activity? activity, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             responseChannel ??= messageContext.QueryResponseChannel<TQuery>();
-            Logger?.LogInformationChecked("Attempting a QueryResponse call using PubSub style messaging, querying {Q}, expecting a response of {R} on {ResponseChannel}", typeof(TQuery), typeof(TQueryREsponse), responseChannel);
+            Logger?.LogInformationChecked("Attempting a QueryResponse call using PubSub style messaging, querying {Q}, expecting a response of {R} on {ResponseChannel}", typeof(TQuery), typeof(TQueryResponse), responseChannel);
             ArgumentNullException.ThrowIfNullOrWhiteSpace(responseChannel);
             var replyChannel = await MapChannel(ChannelMapper.MapTypes.QueryResponse, responseChannel!);
             Logger?.LogDebugChecked("QueryResponse reply channel mapped to {ReplyChannel}", replyChannel);
@@ -602,13 +603,13 @@ namespace MQContract.Connections
                 if (!token.IsCancellationRequested)
                     await token.CancelAsync();
             }
-            return await ProduceResultAsync<TQueryREsponse>(tcs.Task.Result, serviceConnection, connectionName, responseChannel: responseChannel);
+            return await ProduceResultAsync<TQueryResponse>(tcs.Task.Result, serviceConnection, connectionName, responseChannel: responseChannel);
         }
         protected async ValueTask<ISubscription> CreateSubscriptionAsync<TQuery, TQueryResponse>(IMessageFactory<TQuery> queryMessageFactory, IMessageFactory<TQueryResponse> responseMessageFactory, IMessageServiceConnection serviceConnection,
             Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool synchronous, string? serviceConnectionName, MessageFilters<TQuery>? messageFilters, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogInformationChecked("Creating QueryResponse subscription for {Q} answering with {R} on {Channel} in {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
+            QueryResponseLog.ConstructingSubscription(Logger, typeof(TQuery), typeof(TQueryResponse), channel, group);
             var subscription = new QueryResponseSubscription<TQuery>(
                 async (message, replyChannel) =>
                 {
@@ -669,10 +670,10 @@ namespace MQContract.Connections
             group: group,
             synchronous: synchronous,
                 logger: Logger);
-            Logger?.LogDebugChecked("Establishing QueryResponse subscription");
+            QueryResponseLog.EstablishingSubscription(Logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, serviceConnectionName, cancellationToken))
                 return subscription;
-            Logger?.LogDebugChecked("Failed to establish subscription");
+            QueryResponseLog.EstablishingSubscriptionFailed(Logger);
             throw new SubscriptionFailedException();
         }
         #endregion

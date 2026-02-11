@@ -14,6 +14,7 @@
 	    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
 	    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[8.0.2,11.0.0)" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="[8.0.1,11.0.0)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="[8.0.3,11.0.0)" />
 		<PackageReference Include="Polly" Version="[8.6.4,9.0.0)" />
     </ItemGroup>
 	<ItemGroup>

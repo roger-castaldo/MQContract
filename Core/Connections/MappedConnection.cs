@@ -4,6 +4,7 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
+using MQContract.Loggers;
 using MQContract.Messages;
 using MQContract.Middleware;
 using System.Diagnostics;
@@ -85,7 +86,7 @@ namespace MQContract.Connections
         async ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Publishing message {TMessage} on {Channel}", typeof(TMessage), channel);
+            PubSubLog.PublishingMessage(Logger, typeof(TMessage), channel);
             using var activity = StartActivity(Constants.PublishActivityName);
             var serviceMessage = await ProduceServiceMessageAsync<TMessage>(
                 ChannelMapper.MapTypes.Publish,
@@ -105,7 +106,7 @@ namespace MQContract.Connections
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Bulk Publishing messages {TMessage} on {Channel}", typeof(TMessage), channel);
+            PubSubLog.BulkPublishingMessage(Logger, typeof(TMessage), channel);
             using var activity = StartActivity(Constants.BulkPublishActivityName);
             var serviceMessages = await
             messages.WhenAll(m =>
