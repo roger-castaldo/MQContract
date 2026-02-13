@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Extensions;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Middleware;
+using MQContract.Loggers;
 using System.Collections.Concurrent;
 
 namespace MQContract.Middleware
@@ -17,9 +17,9 @@ namespace MQContract.Middleware
         private readonly ConcurrentBag<IMiddleware> collection = [];
         private readonly ConcurrentDictionary<(Type middlewareType, InjectionPositions position), IEnumerable<IMiddleware>> injectableItems = [];
         private readonly ConcurrentDictionary<Type, IEnumerable<IMiddleware>> cache = [];
-        private readonly ILogger? logger;
+        private readonly ILogger logger;
 
-        public MiddlewareCollection(ILogger? logger, ChannelMapper? channelMapper, MessageContext messageContext, IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
+        public MiddlewareCollection(ILogger logger, ChannelMapper? channelMapper, MessageContext messageContext, IMessageEncryptor? defaultMessageEncryptor, IServiceProvider? serviceProvider)
         {
             this.logger=logger;
             collection.Add(new ChannelMappingMiddleware(channelMapper));
@@ -33,9 +33,9 @@ namespace MQContract.Middleware
 
         public async Task RegisterMiddlewareInstanceAsync(object element,IEnumerable<MQContractMessageContext> contexts)
         {
-            if (!(element is IMiddleware middleware))
+            if (element is not IMiddleware middleware)
                 throw new InvalidMiddlewareException(element.GetType());
-            logger?.LogDebugChecked("Registering middleware of type {Type}", element.GetType());
+            BaseLog.RegisteringMiddleware(logger, element.GetType());
             if (middleware is IMessageContextAwareMiddleware messageContextAwareMiddleware)
                 await Task.WhenAll(contexts.Select(context => messageContextAwareMiddleware.ProcessMessagesFromMessageContextAsync(context.DefinedMessages).AsTask()));
             collection.Add(middleware);

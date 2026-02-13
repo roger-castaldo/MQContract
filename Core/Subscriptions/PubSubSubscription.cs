@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Extensions;
 using MQContract.Interfaces.Service;
 using MQContract.Loggers;
 using MQContract.Messages;
@@ -8,7 +7,7 @@ namespace MQContract.Subscriptions
 {
     internal sealed class PubSubSubscription<TMessage>(Func<ReceivedServiceMessage, ValueTask<bool>> messageReceived, Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel, MessageContext context,
-        string? channel = null, string? group = null, bool synchronous = false, ILogger? logger = null)
+        ILogger logger, string? channel = null, string? group = null, bool synchronous = false)
         : SubscriptionBase<TMessage>(mapChannel, context, channel, synchronous, logger)
     {
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)

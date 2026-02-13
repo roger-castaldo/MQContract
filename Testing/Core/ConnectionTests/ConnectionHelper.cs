@@ -70,7 +70,7 @@ namespace AutomatedTesting.ConnectionTests
             Assert.AreEqual(2, activity.Events.Count());
         }
 
-        public static void ValidateBulkPublishActivity<T>(IEnumerable<ServiceMessage> messages, Activity activity, string activityType, Type connectionType, bool success, bool withTrace, bool bulkSupported, string? connectionName = null)
+        public static void ValidateBulkPublishActivity<T>(IEnumerable<ServiceMessage> messages, Activity activity, string activityType, Type connectionType, bool success, bool withTrace, string? connectionName = null)
         {
             Assert.AreEqual(activityType, activity.DisplayName);
             Assert.AreEqual(ActivityKind.Producer, activity.Kind);
@@ -93,9 +93,8 @@ namespace AutomatedTesting.ConnectionTests
                 && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.mappedchannel") && Equals(t.Value, message.Channel))));
                 Assert.IsTrue(activity.Events.Any(evnt => Equals("BulkMessagePublished", evnt.Name)
                 && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.status") && Equals(t.Value, (success ? "Success" : "Fail")))
-                && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.bulksupported") && Equals(t.Value, bulkSupported)
                 && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.serviceconnectiontype") && Equals(t.Value, connectionType.FullName))
-                && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, message.ID)))));
+                && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, message.ID))));
             }
         }
 

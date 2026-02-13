@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MQContract.Attributes;
-using MQContract.Extensions;
 using MQContract.Helpers;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
+using MQContract.Loggers;
 using MQContract.Messages;
 using MQContract.Middleware;
 using System.Collections.Concurrent;
@@ -35,7 +35,7 @@ namespace MQContract.Connections
             }
             catch (Exception err)
             {
-                Logger?.LogErrorChecked(err, "An error occured attempting to register a {ConsumerName} of type {ConsumerType}", consumerName, consumerType);
+                BaseLog.ConsumerRegistrationFailed(Logger, err, consumerName, consumerType);
                 throw new ConsumerRegistrationFailedException(consumerName, consumerType, err);
             }
             consumerSubscriptions.Add(subscription);

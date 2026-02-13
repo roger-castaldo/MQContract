@@ -3,6 +3,7 @@
 
 ## Contents
 
+- [BaseLog](#T-MQContract-Loggers-BaseLog 'MQContract.Loggers.BaseLog')
 - [ChannelMapper](#T-MQContract-ChannelMapper 'MQContract.ChannelMapper')
   - [AddDefaultPublishMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultPublishMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddDefaultPublishMap(System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
   - [AddDefaultPublishSubscriptionMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultPublishSubscriptionMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddDefaultPublishSubscriptionMap(System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
@@ -35,16 +36,26 @@
 - [InvalidPolicyArgumentsException](#T-MQContract-InvalidPolicyArgumentsException 'MQContract.InvalidPolicyArgumentsException')
 - [InvalidQueryResponseMessageReceivedException](#T-MQContract-InvalidQueryResponseMessageReceivedException 'MQContract.InvalidQueryResponseMessageReceivedException')
 - [InvalidRetryCircuitBreakTriggersException](#T-MQContract-InvalidRetryCircuitBreakTriggersException 'MQContract.InvalidRetryCircuitBreakTriggersException')
+- [MappableConnectionLog](#T-MQContract-Loggers-MappableConnectionLog 'MQContract.Loggers.MappableConnectionLog')
 - [MessageChannelNullException](#T-MQContract-MessageChannelNullException 'MQContract.MessageChannelNullException')
 - [MessageConversionException](#T-MQContract-MessageConversionException 'MQContract.MessageConversionException')
 - [NoConnectionMatchException](#T-MQContract-NoConnectionMatchException 'MQContract.NoConnectionMatchException')
 - [PingNotSupportedException](#T-MQContract-PingNotSupportedException 'MQContract.PingNotSupportedException')
+- [PubSubLog](#T-MQContract-Loggers-PubSubLog 'MQContract.Loggers.PubSubLog')
 - [QueryExecutionFailedException](#T-MQContract-QueryExecutionFailedException 'MQContract.QueryExecutionFailedException')
 - [QueryResponseException](#T-MQContract-QueryResponseException 'MQContract.QueryResponseException')
+- [QueryResponseLog](#T-MQContract-Loggers-QueryResponseLog 'MQContract.Loggers.QueryResponseLog')
 - [QueryTimeoutException](#T-MQContract-QueryTimeoutException 'MQContract.QueryTimeoutException')
 - [SubscriptionFailedException](#T-MQContract-SubscriptionFailedException 'MQContract.SubscriptionFailedException')
 - [TooManyConnectionMatchesException](#T-MQContract-TooManyConnectionMatchesException 'MQContract.TooManyConnectionMatchesException')
 - [UnknownResponseTypeException](#T-MQContract-UnknownResponseTypeException 'MQContract.UnknownResponseTypeException')
+
+<a name='T-MQContract-Loggers-BaseLog'></a>
+## BaseLog `type`
+
+##### Namespace
+
+MQContract.Loggers
 
 <a name='T-MQContract-ChannelMapper'></a>
 ## ChannelMapper `type`
@@ -575,6 +586,13 @@ MQContract
 
 Thrown from a Resiliant Contract Connection when an attempt to create a policy is made but the retry count is higher than the circuit break count
 
+<a name='T-MQContract-Loggers-MappableConnectionLog'></a>
+## MappableConnectionLog `type`
+
+##### Namespace
+
+MQContract.Loggers
+
 <a name='T-MQContract-MessageChannelNullException'></a>
 ## MessageChannelNullException `type`
 
@@ -619,6 +637,13 @@ MQContract
 
 Thrown from the ContractedConnection or the MappedConnection when there is no underlying service that supports the Ping call
 
+<a name='T-MQContract-Loggers-PubSubLog'></a>
+## PubSubLog `type`
+
+##### Namespace
+
+MQContract.Loggers
+
 <a name='T-MQContract-QueryExecutionFailedException'></a>
 ## QueryExecutionFailedException `type`
 
@@ -640,6 +665,13 @@ MQContract
 ##### Summary
 
 Thrown when a Query call is made and there is an error in the response
+
+<a name='T-MQContract-Loggers-QueryResponseLog'></a>
+## QueryResponseLog `type`
+
+##### Namespace
+
+MQContract.Loggers
 
 <a name='T-MQContract-QueryTimeoutException'></a>
 ## QueryTimeoutException `type`

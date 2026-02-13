@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Extensions;
+using MQContract.Loggers;
 using MQContract.Messages;
 using MQContract.Middleware;
 using Polly;
@@ -10,7 +10,7 @@ using System.Diagnostics;
 namespace MQContract.Connections
 {
     internal class ResiliencePolicy(string name,
-        ILogger? logger,
+        ILogger logger,
         (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy,
         (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy
     )
@@ -71,7 +71,7 @@ namespace MQContract.Connections
 
         private static AsyncPolicy<IEnumerable<TransmissionResult>> BuildTransmissionPolicy(
             string name,
-            ILogger? logger,
+            ILogger logger,
             (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy,
             (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy
         )
@@ -87,12 +87,12 @@ namespace MQContract.Connections
                             fallbackAction: (delegateResult, context, cancellationToken) =>
                             {
                                 foreach (var result in delegateResult.Result.Where(r => r.IsError))
-                                    logger?.LogDebugChecked("Retry fallback has been triggered for {MessageID}", result.ID);
+                                    BaseLog.ResilienceRetryTriggered(logger, result.ID);
                                 return Task.FromResult(delegateResult.Result.Select(instance => new TransmissionResult(instance.ID, (instance.IsError ? new ErrorMessage(new ResilienceException(ResilienceTypes.Retry, instance.Error!.Exception)) : null))));
                             },
                             onFallbackAsync: (delegateResult, cancellationToken) =>
                             {
-                                logger?.LogErrorChecked(delegateResult.Exception, "Failed to fallback");
+                                BaseLog.ResilienceFailedToFallback(logger, delegateResult.Exception);
                                 return Task.CompletedTask;
                             }
                         );
@@ -105,7 +105,7 @@ namespace MQContract.Connections
             };
         }
 
-        private static AsyncPolicy<IEnumerable<QueryResult<TQueryResult>>> BuildQueryPolicy<TQueryResult>(string name, ILogger? logger,
+        private static AsyncPolicy<IEnumerable<QueryResult<TQueryResult>>> BuildQueryPolicy<TQueryResult>(string name, ILogger logger,
             (int retryCount, Func<int, TimeSpan> sleepDurationProvider)? retryPolicy,
             (int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)? circuitBreakPolicy
         )
@@ -121,12 +121,12 @@ namespace MQContract.Connections
                             fallbackAction: (delegateResult, context, cancellationToken) =>
                             {
                                 foreach (var result in delegateResult.Result.Where(r => r.IsError))
-                                    logger?.LogDebugChecked("Retry fallback has been triggered for {MessageID}", result.ID);
+                                    BaseLog.ResilienceRetryTriggered(logger, result.ID);
                                 return Task.FromResult(delegateResult.Result.Select(instance => new QueryResult<TQueryResult>(instance.ID, instance.Header, instance.Result, (instance.IsError ? new ErrorMessage(new ResilienceException(ResilienceTypes.Retry, instance.Error!.Exception)) : null))));
                             },
                             onFallbackAsync: (delegateResult, cancellationToken) =>
                             {
-                                logger?.LogErrorChecked(delegateResult.Exception, "Failed to fallback");
+                                BaseLog.ResilienceFailedToFallback(logger, delegateResult.Exception);
                                 return Task.CompletedTask;
                             }
                         );
@@ -188,9 +188,7 @@ namespace MQContract.Connections
                     var response = await func(serviceMessages.Where(msg => !currentSuccess.Any(res => Equals(msg.ID, res.ID))), cancellation);
                     context.Remove(SuccessStorageKey);
                     context.Add(SuccessStorageKey, currentSuccess.Concat(response.Where(resp => !resp.IsError || (resp.IsError && resp.Error!.IsFatal))).ToArray());
-                    return currentSuccess.Concat(response)
-                        .OrderBy(rep => Array.FindIndex(serviceMessages, msg => Equals(msg.ID, rep.ID)))
-                        .ToArray();
+                    return [.. currentSuccess.Concat(response).OrderBy(rep => Array.FindIndex(serviceMessages, msg => Equals(msg.ID, rep.ID)))];
                 }, resultContext, cancellationToken);
             }
             catch (BrokenCircuitException bce)

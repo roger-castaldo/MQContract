@@ -179,7 +179,6 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 serviceConnection.Object.GetType(),
                 true,
                 withLinking,
-                true,
                 connectionName: ServiceName
             );
             #endregion

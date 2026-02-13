@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using MQContract.Connections;
-using MQContract.Extensions;
 using MQContract.Interfaces.Service;
 using MQContract.Loggers;
 using MQContract.Messages;
@@ -14,8 +13,8 @@ namespace MQContract.Subscriptions
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         MessageContext context,
-        string? channel = null, string? group = null,
-        bool synchronous = false, ILogger? logger = null)
+        ILogger logger, string? channel = null,
+        string? group = null, bool synchronous = false)
         : SubscriptionBase<TMessage>(mapChannel, context, channel, synchronous, logger)
     {
         private ManualResetEventSlim? manualResetEvent = new(true);

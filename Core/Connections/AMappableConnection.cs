@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Extensions;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
+using MQContract.Loggers;
 using MQContract.Messages;
 
 namespace MQContract.Connections
@@ -61,11 +61,11 @@ namespace MQContract.Connections
         protected async ValueTask<IEnumerable<ServiceConnectionList.ServiceConnection>> GetConnectionsAsync(string channel, Type messageType, MessageHeader messageHeader)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Locating connection(s) for {Channel}, {MessageType}, {HeaderKeys}", channel, messageType, string.Join(',', messageHeader.Keys));
+            MappableConnectionLog.LocatingConnections(Logger, channel, messageType, string.Join(',', messageHeader.Keys));
             var result = await connectionList.GetAsync(channel, messageType, messageHeader);
             if (!result.Any())
             {
-                Logger?.LogErrorChecked("Unable to locate any connections matching {Channel}, {MessageType}, {HeaderKeys}", channel, messageType, string.Join(',', messageHeader.Keys));
+                MappableConnectionLog.UnableToLocateConnections(Logger, channel, messageType, string.Join(',', messageHeader.Keys));
                 throw new NoConnectionMatchException();
             }
             return result;

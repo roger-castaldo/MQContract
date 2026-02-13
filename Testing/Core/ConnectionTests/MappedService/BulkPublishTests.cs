@@ -169,7 +169,6 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 serviceConnection.Object.GetType(),
                 true,
                 withLinking,
-                true,
                 connectionName: ServiceName
             );
             #endregion
