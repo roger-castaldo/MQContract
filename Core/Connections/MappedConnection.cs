@@ -3,7 +3,7 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
-using MQContract.Loggers;
+using MQContract.Logging;
 using MQContract.Messages;
 using MQContract.Middleware;
 using System.Diagnostics;
@@ -21,7 +21,7 @@ namespace MQContract.Connections
         ValueTask<PingResult> IContractConnection.PingAsync()
         {
             using var scope = SetScope();
-            BaseLog.PingServiceConnection(Logger);  
+            Logs.Transport.PingServiceConnection(Logger);  
             var connections = FullList.Select(c => c.MessageServiceConnection).OfType<IPingableMessageServiceConnection>();
             return connections.Count() switch
             {
@@ -44,7 +44,7 @@ namespace MQContract.Connections
             var connections = await base.GetConnectionsAsync(channel, messageType, messageHeader);
             if (connections.Count()>1)
             {
-                MappableConnectionLog.LocatedTooManyConnections(Logger, channel, messageType, string.Join(',', messageHeader.Keys));
+                Logs.Transport.LocatedTooManyConnections(Logger, channel, messageType, messageHeader.Keys);
                 throw new TooManyConnectionMatchesException();
             }
             return connections.First();
@@ -53,11 +53,11 @@ namespace MQContract.Connections
         private async ValueTask<GetConnectionResult> GetConnectionAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
         {
             using var scope = SetScope();
-            MappableConnectionLog.LocatingConnectionsForMapType(Logger, channel, typeof(TMessage), mapTypes);
+            Logs.Transport.LocatingConnectionsForMapType(Logger, channel, typeof(TMessage), mapTypes);
             var connections = await base.GetConnectionsAsync<TMessage>(channel, mapTypes);
             if (connections.Connections.Count()>1)
             {
-                MappableConnectionLog.LocatedTooManyConnectionsForMapType(Logger, channel, typeof(TMessage), mapTypes);
+                Logs.Transport.LocatedTooManyConnectionsForMapType(Logger, channel, typeof(TMessage), mapTypes);
                 throw new TooManyConnectionMatchesException();
             }
             return new(connections.Connections.First(), connections.Channel);
@@ -84,7 +84,7 @@ namespace MQContract.Connections
         async ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            PubSubLog.PublishingMessage(Logger, typeof(TMessage), channel);
+            Logs.Publishing.PublishingMessage(Logger, typeof(TMessage), channel);
             using var activity = StartActivity(Constants.PublishActivityName);
             var serviceMessage = await ProduceServiceMessageAsync<TMessage>(
                 ChannelMapper.MapTypes.Publish,
@@ -104,7 +104,7 @@ namespace MQContract.Connections
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            PubSubLog.BulkPublishingMessage(Logger, typeof(TMessage), channel);
+            Logs.Publishing.BulkPublishingMessages(Logger, typeof(TMessage), channel);
             using var activity = StartActivity(Constants.BulkPublishActivityName);
             var serviceMessages = await
             messages.WhenAll(m =>
@@ -132,7 +132,7 @@ namespace MQContract.Connections
         async ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            QueryResponseLog.ExecutingQuery(Logger, typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
+            Logs.Publishing.ExecutingQuery(Logger, typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
             using var activity = StartActivity(Constants.PublishQueryActivityName);
             var serviceMessage = await ProduceServiceMessageAsync<TQuery>(
                 ChannelMapper.MapTypes.Query,
@@ -153,7 +153,7 @@ namespace MQContract.Connections
             CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            QueryResponseLog.ExtractingQueryResponseType(Logger, typeof(TQuery), channel, responseChannel);
+            Logs.Pipeline.ExtractingQueryResponseType(Logger, typeof(TQuery), channel, responseChannel);
             return await messageContext.ExecuteQuery<TQuery>(this, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
         }
 

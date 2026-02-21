@@ -4,7 +4,7 @@ using MQContract.Attributes;
 using MQContract.Helpers;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
-using MQContract.Loggers;
+using MQContract.Logging;
 using MQContract.Messages;
 using MQContract.Middleware;
 using System.Collections.Concurrent;
@@ -14,9 +14,7 @@ using System.Runtime.Loader;
 
 namespace MQContract.Connections
 {
-#pragma warning disable S3881 // "IDisposable" should be implemented correctly
     internal abstract partial class AConnection<TContractConnection> : IMetricContractConnection<TContractConnection>
-#pragma warning restore S3881 // "IDisposable" should be implemented correctly
         where TContractConnection : IBaseContractConnection
     {
         private const string ConsumerClassNameKey = $"{OpenTelemetryMiddleware.KeyBase}.consumerclass";
@@ -35,7 +33,7 @@ namespace MQContract.Connections
             }
             catch (Exception err)
             {
-                BaseLog.ConsumerRegistrationFailed(Logger, err, consumerName, consumerType);
+                Logs.Lifetime.ConsumerRegistrationFailed(Logger, err, consumerName, consumerType);
                 throw new ConsumerRegistrationFailedException(consumerName, consumerType, err);
             }
             consumerSubscriptions.Add(subscription);

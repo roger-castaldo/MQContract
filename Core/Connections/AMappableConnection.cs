@@ -3,7 +3,7 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
-using MQContract.Loggers;
+using MQContract.Logging;
 using MQContract.Messages;
 
 namespace MQContract.Connections
@@ -61,11 +61,11 @@ namespace MQContract.Connections
         protected async ValueTask<IEnumerable<ServiceConnectionList.ServiceConnection>> GetConnectionsAsync(string channel, Type messageType, MessageHeader messageHeader)
         {
             using var scope = SetScope();
-            MappableConnectionLog.LocatingConnections(Logger, channel, messageType, string.Join(',', messageHeader.Keys));
+            Logs.Transport.LocatingConnections(Logger, channel, messageType, messageHeader.Keys);
             var result = await connectionList.GetAsync(channel, messageType, messageHeader);
             if (!result.Any())
             {
-                MappableConnectionLog.UnableToLocateConnections(Logger, channel, messageType, string.Join(',', messageHeader.Keys));
+                Logs.Transport.UnableToLocateConnections(Logger, channel, messageType, messageHeader.Keys);
                 throw new NoConnectionMatchException();
             }
             return result;

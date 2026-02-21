@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
-using MQContract.Loggers;
+using MQContract.Logging;
 using System.Diagnostics.CodeAnalysis;
 
 namespace MQContract.Subscriptions
@@ -26,7 +26,7 @@ namespace MQContract.Subscriptions
         {
             if (serviceSubscription!=null)
             {
-                BaseLog.SubscriptionEndAsync(logger, ID);
+                Logs.Lifetime.SubscriptionEndAsync(logger, ID);
                 await serviceSubscription.EndAsync();
                 serviceSubscription=null;
             }

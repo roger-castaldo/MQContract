@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using MQContract.Interfaces.Service;
-using MQContract.Loggers;
+using MQContract.Logging;
 using MQContract.Messages;
 
 namespace MQContract.Subscriptions
@@ -13,7 +13,7 @@ namespace MQContract.Subscriptions
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            PubSubLog.EstablishingPubSubServiceSubscription(Logger);
+            Logs.Lifetime.EstablishingPubSubServiceSubscription(Logger);
             serviceSubscription = await connection.SubscribeAsync(
                 async serviceMessage => await ProcessMessage(serviceMessage),
                 error => errorReceived(error),
@@ -23,7 +23,7 @@ namespace MQContract.Subscriptions
             );
             if (serviceSubscription==null)
                 return false;
-            PubSubLog.PubSubSubscriptionEstablishmentSucceeded(Logger);
+            Logs.Lifetime.PubSubSubscriptionEstablishmentSucceeded(Logger);
             return true;
         }
 
@@ -32,18 +32,18 @@ namespace MQContract.Subscriptions
             using var scope = SetScope();
             try
             {
-                PubSubLog.ProcessingServiceMessage(Logger, serviceMessage.ID);
+                Logs.Consuming.ProcessingServiceMessage(Logger, serviceMessage.ID);
                 var tsk = messageReceived(serviceMessage);
                 var ack = await tsk.ConfigureAwait(!Synchronous);
                 if (serviceMessage.Acknowledge!=null && ack)
                 {
-                    PubSubLog.AcknowledgingServiceMessage(Logger, serviceMessage.ID);
+                    Logs.Consuming.AcknowledgingServiceMessage(Logger, serviceMessage.ID);
                     await serviceMessage.Acknowledge();
                 }
             }
             catch (Exception e)
             {
-                PubSubLog.ProcessingServiceMessageError(Logger, e, serviceMessage.ID);
+                Logs.Consuming.ProcessingServiceMessageError(Logger, e, serviceMessage.ID);
                 errorReceived(e);
             }
         }

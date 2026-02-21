@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MQContract.Connections;
 using MQContract.Interfaces.Service;
-using MQContract.Loggers;
+using MQContract.Logging;
 using MQContract.Messages;
 using MQContract.Middleware;
 using System.Diagnostics;
@@ -23,13 +23,13 @@ namespace MQContract.Subscriptions
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, string? serviceConnectionName, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            QueryResponseLog.EstablishingServiceSubscription(Logger);
+            Logs.Lifetime.EstablishingServiceSubscription(Logger);
 
             try
             {
                 if (connection is IQueryableMessageServiceConnection queryableMessageServiceConnection)
                 {
-                    QueryResponseLog.EstablishingQueryResponseServiceSubscription(Logger);
+                    Logs.Lifetime.EstablishingQueryResponseServiceSubscription(Logger);
                     serviceSubscription = await queryableMessageServiceConnection.SubscribeQueryAsync(
                         async serviceMessage =>
                         {
@@ -41,22 +41,22 @@ namespace MQContract.Subscriptions
                         group: group,
                         cancellationToken: cancellationToken
                     );
-                    QueryResponseLog.EstablishingQueryResponseServiceSubscriptionSuccess(Logger);
+                    Logs.Lifetime.EstablishingQueryResponseSubscriptionSuccess(Logger);
                 }
                 else
                 {
-                    QueryResponseLog.EstablishingPubSubServiceSubscription(Logger);
+                    Logs.Lifetime.EstablishingQueryResponseSubscriptionWithPubSubServiceSubscription(Logger);
                     serviceSubscription = await connection.SubscribeAsync(
                         async (serviceMessage) =>
                         {
                             if (!QueryResponseHelper.IsValidMessage(serviceMessage))
                             {
-                                QueryResponseLog.ReceivedInvalidQueryResponseMessage(Logger);
+                                Logs.Pipeline.ReceivedInvalidQueryResponseMessage(Logger);
                                 errorReceived(new InvalidQueryResponseMessageReceivedException());
                             }
                             else
                             {
-                                QueryResponseLog.ProcessingRecievedMessage(Logger, serviceMessage.ID);
+                                Logs.Consuming.ProcessingServiceMessage(Logger, serviceMessage.ID);
                                 (var resultMessage, var activity) = await ProcessServiceMessageAsync(
                                     new(
                                         serviceMessage.ID,
@@ -79,14 +79,14 @@ namespace MQContract.Subscriptions
                         MessageChannel,
                         cancellationToken: cancellationToken
                     );
-                    QueryResponseLog.EstablishinPubSubServiceSubscriptionSuccess(Logger);
+                    Logs.Lifetime.EstablishingQueryResponseSubscriptionSuccess(Logger);
                 }
 
                 return serviceSubscription != null;
             }
             catch (Exception ex)
             {
-                QueryResponseLog.ErrorEstablishingSubscription(Logger, ex);
+                Logs.Lifetime.ErrorEstablishingSubscription(Logger, ex);
                 throw new SubscriptionFailedException(ex);
             }
         }
@@ -98,7 +98,7 @@ namespace MQContract.Subscriptions
             using var scope = SetScope();
             if (Synchronous && !(token?.IsCancellationRequested ?? false))
             {
-                QueryResponseLog.WaitingToProcessMessage(Logger);
+                Logs.Consuming.WaitingToProcessMessage(Logger);
                 manualResetEvent!.Wait(cancellationToken: token!.Token);
             }
 
@@ -107,44 +107,44 @@ namespace MQContract.Subscriptions
 
             try
             {
-                QueryResponseLog.ProcessingServiceMessage(Logger, message.ID);
+                Logs.Consuming.ProcessingServiceMessage(Logger, message.ID);
                 response = await processMessage(message, replyChannel);
                 if (message.Acknowledge != null && !Equals(response?.FilterResult, MessageFilterResult.DropAndDontAcknowledge))
                 {
-                    QueryResponseLog.AcknowledgingServiceMessage(Logger, message.ID);
+                    Logs.Consuming.AcknowledgingServiceMessage(Logger, message.ID);
                     await message.Acknowledge();
                 }
             }
             catch (Exception e)
             {
-                QueryResponseLog.ErrorProcessingServiceMessage(Logger, e, message.ID);
+                Logs.Consuming.ProcessingServiceMessageError(Logger, e, message.ID);
                 errorReceived(e);
                 error = e;
             }
 
             if (Synchronous)
             {
-                QueryResponseLog.ReleasingMessageWait(Logger);
+                Logs.Consuming.ReleasingMessageWait(Logger);
                 manualResetEvent!.Set();
             }
 
             if (error != null)
             {
-                QueryResponseLog.ReturningErrorMessage(Logger, message.ID);
+                Logs.Consuming.ReturningErrorMessage(Logger, message.ID);
                 return new(ErrorServiceMessage.Produce(replyChannel, error), response?.Activity);
             }
 
-            QueryResponseLog.ReturningValidResponse(Logger, message.ID);
+            Logs.Consuming.ReturningValidResponse(Logger, message.ID);
             return new(response?.ServiceMessage ?? (Equals(response?.FilterResult, MessageFilterResult.Allow) ? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()) : null), response?.Activity);
         }
 
         protected override void InternalDispose()
         {
-            QueryResponseLog.Disposing(Logger);
+            Logs.Lifetime.DisposingQueryResponseSubscription(Logger);
 
             if (token != null)
             {
-                QueryResponseLog.CancellingToken(Logger);
+                Logs.Consuming.CancellingToken(Logger);
                 token.Cancel();
                 manualResetEvent?.Dispose();
                 token.Dispose();
@@ -152,7 +152,7 @@ namespace MQContract.Subscriptions
                 manualResetEvent = null;
             }
 
-            QueryResponseLog.Disposed(Logger);
+            Logs.Lifetime.DisposedQueryResponseSubscription(Logger);
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Loggers;
+using MQContract.Logging;
 using MQContract.Messages;
 using MQContract.Middleware;
 using Polly;
@@ -87,12 +87,12 @@ namespace MQContract.Connections
                             fallbackAction: (delegateResult, context, cancellationToken) =>
                             {
                                 foreach (var result in delegateResult.Result.Where(r => r.IsError))
-                                    BaseLog.ResilienceRetryTriggered(logger, result.ID);
+                                    Logs.Pipeline.ResilienceRetryTriggered(logger, result.ID);
                                 return Task.FromResult(delegateResult.Result.Select(instance => new TransmissionResult(instance.ID, (instance.IsError ? new ErrorMessage(new ResilienceException(ResilienceTypes.Retry, instance.Error!.Exception)) : null))));
                             },
                             onFallbackAsync: (delegateResult, cancellationToken) =>
                             {
-                                BaseLog.ResilienceFailedToFallback(logger, delegateResult.Exception);
+                                Logs.Pipeline.ResilienceFailedToFallback(logger, delegateResult.Exception);
                                 return Task.CompletedTask;
                             }
                         );
@@ -121,12 +121,12 @@ namespace MQContract.Connections
                             fallbackAction: (delegateResult, context, cancellationToken) =>
                             {
                                 foreach (var result in delegateResult.Result.Where(r => r.IsError))
-                                    BaseLog.ResilienceRetryTriggered(logger, result.ID);
+                                    Logs.Pipeline.ResilienceRetryTriggered(logger, result.ID);
                                 return Task.FromResult(delegateResult.Result.Select(instance => new QueryResult<TQueryResult>(instance.ID, instance.Header, instance.Result, (instance.IsError ? new ErrorMessage(new ResilienceException(ResilienceTypes.Retry, instance.Error!.Exception)) : null))));
                             },
                             onFallbackAsync: (delegateResult, cancellationToken) =>
                             {
-                                BaseLog.ResilienceFailedToFallback(logger, delegateResult.Exception);
+                                Logs.Pipeline.ResilienceFailedToFallback(logger, delegateResult.Exception);
                                 return Task.CompletedTask;
                             }
                         );

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Middleware;
-using MQContract.Loggers;
+using MQContract.Logging;
 using System.Collections.Concurrent;
 
 namespace MQContract.Middleware
@@ -35,7 +35,7 @@ namespace MQContract.Middleware
         {
             if (element is not IMiddleware middleware)
                 throw new InvalidMiddlewareException(element.GetType());
-            BaseLog.RegisteringMiddleware(logger, element.GetType());
+            Logs.Lifetime.RegisteringMiddleware(logger, element.GetType());
             if (middleware is IMessageContextAwareMiddleware messageContextAwareMiddleware)
                 await Task.WhenAll(contexts.Select(context => messageContextAwareMiddleware.ProcessMessagesFromMessageContextAsync(context.DefinedMessages).AsTask()));
             collection.Add(middleware);

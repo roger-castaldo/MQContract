@@ -3,7 +3,6 @@
 
 ## Contents
 
-- [BaseLog](#T-MQContract-Loggers-BaseLog 'MQContract.Loggers.BaseLog')
 - [ChannelMapper](#T-MQContract-ChannelMapper 'MQContract.ChannelMapper')
   - [AddDefaultPublishMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultPublishMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddDefaultPublishMap(System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
   - [AddDefaultPublishSubscriptionMap(mapFunction)](#M-MQContract-ChannelMapper-AddDefaultPublishSubscriptionMap-System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddDefaultPublishSubscriptionMap(System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
@@ -26,36 +25,32 @@
   - [AddQuerySubscriptionMap(originalChannel,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-String,System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.String,System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
   - [AddQuerySubscriptionMap(isMatch,mapFunction)](#M-MQContract-ChannelMapper-AddQuerySubscriptionMap-System-Func{System-String,System-Boolean},System-Func{System-String,System-Threading-Tasks-ValueTask{System-String}}- 'MQContract.ChannelMapper.AddQuerySubscriptionMap(System.Func{System.String,System.Boolean},System.Func{System.String,System.Threading.Tasks.ValueTask{System.String}})')
 - [ConsumerRegistrationFailedException](#T-MQContract-ConsumerRegistrationFailedException 'MQContract.ConsumerRegistrationFailedException')
+- [Consuming](#T-MQContract-Logging-EventIds-Consuming 'MQContract.Logging.EventIds.Consuming')
 - [ContractConnection](#T-MQContract-ContractConnection 'MQContract.ContractConnection')
   - [Instance(serviceConnection,defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-Instance-MQContract-Interfaces-Service-IMessageServiceConnection,MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.Instance(MQContract.Interfaces.Service.IMessageServiceConnection,MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
   - [MappedServiceInstance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-MappedServiceInstance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.MappedServiceInstance(MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
   - [MultiServiceInstance(defaultMessageEncoder,defaultMessageEncryptor,serviceProvider,logger,channelMapper)](#M-MQContract-ContractConnection-MultiServiceInstance-MQContract-Interfaces-Encoding-IMessageEncoder,MQContract-Interfaces-Encrypting-IMessageEncryptor,System-IServiceProvider,Microsoft-Extensions-Logging-ILogger,MQContract-ChannelMapper- 'MQContract.ContractConnection.MultiServiceInstance(MQContract.Interfaces.Encoding.IMessageEncoder,MQContract.Interfaces.Encrypting.IMessageEncryptor,System.IServiceProvider,Microsoft.Extensions.Logging.ILogger,MQContract.ChannelMapper)')
 - [DynamicCodeNotSupportedException](#T-MQContract-DynamicCodeNotSupportedException 'MQContract.DynamicCodeNotSupportedException')
+- [EventIds](#T-MQContract-Logging-EventIds 'MQContract.Logging.EventIds')
 - [InvalidConsumerTypeException](#T-MQContract-InvalidConsumerTypeException 'MQContract.InvalidConsumerTypeException')
 - [InvalidMiddlewareException](#T-MQContract-InvalidMiddlewareException 'MQContract.InvalidMiddlewareException')
 - [InvalidPolicyArgumentsException](#T-MQContract-InvalidPolicyArgumentsException 'MQContract.InvalidPolicyArgumentsException')
 - [InvalidQueryResponseMessageReceivedException](#T-MQContract-InvalidQueryResponseMessageReceivedException 'MQContract.InvalidQueryResponseMessageReceivedException')
 - [InvalidRetryCircuitBreakTriggersException](#T-MQContract-InvalidRetryCircuitBreakTriggersException 'MQContract.InvalidRetryCircuitBreakTriggersException')
-- [MappableConnectionLog](#T-MQContract-Loggers-MappableConnectionLog 'MQContract.Loggers.MappableConnectionLog')
+- [Lifetime](#T-MQContract-Logging-EventIds-Lifetime 'MQContract.Logging.EventIds.Lifetime')
 - [MessageChannelNullException](#T-MQContract-MessageChannelNullException 'MQContract.MessageChannelNullException')
 - [MessageConversionException](#T-MQContract-MessageConversionException 'MQContract.MessageConversionException')
 - [NoConnectionMatchException](#T-MQContract-NoConnectionMatchException 'MQContract.NoConnectionMatchException')
 - [PingNotSupportedException](#T-MQContract-PingNotSupportedException 'MQContract.PingNotSupportedException')
-- [PubSubLog](#T-MQContract-Loggers-PubSubLog 'MQContract.Loggers.PubSubLog')
+- [Pipeline](#T-MQContract-Logging-EventIds-Pipeline 'MQContract.Logging.EventIds.Pipeline')
+- [Publishing](#T-MQContract-Logging-EventIds-Publishing 'MQContract.Logging.EventIds.Publishing')
 - [QueryExecutionFailedException](#T-MQContract-QueryExecutionFailedException 'MQContract.QueryExecutionFailedException')
 - [QueryResponseException](#T-MQContract-QueryResponseException 'MQContract.QueryResponseException')
-- [QueryResponseLog](#T-MQContract-Loggers-QueryResponseLog 'MQContract.Loggers.QueryResponseLog')
 - [QueryTimeoutException](#T-MQContract-QueryTimeoutException 'MQContract.QueryTimeoutException')
 - [SubscriptionFailedException](#T-MQContract-SubscriptionFailedException 'MQContract.SubscriptionFailedException')
 - [TooManyConnectionMatchesException](#T-MQContract-TooManyConnectionMatchesException 'MQContract.TooManyConnectionMatchesException')
+- [Transport](#T-MQContract-Logging-EventIds-Transport 'MQContract.Logging.EventIds.Transport')
 - [UnknownResponseTypeException](#T-MQContract-UnknownResponseTypeException 'MQContract.UnknownResponseTypeException')
-
-<a name='T-MQContract-Loggers-BaseLog'></a>
-## BaseLog `type`
-
-##### Namespace
-
-MQContract.Loggers
 
 <a name='T-MQContract-ChannelMapper'></a>
 ## ChannelMapper `type`
@@ -434,6 +429,13 @@ MQContract
 
 Thrown when the registration of a consumer failes
 
+<a name='T-MQContract-Logging-EventIds-Consuming'></a>
+## Consuming `type`
+
+##### Namespace
+
+MQContract.Logging.EventIds
+
 <a name='T-MQContract-ContractConnection'></a>
 ## ContractConnection `type`
 
@@ -531,6 +533,13 @@ MQContract
 
 Thrown when dynamic code is not supported but a call that requires it is made
 
+<a name='T-MQContract-Logging-EventIds'></a>
+## EventIds `type`
+
+##### Namespace
+
+MQContract.Logging
+
 <a name='T-MQContract-InvalidConsumerTypeException'></a>
 ## InvalidConsumerTypeException `type`
 
@@ -586,12 +595,12 @@ MQContract
 
 Thrown from a Resiliant Contract Connection when an attempt to create a policy is made but the retry count is higher than the circuit break count
 
-<a name='T-MQContract-Loggers-MappableConnectionLog'></a>
-## MappableConnectionLog `type`
+<a name='T-MQContract-Logging-EventIds-Lifetime'></a>
+## Lifetime `type`
 
 ##### Namespace
 
-MQContract.Loggers
+MQContract.Logging.EventIds
 
 <a name='T-MQContract-MessageChannelNullException'></a>
 ## MessageChannelNullException `type`
@@ -637,12 +646,19 @@ MQContract
 
 Thrown from the ContractedConnection or the MappedConnection when there is no underlying service that supports the Ping call
 
-<a name='T-MQContract-Loggers-PubSubLog'></a>
-## PubSubLog `type`
+<a name='T-MQContract-Logging-EventIds-Pipeline'></a>
+## Pipeline `type`
 
 ##### Namespace
 
-MQContract.Loggers
+MQContract.Logging.EventIds
+
+<a name='T-MQContract-Logging-EventIds-Publishing'></a>
+## Publishing `type`
+
+##### Namespace
+
+MQContract.Logging.EventIds
 
 <a name='T-MQContract-QueryExecutionFailedException'></a>
 ## QueryExecutionFailedException `type`
@@ -665,13 +681,6 @@ MQContract
 ##### Summary
 
 Thrown when a Query call is made and there is an error in the response
-
-<a name='T-MQContract-Loggers-QueryResponseLog'></a>
-## QueryResponseLog `type`
-
-##### Namespace
-
-MQContract.Loggers
 
 <a name='T-MQContract-QueryTimeoutException'></a>
 ## QueryTimeoutException `type`
@@ -705,6 +714,13 @@ MQContract
 ##### Summary
 
 Thrown from the Mapped Connection when more than 1 connection matches the search criteria making the requested action impossible to do
+
+<a name='T-MQContract-Logging-EventIds-Transport'></a>
+## Transport `type`
+
+##### Namespace
+
+MQContract.Logging.EventIds
 
 <a name='T-MQContract-UnknownResponseTypeException'></a>
 ## UnknownResponseTypeException `type`
