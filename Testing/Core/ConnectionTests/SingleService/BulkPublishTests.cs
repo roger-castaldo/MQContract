@@ -163,9 +163,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 "MQContract.BulkPublishMessages",
                 serviceConnection.Object.GetType(),
                 true,
-                withLinking,
-                true
-            );
+                withLinking);
             #endregion
 
             #region Verify

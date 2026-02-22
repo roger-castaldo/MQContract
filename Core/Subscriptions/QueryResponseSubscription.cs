@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MQContract.Connections;
-using MQContract.Extensions;
 using MQContract.Interfaces.Service;
+using MQContract.Logging;
 using MQContract.Messages;
 using MQContract.Middleware;
 using System.Diagnostics;
@@ -13,8 +13,8 @@ namespace MQContract.Subscriptions
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         MessageContext context,
-        string? channel = null, string? group = null,
-        bool synchronous = false, ILogger? logger = null)
+        ILogger logger, string? channel = null,
+        string? group = null, bool synchronous = false)
         : SubscriptionBase<TMessage>(mapChannel, context, channel, synchronous, logger)
     {
         private ManualResetEventSlim? manualResetEvent = new(true);
@@ -23,13 +23,13 @@ namespace MQContract.Subscriptions
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, string? serviceConnectionName, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogInformationChecked("Establishing underlying service subscription for QueryResponse subscription.");
+            Logs.Lifetime.EstablishingServiceSubscription(Logger);
 
             try
             {
                 if (connection is IQueryableMessageServiceConnection queryableMessageServiceConnection)
                 {
-                    Logger?.LogDebugChecked("Establishing underlying QueryResponse service subscription.");
+                    Logs.Lifetime.EstablishingQueryResponseServiceSubscription(Logger);
                     serviceSubscription = await queryableMessageServiceConnection.SubscribeQueryAsync(
                         async serviceMessage =>
                         {
@@ -41,22 +41,22 @@ namespace MQContract.Subscriptions
                         group: group,
                         cancellationToken: cancellationToken
                     );
-                    Logger?.LogInformationChecked("Successfully established QueryResponse subscription.");
+                    Logs.Lifetime.EstablishingQueryResponseSubscriptionSuccess(Logger);
                 }
                 else
                 {
-                    Logger?.LogInformationChecked("Establishing underlying PubSub service subscription to listen for incoming queries.");
+                    Logs.Lifetime.EstablishingQueryResponseSubscriptionWithPubSubServiceSubscription(Logger);
                     serviceSubscription = await connection.SubscribeAsync(
                         async (serviceMessage) =>
                         {
                             if (!QueryResponseHelper.IsValidMessage(serviceMessage))
                             {
-                                Logger?.LogWarningChecked("Received invalid query response message.");
+                                Logs.Pipeline.ReceivedInvalidQueryResponseMessage(Logger);
                                 errorReceived(new InvalidQueryResponseMessageReceivedException());
                             }
                             else
                             {
-                                Logger?.LogDebugChecked("Processing received service message.");
+                                Logs.Consuming.ProcessingServiceMessage(Logger, serviceMessage.ID);
                                 (var resultMessage, var activity) = await ProcessServiceMessageAsync(
                                     new(
                                         serviceMessage.ID,
@@ -79,14 +79,14 @@ namespace MQContract.Subscriptions
                         MessageChannel,
                         cancellationToken: cancellationToken
                     );
-                    Logger?.LogInformationChecked("Successfully established PubSub subscription.");
+                    Logs.Lifetime.EstablishingQueryResponseSubscriptionSuccess(Logger);
                 }
 
                 return serviceSubscription != null;
             }
             catch (Exception ex)
             {
-                Logger?.LogErrorChecked(ex, "Error occurred while establishing the subscription.");
+                Logs.Lifetime.ErrorEstablishingSubscription(Logger, ex);
                 throw new SubscriptionFailedException(ex);
             }
         }
@@ -98,7 +98,7 @@ namespace MQContract.Subscriptions
             using var scope = SetScope();
             if (Synchronous && !(token?.IsCancellationRequested ?? false))
             {
-                Logger?.LogDebugChecked("Waiting for manual reset event to complete synchronous operation.");
+                Logs.Consuming.WaitingToProcessMessage(Logger);
                 manualResetEvent!.Wait(cancellationToken: token!.Token);
             }
 
@@ -107,44 +107,44 @@ namespace MQContract.Subscriptions
 
             try
             {
-                Logger?.LogDebugChecked("Processing service message with ID: {MessageID}", message.ID);
+                Logs.Consuming.ProcessingServiceMessage(Logger, message.ID);
                 response = await processMessage(message, replyChannel);
                 if (message.Acknowledge != null && !Equals(response?.FilterResult, MessageFilterResult.DropAndDontAcknowledge))
                 {
-                    Logger?.LogDebugChecked("Acknowledging service message with ID: {MessageID}", message.ID);
+                    Logs.Consuming.AcknowledgingServiceMessage(Logger, message.ID);
                     await message.Acknowledge();
                 }
             }
             catch (Exception e)
             {
-                Logger?.LogErrorChecked(e, "Error occurred while processing service message with ID: {MessageID}", message.ID);
+                Logs.Consuming.ProcessingServiceMessageError(Logger, e, message.ID);
                 errorReceived(e);
                 error = e;
             }
 
             if (Synchronous)
             {
-                Logger?.LogDebugChecked("Setting manual reset event for synchronous operation.");
+                Logs.Consuming.ReleasingMessageWait(Logger);
                 manualResetEvent!.Set();
             }
 
             if (error != null)
             {
-                Logger?.LogWarningChecked("Returning error response for message with ID: {MessageID}", message.ID);
+                Logs.Consuming.ReturningErrorMessage(Logger, message.ID);
                 return new(ErrorServiceMessage.Produce(replyChannel, error), response?.Activity);
             }
 
-            Logger?.LogInformationChecked("Returning valid service response for message with ID: {MessageID}", message.ID);
+            Logs.Consuming.ReturningValidResponse(Logger, message.ID);
             return new(response?.ServiceMessage ?? (Equals(response?.FilterResult, MessageFilterResult.Allow) ? ErrorServiceMessage.Produce(replyChannel, new NullReferenceException()) : null), response?.Activity);
         }
 
         protected override void InternalDispose()
         {
-            Logger?.LogInformationChecked("Disposing resources for QueryResponseSubscription.");
+            Logs.Lifetime.DisposingQueryResponseSubscription(Logger);
 
             if (token != null)
             {
-                Logger?.LogDebugChecked("Cancelling token for QueryResponseSubscription.");
+                Logs.Consuming.CancellingToken(Logger);
                 token.Cancel();
                 manualResetEvent?.Dispose();
                 token.Dispose();
@@ -152,7 +152,7 @@ namespace MQContract.Subscriptions
                 manualResetEvent = null;
             }
 
-            Logger?.LogInformationChecked("Resources for QueryResponseSubscription have been disposed.");
+            Logs.Lifetime.DisposedQueryResponseSubscription(Logger);
         }
     }
 }

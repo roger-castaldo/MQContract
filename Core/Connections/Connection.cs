@@ -1,10 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
-using MQContract.Extensions;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Encoding;
 using MQContract.Interfaces.Encrypting;
 using MQContract.Interfaces.Service;
+using MQContract.Logging;
 using MQContract.Messages;
+using MQContract.Middleware;
 using System.Diagnostics;
 
 namespace MQContract.Connections
@@ -53,7 +54,7 @@ namespace MQContract.Connections
         async ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Publishing message {T} on {Channel}", typeof(TMessage), channel);
+            Logs.Publishing.PublishingMessage(Logger, typeof(TMessage), channel);
             using var activity = StartActivity(Constants.PublishActivityName, serviceConnection: serviceConnection);
             var serviceMessage = await ProduceServiceMessageAsync<TMessage>(
                 ChannelMapper.MapTypes.Publish,
@@ -71,7 +72,7 @@ namespace MQContract.Connections
         async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Bulk Publishing messages {T} on {Channel}", typeof(TMessage), channel);
+            Logs.Publishing.BulkPublishingMessages(Logger, typeof(TMessage), channel);
             using var activity = StartActivity(Constants.BulkPublishActivityName, serviceConnection: serviceConnection);
             activity?.SetTag(Constants.BulkPublishCountTag, messages.Count());
             var serviceMessages = await
@@ -98,8 +99,9 @@ namespace MQContract.Connections
         async ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Executing QueryResponse of {TQuery}, expecting {TQueryResponse} on {Channel} with {ResponseChannel}", typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
+            Logs.Publishing.ExecutingQuery(Logger, typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
             using var activity = StartActivity(Constants.PublishQueryActivityName, serviceConnection: serviceConnection);
+            OpenTelemetryMiddleware.TagEventID(activity, EventIds.Publishing.ExecutingQuery);
             var serviceMessage = await ProduceServiceMessageAsync<TQuery>(
                 ChannelMapper.MapTypes.Query,
                 GetMessageFactory<TQuery>(),
@@ -117,14 +119,13 @@ namespace MQContract.Connections
             CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Attempting to get response type for QueryResponse for {TQuery} on {Channel} with {ResponseChannel}", typeof(TQuery), channel, responseChannel);
+            Logs.Pipeline.ExtractingQueryResponseType(Logger, typeof(TQuery), channel, responseChannel);
             return await messageContext.ExecuteQuery<TQuery>(this, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
         }
 
         protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, MessageFilters<TQuery>? messageFilter, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
-            Logger?.LogDebugChecked("Producing QueryResponse Subscription for {TQuery} responding with {TQueryResponse} on {Channel} in {Group}", typeof(TQuery), typeof(TQueryResponse), channel, group);
             var queryMessageFactory = GetMessageFactory<TQuery>(ignoreMessageHeader);
             var responseMessageFactory = GetMessageFactory<TQueryResponse>();
             return await CreateSubscriptionAsync<TQuery, TQueryResponse>(
