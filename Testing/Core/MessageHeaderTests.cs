@@ -8,7 +8,7 @@
         private static readonly string key2 = Helper.GenerateRandomString(20);
         private static readonly string value2 = Helper.GenerateRandomString(20);
         private static readonly string key3 = Helper.GenerateRandomString(20);
-        private const string? value3 = null;
+        private const string value3 = "";
 
         [TestMethod]
         public void TestEnumerableConstructor()
@@ -50,7 +50,7 @@
             #endregion
 
             #region Assert
-            Assert.AreEqual(3, header.Keys.Count());
+            Assert.AreEqual(3, header.Count);
             Assert.IsTrue(header.Keys.Contains(key1));
             Assert.IsTrue(header.Keys.Contains(key2));
             Assert.IsTrue(header.Keys.Contains(key3));
@@ -80,7 +80,7 @@
             #endregion
 
             #region Assert
-            Assert.AreEqual(3, header.Keys.Count());
+            Assert.AreEqual(3, header.Count);
             Assert.IsTrue(header.Keys.Contains(key1));
             Assert.IsTrue(header.Keys.Contains(key2));
             Assert.IsTrue(header.Keys.Contains(key3));
@@ -105,67 +105,6 @@
             var header = new MessageHeader(originalHeader, new Dictionary<string, string?>([
                 new(key2,value2)
             ]));
-            #endregion
-
-            #region Act
-            #endregion
-
-            #region Assert
-            Assert.AreEqual(3, header.Keys.Count());
-            Assert.IsTrue(header.Keys.Contains(key1));
-            Assert.IsTrue(header.Keys.Contains(key2));
-            Assert.IsTrue(header.Keys.Contains(key3));
-            Assert.AreEqual(value1, header[key1]);
-            Assert.AreEqual(value2, header[key2]);
-            Assert.AreEqual(string.Empty, header[key3]);
-            #endregion
-
-            #region Verify
-            #endregion
-        }
-
-        [TestMethod]
-        public void TestAppendHeaderConstructorWithoutOverride()
-        {
-            #region Arrange
-            var originalHeader = new MessageHeader(new Dictionary<string, string?>([
-                new(key1,value1),
-                new(key3,value3)
-            ]));
-            var header = new MessageHeader(originalHeader, new MessageHeader(new Dictionary<string, string?>([
-                new(key2,value2)
-            ])));
-            #endregion
-
-            #region Act
-            #endregion
-
-            #region Assert
-            Assert.AreEqual(3, header.Keys.Count());
-            Assert.IsTrue(header.Keys.Contains(key1));
-            Assert.IsTrue(header.Keys.Contains(key2));
-            Assert.IsTrue(header.Keys.Contains(key3));
-            Assert.AreEqual(value1, header[key1]);
-            Assert.AreEqual(value2, header[key2]);
-            Assert.AreEqual(string.Empty, header[key3]);
-            #endregion
-
-            #region Verify
-            #endregion
-        }
-
-        [TestMethod]
-        public void TestAppendHeaderConstructorWithOverride()
-        {
-            #region Arrange
-            var originalHeader = new MessageHeader(new Dictionary<string, string?>([
-                new(key1,value1),
-                new(key2,value1),
-                new(key3,value3)
-            ]));
-            var header = new MessageHeader(originalHeader, new MessageHeader(new Dictionary<string, string?>([
-                new(key2,value2)
-            ])));
             #endregion
 
             #region Act

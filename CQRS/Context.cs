@@ -21,8 +21,8 @@ namespace MQContract.CQRS
         public Context()
         {
             messageHeader = new([
-                new KeyValuePair<string,string>(MessageIdHeaderKey, Guid.NewGuid().ToString()),
-                new KeyValuePair<string,string>(CorrelationIdHeaderKey, Guid.NewGuid().ToString())
+                new KeyValuePair<string,string?>(MessageIdHeaderKey, Guid.NewGuid().ToString()),
+                new KeyValuePair<string,string?>(CorrelationIdHeaderKey, Guid.NewGuid().ToString())
            ]);
         }
 
@@ -72,7 +72,7 @@ namespace MQContract.CQRS
         internal Guid? CausationId => (string.IsNullOrWhiteSpace(this[CausationIdHeaderKey]) ? null : Guid.Parse(this[CausationIdHeaderKey]!));
 
         internal Context CloneToChild()
-            => new(new MessageHeader(messageHeader, new Dictionary<string, string?>(
+            => new(new MessageHeader(messageHeader, 
                     properties
                         .AsEnumerable()
                         .Where(pair => !Equals(pair.Key, CausationIdHeaderKey) && !Equals(pair.Key, MessageIdHeaderKey))
@@ -80,20 +80,13 @@ namespace MQContract.CQRS
                             new(MessageIdHeaderKey,Guid.NewGuid().ToString()),
                             new(CausationIdHeaderKey,MessageId.ToString())
                         ])
-            )));
+            ));
 
         internal MessageHeader AsMessageHeader()
             => new(messageHeader, properties);
 
-        internal Dictionary<string, string?> AsDictionary()
-        {
-            var header = AsMessageHeader();
-            return new(
-                header.Keys
-                .Where(k => !string.IsNullOrWhiteSpace(header[k]))
-                .Select(k => new KeyValuePair<string, string?>(k, header[k]!))
-            );
-        }
-
+        internal IEnumerable<KeyValuePair<string, string?>> AsEnumerable()
+            => AsMessageHeader().Select(pair => new KeyValuePair<string, string?>(pair.Key, pair.Value));
+        
     }
 }

@@ -39,7 +39,7 @@ namespace MQContract.CQRS.Contexts
 
         Activity? IInvocationContext.Activity => activity;
 
-        internal Dictionary<string, string?> Headers => context.AsDictionary();
+        internal IEnumerable<KeyValuePair<string, string?>> Headers => context.AsEnumerable();
 
         ValueTask IInvocationContext.ExecuteCommandAsync<TCommand>(TCommand command)
             => connection.ExecuteCommandAsync<TCommand>(command, context.CloneToChild(), cancellationTokenSource.Token);

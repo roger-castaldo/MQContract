@@ -27,7 +27,7 @@ namespace MQContract.Kafka.Subscriptions
                                 channel,
                                 headers,
                                 msg.Message.Value,
-                                Acknowledge: async () =>
+                                acknowledge: async () =>
                                 {
                                     consumer.Commit(msg);
                                     ackSource.TrySetResult();

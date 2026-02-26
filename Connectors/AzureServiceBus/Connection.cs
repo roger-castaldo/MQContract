@@ -42,11 +42,7 @@ namespace MQContract.AzureServiceBus
         private static ServiceBusMessage ConvertMessage(ServiceMessage message)
         {
             var result = new ServiceBusMessage(message.Data);
-            foreach (var k in message.Header.Keys)
-            {
-                if (message.Header[k]!=null)
-                    result.ApplicationProperties.Add(k, message.Header[k]);
-            }
+            message.Header.ForEach(pair=>result.ApplicationProperties.Add(pair.Key, pair.Value));
             result.MessageId = message.ID;
             result.Subject=message.MessageTypeID;
             return result;
@@ -54,14 +50,14 @@ namespace MQContract.AzureServiceBus
 
         private static ReceivedServiceMessage ConvertMessage(ServiceBusReceivedMessage message, string channel, Func<Task> acknowledge)
         {
-            var headers = new Dictionary<string, string?>();
-            foreach (var key in message.ApplicationProperties.Keys)
-                headers.Add(key, (string?)message.ApplicationProperties[key]);
             return new(
                 message.MessageId,
                 message.Subject,
                 channel,
-                new MessageHeader(headers),
+                new MessageHeader(
+                    message.ApplicationProperties.Keys
+                    .Select(key => new KeyValuePair<string, string?>(key, (string?)message.ApplicationProperties[key]))
+                ),
                 message.Body.ToArray(),
                 async () => await acknowledge()
             );

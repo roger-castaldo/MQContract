@@ -57,18 +57,12 @@ namespace MQContract.Subscriptions
                             else
                             {
                                 Logs.Consuming.ProcessingServiceMessage(Logger, serviceMessage.ID);
+                                serviceMessage = QueryResponseHelper.StripHeaders(serviceMessage, out var queryClientID, out var replyID, out var replyChannel);
                                 (var resultMessage, var activity) = await ProcessServiceMessageAsync(
-                                    new(
-                                        serviceMessage.ID,
-                                        serviceMessage.MessageTypeID,
-                                        serviceMessage.Channel,
-                                        QueryResponseHelper.StripHeaders(serviceMessage, out var queryClientID, out var replyID, out var replyChannel),
-                                        serviceMessage.Data,
-                                        serviceMessage.Acknowledge
-                                    ),
+                                    serviceMessage,
                                     replyChannel!
                                 );
-                                if (resultMessage!=null)
+                                if (resultMessage != null)
                                 {
                                     var res = await connection.PublishAsync(QueryResponseHelper.EncodeMessage(resultMessage!, queryClientID, replyID, null, replyChannel), cancellationToken);
                                     OpenTelemetryMiddleware.AddMessagePublishedEvent(activity, resultMessage!, res, connection, serviceConnectionName);

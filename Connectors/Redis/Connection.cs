@@ -96,16 +96,15 @@ namespace MQContract.Redis
         private const string MESSAGE_TIMEOUT_KEY = "_MessageTimeout";
 
         internal static NameValueEntry[] ConvertMessage(ServiceMessage message, string? replyChannel = null, TimeSpan? messageTimeout = null)
-            => message.Header.Keys.Select(k => new NameValueEntry(k, message.Header[k]))
-            .Concat(
+            =>
             [
                 new NameValueEntry(MESSAGE_ID_KEY,message.ID),
                 new NameValueEntry(MESSAGE_TYPE_KEY,message.MessageTypeID),
-                new NameValueEntry(MESSAGE_DATA_KEY,message.Data.ToArray())
-            ])
-            .Concat(replyChannel==null ? [] : [new NameValueEntry(MESSAGE_REPLY_KEY, replyChannel)])
-            .Concat(messageTimeout==null ? [] : [new NameValueEntry(MESSAGE_TIMEOUT_KEY, messageTimeout.ToString())])
-            .ToArray();
+                new NameValueEntry(MESSAGE_DATA_KEY,message.Data.ToArray()),
+                .. message.Header.Select(pair => new NameValueEntry(pair.Key, pair.Value))
+                    .Concat(replyChannel==null ? [] : [new NameValueEntry(MESSAGE_REPLY_KEY, replyChannel)])
+                    .Concat(messageTimeout==null ? [] : [new NameValueEntry(MESSAGE_TIMEOUT_KEY, messageTimeout.ToString())])
+            ];
 
         internal static (ReceivedServiceMessage receivedMessage, string? replyChannel, TimeSpan? messageTimeout, TaskCompletionSource ackSource) ConvertMessage(NameValueEntry[] data, string channel, Func<ValueTask>? acknowledge)
 #pragma warning disable S6580 // Use a format provider when parsing date and time
@@ -122,9 +121,9 @@ namespace MQContract.Redis
                         && !Equals(nve.Name, MESSAGE_REPLY_KEY)
                         && !Equals(nve.Name, MESSAGE_TIMEOUT_KEY)
                     )
-                    .Select(nve => new KeyValuePair<string, string>(nve.Name!, nve.Value.ToString()))),
+                    .Select(nve => new KeyValuePair<string, string?>(nve.Name!, nve.Value.ToString()))),
                     (byte[])data.First(nve => Equals(nve.Name, MESSAGE_DATA_KEY)).Value!,
-                    Acknowledge: async() =>
+                    acknowledge: async() =>
                     {
                         if (acknowledge!=null)
                             await acknowledge();
@@ -156,7 +155,7 @@ namespace MQContract.Redis
             return new(
                 data.First(pair => Equals(pair.Key, MESSAGE_ID_KEY)).Value.GetValue<string>(),
                 new(data.Where(pair => !Equals(pair.Key, MESSAGE_ID_KEY) && !Equals(pair.Key, MESSAGE_TYPE_KEY) && !Equals(pair.Key, MESSAGE_DATA_KEY))
-                    .Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value.GetValue<string>()))
+                    .Select(pair => new KeyValuePair<string, string?>(pair.Key, pair.Value.GetValue<string>()))
                 ),
                 data.First(pair => Equals(pair.Key, MESSAGE_TYPE_KEY)).Value.GetValue<string>(),
                 Convert.FromBase64String(data.First(pair => Equals(pair.Key, MESSAGE_DATA_KEY)).Value.GetValue<string>())

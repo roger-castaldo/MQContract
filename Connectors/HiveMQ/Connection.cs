@@ -88,8 +88,7 @@ namespace MQContract.HiveMQ
                 Payload=message.Data.ToArray(),
                 ResponseTopic=responseTopic,
                 UserProperties=new Dictionary<string, string>(
-                    message.Header.Keys
-                    .Select(k => new KeyValuePair<string, string>(k, message.Header[k]!))
+                    message.Header.Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value))
                     .Concat([
                         new(MessageID,message.ID),
                         new(MessageTypeID,message.MessageTypeID)
@@ -105,7 +104,10 @@ namespace MQContract.HiveMQ
                 message.UserProperties[MessageID],
                 message.UserProperties[MessageTypeID],
                 message.Topic!,
-                new(message.UserProperties.AsEnumerable().Where(pair => !Equals(pair.Key, MessageID)&&!Equals(pair.Key, MessageTypeID)&&!Equals(pair.Key, ResponseID))),
+                new(message.UserProperties.AsEnumerable()
+                    .Where(pair => !Equals(pair.Key, MessageID)&&!Equals(pair.Key, MessageTypeID)&&!Equals(pair.Key, ResponseID))
+                    .Select(pair=>new KeyValuePair<string, string?>(pair.Key, pair.Value))
+                ),
                 message.Payload
             );
         }

@@ -38,10 +38,8 @@ namespace MQContract.Middleware
         {
             if (linkActivitiesAcrossSystems && context.Activity!=null)
             {
-                message = new(new MessageHeader(message.MessageHeader, new Dictionary<string, string?>([
-                    new(TraceParentHeaderKey, context.Activity.TraceId.ToString()),
-                    new(TraceParentSpanHeaderKey, context.Activity.SpanId.ToString())
-                ])), message.Message, message.Channel);
+                message.MessageHeader[TraceParentHeaderKey] = context.Activity.TraceId.ToString();
+                message.MessageHeader[TraceParentSpanHeaderKey] = context.Activity.SpanId.ToString();
             }
             context.Activity?.AddTag(InitialChannelKey, message.Channel);
             context.Activity?.AddTag(MessageTypeClassKey, typeof(TMessage).Name);

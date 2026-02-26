@@ -20,7 +20,7 @@ namespace AutomatedTesting
 
             var testMessage = RandomNumberGenerator.GetBytes(1024);
 
-            List<ServiceMessage> serviceMessages = [];
+            List<ReceivedServiceMessage> serviceMessages = [];
             var actions = new List<Func<ReceivedServiceMessage, ValueTask>>();
             var recievedMessages = new List<IReceivedMessage<byte[]>>();
 
@@ -72,7 +72,7 @@ namespace AutomatedTesting
 
             var testMessage = "The quick brown fox jumps over the lazy dog";
 
-            List<ServiceMessage> serviceMessages = [];
+            List<ReceivedServiceMessage> serviceMessages = [];
             var actions = new List<Func<ReceivedServiceMessage, ValueTask>>();
             var recievedMessages = new List<IReceivedMessage<string>>();
 
@@ -125,7 +125,7 @@ namespace AutomatedTesting
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
 
-            List<ServiceMessage> serviceMessages = [];
+            List<ReceivedServiceMessage> serviceMessages = [];
             var actions = new List<Func<ReceivedServiceMessage, ValueTask>>();
             var recievedMessages = new List<IReceivedMessage<T>>();
 
@@ -174,7 +174,7 @@ namespace AutomatedTesting
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
             var serviceSubscription = new Mock<IServiceSubscription>();
 
-            List<ServiceMessage> serviceMessages = [];
+            List<ReceivedServiceMessage> serviceMessages = [];
             var actions = new List<Func<ReceivedServiceMessage, ValueTask>>();
             var recievedMessages = new List<IReceivedMessage<T>>();
             var recievedArrayMessages = new List<IReceivedMessage<T[]>>();

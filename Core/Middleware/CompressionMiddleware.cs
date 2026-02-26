@@ -20,13 +20,8 @@ namespace MQContract.Middleware
                 await zip.FlushAsync();
                 if (ms.Length>c.MaxMessageSize)
                     throw new ArgumentOutOfRangeException(nameof(message), $"message data exceeds maxmium message size (MaxSize:{c.MaxMessageSize},EncodedSize:{ms.Length})");
-                return new(
-                    message.ID,
-                    message.MessageTypeID,
-                    message.Channel,
-                    new(message.Header, new Dictionary<string, string?>() { { CompressedHeader, "true" } }),
-                    ms.ToArray()
-                );
+                message.Data = ms.ToArray();
+                message.Header[CompressedHeader] = "true";
             }
             return message;
         }

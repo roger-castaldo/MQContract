@@ -33,12 +33,12 @@ namespace MQContract.AmazonSNQS
             WriteString(message.ID, bw);
             WriteString(message.MessageTypeID, bw);
             WriteString(message.Channel, bw);
-            bw.Write(message.Header.Keys.Count());
-            foreach (var key in message.Header.Keys)
+            bw.Write(message.Header.Count);
+            message.Header.ForEach(pair =>
             {
-                WriteString(key, bw);
-                WriteString(message.Header[key], bw);
-            }
+                WriteString(pair.Key, bw);
+                WriteString(pair.Value, bw);
+            });
             bw.Write(message.Data.Length);
             bw.Write(message.Data.ToArray());
             bw.Flush();

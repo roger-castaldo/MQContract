@@ -34,13 +34,13 @@ namespace MQContract.Middleware
         async ValueTask<ServiceMessage> IAfterEncodeMiddleware.AfterMessageEncodeAsync(Type messageType, IContext context, ServiceMessage message)
         {
             var encryptionResult = await GetEncryptor(messageType).EncryptAsync(message.Data.ToArray());
-            return new(
-                message.ID,
-                message.MessageTypeID,
-                message.Channel,
-                (encryptionResult.Headers==null ? message.Header : new(message.Header, encryptionResult.Headers)),
-                encryptionResult.Data
-            );
+            message.Data = encryptionResult.Data;
+            if (encryptionResult.Headers != null)
+            {
+                foreach(var header in encryptionResult.Headers)
+                    message.Header[header.Key] = header.Value;
+            }
+            return message;
         }
 
         async ValueTask<DecodableMessage> IBeforeDecodeMiddleware.BeforeMessageDecodeAsync(IContext context, string id, string messageTypeID, string messageChannel, DecodableMessage message)

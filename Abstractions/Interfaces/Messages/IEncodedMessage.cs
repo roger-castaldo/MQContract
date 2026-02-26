@@ -18,6 +18,6 @@ namespace MQContract.Interfaces.Messages
         /// <summary>
         /// The encoded message
         /// </summary>
-        ReadOnlyMemory<byte> Data { get; }
+        ReadOnlyMemory<byte> Data { get; set; }
     }
 }

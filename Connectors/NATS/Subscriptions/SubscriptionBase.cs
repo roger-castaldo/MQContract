@@ -26,7 +26,7 @@ namespace MQContract.NATS.Subscriptions
                 subject,
                 convertedHeaders,
                 data??new ReadOnlyMemory<byte>(),
-                Acknowledge: acknowledge
+                acknowledge: acknowledge
             );
         }
 

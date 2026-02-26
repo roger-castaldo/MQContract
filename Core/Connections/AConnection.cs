@@ -651,7 +651,7 @@ namespace MQContract.Connections
                                 responseActivity,
                                 maxMessageSize: serviceConnection.MaxMessageBodySize,
                                 channel: replyChannel,
-                                messageHeader: new(result.Headers)
+                                messageHeader: (result.Headers is null ? null : new(result.Headers))
                             );
                             responseActivity?.SetStatus(ActivityStatusCode.Ok);
                             return new(response, responseActivity, decodedResult.FilterResult);

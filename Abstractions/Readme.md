@@ -49,6 +49,12 @@
   - [Channel](#P-MQContract-Interfaces-Middleware-EncodableMessage`1-Channel 'MQContract.Interfaces.Middleware.EncodableMessage`1.Channel')
   - [Message](#P-MQContract-Interfaces-Middleware-EncodableMessage`1-Message 'MQContract.Interfaces.Middleware.EncodableMessage`1.Message')
   - [MessageHeader](#P-MQContract-Interfaces-Middleware-EncodableMessage`1-MessageHeader 'MQContract.Interfaces.Middleware.EncodableMessage`1.MessageHeader')
+- [EncodedMessage](#T-MQContract-Messages-EncodedMessage 'MQContract.Messages.EncodedMessage')
+  - [#ctor(id,messageTypeID,header,data)](#M-MQContract-Messages-EncodedMessage-#ctor-System-String,MQContract-Messages-MessageHeader,System-String,System-ReadOnlyMemory{System-Byte}- 'MQContract.Messages.EncodedMessage.#ctor(System.String,MQContract.Messages.MessageHeader,System.String,System.ReadOnlyMemory{System.Byte})')
+  - [Data](#P-MQContract-Messages-EncodedMessage-Data 'MQContract.Messages.EncodedMessage.Data')
+  - [Header](#P-MQContract-Messages-EncodedMessage-Header 'MQContract.Messages.EncodedMessage.Header')
+  - [ID](#P-MQContract-Messages-EncodedMessage-ID 'MQContract.Messages.EncodedMessage.ID')
+  - [MessageTypeID](#P-MQContract-Messages-EncodedMessage-MessageTypeID 'MQContract.Messages.EncodedMessage.MessageTypeID')
 - [EncryptionResult](#T-MQContract-Interfaces-Encrypting-EncryptionResult 'MQContract.Interfaces.Encrypting.EncryptionResult')
   - [#ctor(Headers,Data)](#M-MQContract-Interfaces-Encrypting-EncryptionResult-#ctor-System-Collections-Generic-Dictionary{System-String,System-String},System-Byte[]- 'MQContract.Interfaces.Encrypting.EncryptionResult.#ctor(System.Collections.Generic.Dictionary{System.String,System.String},System.Byte[])')
   - [Data](#P-MQContract-Interfaces-Encrypting-EncryptionResult-Data 'MQContract.Interfaces.Encrypting.EncryptionResult.Data')
@@ -276,12 +282,16 @@
   - [HeaderFilter](#P-MQContract-Messages-MessageFilters`1-HeaderFilter 'MQContract.Messages.MessageFilters`1.HeaderFilter')
   - [MessageFilter](#P-MQContract-Messages-MessageFilters`1-MessageFilter 'MQContract.Messages.MessageFilters`1.MessageFilter')
 - [MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader')
-  - [#ctor(data)](#M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.MessageHeader.#ctor(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
-  - [#ctor(headers)](#M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-Dictionary{System-String,System-String}- 'MQContract.Messages.MessageHeader.#ctor(System.Collections.Generic.Dictionary{System.String,System.String})')
-  - [#ctor(originalHeader,appendedHeader)](#M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,System-Collections-Generic-Dictionary{System-String,System-String}- 'MQContract.Messages.MessageHeader.#ctor(MQContract.Messages.MessageHeader,System.Collections.Generic.Dictionary{System.String,System.String})')
-  - [#ctor(originalHeader,appendedHeader)](#M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,MQContract-Messages-MessageHeader- 'MQContract.Messages.MessageHeader.#ctor(MQContract.Messages.MessageHeader,MQContract.Messages.MessageHeader)')
+  - [#ctor()](#M-MQContract-Messages-MessageHeader-#ctor 'MQContract.Messages.MessageHeader.#ctor')
+  - [#ctor(originalHeader,headers)](#M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.MessageHeader.#ctor(MQContract.Messages.MessageHeader,System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
+  - [#ctor(headers)](#M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.MessageHeader.#ctor(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
+  - [Count](#P-MQContract-Messages-MessageHeader-Count 'MQContract.Messages.MessageHeader.Count')
   - [Item](#P-MQContract-Messages-MessageHeader-Item-System-String- 'MQContract.Messages.MessageHeader.Item(System.String)')
   - [Keys](#P-MQContract-Messages-MessageHeader-Keys 'MQContract.Messages.MessageHeader.Keys')
+  - [AsEnumerable()](#M-MQContract-Messages-MessageHeader-AsEnumerable 'MQContract.Messages.MessageHeader.AsEnumerable')
+  - [AsSpan()](#M-MQContract-Messages-MessageHeader-AsSpan 'MQContract.Messages.MessageHeader.AsSpan')
+  - [ForEach(action)](#M-MQContract-Messages-MessageHeader-ForEach-System-Action{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.MessageHeader.ForEach(System.Action{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
+  - [Select\`\`1(selector)](#M-MQContract-Messages-MessageHeader-Select``1-System-Func{System-Collections-Generic-KeyValuePair{System-String,System-String},``0}- 'MQContract.Messages.MessageHeader.Select``1(System.Func{System.Collections.Generic.KeyValuePair{System.String,System.String},``0})')
 - [MessageTypeDefinition](#T-MQContract-MQContractMessageContext-MessageTypeDefinition 'MQContract.MQContractMessageContext.MessageTypeDefinition')
   - [#ctor(Channel,TypeName,TypeVersion,ResponseChannel,ResponseTimeout,ResponseType)](#M-MQContract-MQContractMessageContext-MessageTypeDefinition-#ctor-System-String,System-String,System-Version,System-String,System-Nullable{System-TimeSpan},System-Type- 'MQContract.MQContractMessageContext.MessageTypeDefinition.#ctor(System.String,System.String,System.Version,System.String,System.Nullable{System.TimeSpan},System.Type)')
   - [Channel](#P-MQContract-MQContractMessageContext-MessageTypeDefinition-Channel 'MQContract.MQContractMessageContext.MessageTypeDefinition.Channel')
@@ -331,7 +341,7 @@
   - [ResponseTimeout](#P-MQContract-Attributes-QueryMessageAttribute-ResponseTimeout 'MQContract.Attributes.QueryMessageAttribute.ResponseTimeout')
   - [ResponseType](#P-MQContract-Attributes-QueryMessageAttribute-ResponseType 'MQContract.Attributes.QueryMessageAttribute.ResponseType')
 - [QueryResponseMessage\`1](#T-MQContract-Messages-QueryResponseMessage`1 'MQContract.Messages.QueryResponseMessage`1')
-  - [#ctor(Message,Headers)](#M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-Dictionary{System-String,System-String}- 'MQContract.Messages.QueryResponseMessage`1.#ctor(`0,System.Collections.Generic.Dictionary{System.String,System.String})')
+  - [#ctor(Message,Headers)](#M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.QueryResponseMessage`1.#ctor(`0,System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
   - [Headers](#P-MQContract-Messages-QueryResponseMessage`1-Headers 'MQContract.Messages.QueryResponseMessage`1.Headers')
   - [Message](#P-MQContract-Messages-QueryResponseMessage`1-Message 'MQContract.Messages.QueryResponseMessage`1.Message')
 - [QueryResult\`1](#T-MQContract-Messages-QueryResult`1 'MQContract.Messages.QueryResult`1')
@@ -342,8 +352,9 @@
   - [#ctor(ID,MessageTypeID,Channel,Header,CorrelationID,Data,Acknowledge)](#M-MQContract-Messages-ReceivedInboxServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-Guid,System-ReadOnlyMemory{System-Byte},System-Func{System-Threading-Tasks-ValueTask}- 'MQContract.Messages.ReceivedInboxServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.Guid,System.ReadOnlyMemory{System.Byte},System.Func{System.Threading.Tasks.ValueTask})')
   - [CorrelationID](#P-MQContract-Messages-ReceivedInboxServiceMessage-CorrelationID 'MQContract.Messages.ReceivedInboxServiceMessage.CorrelationID')
 - [ReceivedServiceMessage](#T-MQContract-Messages-ReceivedServiceMessage 'MQContract.Messages.ReceivedServiceMessage')
-  - [#ctor(ID,MessageTypeID,Channel,Header,Data,Acknowledge)](#M-MQContract-Messages-ReceivedServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte},System-Func{System-Threading-Tasks-ValueTask}- 'MQContract.Messages.ReceivedServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.ReadOnlyMemory{System.Byte},System.Func{System.Threading.Tasks.ValueTask})')
+  - [#ctor(id,messageTypeID,channel,header,data,acknowledge)](#M-MQContract-Messages-ReceivedServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte},System-Func{System-Threading-Tasks-ValueTask}- 'MQContract.Messages.ReceivedServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.ReadOnlyMemory{System.Byte},System.Func{System.Threading.Tasks.ValueTask})')
   - [Acknowledge](#P-MQContract-Messages-ReceivedServiceMessage-Acknowledge 'MQContract.Messages.ReceivedServiceMessage.Acknowledge')
+  - [Channel](#P-MQContract-Messages-ReceivedServiceMessage-Channel 'MQContract.Messages.ReceivedServiceMessage.Channel')
   - [ReceivedTimestamp](#P-MQContract-Messages-ReceivedServiceMessage-ReceivedTimestamp 'MQContract.Messages.ReceivedServiceMessage.ReceivedTimestamp')
 - [ResilienceException](#T-MQContract-ResilienceException 'MQContract.ResilienceException')
   - [#ctor(type,error)](#M-MQContract-ResilienceException-#ctor-MQContract-ResilienceTypes,System-Exception- 'MQContract.ResilienceException.#ctor(MQContract.ResilienceTypes,System.Exception)')
@@ -352,18 +363,10 @@
   - [CircuitBreak](#F-MQContract-ResilienceTypes-CircuitBreak 'MQContract.ResilienceTypes.CircuitBreak')
   - [Retry](#F-MQContract-ResilienceTypes-Retry 'MQContract.ResilienceTypes.Retry')
 - [ServiceMessage](#T-MQContract-Messages-ServiceMessage 'MQContract.Messages.ServiceMessage')
-  - [#ctor(ID,MessageTypeID,Channel,Header,Data)](#M-MQContract-Messages-ServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte}- 'MQContract.Messages.ServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.ReadOnlyMemory{System.Byte})')
+  - [#ctor(id,messageTypeID,channel,header,data)](#M-MQContract-Messages-ServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte}- 'MQContract.Messages.ServiceMessage.#ctor(System.String,System.String,System.String,MQContract.Messages.MessageHeader,System.ReadOnlyMemory{System.Byte})')
   - [Channel](#P-MQContract-Messages-ServiceMessage-Channel 'MQContract.Messages.ServiceMessage.Channel')
-  - [Data](#P-MQContract-Messages-ServiceMessage-Data 'MQContract.Messages.ServiceMessage.Data')
-  - [Header](#P-MQContract-Messages-ServiceMessage-Header 'MQContract.Messages.ServiceMessage.Header')
-  - [ID](#P-MQContract-Messages-ServiceMessage-ID 'MQContract.Messages.ServiceMessage.ID')
-  - [MessageTypeID](#P-MQContract-Messages-ServiceMessage-MessageTypeID 'MQContract.Messages.ServiceMessage.MessageTypeID')
 - [ServiceQueryResult](#T-MQContract-Messages-ServiceQueryResult 'MQContract.Messages.ServiceQueryResult')
-  - [#ctor(ID,Header,MessageTypeID,Data)](#M-MQContract-Messages-ServiceQueryResult-#ctor-System-String,MQContract-Messages-MessageHeader,System-String,System-ReadOnlyMemory{System-Byte}- 'MQContract.Messages.ServiceQueryResult.#ctor(System.String,MQContract.Messages.MessageHeader,System.String,System.ReadOnlyMemory{System.Byte})')
-  - [Data](#P-MQContract-Messages-ServiceQueryResult-Data 'MQContract.Messages.ServiceQueryResult.Data')
-  - [Header](#P-MQContract-Messages-ServiceQueryResult-Header 'MQContract.Messages.ServiceQueryResult.Header')
-  - [ID](#P-MQContract-Messages-ServiceQueryResult-ID 'MQContract.Messages.ServiceQueryResult.ID')
-  - [MessageTypeID](#P-MQContract-Messages-ServiceQueryResult-MessageTypeID 'MQContract.Messages.ServiceQueryResult.MessageTypeID')
+  - [#ctor(id,messageTypeID,header,data)](#M-MQContract-Messages-ServiceQueryResult-#ctor-System-String,MQContract-Messages-MessageHeader,System-String,System-ReadOnlyMemory{System-Byte}- 'MQContract.Messages.ServiceQueryResult.#ctor(System.String,MQContract.Messages.MessageHeader,System.String,System.ReadOnlyMemory{System.Byte})')
 - [TransmissionException](#T-MQContract-TransmissionException 'MQContract.TransmissionException')
   - [#ctor(underlyingError,isFatal)](#M-MQContract-TransmissionException-#ctor-System-Exception,System-Boolean- 'MQContract.TransmissionException.#ctor(System.Exception,System.Boolean)')
   - [IsFatal](#P-MQContract-TransmissionException-IsFatal 'MQContract.TransmissionException.IsFatal')
@@ -1233,6 +1236,61 @@ The message itself
 ##### Summary
 
 THe headers supplied with the message
+
+<a name='T-MQContract-Messages-EncodedMessage'></a>
+## EncodedMessage `type`
+
+##### Namespace
+
+MQContract.Messages
+
+##### Summary
+
+Used as the base of an Encoded Message which can be a ServiceMessage, ReceivedServiceMessage, or ServiceQueryResult. This is used to house the common properties of all of these message types and to avoid code duplication.
+
+<a name='M-MQContract-Messages-EncodedMessage-#ctor-System-String,MQContract-Messages-MessageHeader,System-String,System-ReadOnlyMemory{System-Byte}-'></a>
+### #ctor(id,messageTypeID,header,data) `constructor`
+
+##### Summary
+
+Default constructor for a Service Query Result
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| id | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique ID of the message |
+| messageTypeID | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | An identifier that identifies the type of message encoded |
+| header | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The headers to transmit with the message |
+| data | [System.ReadOnlyMemory{System.Byte}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.ReadOnlyMemory 'System.ReadOnlyMemory{System.Byte}') | The content of the message |
+
+<a name='P-MQContract-Messages-EncodedMessage-Data'></a>
+### Data `property`
+
+##### Summary
+
+The encoded message
+
+<a name='P-MQContract-Messages-EncodedMessage-Header'></a>
+### Header `property`
+
+##### Summary
+
+The header for the given message
+
+<a name='P-MQContract-Messages-EncodedMessage-ID'></a>
+### ID `property`
+
+##### Summary
+
+The unique ID of the message
+
+<a name='P-MQContract-Messages-EncodedMessage-MessageTypeID'></a>
+### MessageTypeID `property`
+
+##### Summary
+
+The message type id to transmit across
 
 <a name='T-MQContract-Interfaces-Encrypting-EncryptionResult'></a>
 ## EncryptionResult `type`
@@ -5117,72 +5175,57 @@ MQContract.Messages
 
 Houses additional headers to be passed through or that were passed along the service message
 
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| data | [T:MQContract.Messages.MessageHeader](#T-T-MQContract-Messages-MessageHeader 'T:MQContract.Messages.MessageHeader') | A list of KeyValuePairs that make up the header |
-
-<a name='M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}-'></a>
-### #ctor(data) `constructor`
+<a name='M-MQContract-Messages-MessageHeader-#ctor'></a>
+### #ctor() `constructor`
 
 ##### Summary
 
-Houses additional headers to be passed through or that were passed along the service message
+Constructor to create a MessageHeader instance without any inital headers
+
+##### Parameters
+
+This constructor has no parameters.
+
+<a name='M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}-'></a>
+### #ctor(originalHeader,headers) `constructor`
+
+##### Summary
+
+Constructor to create a MessageHeader instance merging and existing header with new header values. The existing header values will be overwritten by the new header values if there are any key conflicts, otherwise the new header values will be added to the existing header values.
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| data | [System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}') | A list of KeyValuePairs that make up the header |
+| originalHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The original header to merge with the new header values |
+| headers | [System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}') | The desired data for the header |
 
-<a name='M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-Dictionary{System-String,System-String}-'></a>
+<a name='M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}-'></a>
 ### #ctor(headers) `constructor`
 
 ##### Summary
 
-Constructor to create the MessageHeader class using a Dictionary
+Constructor to create a MessageHeader instance using initial data values
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| headers | [System.Collections.Generic.Dictionary{System.String,System.String}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.Dictionary 'System.Collections.Generic.Dictionary{System.String,System.String}') | The desired data for the header |
+| headers | [System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}') | The desired data for the header |
 
-<a name='M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,System-Collections-Generic-Dictionary{System-String,System-String}-'></a>
-### #ctor(originalHeader,appendedHeader) `constructor`
+<a name='P-MQContract-Messages-MessageHeader-Count'></a>
+### Count `property`
 
 ##### Summary
 
-Constructor to create a merged message header with taking the original and appending the new values
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| originalHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The base header to use |
-| appendedHeader | [System.Collections.Generic.Dictionary{System.String,System.String}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.Dictionary 'System.Collections.Generic.Dictionary{System.String,System.String}') | The additional properties to add |
-
-<a name='M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,MQContract-Messages-MessageHeader-'></a>
-### #ctor(originalHeader,appendedHeader) `constructor`
-
-##### Summary
-
-Constructor to create a merged message header with taking the original and appending the new values
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| originalHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The base header to use |
-| appendedHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The additional properties to add |
+The current count of values in the collection
 
 <a name='P-MQContract-Messages-MessageHeader-Item-System-String-'></a>
 ### Item `property`
 
 ##### Summary
 
-Called to obtain a header value for the given key if it exists
+Called to obtain a header value for the given key if it exists, or set a header value for the given key. Setting a value for an existing key will overwrite the existing value, while setting a value for a non-existing key will add a new header to the collection.
 
 ##### Returns
 
@@ -5192,7 +5235,7 @@ The value for the given key or null if not found
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tagKey | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique header key to get the value for |
+| key | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique header key to get the value for |
 
 <a name='P-MQContract-Messages-MessageHeader-Keys'></a>
 ### Keys `property`
@@ -5200,6 +5243,70 @@ The value for the given key or null if not found
 ##### Summary
 
 A list of the available keys in the header
+
+<a name='M-MQContract-Messages-MessageHeader-AsEnumerable'></a>
+### AsEnumerable() `method`
+
+##### Summary
+
+Returns the header key/value pairs as an enumerable list. This is less efficient than using the AsSpan method, but is more convenient for use in LINQ queries and other scenarios where an enumerable is required.
+
+##### Returns
+
+The header key/value pairs as an enumerable value
+
+##### Parameters
+
+This method has no parameters.
+
+<a name='M-MQContract-Messages-MessageHeader-AsSpan'></a>
+### AsSpan() `method`
+
+##### Summary
+
+The list of values returned as a span for the underlying services to read them all at once. This is more efficient than using the indexer for each key when the underlying service supports it.
+
+##### Parameters
+
+This method has no parameters.
+
+<a name='M-MQContract-Messages-MessageHeader-ForEach-System-Action{System-Collections-Generic-KeyValuePair{System-String,System-String}}-'></a>
+### ForEach(action) `method`
+
+##### Summary
+
+Execute an action for each header entry without exposing the underlying span.
+This avoids allocations and also avoids capturing a ref struct in async methods.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| action | [System.Action{System.Collections.Generic.KeyValuePair{System.String,System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Collections.Generic.KeyValuePair{System.String,System.String}}') | Action to execute for each header key/value pair. |
+
+<a name='M-MQContract-Messages-MessageHeader-Select``1-System-Func{System-Collections-Generic-KeyValuePair{System-String,System-String},``0}-'></a>
+### Select\`\`1(selector) `method`
+
+##### Summary
+
+Projects each key-value pair in the collection into a new form by applying the specified selector function.
+
+##### Returns
+
+An enumerable collection of elements of type T resulting from applying the selector function to each
+key-value pair.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selector | [System.Func{System.Collections.Generic.KeyValuePair{System.String,System.String},\`\`0}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.Collections.Generic.KeyValuePair{System.String,System.String},``0}') | A function to apply to each key-value pair in the collection to produce the result element. |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The type of the elements returned by the selector function. |
 
 <a name='T-MQContract-MQContractMessageContext-MessageTypeDefinition'></a>
 ## MessageTypeDefinition `type`
@@ -6045,7 +6152,7 @@ Houses the Query Response Message to be sent back from a query call
 | ---- | ----------- |
 | TQueryResponse | The type of message contained in the response |
 
-<a name='M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-Dictionary{System-String,System-String}-'></a>
+<a name='M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}-'></a>
 ### #ctor(Message,Headers) `constructor`
 
 ##### Summary
@@ -6057,7 +6164,7 @@ Houses the Query Response Message to be sent back from a query call
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | Message | [\`0](#T-`0 '`0') | The message to respond back with |
-| Headers | [System.Collections.Generic.Dictionary{System.String,System.String}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.Dictionary 'System.Collections.Generic.Dictionary{System.String,System.String}') | The headers to attach to the response |
+| Headers | [System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}') | The headers to attach to the response |
 
 ##### Generic Types
 
@@ -6192,29 +6299,23 @@ MQContract.Messages
 
 A Received Service Message that gets passed back up into the Contract Connection when a message is received from the underlying service connection
 
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| ID | [T:MQContract.Messages.ReceivedServiceMessage](#T-T-MQContract-Messages-ReceivedServiceMessage 'T:MQContract.Messages.ReceivedServiceMessage') | The unique ID of the message |
-
 <a name='M-MQContract-Messages-ReceivedServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte},System-Func{System-Threading-Tasks-ValueTask}-'></a>
-### #ctor(ID,MessageTypeID,Channel,Header,Data,Acknowledge) `constructor`
+### #ctor(id,messageTypeID,channel,header,data,acknowledge) `constructor`
 
 ##### Summary
 
-A Received Service Message that gets passed back up into the Contract Connection when a message is received from the underlying service connection
+Default constructor for a service message
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| ID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique ID of the message |
-| MessageTypeID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The message type id which is used for decoding to a class |
-| Channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel the message was received on |
-| Header | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message headers that came through |
-| Data | [System.ReadOnlyMemory{System.Byte}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.ReadOnlyMemory 'System.ReadOnlyMemory{System.Byte}') | The binary content of the message that should be the encoded class |
-| Acknowledge | [System.Func{System.Threading.Tasks.ValueTask}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.Threading.Tasks.ValueTask}') | The acknowledgement callback to be called when the message is received if the underlying service requires it |
+| id | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique ID of the message |
+| messageTypeID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | An identifier that identifies the type of message encoded |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to transmit the message on |
+| header | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The headers to transmit with the message |
+| data | [System.ReadOnlyMemory{System.Byte}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.ReadOnlyMemory 'System.ReadOnlyMemory{System.Byte}') | The content of the message |
+| acknowledge | [System.Func{System.Threading.Tasks.ValueTask}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.Threading.Tasks.ValueTask}') | The acknowledgement callback to be called when the message is received if the underlying service requires it |
 
 <a name='P-MQContract-Messages-ReceivedServiceMessage-Acknowledge'></a>
 ### Acknowledge `property`
@@ -6222,6 +6323,13 @@ A Received Service Message that gets passed back up into the Contract Connection
 ##### Summary
 
 The acknowledgement callback to be called when the message is received if the underlying service requires it
+
+<a name='P-MQContract-Messages-ReceivedServiceMessage-Channel'></a>
+### Channel `property`
+
+##### Summary
+
+Houses the channel that the Received Message was received on
 
 <a name='P-MQContract-Messages-ReceivedServiceMessage-ReceivedTimestamp'></a>
 ### ReceivedTimestamp `property`
@@ -6304,63 +6412,29 @@ MQContract.Messages
 
 Houses a service level message that would be supplied to the underlying Service Connection for transmission purposes
 
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| ID | [T:MQContract.Messages.ServiceMessage](#T-T-MQContract-Messages-ServiceMessage 'T:MQContract.Messages.ServiceMessage') | The unique ID of the message |
-
 <a name='M-MQContract-Messages-ServiceMessage-#ctor-System-String,System-String,System-String,MQContract-Messages-MessageHeader,System-ReadOnlyMemory{System-Byte}-'></a>
-### #ctor(ID,MessageTypeID,Channel,Header,Data) `constructor`
+### #ctor(id,messageTypeID,channel,header,data) `constructor`
 
 ##### Summary
 
-Houses a service level message that would be supplied to the underlying Service Connection for transmission purposes
+Default constructor for a service message
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| ID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique ID of the message |
-| MessageTypeID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | An identifier that identifies the type of message encoded |
-| Channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to transmit the message on |
-| Header | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The headers to transmit with the message |
-| Data | [System.ReadOnlyMemory{System.Byte}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.ReadOnlyMemory 'System.ReadOnlyMemory{System.Byte}') | The content of the message |
+| id | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique ID of the message |
+| messageTypeID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | An identifier that identifies the type of message encoded |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to transmit the message on |
+| header | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The headers to transmit with the message |
+| data | [System.ReadOnlyMemory{System.Byte}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.ReadOnlyMemory 'System.ReadOnlyMemory{System.Byte}') | The content of the message |
 
 <a name='P-MQContract-Messages-ServiceMessage-Channel'></a>
 ### Channel `property`
 
 ##### Summary
 
-The channel to transmit the message on
-
-<a name='P-MQContract-Messages-ServiceMessage-Data'></a>
-### Data `property`
-
-##### Summary
-
-The content of the message
-
-<a name='P-MQContract-Messages-ServiceMessage-Header'></a>
-### Header `property`
-
-##### Summary
-
-The headers to transmit with the message
-
-<a name='P-MQContract-Messages-ServiceMessage-ID'></a>
-### ID `property`
-
-##### Summary
-
-The unique ID of the message
-
-<a name='P-MQContract-Messages-ServiceMessage-MessageTypeID'></a>
-### MessageTypeID `property`
-
-##### Summary
-
-An identifier that identifies the type of message encoded
+The channel to transmit the message on.
 
 <a name='T-MQContract-Messages-ServiceQueryResult'></a>
 ## ServiceQueryResult `type`
@@ -6373,55 +6447,21 @@ MQContract.Messages
 
 Houses a result from a query call from the Service Connection Level
 
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| ID | [T:MQContract.Messages.ServiceQueryResult](#T-T-MQContract-Messages-ServiceQueryResult 'T:MQContract.Messages.ServiceQueryResult') | The ID of the message |
-
 <a name='M-MQContract-Messages-ServiceQueryResult-#ctor-System-String,MQContract-Messages-MessageHeader,System-String,System-ReadOnlyMemory{System-Byte}-'></a>
-### #ctor(ID,Header,MessageTypeID,Data) `constructor`
+### #ctor(id,messageTypeID,header,data) `constructor`
 
 ##### Summary
 
-Houses a result from a query call from the Service Connection Level
+Default constructor for a Service Query Result
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| ID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The ID of the message |
-| Header | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The headers transmitted |
-| MessageTypeID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The type of message encoded |
-| Data | [System.ReadOnlyMemory{System.Byte}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.ReadOnlyMemory 'System.ReadOnlyMemory{System.Byte}') | The encoded data of the message |
-
-<a name='P-MQContract-Messages-ServiceQueryResult-Data'></a>
-### Data `property`
-
-##### Summary
-
-The encoded data of the message
-
-<a name='P-MQContract-Messages-ServiceQueryResult-Header'></a>
-### Header `property`
-
-##### Summary
-
-The headers transmitted
-
-<a name='P-MQContract-Messages-ServiceQueryResult-ID'></a>
-### ID `property`
-
-##### Summary
-
-The ID of the message
-
-<a name='P-MQContract-Messages-ServiceQueryResult-MessageTypeID'></a>
-### MessageTypeID `property`
-
-##### Summary
-
-The type of message encoded
+| id | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The unique ID of the message |
+| messageTypeID | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | An identifier that identifies the type of message encoded |
+| header | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The headers to transmit with the message |
+| data | [System.ReadOnlyMemory{System.Byte}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.ReadOnlyMemory 'System.ReadOnlyMemory{System.Byte}') | The content of the message |
 
 <a name='T-MQContract-TransmissionException'></a>
 ## TransmissionException `type`
