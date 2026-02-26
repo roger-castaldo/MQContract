@@ -46,6 +46,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
                     messages.Add(message);
+                    Assert.AreEqual(3, message.Header.Count);
+                    Assert.AreEqual(responseChannel, message.Header[REPLY_CHANNEL_HEADER]);
                     var resp = new ReceivedServiceMessage(message.ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, message.Header, responseData, () =>
                     {
                         acknowledged=true;
@@ -78,8 +80,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
-            Assert.AreEqual(3, messages[0].Header.Keys.Count());
-            Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
+            Assert.AreEqual(0, messages[0].Header.Count);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             Assert.IsTrue(acknowledged);
@@ -120,6 +121,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
                     messages.Add(message);
+                    Assert.AreEqual(4, message.Header.Count);
+                    Assert.AreEqual(responseChannel, message.Header[REPLY_CHANNEL_HEADER]);
                     var resp = new ReceivedServiceMessage(message.ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, message.Header, responseData);
                     foreach (var action in messageActions)
                         action(resp);
@@ -148,8 +151,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
-            Assert.AreEqual(4, messages[0].Header.Keys.Count());
-            Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
+            Assert.AreEqual(1, messages[0].Header.Count);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             Assert.AreEqual(1, result.First().Header.Keys.Count());
@@ -189,10 +191,12 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
                     messages.Add(message);
+                    Assert.AreEqual(3, message.Header.Count);
+                    Assert.AreEqual(responseChannel, message.Header[REPLY_CHANNEL_HEADER]);
                     var resp = new ReceivedServiceMessage(message.ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, new([
-                        new KeyValuePair<string,string>(QUERY_IDENTIFIER_HEADER,Guid.NewGuid().ToString()),
-                        new KeyValuePair<string,string>(REPLY_ID,Guid.NewGuid().ToString()),
-                        new KeyValuePair<string,string>(REPLY_CHANNEL_HEADER,responseChannel)
+                        new KeyValuePair<string,string?>(QUERY_IDENTIFIER_HEADER,Guid.NewGuid().ToString()),
+                        new KeyValuePair<string,string?>(REPLY_ID,Guid.NewGuid().ToString()),
+                        new KeyValuePair<string,string?>(REPLY_CHANNEL_HEADER,responseChannel)
                         ]), responseData);
                     foreach (var action in messageActions)
                         action(resp);
@@ -224,8 +228,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
-            Assert.AreEqual(3, messages[0].Header.Keys.Count());
-            Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
+            Assert.AreEqual(0, messages[0].Header.Count);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             #endregion
@@ -263,6 +266,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
                     messages.Add(message);
+                    Assert.AreEqual(3, message.Header.Count);
+                    Assert.AreEqual(responseChannel, message.Header[REPLY_CHANNEL_HEADER]);
                     var resp = new ReceivedServiceMessage(message.ID, "U-BasicResponseMessage-0.0.0.0", responseChannel!, message.Header, responseData);
                     foreach (var action in messageActions)
                         action(resp);
@@ -291,8 +296,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
-            Assert.AreEqual(3, messages[0].Header.Keys.Count());
-            Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
+            Assert.AreEqual(0, messages[0].Header.Count);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             #endregion
@@ -442,6 +446,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
                     messages.Add(message);
+                    Assert.AreEqual((withLinking ? 5 : 3), message.Header.Count);
+                    Assert.AreEqual(responseChannel, message.Header[REPLY_CHANNEL_HEADER]);
                     var resp = new ReceivedServiceMessage(message.ID, "U-BasicResponseMessage-0.0.0.0", responseChannel, message.Header, responseData, () =>
                     {
                         acknowledged=true;
@@ -475,8 +481,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(responseChannel, channels[0]);
             Assert.HasCount(1, messages);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
-            Assert.AreEqual((withLinking ? 5 : 3), messages[0].Header.Keys.Count());
-            Assert.AreEqual(responseChannel, messages[0].Header[REPLY_CHANNEL_HEADER]);
+            Assert.AreEqual((withLinking ? 2 : 0), messages[0].Header.Count);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             Assert.IsTrue(acknowledged);

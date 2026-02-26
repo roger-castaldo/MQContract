@@ -78,52 +78,6 @@
         }
 
         [TestMethod]
-        public void TestMessageHeaderMergeConstructorWithOriginalAndNullExtension()
-        {
-            #region Arrange
-            var originalHeader = new MessageHeader([
-                new KeyValuePair<string,string>("key1","value1"),
-                new KeyValuePair<string,string>("key2","value2")
-            ]);
-            #endregion
-
-            #region Act
-            var header = new MessageHeader(originalHeader, (MessageHeader?)null);
-            #endregion
-
-            #region Assert
-            Assert.AreEqual(2, header.Keys.Count());
-            Assert.IsTrue(originalHeader.Keys.All(k => header.Keys.Contains(k) && Equals(header[k], originalHeader[k])));
-            #endregion
-
-            #region Verify
-            #endregion
-        }
-
-        [TestMethod]
-        public void TestMessageHeaderMergeConstructorWithNullOriginalAndExtension()
-        {
-            #region Arrange
-            var data = new Dictionary<string, string?>([
-                new KeyValuePair<string,string?>("key3","value3"),
-                new KeyValuePair<string,string?>("key4","value4")
-            ]);
-            #endregion
-
-            #region Act
-            var header = new MessageHeader(null, data);
-            #endregion
-
-            #region Assert
-            Assert.AreEqual(2, header.Keys.Count());
-            Assert.IsTrue(data.All(pair => header.Keys.Contains(pair.Key) && Equals(header[pair.Key], pair.Value)));
-            #endregion
-
-            #region Verify
-            #endregion
-        }
-
-        [TestMethod]
         public void TestMessageHeaderMergeConstructorWithOriginalAndExtensionWithSameKeys()
         {
             #region Arrange

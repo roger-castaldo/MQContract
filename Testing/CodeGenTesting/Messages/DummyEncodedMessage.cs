@@ -9,6 +9,6 @@ namespace CodeGenTesting.Messages
 
         string IEncodedMessage.MessageTypeID => id;
 
-        ReadOnlyMemory<byte> IEncodedMessage.Data => data;
+        ReadOnlyMemory<byte> IEncodedMessage.Data { get; set; } = data;
     }
 }

@@ -50,7 +50,7 @@ namespace MQContract.Messages
         public MessageHeader(IEnumerable<KeyValuePair<string, string?>> headers)
         {
             var cleanHeaders = headers.Where(kvp => kvp.Value is not null)
-                  .OfType<KeyValuePair<string, string>>()
+                  .Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value!))
                   .ToArray();
             buffer = ArrayPool<KeyValuePair<string, string>>.Shared.Rent(Math.Max(cleanHeaders.Length, DefaultCapacity));
             cleanHeaders.CopyTo(this.buffer, 0);

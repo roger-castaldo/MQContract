@@ -35,6 +35,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 .Returns((ServiceMessage message, CancellationToken cancellationToken) =>
                 {
                     messages.Add(message);
+                    if (Equals(message.Channel, "BasicQueryMessage"))
+                        Assert.AreEqual(3, message.Header.Count);
                     var idx = channels.IndexOf(message.Channel);
                     if (idx != -1)
                         messageActions[idx](new ReceivedServiceMessage(message.ID, message.MessageTypeID, message.Channel, message.Header, message.Data));
@@ -78,8 +80,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNull(groups[0]);
             Assert.IsNotNull(groups[1]);
             Assert.AreEqual(receivedMessages[0].ID, messages[0].ID);
-            Assert.AreEqual(0, receivedMessages[0].Headers.Keys.Count());
-            Assert.AreEqual(3, messages[0].Header.Keys.Count());
+            Assert.AreEqual(0, receivedMessages[0].Headers.Count);
+            Assert.AreEqual(0, messages[0].Header.Count);
             Assert.AreEqual(message, receivedMessages[0].Message);
             Assert.IsFalse(result.IsError);
             Assert.IsNull(result.Error);
@@ -242,8 +244,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsNull(groups[0]);
             Assert.IsNotNull(groups[1]);
             Assert.AreEqual(receivedMessages[0].ID, messages[0].ID);
-            Assert.AreEqual((withLinking ? 2 : 0), receivedMessages[0].Headers.Keys.Count());
-            Assert.AreEqual((withLinking ? 5 : 3), messages[0].Header.Keys.Count());
+            Assert.AreEqual((withLinking ? 2 : 0), receivedMessages[0].Headers.Count);
+            Assert.AreEqual((withLinking ? 2 : 0), messages[0].Header.Count);
             Assert.AreEqual(message, receivedMessages[0].Message);
             Assert.IsFalse(result.IsError);
             Assert.IsNull(result.Error);
@@ -377,7 +379,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 Assert.IsNotNull(result);
                 Assert.IsNull(error);
                 Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-                Assert.AreEqual(serviceMessages[0].Header.Keys.Count()-3, messages[0].Headers.Keys.Count());
+                Assert.AreEqual(serviceMessages[0].Header.Count, messages[0].Headers.Count);
                 Assert.AreEqual(message, messages[0].Message);
             }
             else
