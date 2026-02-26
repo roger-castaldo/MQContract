@@ -52,8 +52,7 @@ namespace MQContract.GooglePubSub
                         MessageId=serviceMessage.ID
                     };
                     message.Attributes.Add(MessageTypeID, serviceMessage.MessageTypeID);
-                    foreach (var key in serviceMessage.Header.Keys)
-                        message.Attributes.Add(key, serviceMessage.Header[key]!);
+                    serviceMessage.Header.ForEach(pair => message.Attributes.Add(pair.Key, pair.Value));
                     var result = new PublishRequest()
                     {
                         TopicAsTopicName = TopicName.FromProjectTopic(projectId, serviceMessage.Channel)
@@ -115,7 +114,7 @@ namespace MQContract.GooglePubSub
                 message.Message.Attributes[MessageTypeID],
                 channel,
                 new(message.Message.Attributes.Where(pair => !Equals(pair.Key, MessageTypeID))
-                    .Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value))
+                    .Select(pair => new KeyValuePair<string, string?>(pair.Key, pair.Value))
                 ),
                 message.Message.Data.ToArray(),
                 acknowledge

@@ -199,13 +199,12 @@ namespace MQContract.KubeMQ
         internal static MapField<string, string> ConvertMessageHeader(MessageHeader header)
         {
             var result = new MapField<string, string>();
-            foreach (var key in header.Keys)
-                result.Add(key, header[key]!);
+            header.ForEach(kv => result.Add(kv.Key, kv.Value));
             return result;
         }
 
         internal static MessageHeader ConvertMessageHeader(MapField<string, string> header)
-            => new(header.AsEnumerable());
+            => new(header.AsEnumerable().Select(pair=>new KeyValuePair<string, string?>(pair.Key, pair.Value)));
 
         ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
             => batchedMessageStream.TransmitAsync(message, cancellationToken);

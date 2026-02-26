@@ -41,8 +41,10 @@ namespace MQContract.ApachePulsar
                         Key = serviceMessage.ID
                     };
                     messageMetadata[MessageTypeID] = serviceMessage.MessageTypeID;
-                    foreach (var key in serviceMessage.Header.Keys)
-                        messageMetadata[key] = serviceMessage.Header[key];
+                    serviceMessage.Header.ForEach(pair =>
+                    {
+                         messageMetadata[pair.Key] = pair.Value;
+                    });
                     return new MessageInstance(serviceMessage.ID, serviceMessage.Channel, messageMetadata, serviceMessage.Data);
                 },
                 async (messageInstance, cancellationToken) =>
@@ -86,7 +88,7 @@ namespace MQContract.ApachePulsar
                 message.Key!,
                 message.Properties[MessageTypeID],
                 channel,
-                new(message.Properties.Where(pair => !Equals(pair.Key, MessageTypeID))),
+                new(message.Properties.Where(pair => !Equals(pair.Key, MessageTypeID)).Select(pair=>new KeyValuePair<string,string?>(pair.Key,pair.Value))),
                 message.Data.ToArray(),
                 acknowledge
             );

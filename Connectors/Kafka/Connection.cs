@@ -103,8 +103,7 @@ namespace MQContract.Kafka
         internal static Headers ExtractHeaders(ServiceMessage message)
         {
             var result = new Headers();
-            foreach (var key in message.Header.Keys)
-                result.Add(key, EncodeHeaderValue(message.Header[key]!));
+            message.Header.ForEach(kv => result.Add(kv.Key, EncodeHeaderValue(kv.Value)));
             result.Add(MESSAGE_TYPE_HEADER, EncodeHeaderValue(message.MessageTypeID));
             return result;
         }
@@ -118,7 +117,7 @@ namespace MQContract.Kafka
             return new(
                 header
                 .Where(h => !Equals(h.Key, MESSAGE_TYPE_HEADER))
-                .Select(h => new KeyValuePair<string, string>(h.Key, DecodeHeaderValue(h.GetValueBytes())))
+                .Select(h => new KeyValuePair<string, string?>(h.Key, DecodeHeaderValue(h.GetValueBytes())))
             );
         }
 

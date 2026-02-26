@@ -48,8 +48,7 @@ namespace MQContract.ActiveMQ
                     var msg = await session.CreateBytesMessageAsync(serviceMessage.Data.ToArray());
                     msg.NMSMessageId=serviceMessage.ID;
                     msg.Properties[MESSAGE_TYPE_HEADER] = serviceMessage.MessageTypeID;
-                    foreach (var key in serviceMessage.Header.Keys)
-                        msg.Properties[key] = serviceMessage.Header[key];
+                    serviceMessage.Header.ForEach(pair => msg.Properties[pair.Key] = pair.Value);
                     return new MessageInstance(serviceMessage.ID, msg, GetTopic(serviceMessage.Channel));
                 },
                 async (messageInstance, cancellationToken) =>
@@ -78,12 +77,10 @@ namespace MQContract.ActiveMQ
 
         private static MessageHeader ExtractHeaders(IPrimitiveMap properties, out string? messageTypeID)
         {
-            var result = new Dictionary<string, string?>();
             messageTypeID = (string?)(properties.Contains(MESSAGE_TYPE_HEADER) ? properties[MESSAGE_TYPE_HEADER] : null);
-            foreach (var key in properties.Keys.OfType<string>()
-                .Where(h => !Equals(h, MESSAGE_TYPE_HEADER)))
-                result.Add(key, (string)properties[key]);
-            return new(result);
+            return new(properties.Keys.OfType<string>()
+                .Where(h => !Equals(h, MESSAGE_TYPE_HEADER))
+                .Select(key => new KeyValuePair<string, string?>(key, (string?)properties[key])));
         }
 
         internal static ReceivedServiceMessage ProduceMessage(string channel, IMessage message, TaskCompletionSource ackSource)

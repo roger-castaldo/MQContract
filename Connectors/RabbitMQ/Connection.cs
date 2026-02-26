@@ -138,15 +138,16 @@ namespace MQContract.RabbitMQ
                 bw.Write((byte)0);
             bw.Write(message.Data.Length);
             bw.Write(message.Data.ToArray());
-            foreach (var key in message.Header.Keys)
+            message.Header.ForEach(pair =>
             {
-                var bytes = UTF8Encoding.UTF8.GetBytes(key);
+                var bytes = UTF8Encoding.UTF8.GetBytes(pair.Key);
                 bw.Write(bytes.Length);
                 bw.Write(bytes);
-                bytes = UTF8Encoding.UTF8.GetBytes(message.Header[key]!);
+                bytes = UTF8Encoding.UTF8.GetBytes(pair.Value!);
                 bw.Write(bytes.Length);
                 bw.Write(bytes);
-            }
+
+            });
             bw.Flush();
             return (props, ms.ToArray());
         }

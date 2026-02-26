@@ -55,6 +55,7 @@
   - [Header](#P-MQContract-Messages-EncodedMessage-Header 'MQContract.Messages.EncodedMessage.Header')
   - [ID](#P-MQContract-Messages-EncodedMessage-ID 'MQContract.Messages.EncodedMessage.ID')
   - [MessageTypeID](#P-MQContract-Messages-EncodedMessage-MessageTypeID 'MQContract.Messages.EncodedMessage.MessageTypeID')
+  - [Dispose(disposing)](#M-MQContract-Messages-EncodedMessage-Dispose-System-Boolean- 'MQContract.Messages.EncodedMessage.Dispose(System.Boolean)')
 - [EncryptionResult](#T-MQContract-Interfaces-Encrypting-EncryptionResult 'MQContract.Interfaces.Encrypting.EncryptionResult')
   - [#ctor(Headers,Data)](#M-MQContract-Interfaces-Encrypting-EncryptionResult-#ctor-System-Collections-Generic-Dictionary{System-String,System-String},System-Byte[]- 'MQContract.Interfaces.Encrypting.EncryptionResult.#ctor(System.Collections.Generic.Dictionary{System.String,System.String},System.Byte[])')
   - [Data](#P-MQContract-Interfaces-Encrypting-EncryptionResult-Data 'MQContract.Interfaces.Encrypting.EncryptionResult.Data')
@@ -283,10 +284,15 @@
   - [MessageFilter](#P-MQContract-Messages-MessageFilters`1-MessageFilter 'MQContract.Messages.MessageFilters`1.MessageFilter')
 - [MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader')
   - [#ctor()](#M-MQContract-Messages-MessageHeader-#ctor 'MQContract.Messages.MessageHeader.#ctor')
+  - [#ctor(originalHeader,headers)](#M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.MessageHeader.#ctor(MQContract.Messages.MessageHeader,System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
   - [#ctor(headers)](#M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.MessageHeader.#ctor(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
+  - [Count](#P-MQContract-Messages-MessageHeader-Count 'MQContract.Messages.MessageHeader.Count')
   - [Item](#P-MQContract-Messages-MessageHeader-Item-System-String- 'MQContract.Messages.MessageHeader.Item(System.String)')
   - [Keys](#P-MQContract-Messages-MessageHeader-Keys 'MQContract.Messages.MessageHeader.Keys')
+  - [AsEnumerable()](#M-MQContract-Messages-MessageHeader-AsEnumerable 'MQContract.Messages.MessageHeader.AsEnumerable')
   - [AsSpan()](#M-MQContract-Messages-MessageHeader-AsSpan 'MQContract.Messages.MessageHeader.AsSpan')
+  - [ForEach(action)](#M-MQContract-Messages-MessageHeader-ForEach-System-Action{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.MessageHeader.ForEach(System.Action{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
+  - [Select\`\`1(selector)](#M-MQContract-Messages-MessageHeader-Select``1-System-Func{System-Collections-Generic-KeyValuePair{System-String,System-String},``0}- 'MQContract.Messages.MessageHeader.Select``1(System.Func{System.Collections.Generic.KeyValuePair{System.String,System.String},``0})')
 - [MessageTypeDefinition](#T-MQContract-MQContractMessageContext-MessageTypeDefinition 'MQContract.MQContractMessageContext.MessageTypeDefinition')
   - [#ctor(Channel,TypeName,TypeVersion,ResponseChannel,ResponseTimeout,ResponseType)](#M-MQContract-MQContractMessageContext-MessageTypeDefinition-#ctor-System-String,System-String,System-Version,System-String,System-Nullable{System-TimeSpan},System-Type- 'MQContract.MQContractMessageContext.MessageTypeDefinition.#ctor(System.String,System.String,System.Version,System.String,System.Nullable{System.TimeSpan},System.Type)')
   - [Channel](#P-MQContract-MQContractMessageContext-MessageTypeDefinition-Channel 'MQContract.MQContractMessageContext.MessageTypeDefinition.Channel')
@@ -336,7 +342,7 @@
   - [ResponseTimeout](#P-MQContract-Attributes-QueryMessageAttribute-ResponseTimeout 'MQContract.Attributes.QueryMessageAttribute.ResponseTimeout')
   - [ResponseType](#P-MQContract-Attributes-QueryMessageAttribute-ResponseType 'MQContract.Attributes.QueryMessageAttribute.ResponseType')
 - [QueryResponseMessage\`1](#T-MQContract-Messages-QueryResponseMessage`1 'MQContract.Messages.QueryResponseMessage`1')
-  - [#ctor(Message,Headers)](#M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-Dictionary{System-String,System-String}- 'MQContract.Messages.QueryResponseMessage`1.#ctor(`0,System.Collections.Generic.Dictionary{System.String,System.String})')
+  - [#ctor(Message,Headers)](#M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}- 'MQContract.Messages.QueryResponseMessage`1.#ctor(`0,System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})')
   - [Headers](#P-MQContract-Messages-QueryResponseMessage`1-Headers 'MQContract.Messages.QueryResponseMessage`1.Headers')
   - [Message](#P-MQContract-Messages-QueryResponseMessage`1-Message 'MQContract.Messages.QueryResponseMessage`1.Message')
 - [QueryResult\`1](#T-MQContract-Messages-QueryResult`1 'MQContract.Messages.QueryResult`1')
@@ -1286,6 +1292,26 @@ The unique ID of the message
 ##### Summary
 
 The message type id to transmit across
+
+<a name='M-MQContract-Messages-EncodedMessage-Dispose-System-Boolean-'></a>
+### Dispose(disposing) `method`
+
+##### Summary
+
+Releases the resources used by the current instance and optionally disposes of managed resources.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| disposing | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates whether to release both managed and unmanaged resources (`true`) or only unmanaged
+resources (`false`). |
+
+##### Remarks
+
+This method is called by the public Dispose method and should be overridden in
+derived classes to release additional resources. It is important to ensure that this method is called only
+once to avoid disposing of resources multiple times.
 
 <a name='T-MQContract-Interfaces-Encrypting-EncryptionResult'></a>
 ## EncryptionResult `type`
@@ -5181,6 +5207,20 @@ Constructor to create a MessageHeader instance without any inital headers
 
 This constructor has no parameters.
 
+<a name='M-MQContract-Messages-MessageHeader-#ctor-MQContract-Messages-MessageHeader,System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}-'></a>
+### #ctor(originalHeader,headers) `constructor`
+
+##### Summary
+
+Constructor to create a MessageHeader instance merging and existing header with new header values. The existing header values will be overwritten by the new header values if there are any key conflicts, otherwise the new header values will be added to the existing header values.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| originalHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The original header to merge with the new header values |
+| headers | [System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}') | The desired data for the header |
+
 <a name='M-MQContract-Messages-MessageHeader-#ctor-System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}-'></a>
 ### #ctor(headers) `constructor`
 
@@ -5193,6 +5233,13 @@ Constructor to create a MessageHeader instance using initial data values
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | headers | [System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}') | The desired data for the header |
+
+<a name='P-MQContract-Messages-MessageHeader-Count'></a>
+### Count `property`
+
+##### Summary
+
+The current count of values in the collection
 
 <a name='P-MQContract-Messages-MessageHeader-Item-System-String-'></a>
 ### Item `property`
@@ -5218,6 +5265,21 @@ The value for the given key or null if not found
 
 A list of the available keys in the header
 
+<a name='M-MQContract-Messages-MessageHeader-AsEnumerable'></a>
+### AsEnumerable() `method`
+
+##### Summary
+
+Returns the header key/value pairs as an enumerable list. This is less efficient than using the AsSpan method, but is more convenient for use in LINQ queries and other scenarios where an enumerable is required.
+
+##### Returns
+
+The header key/value pairs as an enumerable value
+
+##### Parameters
+
+This method has no parameters.
+
 <a name='M-MQContract-Messages-MessageHeader-AsSpan'></a>
 ### AsSpan() `method`
 
@@ -5228,6 +5290,44 @@ The list of values returned as a span for the underlying services to read them a
 ##### Parameters
 
 This method has no parameters.
+
+<a name='M-MQContract-Messages-MessageHeader-ForEach-System-Action{System-Collections-Generic-KeyValuePair{System-String,System-String}}-'></a>
+### ForEach(action) `method`
+
+##### Summary
+
+Execute an action for each header entry without exposing the underlying span.
+This avoids allocations and also avoids capturing a ref struct in async methods.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| action | [System.Action{System.Collections.Generic.KeyValuePair{System.String,System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Action 'System.Action{System.Collections.Generic.KeyValuePair{System.String,System.String}}') | Action to execute for each header key/value pair. |
+
+<a name='M-MQContract-Messages-MessageHeader-Select``1-System-Func{System-Collections-Generic-KeyValuePair{System-String,System-String},``0}-'></a>
+### Select\`\`1(selector) `method`
+
+##### Summary
+
+Projects each key-value pair in the collection into a new form by applying the specified selector function.
+
+##### Returns
+
+An enumerable collection of elements of type T resulting from applying the selector function to each
+key-value pair.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selector | [System.Func{System.Collections.Generic.KeyValuePair{System.String,System.String},\`\`0}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Func 'System.Func{System.Collections.Generic.KeyValuePair{System.String,System.String},``0}') | A function to apply to each key-value pair in the collection to produce the result element. |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| T | The type of the elements returned by the selector function. |
 
 <a name='T-MQContract-MQContractMessageContext-MessageTypeDefinition'></a>
 ## MessageTypeDefinition `type`
@@ -6073,7 +6173,7 @@ Houses the Query Response Message to be sent back from a query call
 | ---- | ----------- |
 | TQueryResponse | The type of message contained in the response |
 
-<a name='M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-Dictionary{System-String,System-String}-'></a>
+<a name='M-MQContract-Messages-QueryResponseMessage`1-#ctor-`0,System-Collections-Generic-IEnumerable{System-Collections-Generic-KeyValuePair{System-String,System-String}}-'></a>
 ### #ctor(Message,Headers) `constructor`
 
 ##### Summary
@@ -6085,7 +6185,7 @@ Houses the Query Response Message to be sent back from a query call
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | Message | [\`0](#T-`0 '`0') | The message to respond back with |
-| Headers | [System.Collections.Generic.Dictionary{System.String,System.String}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.Dictionary 'System.Collections.Generic.Dictionary{System.String,System.String}') | The headers to attach to the response |
+| Headers | [System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}}') | The headers to attach to the response |
 
 ##### Generic Types
 

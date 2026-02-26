@@ -137,17 +137,13 @@ namespace MQContract.NATS
             );
 
         internal static NatsHeaders ExtractHeader(ServiceMessage message)
-            => new(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>(
-                message.Header.Keys.Select(k =>
-                    new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
-                        k,
-                        new Microsoft.Extensions.Primitives.StringValues(message.Header[k]))
-                )
+            => [.. new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>(
+                message.Header.Select(pair=>new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(pair.Key, new Microsoft.Extensions.Primitives.StringValues(pair.Value)))
                 .Concat([
                     new(MESSAGE_IDENTIFIER_HEADER,message.ID),
                     new(MESSAGE_TYPE_HEADER,message.MessageTypeID)
                 ])
-            ));
+            )];
 
         internal static MessageHeader ExtractHeader(NatsHeaders? header, out string? messageID, out string? messageTypeID)
         {
@@ -161,7 +157,7 @@ namespace MQContract.NATS
                 messageTypeID=null;
             return new MessageHeader(header?
                 .Where(pair => !Equals(pair.Key, MESSAGE_IDENTIFIER_HEADER)&&!Equals(pair.Key, MESSAGE_TYPE_HEADER))
-                .Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value.ToString()))?? []
+                .Select(pair => new KeyValuePair<string, string?>(pair.Key, pair.Value.ToString()))?? []
             );
         }
 
