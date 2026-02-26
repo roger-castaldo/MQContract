@@ -55,7 +55,6 @@
   - [Header](#P-MQContract-Messages-EncodedMessage-Header 'MQContract.Messages.EncodedMessage.Header')
   - [ID](#P-MQContract-Messages-EncodedMessage-ID 'MQContract.Messages.EncodedMessage.ID')
   - [MessageTypeID](#P-MQContract-Messages-EncodedMessage-MessageTypeID 'MQContract.Messages.EncodedMessage.MessageTypeID')
-  - [Dispose(disposing)](#M-MQContract-Messages-EncodedMessage-Dispose-System-Boolean- 'MQContract.Messages.EncodedMessage.Dispose(System.Boolean)')
 - [EncryptionResult](#T-MQContract-Interfaces-Encrypting-EncryptionResult 'MQContract.Interfaces.Encrypting.EncryptionResult')
   - [#ctor(Headers,Data)](#M-MQContract-Interfaces-Encrypting-EncryptionResult-#ctor-System-Collections-Generic-Dictionary{System-String,System-String},System-Byte[]- 'MQContract.Interfaces.Encrypting.EncryptionResult.#ctor(System.Collections.Generic.Dictionary{System.String,System.String},System.Byte[])')
   - [Data](#P-MQContract-Interfaces-Encrypting-EncryptionResult-Data 'MQContract.Interfaces.Encrypting.EncryptionResult.Data')
@@ -1292,26 +1291,6 @@ The unique ID of the message
 ##### Summary
 
 The message type id to transmit across
-
-<a name='M-MQContract-Messages-EncodedMessage-Dispose-System-Boolean-'></a>
-### Dispose(disposing) `method`
-
-##### Summary
-
-Releases the resources used by the current instance and optionally disposes of managed resources.
-
-##### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| disposing | [System.Boolean](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Boolean 'System.Boolean') | Indicates whether to release both managed and unmanaged resources (`true`) or only unmanaged
-resources (`false`). |
-
-##### Remarks
-
-This method is called by the public Dispose method and should be overridden in
-derived classes to release additional resources. It is important to ensure that this method is called only
-once to avoid disposing of resources multiple times.
 
 <a name='T-MQContract-Interfaces-Encrypting-EncryptionResult'></a>
 ## EncryptionResult `type`

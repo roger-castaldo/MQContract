@@ -41,30 +41,13 @@ namespace MQContract.Messages
             Data = data;
         }
 
-        /// <summary>
-        /// Releases the resources used by the current instance and optionally disposes of managed resources.
-        /// </summary>
-        /// <remarks>This method is called by the public Dispose method and should be overridden in
-        /// derived classes to release additional resources. It is important to ensure that this method is called only
-        /// once to avoid disposing of resources multiple times.</remarks>
-        /// <param name="disposing">Indicates whether to release both managed and unmanaged resources (<see langword="true"/>) or only unmanaged
-        /// resources (<see langword="false"/>).</param>
-        protected virtual void Dispose(bool disposing)
+        void IDisposable.Dispose()
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    ((IDisposable)Header).Dispose();
-                }
+                ((IDisposable)Header).Dispose();
                 disposedValue=true;
             }
-        }
-
-        void IDisposable.Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }
