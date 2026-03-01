@@ -13,9 +13,9 @@ namespace MQContract.Subscriptions
         Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel,
         MessageContext context,
-        ILogger logger, string? channel = null,
+        ILogger logger, Action<Guid> remove, string? channel = null,
         string? group = null, bool synchronous = false)
-        : SubscriptionBase<TMessage>(mapChannel, context, channel, synchronous, logger)
+        : SubscriptionBase<TMessage>(mapChannel, context, channel, synchronous, logger, remove)
     {
         private ManualResetEventSlim? manualResetEvent = new(true);
         private CancellationTokenSource? token = new();

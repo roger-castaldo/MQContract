@@ -28,7 +28,7 @@ namespace MQContract.Connections
         private readonly ConcurrentDictionary<Guid, TaskCompletionSource<ServiceQueryResult>> inboxResponses = [];
         private readonly ConcurrentDictionary<string, IServiceSubscription> inboxSubscriptions = [];
         private readonly ConcurrentDictionary<(Type messageType, bool ignoreMessageHeader), IMessageTypeFactory> typeFactories = [];
-        private readonly ConcurrentBag<ISubscription> consumerSubscriptions = [];
+        private readonly ConcurrentDictionary<Guid,IInternalSubscription> activeSubscriptions = [];
         protected readonly ILogger Logger;
         private readonly IMessageEncoder? defaultMessageEncoder;
         private readonly IServiceProvider? serviceProvider;
@@ -268,12 +268,16 @@ namespace MQContract.Connections
                 (originalChannel) => MapChannel(ChannelMapper.MapTypes.PublishSubscription, originalChannel)!,
                 messageContext,
                 logger: Logger,
+                remove: (id) => activeSubscriptions.TryRemove(id,out _),
             channel: channel,
             group: group,
                 synchronous: synchronous);
             Logs.Lifetime.EstablishingPubSubSubscription(Logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, cancellationToken))
+            {
+                activeSubscriptions.TryAdd(subscription.ID, subscription);
                 return subscription;
+            }
             Logs.Lifetime.PubSubSubscriptionEstablishmentFailed(Logger);
             throw new SubscriptionFailedException();
         }
@@ -668,12 +672,16 @@ namespace MQContract.Connections
                 (originalChannel) => MapChannel(ChannelMapper.MapTypes.QuerySubscription, originalChannel),
                 messageContext,
                 logger: Logger,
-            channel: channel,
-            group: group,
+                remove: (id) => activeSubscriptions.TryRemove(id, out _),
+                channel: channel,
+                group: group,
                 synchronous: synchronous);
             Logs.Lifetime.EstablishingSubscription(Logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, serviceConnectionName, cancellationToken))
+            {
+                activeSubscriptions.TryAdd(subscription.ID, subscription);
                 return subscription;
+            }
             Logs.Lifetime.EstablishingSubscriptionFailed(Logger);
             throw new SubscriptionFailedException();
         }
@@ -687,8 +695,8 @@ namespace MQContract.Connections
             Logs.Lifetime.ClosingAllInboxes(Logger);
             await Task.WhenAll([
                 .. inboxSubscriptions.Values.Select(sub => sub.EndAsync().AsTask()),
-                .. consumerSubscriptions.Select(sub=>sub.EndAsync().AsTask())
-            ]);
+                .. activeSubscriptions.Values.Select(sub=>sub.EndAsyncWithoutRemoval().AsTask())
+            ]).ConfigureAwait(true);
             await CloseAsync();
         }
         protected abstract ValueTask InternalDisposeAsync();
@@ -705,11 +713,11 @@ namespace MQContract.Connections
                         else if (sub is IDisposable disposable)
                             disposable.Dispose();
                     }),
-                    .. consumerSubscriptions.Select(async(sub)=>{
+                    .. activeSubscriptions.Values.Select(async(sub)=>{
                         await sub.DisposeAsync();
                     })
                 ]);
-                consumerSubscriptions.Clear();
+                activeSubscriptions.Clear();
                 inboxSubscriptions.Clear();
                 await InternalDisposeAsync();
             }

@@ -75,6 +75,7 @@ namespace Messages
                     storedArrivalSubscription.EndAsync().AsTask()
                 ).ConfigureAwait(true);
                 await contractConnection.CloseAsync().ConfigureAwait(true);
+                Console.WriteLine("Connection closed, system exiting.");
             }, true);
 
             Console.WriteLine("Awaiting 5 seconds to ensure that all subscriptions are established fully.");

@@ -7,8 +7,8 @@ namespace MQContract.Subscriptions
 {
     internal sealed class PubSubSubscription<TMessage>(Func<ReceivedServiceMessage, ValueTask<bool>> messageReceived, Action<Exception> errorReceived,
         Func<string, ValueTask<string>> mapChannel, MessageContext context,
-        ILogger logger, string? channel = null, string? group = null, bool synchronous = false)
-        : SubscriptionBase<TMessage>(mapChannel, context, channel, synchronous, logger)
+        ILogger logger, Action<Guid> remove, string? channel = null, string? group = null, bool synchronous = false)
+        : SubscriptionBase<TMessage>(mapChannel, context, channel, synchronous, logger, remove)
     {
         public async ValueTask<bool> EstablishSubscriptionAsync(IMessageServiceConnection connection, CancellationToken cancellationToken)
         {

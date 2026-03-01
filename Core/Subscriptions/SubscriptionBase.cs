@@ -6,7 +6,14 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MQContract.Subscriptions
 {
-    internal abstract class SubscriptionBase<TMessage>(Func<string, ValueTask<string>> mapChannel, MessageContext context, string? channel, bool synchronous, ILogger logger) : ISubscription
+    internal abstract class SubscriptionBase<TMessage>(
+        Func<string, ValueTask<string>> mapChannel, 
+        MessageContext context, 
+        string? channel, 
+        bool synchronous, 
+        ILogger logger,
+        Action<Guid> remove) 
+        : IInternalSubscription
     {
         protected IServiceSubscription? serviceSubscription;
         private bool disposedValue;
@@ -22,7 +29,12 @@ namespace MQContract.Subscriptions
         protected virtual void InternalDispose()
         { }
 
-        public async ValueTask EndAsync()
+        ValueTask ISubscription.EndAsync()
+            => EndAsync(true);
+        ValueTask IInternalSubscription.EndAsyncWithoutRemoval()
+            => EndAsync(false);
+
+        private async ValueTask EndAsync(bool callRemove)
         {
             if (serviceSubscription!=null)
             {
@@ -30,6 +42,8 @@ namespace MQContract.Subscriptions
                 await serviceSubscription.EndAsync();
                 serviceSubscription=null;
             }
+            if (callRemove)
+                remove(ID);
         }
 
         protected virtual void Dispose(bool disposing)
