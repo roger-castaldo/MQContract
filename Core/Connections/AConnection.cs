@@ -678,7 +678,10 @@ namespace MQContract.Connections
                 synchronous: synchronous);
             Logs.Lifetime.EstablishingSubscription(Logger);
             if (await subscription.EstablishSubscriptionAsync(serviceConnection, serviceConnectionName, cancellationToken))
+            {
+                activeSubscriptions.TryAdd(subscription.ID, subscription);
                 return subscription;
+            }
             Logs.Lifetime.EstablishingSubscriptionFailed(Logger);
             throw new SubscriptionFailedException();
         }
