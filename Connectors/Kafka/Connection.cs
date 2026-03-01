@@ -43,7 +43,9 @@ namespace MQContract.Kafka
                 CompressionType = CompressionType.Lz4,
 
                 // Ordering / Parallelism
-                MaxInFlight = 5
+                MaxInFlight = 5,
+                MessageTimeoutMs = 10000,    
+                SocketTimeoutMs = 10000
             };
             producer = new ProducerBuilder<string, byte[]>(produceConfig)
                 .Build();
@@ -144,7 +146,9 @@ namespace MQContract.Kafka
                 MaxPartitionFetchBytes = clientConfig.MessageMaxBytes ?? (1024 * 1024), // limit per-partition fetch size
                 QueuedMinMessages = 1,          // start delivering to the application with fewer queued messages
                 AutoCommitIntervalMs = 1000,    // commit offsets to broker more frequently (still relying on StoreOffset)
-                SocketKeepaliveEnable = true
+                SocketKeepaliveEnable = true,
+                SessionTimeoutMs = 6000,
+                HeartbeatIntervalMs = 2000
             });
             if (isReply)
                 builder.SetPartitionsAssignedHandler((c, partitions) =>
@@ -187,6 +191,7 @@ namespace MQContract.Kafka
             {
                 disposedValue=true;
                 await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
+                producer.Flush(TimeSpan.FromSeconds(3));
                 producer.Dispose();
             }
             GC.SuppressFinalize(this);

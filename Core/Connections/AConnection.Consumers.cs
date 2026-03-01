@@ -36,7 +36,6 @@ namespace MQContract.Connections
                 Logs.Lifetime.ConsumerRegistrationFailed(Logger, err, consumerName, consumerType);
                 throw new ConsumerRegistrationFailedException(consumerName, consumerType, err);
             }
-            consumerSubscriptions.Add(subscription);
             return (TContractConnection)(IBaseContractConnection)this;
         }
 

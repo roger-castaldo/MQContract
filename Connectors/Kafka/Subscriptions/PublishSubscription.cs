@@ -4,14 +4,15 @@ using MQContract.Messages;
 namespace MQContract.Kafka.Subscriptions
 {
     internal class PublishSubscription(Confluent.Kafka.IConsumer<string, byte[]> consumer, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel)
-        : IServiceSubscription
+        : IServiceSubscription, IAsyncDisposable
     {
         private bool disposedValue;
         protected readonly CancellationTokenSource cancelToken = new();
+        private Task? consumerLoop;
 
         public void Start()
         {
-            Task.Run(async () =>
+            consumerLoop = Task.Run(async () =>
             {
                 while (!cancelToken.IsCancellationRequested)
                 {
@@ -40,34 +41,15 @@ namespace MQContract.Kafka.Subscriptions
                     {
                         //dropped this exception as it can occur when the consumption is stopped
                     }
+                    catch (AccessViolationException)
+                    {
+                        //dropped this exception as it can occur when the consumption is stopped
+                    }
                     catch (Exception ex)
                     {
                         errorReceived(ex);
                     }
                 }
-                consumer.Close();
-            });
-        }
-
-        public async ValueTask EndAsync()
-        {
-            try
-            {
-                await cancelToken.CancelAsync();
-            }
-            catch
-            {
-                //ignoring the error as the goal is to call cancel and not care about the error
-            }
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            if (!disposedValue)
-            {
-                disposedValue=true;
-                if (!cancelToken.IsCancellationRequested)
-                    await cancelToken.CancelAsync();
                 try
                 {
                     consumer.Close();
@@ -75,6 +57,26 @@ namespace MQContract.Kafka.Subscriptions
                 catch
                 {
                     //ignoring error here as we are attempting to dispose the resource
+                }
+            });
+        }
+
+        public async ValueTask EndAsync()
+            => await DisposeAsync();
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!disposedValue)
+            {
+                disposedValue=true;
+                if (!cancelToken.IsCancellationRequested)
+                {
+                    cancelToken.Cancel();
+                    try
+                    {
+                        await consumerLoop!.ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) { }
                 }
                 consumer.Dispose();
                 cancelToken.Dispose();
