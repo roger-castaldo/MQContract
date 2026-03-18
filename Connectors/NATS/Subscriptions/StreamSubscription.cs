@@ -15,7 +15,7 @@ namespace MQContract.NATS.Subscriptions
                 {
                     await consumer.RefreshAsync(CancelToken); // or try to recreate consumer
 
-                    await foreach (var msg in consumer.ConsumeAsync<byte[]>().WithCancellation(CancelToken))
+                    await foreach (var msg in consumer.ConsumeAsync<byte[]>(cancellationToken:CancelToken))
                     {
                         var ackSource = new TaskCompletionSource();
                         try

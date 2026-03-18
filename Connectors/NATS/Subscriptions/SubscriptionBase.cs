@@ -4,8 +4,9 @@ using NATS.Client.JetStream;
 
 namespace MQContract.NATS.Subscriptions
 {
-    internal abstract class SubscriptionBase() : IInternalServiceSubscription, IDisposable
+    internal abstract class SubscriptionBase() : IInternalServiceSubscription, IAsyncDisposable
     {
+        private Task? runningTask;
         private readonly CancellationTokenSource CancelTokenSource = new();
         private bool disposedValue;
 
@@ -32,31 +33,26 @@ namespace MQContract.NATS.Subscriptions
 
         protected abstract Task RunAction();
         public void Run()
-            => RunAction();
+            => runningTask = RunAction();
 
-        public async ValueTask EndAsync()
-        {
-            if (!CancelTokenSource.IsCancellationRequested)
-                await CancelTokenSource.CancelAsync();
-        }
+        public ValueTask EndAsync()
+            => ((IAsyncDisposable)this).DisposeAsync();
 
-        protected virtual void Dispose(bool disposing)
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             if (!disposedValue)
             {
-                if (disposing&&!CancelTokenSource.IsCancellationRequested)
-                    CancelTokenSource.Cancel();
+                disposedValue=true;
+                if (!CancelTokenSource.IsCancellationRequested)
+                {
+                    await CancelTokenSource.CancelAsync();
+                    await(runningTask??Task.CompletedTask);
+                }
 
                 CancelTokenSource.Dispose();
-                disposedValue=true;
+                runningTask=null;
+                GC.SuppressFinalize(this);
             }
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }
