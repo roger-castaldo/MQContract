@@ -116,7 +116,10 @@ namespace MQContract.ApachePulsar
             try
             {
                 var start = Stopwatch.GetTimestamp();
-                await using var producer = PulsarClient.CreateProducer<byte[]>(new("non-persistent://public/default/heartbeat", Schema.ByteArray));
+                await using var producer = PulsarClient.CreateProducer<byte[]>(new("non-persistent://public/default/heartbeat", Schema.ByteArray)
+                {
+                    MaxPendingMessages=1
+                });
                 _ = await producer.Send(new(), new byte[0]); // empty payload
                 return new(PulsarClient.ServiceUrl.ToString(), string.Empty, Stopwatch.GetElapsedTime(start));
             }
