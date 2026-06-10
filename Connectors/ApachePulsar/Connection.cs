@@ -15,7 +15,7 @@ namespace MQContract.ApachePulsar
     public sealed class Connection : IPingableMessageServiceConnection, IAsyncDisposable
     {
         private readonly record struct MessageInstance(string ID, string Channel, MessageMetadata MessageMetadata, ReadOnlyMemory<byte> Data);
-        private const string MessageTypeID = "_MessageTypeID";
+        private const string MessageTypeID = "x-mqcontract-message-type";
 
         private readonly ConcurrentDictionary<string, IProducer<byte[]>> producers = new();
         private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;

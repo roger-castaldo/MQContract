@@ -15,7 +15,7 @@ namespace MQContract.ActiveMQ
     {
         private readonly record struct MessageInstance(string ID, IBytesMessage Message, IDestination Topic);
 
-        private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
+        private const string MESSAGE_TYPE_HEADER = "x-mqcontract-message-type";
         private bool disposedValue;
 
         private readonly ISession session;

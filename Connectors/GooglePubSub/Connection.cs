@@ -15,7 +15,7 @@ namespace MQContract.GooglePubSub
         IPingableMessageServiceConnection, IAsyncDisposable
     {
         private readonly record struct MessageInstance(string ID, PublishRequest Request);
-        private const string MessageTypeID = "_MessageTypeID";
+        private const string MessageTypeID = "x-mqcontract-message-type";
 
         private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
 

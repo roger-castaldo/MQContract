@@ -15,7 +15,7 @@ namespace MQContract.Kafka
     {
         private readonly record struct MessageInstance(string ID, string Channel, Message<string, byte[]> Message);
 
-        private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
+        private const string MESSAGE_TYPE_HEADER = "x-mqcontract-message-type";
         private bool disposedValue;
 
         private readonly ClientConfig clientConfig;

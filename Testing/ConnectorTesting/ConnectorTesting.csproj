@@ -8,13 +8,11 @@
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
 		<GenerateCodeCoverage>true</GenerateCodeCoverage>
-		<!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>-->
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.4.0" />
-		<PackageReference Include="Moq" Version="4.20.72" />
+		<PackageReference Include="Testcontainers" Version="4.12.0" />
+		<PackageReference Include="Testcontainers.Nats" Version="4.12.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
 		<PackageReference Include="MSTest.TestAdapter" Version="4.2.3" />
 		<PackageReference Include="MSTest.TestFramework" Version="4.2.3" />
@@ -29,14 +27,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Core\Core.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+	  <ProjectReference Include="..\..\Connectors\NATS\NATS.csproj" />
+	  <ProjectReference Include="..\..\Core\Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Generators\Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
+
 </Project>

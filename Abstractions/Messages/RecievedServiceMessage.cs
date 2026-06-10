@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace MQContract.Messages
+﻿namespace MQContract.Messages
 {
     /// <summary>
     /// A Received Service Message that gets passed back up into the Contract Connection when a message is received from the underlying service connection

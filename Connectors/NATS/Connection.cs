@@ -16,8 +16,8 @@ namespace MQContract.NATS
     public sealed class Connection : IQueryResponseMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
     {
         private readonly record struct MessageInstance(string ID, string Channel, ReadOnlyMemory<byte> Data, NatsHeaders? Headers);
-        private const string MESSAGE_IDENTIFIER_HEADER = "_MessageID";
-        private const string MESSAGE_TYPE_HEADER = "_MessageTypeID";
+        private const string MESSAGE_IDENTIFIER_HEADER = "Nats-Msg-Id";
+        private const string MESSAGE_TYPE_HEADER = "x-mqcontract-message-type";
         private const string QUERY_RESPONSE_ERROR_TYPE = "NatsQueryError";
 
         private readonly List<SubscriptionConsumerConfig> subscriptionConsumerConfigs = [];

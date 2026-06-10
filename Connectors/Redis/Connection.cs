@@ -89,7 +89,7 @@ namespace MQContract.Redis
             await ConnectionMultiplexer.CloseAsync();
         }
 
-        private const string MESSAGE_TYPE_KEY = "_MessageTypeID";
+        private const string MESSAGE_TYPE_KEY = "x-mqcontract-message-type";
         private const string MESSAGE_ID_KEY = "_MessageID";
         private const string MESSAGE_DATA_KEY = "_MessageData";
         private const string MESSAGE_REPLY_KEY = "_MessageReplyChannel";

@@ -77,7 +77,7 @@ namespace MQContract.HiveMQ
         }
 
         private const string MessageID = "_ID";
-        private const string MessageTypeID = "_MessageTypeID";
+        private const string MessageTypeID = "x-mqcontract-message-type";
         private const string ResponseID = "_MessageResponseID";
 
         private static MQTT5PublishMessage ConvertMessage(ServiceMessage message, string? responseTopic = null, Guid? responseID = null, string? respondToTopic = null)
