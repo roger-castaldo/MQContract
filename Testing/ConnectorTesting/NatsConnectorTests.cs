@@ -35,4 +35,12 @@ public class NatsConnectorTests
         var connection = new Connection(natsTestHarness.Options);
         await QueryResponseTestHelper.ExecuteQueryResponseTestsAsync(connection);
     }
+
+    [TestMethod]
+    public async Task TestPing()
+    {
+        Assert.IsNotNull(natsTestHarness);
+        var connection = new Connection(natsTestHarness.Options);
+        await PingTestHelper.ExecutePingTestsAsync(connection);
+    }
 }

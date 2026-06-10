@@ -47,7 +47,7 @@ namespace MQContract.ZeroMQ
         private readonly NetMQPoller poller = new();
         private string? inboxAddress = null;
         private readonly List<string> servers = [];
-        private TaskCompletionSource? pingResponse = null;
+        private readonly ManualResetEventSlim pingResponseEvent = new(false);
         private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
         private bool disposedValue;
 
@@ -91,10 +91,10 @@ namespace MQContract.ZeroMQ
                 subscriberConnection.ReceiveReady += async (s, e) =>
                 {
                     var bytes = e.Socket.ReceiveFrameBytes();
-                    if (bytes.Length>PingMessage.Length && PingMessage.SequenceEqual(bytes.Take(PingMessage.Length)))
+                    if (PongMessage.SequenceEqual(bytes))
+                        pingResponseEvent.Set();
+                    else if (bytes.Length>PingMessage.Length && PingMessage.SequenceEqual(bytes.Take(PingMessage.Length)))
                         SendMessageToDestination(PongMessage, System.Text.UTF8Encoding.UTF8.GetString([.. bytes.Skip(PingMessage.Length)]));
-                    else if (PongMessage.SequenceEqual(bytes))
-                        pingResponse?.TrySetResult();
                     else
                     {
                         var mappedMessage = MessageMapper.Map(bytes);
@@ -202,16 +202,16 @@ namespace MQContract.ZeroMQ
             {
                 UndefinedInboxException.ThrowIfNullOrWhiteSpace(inboxAddress);
                 var start = Stopwatch.GetTimestamp();
-                pingResponse = new();
+                pingResponseEvent.Reset();
                 publishConnection.SendFrame([.. PingMessage, .. System.Text.UTF8Encoding.UTF8.GetBytes(inboxAddress!)]);
                 try
                 {
-                    await pingResponse.Task.WaitAsync(PongTimeout);
-                    return new(string.Join(',', servers), typeof(NetMQPoller).Assembly.GetName().Version?.ToString()??string.Empty, Stopwatch.GetElapsedTime(start));
+                    if (pingResponseEvent.Wait(PongTimeout))
+                        return new(string.Join(',', servers), typeof(NetMQPoller).Assembly.GetName().Version?.ToString()??string.Empty, Stopwatch.GetElapsedTime(start));
                 }
                 finally
                 {
-                    pingResponse = null;
+                    pingResponseEvent.Reset();
                 }
             }
             else if (poller.IsRunning)

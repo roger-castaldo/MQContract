@@ -36,13 +36,20 @@ internal static class PubSubTestHelper
 
         Assert.IsNotNull(subscription);
 
-        var results = await contractConnection.BulkPublishAsync<Announcement>(TestAnnouncements);
+        var results = new List<TransmissionResult>();
+
+        foreach(var (announcement, header) in TestAnnouncements)
+        {
+            var result = await contractConnection.PublishAsync(announcement, messageHeader:header);
+            results.Add(result);
+        }
+
+        Assert.IsTrue(results.All(r => !r.IsError));
 
         var success = await TestHelper.WaitForCount(receivedMessages, TestAnnouncements.Count(), TimeSpan.FromMinutes(2));
 
         Assert.IsTrue(success);
 
-        Assert.IsTrue(results.All(r => !r.IsError));
         Assert.AreEqual(TestAnnouncements.Count(), receivedMessages.Count);
         Assert.AreEqual(0, errors.Count);
         foreach(var (announcement, header) in TestAnnouncements)
