@@ -32,6 +32,16 @@ public class RedisConnectorTests
     }
 
     [TestMethod]
+    public async Task TestBulkPubSub()
+    {
+        Assert.IsNotNull(redisTestHarness);
+        var conf = new ConfigurationOptions();
+        conf.EndPoints.Add(redisTestHarness.Endpoints);
+        var connection = new Connection(conf);
+        await BulkPubSubTestHelper.ExecuteBulkPubSubTestsAsync(connection);
+    }
+
+    [TestMethod]
     public async Task TestQueryResponse()
     {
         Assert.IsNotNull(redisTestHarness);

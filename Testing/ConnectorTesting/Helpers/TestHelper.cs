@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ConnectorTesting.Helpers;
+﻿namespace ConnectorTesting.Helpers;
 
 internal static class TestHelper
 {
@@ -20,5 +14,14 @@ internal static class TestHelper
         });
         task.Start();
         return (await Task.WhenAny(task, Task.Delay(maxTime))) == task || values.Count()>=count;
+    }
+
+    const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    public static string RandomString(int length)
+    {
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, length)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
     }
 }

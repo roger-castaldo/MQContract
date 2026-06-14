@@ -52,6 +52,15 @@ public class ZeroMQConnectorTests
     }
 
     [TestMethod]
+    public async Task TestBulkPubSub()
+    {
+        await using var connection = new Connection();
+        var pubPort = BindServer(connection);
+        connection.ConnectToServer($"tcp://localhost:{pubPort}");
+        await BulkPubSubTestHelper.ExecuteBulkPubSubTestsAsync(connection);
+    }
+
+    [TestMethod]
     public async Task TestQueryResponse()
     {
         await using var connection = new Connection();

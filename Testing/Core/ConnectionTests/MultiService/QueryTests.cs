@@ -309,7 +309,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(
-                new GZipStream(new MemoryStream(messages[0].Data.ToArray()), CompressionMode.Decompress)
+                new BrotliStream(new MemoryStream(messages[0].Data.ToArray()), CompressionMode.Decompress)
 , cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
             #endregion

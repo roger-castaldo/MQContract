@@ -6,7 +6,7 @@ using MQContract.Messages;
 
 namespace ConnectorTesting.Helpers;
 
-internal static class PubSubTestHelper
+internal static class BulkPubSubTestHelper
 {
     private static readonly IEnumerable<(Announcement message, MessageHeader? header)> TestAnnouncements = [
         new (new Announcement("Hello World!"), new MessageHeader([new("test-key1", "test-value1")])),
@@ -16,7 +16,7 @@ internal static class PubSubTestHelper
         new (new Announcement("Testing message delivery and error handling."), new MessageHeader([new("test-key5", "test-value5")]))
     ];
 
-    public static async Task ExecutePubSubTestsAsync(IMessageServiceConnection messageServiceConnection)
+    public static async Task ExecuteBulkPubSubTestsAsync(IMessageServiceConnection messageServiceConnection)
     {
         var receivedMessages = new List<IReceivedMessage<Announcement>>();
         var errors = new List<Exception>();
@@ -38,13 +38,7 @@ internal static class PubSubTestHelper
 
         await Task.Delay(TimeSpan.FromSeconds(30));
 
-        var results = new List<TransmissionResult>();
-
-        foreach(var (announcement, header) in TestAnnouncements)
-        {
-            var result = await contractConnection.PublishAsync(announcement, messageHeader:header);
-            results.Add(result);
-        }
+        var results = await contractConnection.BulkPublishAsync(TestAnnouncements);
 
         Assert.IsTrue(results.All(r => !r.IsError));
 

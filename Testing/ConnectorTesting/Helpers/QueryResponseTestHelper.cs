@@ -3,11 +3,6 @@ using MQContract;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConnectorTesting.Helpers;
 
@@ -38,6 +33,8 @@ internal static class QueryResponseTestHelper
         });
 
         Assert.IsNotNull(subscription);
+
+        await Task.Delay(TimeSpan.FromSeconds(30));
 
         var results = new List<QueryResult<Reply>>();
 

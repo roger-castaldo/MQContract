@@ -1,6 +1,4 @@
-﻿using NATS.Client.Core;
-using Testcontainers.Nats;
-using Testcontainers.Redis;
+﻿using Testcontainers.Redis;
 
 namespace ConnectorTesting.Harnesses;
 

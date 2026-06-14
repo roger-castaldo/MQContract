@@ -29,6 +29,14 @@ public class NatsConnectorTests
     }
 
     [TestMethod]
+    public async Task TestBulkPubSub()
+    {
+        Assert.IsNotNull(natsTestHarness);
+        var connection = new Connection(natsTestHarness.Options);
+        await BulkPubSubTestHelper.ExecuteBulkPubSubTestsAsync(connection);
+    }
+
+    [TestMethod]
     public async Task TestQueryResponse()
     {
         Assert.IsNotNull(natsTestHarness);

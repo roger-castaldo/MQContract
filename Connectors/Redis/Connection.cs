@@ -15,6 +15,7 @@ namespace MQContract.Redis
         private readonly record struct MessageInstance(string ID, string Channel, NameValueEntry[] Data);
 
         private readonly Guid connectionID = Guid.NewGuid();
+        private readonly SemaphoreSlim publishSemaphore = new(1, 1);
         private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
         private bool disposedValue;
 
@@ -47,12 +48,17 @@ namespace MQContract.Redis
                     {
                         if (cancellationToken.IsCancellationRequested)
                             return new TransmissionResult(messageInstance.ID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
+                        await publishSemaphore.WaitAsync(cancellationToken);
                         _ = await Database.StreamAddAsync(messageInstance.Channel, messageInstance.Data);
                         return new TransmissionResult(messageInstance.ID);
                     }
                     catch (Exception e)
                     {
                         return new TransmissionResult(messageInstance.ID, Error: new(e));
+                    }
+                    finally
+                    {
+                        publishSemaphore.Release();
                     }
                 }
             );
@@ -218,6 +224,7 @@ namespace MQContract.Redis
                 disposedValue=true;
                 await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
                 await ConnectionMultiplexer.DisposeAsync().ConfigureAwait(true);
+                publishSemaphore.Dispose();
             }
             GC.SuppressFinalize(this);
         }

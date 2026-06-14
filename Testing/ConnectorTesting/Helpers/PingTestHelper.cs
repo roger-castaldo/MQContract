@@ -1,8 +1,6 @@
 ﻿using ConnectorTesting.Messages;
 using MQContract;
-using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
-using MQContract.Messages;
 
 namespace ConnectorTesting.Helpers;
 

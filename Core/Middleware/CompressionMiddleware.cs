@@ -15,7 +15,7 @@ namespace MQContract.Middleware
             if (context is Context c && message.Data.Length>c.MaxMessageSize)
             {
                 using var ms = new MemoryStream();
-                var zip = new GZipStream(ms, CompressionLevel.SmallestSize, false);
+                var zip = new BrotliStream(ms, CompressionLevel.Optimal, false);
                 await zip.WriteAsync(message.Data);
                 await zip.FlushAsync();
                 if (ms.Length>c.MaxMessageSize)
@@ -31,7 +31,7 @@ namespace MQContract.Middleware
             if (messageTypeID.StartsWith("C-") || bool.Parse(message.MessageHeader[CompressedHeader]??"false"))
             {
                 using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
-                using var zip = new GZipStream(ms, CompressionMode.Decompress);
+                using var zip = new BrotliStream(ms, CompressionMode.Decompress);
                 using var resultStream = new MemoryStream();
                 await zip.CopyToAsync(resultStream);
                 resultStream.TryGetBuffer(out ArraySegment<byte> buffer);
