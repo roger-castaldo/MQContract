@@ -3,6 +3,7 @@ using MQContract.Messages;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
+using System.Diagnostics;
 using System.Text;
 
 namespace MQContract.RabbitMQ
@@ -283,11 +284,23 @@ namespace MQContract.RabbitMQ
         ValueTask IMessageServiceConnection.CloseAsync()
          => ((IAsyncDisposable)this).DisposeAsync();
 
-        ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+        async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
         {
-            if (RabbitMQConnection.IsOpen)
-                return ValueTask.FromResult<PingResult>(new(RabbitMQConnection.Endpoint.HostName, string.Empty, RabbitMQConnection.Heartbeat));
-            throw new PingFailedException("Unable to validate connection to RabbitMQ instance");
+            IChannel? pchannel = null;
+            try
+            {
+                var start = Stopwatch.GetTimestamp();
+                pchannel = await RabbitMQConnection.CreateChannelAsync();
+                return new(RabbitMQConnection.Endpoint.HostName, string.Empty, Stopwatch.GetElapsedTime(start));
+            }
+            catch
+            {
+                throw new PingFailedException("Unable to validate connection to RabbitMQ instance");
+            }
+            finally
+            {
+                await (pchannel?.CloseAsync()??Task.CompletedTask);
+            }
         }
 
         async ValueTask IAsyncDisposable.DisposeAsync()

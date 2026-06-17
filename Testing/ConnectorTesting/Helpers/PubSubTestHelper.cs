@@ -32,7 +32,8 @@ internal static class PubSubTestHelper
         }, error =>
         {
             errors.Add(error);
-        });
+        },
+        group: "TestGroup");
 
         Assert.IsNotNull(subscription);
 

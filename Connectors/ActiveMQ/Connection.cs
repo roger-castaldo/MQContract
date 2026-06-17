@@ -135,7 +135,7 @@ namespace MQContract.ActiveMQ
         {
             group??=Guid.NewGuid().ToString();
             var result = new SubscriptionBase((msg,ackSource) => messageReceived(ProduceMessage(channel, msg, ackSource)), errorReceived, await CreateInstance(channel, group));
-            await result.StartAsync();
+            result.Start();
             return result;
         }
 

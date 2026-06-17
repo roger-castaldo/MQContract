@@ -55,7 +55,10 @@ namespace MQContract.ApachePulsar
                             return new TransmissionResult(messageInstance.ID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
                         if (!producers.TryGetValue(messageInstance.Channel, out var producer))
                         {
-                            producer = PulsarClient.CreateProducer<byte[]>(new(messageInstance.Channel, Schema.ByteArray));
+                            producer = PulsarClient.CreateProducer<byte[]>(new(messageInstance.Channel, Schema.ByteArray)
+                            {
+                                MaxPendingMessages=1
+                            });
                             producers.TryAdd(messageInstance.Channel, producer);
                         }
                         _ = await producer.Send(messageInstance.MessageMetadata, messageInstance.Data.ToArray(), cancellationToken);

@@ -30,7 +30,8 @@ internal static class QueryResponseTestHelper
         }, error =>
         {
             errors.Add(error);
-        });
+        },
+        group: "TestGroup");
 
         Assert.IsNotNull(subscription);
 

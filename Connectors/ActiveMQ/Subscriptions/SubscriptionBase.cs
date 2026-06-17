@@ -7,16 +7,17 @@ namespace MQContract.ActiveMQ.Subscriptions
     {
         private bool disposedValue;
         protected readonly CancellationTokenSource cancelToken = new();
+        private Task? consumerLoop;
 
-        internal ValueTask StartAsync()
+        internal void Start()
         {
-            _=Task.Run(async () =>
+            consumerLoop = Task.Run(async () =>
             {
                 while (!cancelToken.IsCancellationRequested)
                 {
                     try
                     {
-                        var msg = await consumer.ReceiveAsync();
+                        var msg = await consumer.ReceiveAsync().WaitAsync(cancelToken.Token);
                         if (msg!=null)
                         {
                             var ackSource = new TaskCompletionSource();
@@ -26,29 +27,36 @@ namespace MQContract.ActiveMQ.Subscriptions
                             );
                         }
                     }
+                    catch (OperationCanceledException)
+                    {
+                        //dropped this exception as it can occur when the consumption is stopped
+                    }
                     catch (Exception ex)
                     {
                         errorReceived(ex);
                     }
                 }
             });
-            return ValueTask.CompletedTask;
         }
 
-        public async ValueTask EndAsync()
-        {
-            if (!cancelToken.IsCancellationRequested)
-                await cancelToken.CancelAsync();
-            if (consumer!=null)
-                await consumer.CloseAsync();
-        }
+        public ValueTask EndAsync()
+            => DisposeAsync();
 
         public async ValueTask DisposeAsync()
         {
             if (!disposedValue)
             {
                 disposedValue=true;
-                await EndAsync();
+                if (!cancelToken.IsCancellationRequested)
+                {
+                    await cancelToken.CancelAsync();
+                    try
+                    {
+                        await (consumerLoop??Task.CompletedTask).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) { }
+                }
+                await ((consumer?.CloseAsync() ?? Task.CompletedTask)).ConfigureAwait(false);
                 consumer?.Dispose();
             }
         }

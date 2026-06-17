@@ -1,6 +1,8 @@
 ﻿using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Collections.Concurrent;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace MQContract.InMemory
@@ -69,7 +71,11 @@ namespace MQContract.InMemory
             => GetChannel(message.Channel).QueryAsync(message, inboxChannel, correlationID, cancellationToken);
 
         ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
-            => ValueTask.FromResult<PingResult>(new(Assembly.GetEntryAssembly()?.GetName()?.Name??string.Empty, Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString()??string.Empty, TimeSpan.Zero));
+        {
+            var start = Stopwatch.GetTimestamp();
+            var result = new PingResult(Assembly.GetEntryAssembly()?.GetName()?.Name??string.Empty, Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString()??string.Empty, Stopwatch.GetElapsedTime(start));
+            return ValueTask.FromResult<PingResult>(result);
+        }
 
         async ValueTask IAsyncDisposable.DisposeAsync()
         {

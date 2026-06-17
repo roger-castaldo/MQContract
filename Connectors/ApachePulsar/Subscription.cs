@@ -18,10 +18,11 @@ namespace MQContract.ApachePulsar
         });
         private readonly CancellationTokenSource cancelToken = new();
         private bool disposedValue;
+        private Task? consumerLoop;
 
         public void Start()
         {
-            _ = Task.Run(async () =>
+            consumerLoop = Task.Run(async () =>
             {
                 while (!cancelToken.IsCancellationRequested)
                 {
@@ -54,28 +55,32 @@ namespace MQContract.ApachePulsar
             });
         }
 
-        async ValueTask IServiceSubscription.EndAsync()
-        {
-            if (!cancelToken.IsCancellationRequested)
-            {
-                try
-                {
-                    await consumer.Unsubscribe();
-                }
-                catch { 
-                    //ignore
-                }
-                await cancelToken.CancelAsync();
-            }
-        }
-
+        ValueTask IServiceSubscription.EndAsync()
+            => ((IAsyncDisposable)this).DisposeAsync();
+        
         async ValueTask IAsyncDisposable.DisposeAsync()
         {
 
             if (!disposedValue)
             {
                 disposedValue=true;
-                await ((IServiceSubscription)this).EndAsync();
+                if (!cancelToken.IsCancellationRequested)
+                {
+                    await cancelToken.CancelAsync();
+                    try
+                    {
+                        await (consumerLoop??Task.CompletedTask).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) { }
+                }
+                try
+                {
+                    await consumer.Unsubscribe();
+                }
+                catch
+                {
+                    //ignore
+                }
                 await consumer.DisposeAsync();
                 cancelToken.Dispose();
             }

@@ -13,6 +13,7 @@
 	<ItemGroup>
 		<PackageReference Include="Testcontainers" Version="4.12.0" />
 		<PackageReference Include="Testcontainers.ActiveMq" Version="4.12.0" />
+		<PackageReference Include="Testcontainers.Kafka" Version="4.12.0" />
 		<PackageReference Include="Testcontainers.Nats" Version="4.12.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
 		<PackageReference Include="MSTest.TestAdapter" Version="4.2.3" />
@@ -25,12 +26,24 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Testcontainers.PubSub" Version="4.12.0" />
+		<PackageReference Include="Testcontainers.Pulsar" Version="4.12.0" />
+		<PackageReference Include="Testcontainers.RabbitMq" Version="4.12.0" />
 		<PackageReference Include="Testcontainers.Redis" Version="4.12.0" />
+		<PackageReference Include="Testcontainers.ServiceBus" Version="4.12.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Connectors\ActiveMQ\ActiveMQ.csproj" />
+	  <ProjectReference Include="..\..\Connectors\AmazonSNQS\AmazonSNQS.csproj" />
+	  <ProjectReference Include="..\..\Connectors\ApachePulsar\ApachePulsar.csproj" />
+	  <ProjectReference Include="..\..\Connectors\AzureServiceBus\AzureServiceBus.csproj" />
+	  <ProjectReference Include="..\..\Connectors\GooglePubSub\GooglePubSub.csproj" />
+	  <ProjectReference Include="..\..\Connectors\HiveMQ\HiveMQ.csproj" />
+	  <ProjectReference Include="..\..\Connectors\InMemory\InMemory.csproj" />
+	  <ProjectReference Include="..\..\Connectors\Kafka\Kafka.csproj" />
 	  <ProjectReference Include="..\..\Connectors\NATS\NATS.csproj" />
+	  <ProjectReference Include="..\..\Connectors\RabbitMQ\RabbitMQ.csproj" />
 	  <ProjectReference Include="..\..\Connectors\Redis\Redis.csproj" />
 	  <ProjectReference Include="..\..\Connectors\ZeroMQ\ZeroMQ.csproj" />
 	  <ProjectReference Include="..\..\Core\Core.csproj" />

@@ -22,13 +22,17 @@ namespace MQContract.Subscriptions
         }
 
         public static ServiceMessage EncodeMessage(ServiceMessage originalMessage, Guid queryClientID, Guid replyID, string? replyChannel, string? channel)
-        {
-            originalMessage.Channel = channel??originalMessage.Channel;
-            originalMessage.Header[QUERY_IDENTIFIER_HEADER] = queryClientID.ToString();
-            originalMessage.Header[REPLY_ID] = replyID.ToString();
-            originalMessage.Header[REPLY_CHANNEL_HEADER] = replyChannel;    
-            return originalMessage;
-        }
+            => new(
+                originalMessage.ID,
+                originalMessage.MessageTypeID,
+                channel??originalMessage.Channel,
+                new(originalMessage.Header, [
+                    new(QUERY_IDENTIFIER_HEADER, queryClientID.ToString()),
+                    new(REPLY_ID, replyID.ToString()),
+                    new(REPLY_CHANNEL_HEADER, replyChannel)
+                ]),
+                originalMessage.Data
+            );
 
         public static bool IsValidMessage(ReceivedServiceMessage serviceMessage)
             => Array.TrueForAll(REQUIRED_HEADERS, key => serviceMessage.Header.Keys.Contains(key));
