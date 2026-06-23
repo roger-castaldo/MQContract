@@ -2,6 +2,7 @@
 using DotPulsar.Abstractions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace MQContract.ApachePulsar
@@ -24,6 +25,12 @@ namespace MQContract.ApachePulsar
         {
             consumerLoop = Task.Run(async () =>
             {
+                if (regReplyGroup.IsMatch(group??string.Empty))
+                {
+                    var ids = await consumer.GetLastMessageIds(cancellationToken: cancelToken.Token);
+                    if (ids.Any())
+                        await consumer.Seek(ids.Last(), cancellationToken: cancelToken.Token);
+                }
                 while (!cancelToken.IsCancellationRequested)
                 {
                     try

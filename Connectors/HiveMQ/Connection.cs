@@ -30,6 +30,7 @@ namespace MQContract.HiveMQ
         /// <param name="clientOptions">The required client options to connect to the HiveMQ instance</param>
         public Connection(HiveMQClientOptions clientOptions)
         {
+            clientOptions.KeepAlive = (clientOptions.KeepAlive==0 ? 30 : clientOptions.KeepAlive);
             this.clientOptions = clientOptions;
             Client = new(clientOptions);
             var connectTask = Client.ConnectAsync();

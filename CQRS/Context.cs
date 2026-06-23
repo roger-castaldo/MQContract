@@ -9,9 +9,9 @@ namespace MQContract.CQRS
     /// </summary>
     public sealed record Context
     {
-        private const string MessageIdHeaderKey = "_messageId";
-        private const string CorrelationIdHeaderKey = "_correlationId";
-        private const string CausationIdHeaderKey = "_causationId";
+        private const string MessageIdHeaderKey = "x-mqcontract-cqrs-message-id";
+        private const string CorrelationIdHeaderKey = "x-mqcontract-cqrs-correlation-id";
+        private const string CausationIdHeaderKey = "x-mqcontract-cqrs-causation-id";
         private readonly MessageHeader messageHeader;
         private readonly Dictionary<string, string?> properties = [];
 

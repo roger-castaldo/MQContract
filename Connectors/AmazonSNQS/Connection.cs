@@ -1,5 +1,4 @@
-﻿using Amazon.Runtime;
-using Amazon.SimpleNotificationService;
+﻿using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
@@ -32,12 +31,12 @@ namespace MQContract.AmazonSNQS
         /// </summary>
         /// <paramref name="snsClientConfiguration">The sns client configuration and credentials to establish a SNS client</paramref>
         /// <paramref name="sqsClientConfiguration">The sqs client configuration and credentials to establish a SQS client</paramref>
-        public Connection((AWSCredentials credentials, AmazonSimpleNotificationServiceConfig config)? snsClientConfiguration = null,
-            (AWSCredentials credentials, AmazonSQSConfig config)? sqsClientConfiguration = null)
+        public Connection(AmazonSimpleNotificationServiceConfig? snsClientConfiguration = null,
+            AmazonSQSConfig? sqsClientConfiguration = null)
         {
             NoClientsSetException.ThrowIfBothNull(snsClientConfiguration, sqsClientConfiguration);
-            SNSClient = (snsClientConfiguration==null ? null : new(snsClientConfiguration.Value.credentials, snsClientConfiguration.Value.config));
-            SQSClient = (sqsClientConfiguration==null ? null : new(sqsClientConfiguration.Value.credentials, sqsClientConfiguration.Value.config));
+            SNSClient = (snsClientConfiguration==null ? null : new(snsClientConfiguration));
+            SQSClient = (sqsClientConfiguration==null ? null : new(sqsClientConfiguration));
             batchedMessageStream = new(
                 (serviceMessage, _) => ValueTask.FromResult(serviceMessage),
                 async (message, cancellationToken) =>

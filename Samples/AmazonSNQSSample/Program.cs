@@ -15,11 +15,11 @@ mapper.AddQueryResponseMap("Greeting.Response", "Greeting_Response");
 
 var credentials = new Amazon.Runtime.BasicAWSCredentials("test", "test");
 
-var config = new AmazonSQSConfig { ServiceURL = ServiceURL };
+var config = new AmazonSQSConfig { ServiceURL = ServiceURL, DefaultAWSCredentials = credentials };
 
-var snsConfig = new AmazonSimpleNotificationServiceConfig { ServiceURL = ServiceURL };
+var snsConfig = new AmazonSimpleNotificationServiceConfig { ServiceURL = ServiceURL, DefaultAWSCredentials = credentials };
 
-var serviceConnection = new Connection(snsClientConfiguration: (credentials, snsConfig), sqsClientConfiguration: (credentials, config));
+var serviceConnection = new Connection(snsClientConfiguration: snsConfig, sqsClientConfiguration: config);
 
 var arrivalsSNSResponse = await serviceConnection.SNSClient!.CreateTopicAsync("Arrivals");
 var storedArrivalsSNSResponse = await serviceConnection.SNSClient!.CreateTopicAsync("StoredArrivals");

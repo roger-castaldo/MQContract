@@ -9,11 +9,12 @@ namespace MQContract.AzureServiceBus
         protected readonly CancellationTokenSource cancelToken = new();
         private ServiceBusReceiver? receiver;
         private bool disposedValue;
+        private Task? consumerLoop;
 
-        internal async Task<IServiceSubscription> StartAsync()
+        internal async ValueTask<IServiceSubscription> StartAsync()
         {
             receiver = (sessionId==null ? client.CreateReceiver(channel, group??channel) : await client.AcceptSessionAsync(channel, group??channel, sessionId));
-            _ = Task.Run(async () =>
+            consumerLoop = Task.Run(async () =>
             {
                 while (!cancelToken.IsCancellationRequested)
                 {
@@ -47,16 +48,21 @@ namespace MQContract.AzureServiceBus
             if (!disposedValue)
             {
                 disposedValue=true;
-                await ((IServiceSubscription)this).EndAsync();
+                if (!cancelToken.IsCancellationRequested)
+                {
+                    cancelToken.Cancel();
+                    try
+                    {
+                        await consumerLoop!.ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) { }
+                }
+                await receiver!.CloseAsync();
                 await receiver!.DisposeAsync();
             }
         }
 
-        async ValueTask IServiceSubscription.EndAsync()
-        {
-            if (!cancelToken.IsCancellationRequested)
-                await cancelToken.CancelAsync();
-            await receiver!.CloseAsync();
-        }
+        ValueTask IServiceSubscription.EndAsync()
+            => ((IAsyncDisposable)this).DisposeAsync();
     }
 }

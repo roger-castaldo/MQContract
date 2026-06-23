@@ -301,7 +301,7 @@ namespace CodeGenTesting
             var replyResult = new QueryResult<Reply>(
                 Helper.RandomString(),
                 new([
-                    new KeyValuePair<string,string>("testkey",Helper.RandomString())
+                    new KeyValuePair<string,string?>("testkey",Helper.RandomString())
                 ]),
                 new(Helper.RandomString()),
                 new(new Exception(Helper.RandomString()), true)
@@ -312,7 +312,7 @@ namespace CodeGenTesting
             TimeSpan? messageTimeout = (timeout==null ? null : TimeSpan.FromSeconds(timeout.Value));
             MessageHeader? header = null;
             if (!string.IsNullOrWhiteSpace(headerKey))
-                header = new MessageHeader([new KeyValuePair<string, string>(headerKey!, headerValue!)]);
+                header = new MessageHeader([new KeyValuePair<string, string?>(headerKey!, headerValue!)]);
             //Act
             var call = context.TryExecuteQuery<Prompt>(mockConnection.Object, prompt, messageTimeout, channel, responseChannel, header, new CancellationToken());
             Assert.IsTrue(call.HasValue);

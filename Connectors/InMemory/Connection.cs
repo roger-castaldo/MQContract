@@ -1,7 +1,6 @@
 ﻿using MQContract.Interfaces.Service;
 using MQContract.Messages;
 using System.Collections.Concurrent;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Reflection;
 

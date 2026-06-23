@@ -97,20 +97,18 @@ namespace MQContract.AzureServiceBus
             return messages.Select(m => new TransmissionResult(m.ID));
         }
 
-        private static async ValueTask<IServiceSubscription> StartServiceSubscriptionAsync(Subscription subscription)
-            => await subscription.StartAsync();
 
         async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-            => await StartServiceSubscriptionAsync(new Subscription(
+            => await new Subscription(
                 client,
                 (msg, acknowledge) => messageReceived(ConvertMessage(msg, channel, acknowledge)),
                 (error) => errorReceived(error),
                 channel,
                 group
-            ));
+            ).StartAsync();
 
-        async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
-            => await StartServiceSubscriptionAsync(new Subscription(
+        ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
+            => new Subscription(
                 client,
                 async (msg, acknowledge) =>
                 {
@@ -129,7 +127,7 @@ namespace MQContract.AzureServiceBus
                 INBOX_CHANNEL_NAME,
                 INBOX_CHANNEL_NAME,
                 InboxSessionID.ToString()
-            ));
+            ).StartAsync();
 
         async ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
         {
@@ -154,7 +152,7 @@ namespace MQContract.AzureServiceBus
         }
 
         async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-            => await StartServiceSubscriptionAsync(new Subscription(
+            => await new Subscription(
                 client,
                 async (msg, acknowledge) =>
                 {
@@ -186,7 +184,7 @@ namespace MQContract.AzureServiceBus
                 (error) => errorReceived(error),
                 channel,
                 group
-            ));
+            ).StartAsync();
 
         async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
         {
