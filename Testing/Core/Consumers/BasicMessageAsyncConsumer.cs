@@ -1,9 +1,9 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using MQContract.Attributes;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
 
-namespace AutomatedTesting.Consumers
+namespace CoreTesting.Consumers
 {
     [Consumer(channel: "AsyncBasicMessage", group: "AsyncBasicMessageGroup")]
     internal class BasicMessageAsyncConsumer : IPubSubAsyncConsumer<BasicMessage>

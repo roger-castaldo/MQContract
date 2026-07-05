@@ -1,5 +1,5 @@
-﻿using AutomatedTesting.ContractConnectionTests.Middlewares;
-using AutomatedTesting.Messages;
+﻿using CoreTesting.ConnectionTests.Middlewares;
+using CoreTesting.Messages;
 using Moq;
 using MQContract.Extensions;
 using MQContract.Interfaces;

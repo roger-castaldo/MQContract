@@ -1,4 +1,4 @@
-﻿namespace AutomatedTesting
+﻿namespace CoreTesting
 {
     [TestClass]
     public class MessageHeaderTests
@@ -24,9 +24,9 @@
             #endregion
 
             #region Assert
-            Assert.AreEqual(2, header.Keys.Count());
-            Assert.IsTrue(header.Keys.Contains(key1));
-            Assert.IsTrue(header.Keys.Contains(key2));
+            Assert.HasCount(2, header.Keys);
+            Assert.Contains(key1, header.Keys);
+            Assert.Contains(key2, header.Keys);
             Assert.AreEqual(value1, header[key1]);
             Assert.AreEqual(value2, header[key2]);
             #endregion
@@ -51,9 +51,9 @@
 
             #region Assert
             Assert.AreEqual(3, header.Count);
-            Assert.IsTrue(header.Keys.Contains(key1));
-            Assert.IsTrue(header.Keys.Contains(key2));
-            Assert.IsTrue(header.Keys.Contains(key3));
+            Assert.Contains(key1, header.Keys);
+            Assert.Contains(key2, header.Keys);
+            Assert.Contains(key3, header.Keys);
             Assert.AreEqual(value1, header[key1]);
             Assert.AreEqual(value2, header[key2]);
             Assert.AreEqual(string.Empty, header[key3]);
@@ -81,9 +81,9 @@
 
             #region Assert
             Assert.AreEqual(3, header.Count);
-            Assert.IsTrue(header.Keys.Contains(key1));
-            Assert.IsTrue(header.Keys.Contains(key2));
-            Assert.IsTrue(header.Keys.Contains(key3));
+            Assert.Contains(key1, header.Keys);
+            Assert.Contains(key2, header.Keys);
+            Assert.Contains(key3, header.Keys);
             Assert.AreEqual(value1, header[key1]);
             Assert.AreEqual(value2, header[key2]);
             Assert.AreEqual(string.Empty, header[key3]);
@@ -111,10 +111,10 @@
             #endregion
 
             #region Assert
-            Assert.AreEqual(3, header.Keys.Count());
-            Assert.IsTrue(header.Keys.Contains(key1));
-            Assert.IsTrue(header.Keys.Contains(key2));
-            Assert.IsTrue(header.Keys.Contains(key3));
+            Assert.HasCount(3, header.Keys);
+            Assert.Contains(key1, header.Keys);
+            Assert.Contains(key2, header.Keys);
+            Assert.Contains(key3, header.Keys);
             Assert.AreEqual(value1, header[key1]);
             Assert.AreEqual(value2, header[key2]);
             Assert.AreEqual(string.Empty, header[key3]);

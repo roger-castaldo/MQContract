@@ -1,4 +1,4 @@
-﻿namespace AutomatedTesting.ServiceInjection
+﻿namespace CoreTesting.ServiceInjection
 {
     internal interface IInjectableService
     {

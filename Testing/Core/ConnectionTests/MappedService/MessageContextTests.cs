@@ -1,4 +1,4 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Extensions;

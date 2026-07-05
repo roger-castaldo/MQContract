@@ -6,24 +6,24 @@ namespace MQContract
 {
     internal partial class MessageContext
     {
-        public ValueTask<QueryResult<object>> ExecuteQuery<TQuery>(IContractConnection contractConnection, TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        public ValueTask<QueryResult<object>> ExecuteQuery<TQuery>(IContractConnection contractConnection, TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
         {
             var resultTask = contexts.FirstOrDefault(context => context.IsMessageCodeGenerated<TQuery>())?
-                .TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, messageHeader, cancellationToken);
+                .TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, cancellationToken);
             if (resultTask.HasValue)
                 return resultTask.Value;
             DynamicCodeNotSupportedException.ThrowIfDynamicCodeIsBlocked("Unable to execute query due to dynamic code not supported and query type not defined in context");
-            return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
+            return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, cancellationToken);
         }
 
-        public ValueTask<IEnumerable<QueryResult<object>>> ExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        public ValueTask<IEnumerable<QueryResult<object>>> ExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
         {
             var resultTask = contexts.FirstOrDefault(context => context.IsMessageCodeGenerated<TQuery>())?
-                .TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, messageHeader, cancellationToken);
+                .TryExecuteQuery<TQuery>(contractConnection, message!, timeout, channel, responseChannel, cancellationToken);
             if (resultTask.HasValue)
                 return resultTask.Value;
             DynamicCodeNotSupportedException.ThrowIfDynamicCodeIsBlocked("Unable to execute query due to dynamic code not supported and query type not defined in context");
-            return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
+            return ExecuteQueryThroughReflection<TQuery>(contractConnection, message, timeout, channel, responseChannel, cancellationToken);
         }
 
         private static QueryResult<object>? ConvertResultFromObject(object? obj)
@@ -43,22 +43,24 @@ namespace MQContract
         }
 
         [RequiresUnreferencedCode("Uses reflection over generic methods and runtime types.")]
-        private async ValueTask<QueryResult<object>> ExecuteQueryThroughReflection<TQuery>(IContractConnection contractConnection, TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        private async ValueTask<QueryResult<object>> ExecuteQueryThroughReflection<TQuery>(IContractConnection contractConnection, TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
         {
             var responseType = QueryResponseType<TQuery>()??throw new UnknownResponseTypeException("ResponseType", typeof(TQuery));
             try
             {
                 return ConvertResultFromObject(await Utility.InvokeMethodAsync(
                         typeof(IContractConnection).GetMethods().First(m => Equals(m.Name, nameof(IContractConnection.QueryAsync))
-                && m.GetGenericArguments().Length==2).MakeGenericMethod(typeof(TQuery), responseType!),
+                        && m.GetGenericArguments().Length==2
+                        && m.GetParameters()[0].ParameterType.IsGenericType
+                        && Equals(m.GetParameters()[0].ParameterType.GetGenericTypeDefinition(),typeof(TransmissionMessage<>)))
+                        .MakeGenericMethod(typeof(TQuery), responseType!),
                         contractConnection,
                         [
                             message,
-                        timeout,
-                        channel,
-                        responseChannel,
-                        messageHeader,
-                        cancellationToken
+                            timeout,
+                            channel,
+                            responseChannel,
+                            cancellationToken
                         ])
                     )!;
             }
@@ -69,7 +71,7 @@ namespace MQContract
         }
 
         [RequiresUnreferencedCode("Uses reflection over generic methods and runtime types.")]
-        private async ValueTask<IEnumerable<QueryResult<object>>> ExecuteQueryThroughReflection<TQuery>(IMultiServiceContractConnection contractConnection, TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        private async ValueTask<IEnumerable<QueryResult<object>>> ExecuteQueryThroughReflection<TQuery>(IMultiServiceContractConnection contractConnection, TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
         {
             var responseType = QueryResponseType<TQuery>()??throw new UnknownResponseTypeException("ResponseType", typeof(TQuery));
             IEnumerable<object> results;
@@ -77,14 +79,16 @@ namespace MQContract
             {
                 results = (IEnumerable<object>)(await Utility.InvokeMethodAsync(
                     typeof(IMultiServiceContractConnection).GetMethods()
-            .First(method => Equals(method.Name, nameof(IMultiServiceContractConnection.QueryAsync)) && method.GetGenericArguments().Length==2).MakeGenericMethod(typeof(TQuery), responseType!),
+            .First(method => Equals(method.Name, nameof(IMultiServiceContractConnection.QueryAsync)) && method.GetGenericArguments().Length==2
+                        && method.GetParameters()[0].ParameterType.IsGenericType
+                        && Equals(method.GetParameters()[0].ParameterType.GetGenericTypeDefinition(),typeof(TransmissionMessage<>)))
+                        .MakeGenericMethod(typeof(TQuery), responseType!),
                     contractConnection,
                     [
                         message,
                         timeout,
                         channel,
                         responseChannel,
-                        messageHeader,
                         cancellationToken
                     ])
                 )!;

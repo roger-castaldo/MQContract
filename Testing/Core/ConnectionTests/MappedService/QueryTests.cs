@@ -1,7 +1,7 @@
-﻿using AutomatedTesting.Encoders;
-using AutomatedTesting.Encryptors;
-using AutomatedTesting.Messages;
-using AutomatedTesting.ServiceInjection;
+﻿using CoreTesting.Encoders;
+using CoreTesting.Encryptors;
+using CoreTesting.Messages;
+using CoreTesting.ServiceInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MQContract;
@@ -16,7 +16,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
-namespace AutomatedTesting.ConnectionTests.MappedService
+namespace CoreTesting.ConnectionTests.MappedService
 {
     [TestClass]
     public class QueryTests
@@ -51,7 +51,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -65,7 +65,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
@@ -106,7 +106,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: $"Not{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}", cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: $"Not{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}", cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -120,7 +120,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual($"Not{typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel}", messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
@@ -133,7 +133,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
         }
 
         [TestMethod]
-        public async Task TestQueryAsyncWithMessageHeaders()
+        public async Task TestQueryAsyncWithMessageHeadersAndIDs()
         {
             #region Arrange
             var testMessage = new BasicQueryMessage("testMessage");
@@ -157,13 +157,14 @@ namespace AutomatedTesting.ConnectionTests.MappedService
                 .Returns(defaultTimeout);
 
             var messageHeader = new MessageHeader([new("testing", "testing")]);
+            var messageID = Guid.NewGuid().ToString();
 
             var contractConnection = ContractConnection.MappedServiceInstance().RegisterServiceConnection((props) => true, ServiceName, serviceConnection.Object);
             #endregion
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, messageHeader: messageHeader, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage, ID: messageID, Header: messageHeader), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -181,9 +182,10 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.Result);
-            Assert.AreEqual(messageHeader.Keys.Count(), messages[0].Header.Keys.Count());
+            Assert.HasCount(messageHeader.Keys.Count(), messages[0].Header.Keys);
             Assert.IsTrue(messageHeader.Keys.All(k => messages[0].Header.Keys.Contains(k)));
             Assert.IsTrue(messageHeader.Keys.All(k => Equals(messages[0].Header[k], messageHeader[k])));
+            Assert.AreEqual(messageID, messages[0].ID);
             #endregion
 
             #region Verify
@@ -221,7 +223,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, timeout: timeout, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), timeout: timeout, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -235,7 +237,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(timeout, timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
@@ -278,7 +280,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -292,7 +294,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual(1, messages[0].Header.Keys.Count());
+            Assert.HasCount(1, messages[0].Header.Keys);
             Assert.AreEqual("true", messages[0].Header[messages[0].Header.Keys.First()]);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
@@ -346,7 +348,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             Trace.WriteLine($"Error Message: {result?.Error?.Message}");
@@ -362,7 +364,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(Convert.ToBase64String(encodedData), Convert.ToBase64String(messages[0].Data.ToArray()));
@@ -418,7 +420,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -436,7 +438,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray().Reverse().ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.Result);
-            Assert.AreEqual(headers.Count, messages[0].Header.Keys.Count());
+            Assert.HasCount(headers.Count, messages[0].Header.Keys);
             Assert.IsTrue(headers.Keys.All(k => messages[0].Header.Keys.Contains(k)));
             Assert.AreEqual(headers[headers.Keys.First()], messages[0].Header[headers.Keys.First()]);
             #endregion
@@ -475,7 +477,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<TimeoutMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<TimeoutMessage, BasicResponseMessage>(new TransmissionMessage<TimeoutMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -489,7 +491,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(TimeoutMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(TimeSpan.FromMilliseconds(typeof(TimeoutMessage).GetCustomAttribute<QueryMessageAttribute>(false)?.ResponseTimeout.TotalMilliseconds ?? 0), timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.TimeoutMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<TimeoutMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
@@ -530,7 +532,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<NamedAndVersionedMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<NamedAndVersionedMessage, BasicResponseMessage>(new TransmissionMessage<NamedAndVersionedMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -544,7 +546,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(NamedAndVersionedMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.NamedAndVersionedMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<NamedAndVersionedMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
@@ -585,7 +587,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<CustomEncoderMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<CustomEncoderMessage, BasicResponseMessage>(new TransmissionMessage<CustomEncoderMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -599,7 +601,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(CustomEncoderMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.CustomEncoderMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await new TestMessageEncoder().DecodeAsync(new MemoryStream(messages[0].Data.ToArray())));
@@ -642,7 +644,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<CustomEncoderWithInjectionMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<CustomEncoderWithInjectionMessage, BasicResponseMessage>(new TransmissionMessage<CustomEncoderWithInjectionMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -656,7 +658,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(CustomEncoderWithInjectionMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.CustomEncoderWithInjectionMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage,
@@ -699,7 +701,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<CustomEncryptorMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<CustomEncryptorMessage, BasicResponseMessage>(new TransmissionMessage<CustomEncryptorMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -756,7 +758,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<CustomEncryptorWithInjectionMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<CustomEncryptorWithInjectionMessage, BasicResponseMessage>(new TransmissionMessage<CustomEncryptorWithInjectionMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -811,7 +813,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.QueryAsync<NoChannelMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken));
+            var exception = await Assert.ThrowsExactlyAsync<MessageChannelNullException>(async () => await contractConnection.QueryAsync<NoChannelMessage, BasicResponseMessage>(new TransmissionMessage<NoChannelMessage>(testMessage), cancellationToken: TestContext.CancellationToken));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -858,7 +860,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExactlyAsync<ArgumentOutOfRangeException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken));
+            var exception = await Assert.ThrowsExactlyAsync<ArgumentOutOfRangeException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -904,11 +906,11 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage1, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage1), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             stopwatch.Start();
-            var result2 = await contractConnection.QueryAsync<NoChannelMessage, BasicResponseMessage>(testMessage2, channel: "TestChannel2", cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<NoChannelMessage, BasicResponseMessage>(new TransmissionMessage<NoChannelMessage>(testMessage2), channel: "TestChannel2", cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -922,7 +924,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(2, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage1, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
@@ -934,7 +936,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.IsFalse(result2.IsError);
             Assert.AreEqual("TestChannel2", messages[1].Channel);
             Assert.AreEqual(defaultTimeout, timeouts[1]);
-            Assert.AreEqual(0, messages[1].Header.Keys.Count());
+            Assert.IsEmpty(messages[1].Header.Keys);
             Assert.AreEqual(Constants.NoChannelMessageType, messages[1].MessageTypeID);
             Assert.IsGreaterThan(0, messages[1].Data.Length);
             Assert.AreEqual(testMessage2, await JsonSerializer.DeserializeAsync<NoChannelMessage>(new MemoryStream(messages[1].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
@@ -975,7 +977,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -989,7 +991,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual(0, messages[0].Header.Keys.Count());
+            Assert.IsEmpty(messages[0].Header.Keys);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
@@ -1019,7 +1021,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var exception = await Assert.ThrowsExactlyAsync<QueryTimeoutException>(async () => await contractConnection.QueryAsync<BasicQueryMessage>(testMessage, cancellationToken: TestContext.CancellationToken));
+            var exception = await Assert.ThrowsExactlyAsync<QueryTimeoutException>(async () => await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -1060,7 +1062,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var exception = await Assert.ThrowsExactlyAsync<UnknownResponseTypeException>(async () => await contractConnection.QueryAsync<NoChannelMessage>(testMessage, cancellationToken: TestContext.CancellationToken));
+            var exception = await Assert.ThrowsExactlyAsync<UnknownResponseTypeException>(async () => await contractConnection.QueryAsync<NoChannelMessage>(new TransmissionMessage<NoChannelMessage>(testMessage), cancellationToken: TestContext.CancellationToken));
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -1106,7 +1108,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExactlyAsync<TooManyConnectionMatchesException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken));
+            var error = await Assert.ThrowsExactlyAsync<TooManyConnectionMatchesException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -1147,7 +1149,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExactlyAsync<NoConnectionMatchException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken));
+            var error = await Assert.ThrowsExactlyAsync<NoConnectionMatchException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -1193,7 +1195,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -1207,7 +1209,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
             Assert.HasCount(1, timeouts);
             Assert.AreEqual(defaultTimeout, timeouts[0]);
-            Assert.AreEqual((withLinking ? 2 : 0), messages[0].Header.Keys.Count());
+            Assert.HasCount((withLinking ? 2 : 0), messages[0].Header.Keys);
             Assert.AreEqual(Constants.BasicQueryMessageType, messages[0].MessageTypeID);
             Assert.IsGreaterThan(0, messages[0].Data.Length);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
@@ -1265,7 +1267,7 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -1312,8 +1314,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            _ = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -1362,8 +1364,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Act
             var stopwatch = Stopwatch.StartNew();
             IEnumerable<QueryResult<BasicResponseMessage>> result = [
-                await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken),
-                await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken)
+                await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken),
+                await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken)
             ];
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
@@ -1422,8 +1424,8 @@ namespace AutomatedTesting.ConnectionTests.MappedService
             #region Act
             var stopwatch = Stopwatch.StartNew();
             IEnumerable<QueryResult<BasicResponseMessage>> result = [
-                await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken),
-                await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken)
+                await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken),
+                await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken)
             ];
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
@@ -1469,10 +1471,10 @@ namespace AutomatedTesting.ConnectionTests.MappedService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var channelRetryResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
-            var channelCircuitBreakResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
-            var typeRetryResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
-            var typeCircuitBreakResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var channelRetryResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
+            var channelCircuitBreakResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
+            var typeRetryResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
+            var typeCircuitBreakResult = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion

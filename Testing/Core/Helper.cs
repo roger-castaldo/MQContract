@@ -1,8 +1,8 @@
-﻿using AutomatedTesting.ServiceInjection;
+﻿using CoreTesting.ServiceInjection;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Cryptography;
 
-namespace AutomatedTesting
+namespace CoreTesting
 {
     internal static class Helper
     {

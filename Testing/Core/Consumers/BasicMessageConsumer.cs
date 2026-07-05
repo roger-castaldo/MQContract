@@ -1,8 +1,8 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
 
-namespace AutomatedTesting.Consumers
+namespace CoreTesting.Consumers
 {
     internal class BasicMessageConsumer : IPubSubConsumer<BasicMessage>
     {

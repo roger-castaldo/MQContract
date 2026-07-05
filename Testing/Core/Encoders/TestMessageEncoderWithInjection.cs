@@ -1,9 +1,9 @@
-﻿using AutomatedTesting.Messages;
-using AutomatedTesting.ServiceInjection;
+﻿using CoreTesting.Messages;
+using CoreTesting.ServiceInjection;
 using MQContract.Interfaces.Encoding;
 using System.Text;
 
-namespace AutomatedTesting.Encoders
+namespace CoreTesting.Encoders
 {
     internal class TestMessageEncoderWithInjection(IInjectableService injectableService)
         : IMessageTypeEncoder<CustomEncoderWithInjectionMessage>

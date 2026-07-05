@@ -1,6 +1,6 @@
 ﻿using MQContract;
 
-namespace AutomatedTesting
+namespace CoreTesting
 {
     [TestClass]
     public class ErrorMessageTests

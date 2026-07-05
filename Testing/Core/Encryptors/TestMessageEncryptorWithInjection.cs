@@ -1,8 +1,8 @@
-﻿using AutomatedTesting.Messages;
-using AutomatedTesting.ServiceInjection;
+﻿using CoreTesting.Messages;
+using CoreTesting.ServiceInjection;
 using MQContract.Interfaces.Encrypting;
 
-namespace AutomatedTesting.Encryptors
+namespace CoreTesting.Encryptors
 {
     internal class TestMessageEncryptorWithInjection(IInjectableService injectableService)
         : IMessageTypeEncryptor<CustomEncryptorWithInjectionMessage>
@@ -12,7 +12,7 @@ namespace AutomatedTesting.Encryptors
         public ValueTask<Stream> DecryptAsync(Stream stream, MessageHeader headers)
         {
             Assert.IsNotNull(headers);
-            Assert.IsTrue(headers.Keys.Contains(HeaderKey));
+            Assert.Contains(HeaderKey, headers.Keys);
             Assert.AreEqual(injectableService.Name, headers[HeaderKey]);
             var data = new BinaryReader(stream).ReadBytes((int)stream.Length);
             return ValueTask.FromResult<Stream>(new MemoryStream(data.Reverse().ToArray()));

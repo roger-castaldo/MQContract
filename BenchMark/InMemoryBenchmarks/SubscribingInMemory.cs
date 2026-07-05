@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Attributes;
 using MQContract;
 using MQContract.Interfaces;
+using MQContract.Messages;
 
 namespace BenchMark.InMemoryBenchmarks
 {
@@ -50,7 +51,7 @@ namespace BenchMark.InMemoryBenchmarks
         {
             var count = MessageCount;
             for (var x = 0; x<count; x++)
-                await contractConnection!.PublishAsync<Announcement>(testMessage, channel: channel);
+                await contractConnection!.PublishAsync<Announcement>(new TransmissionMessage<Announcement>(testMessage), channel: channel);
             await completionSource!.Task;
         }
     }

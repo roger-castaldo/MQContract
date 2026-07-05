@@ -1,4 +1,4 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 
-namespace AutomatedTesting.ConnectionTests.MultiService
+namespace CoreTesting.ConnectionTests.MultiService
 {
     [TestClass]
     public class QueryWithoutQueryResponseTests
@@ -64,7 +64,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -72,7 +72,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(messages.Count, result.Count());
+            Assert.HasCount(messages.Count, result);
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
@@ -135,7 +135,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, messageHeader: new([new KeyValuePair<string, string>(headerKey, headerValue)]), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage, Header: new([new KeyValuePair<string,string?>(headerKey, headerValue)])), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -143,7 +143,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(messages.Count, result.Count());
+            Assert.HasCount(messages.Count, result);
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
@@ -154,7 +154,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.AreEqual(1, messages[0].Header.Count);
             Assert.AreEqual(testMessage, await JsonSerializer.DeserializeAsync<BasicQueryMessage>(new MemoryStream(messages[0].Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             Assert.AreEqual(responseMessage, result.First().Result);
-            Assert.AreEqual(1, result.First().Header.Keys.Count());
+            Assert.HasCount(1, result.First().Header.Keys);
             Assert.AreEqual(headerValue, result.First().Header[headerKey]);
             #endregion
 
@@ -212,7 +212,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -220,7 +220,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(messages.Count, result.Count());
+            Assert.HasCount(messages.Count, result);
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
@@ -280,7 +280,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -288,7 +288,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(messages.Count, result.Count());
+            Assert.HasCount(messages.Count, result);
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
@@ -326,7 +326,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExactlyAsync<QueryExecutionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken));
+            var error = await Assert.ThrowsExactlyAsync<QueryExecutionFailedException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -356,7 +356,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await contractConnection.QueryAsync<BasicResponseMessage, BasicResponseMessage>(testMessage, channel: "Test", cancellationToken: TestContext.CancellationToken));
+            var error = await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () => await contractConnection.QueryAsync<BasicResponseMessage, BasicResponseMessage>(new TransmissionMessage<BasicResponseMessage>(testMessage), channel: "Test", cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -401,7 +401,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #endregion
 
             #region Act
-            var error = await Assert.ThrowsExactlyAsync<QueryTimeoutException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, timeout: defaultTimeout, cancellationToken: TestContext.CancellationToken));
+            var error = await Assert.ThrowsExactlyAsync<QueryTimeoutException>(async () => await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, timeout: defaultTimeout, cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -465,7 +465,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -473,7 +473,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.IsNotNull(result);
-            Assert.AreEqual(messages.Count, result.Count());
+            Assert.HasCount(messages.Count, result);
             Assert.IsNull(result.First().Error);
             Assert.IsFalse(result.First().IsError);
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, messages[0].Channel);
@@ -565,20 +565,20 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
             Assert.IsNotNull(results);
-            Assert.IsTrue(results.Any(result => result.IsError
+            Assert.Contains(result => result.IsError
             && result.Error!=null
             && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.Retry, re.Type)
             && re.InnerException != null
-            && Equals(error, re.InnerException)));
-            Assert.IsTrue(results.Any(result => !result.IsError));
+            && Equals(error, re.InnerException), results);
+            Assert.Contains(result => !result.IsError, results);
             #endregion
 
             #region Verify
@@ -643,20 +643,20 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            _ = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
-            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
+            var results = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
             Assert.IsNotNull(results);
-            Assert.IsTrue(results.Any(result => result.IsError
+            Assert.Contains(result => result.IsError
             && result.Error!=null
             && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.CircuitBreak, re.Type)
-            && re.InnerException is BrokenCircuitException));
-            Assert.IsTrue(results.Any(result => !result.IsError));
+            && re.InnerException is BrokenCircuitException, results);
+            Assert.Contains(result => !result.IsError, results);
             #endregion
 
             #region Verify
@@ -722,29 +722,29 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
-            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
+            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
             Assert.IsNotNull(retryResults);
-            Assert.IsTrue(retryResults.Any(result => result.IsError
+            Assert.Contains(result => result.IsError
             && result.Error!=null
             && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.Retry, re.Type)
             && re.InnerException != null
-            && Equals(error, re.InnerException)));
-            Assert.IsTrue(retryResults.Any(result => !result.IsError));
+            && Equals(error, re.InnerException), retryResults);
+            Assert.Contains(result => !result.IsError, retryResults);
 
             Assert.IsNotNull(circuitResults);
-            Assert.IsTrue(circuitResults.Any(result => result.IsError
+            Assert.Contains(result => result.IsError
             && result.Error!=null
             && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.CircuitBreak, re.Type)
-            && re.InnerException is BrokenCircuitException));
-            Assert.IsTrue(circuitResults.Any(result => !result.IsError));
+            && re.InnerException is BrokenCircuitException, circuitResults);
+            Assert.Contains(result => !result.IsError, circuitResults);
             #endregion
 
             #region Verify
@@ -810,28 +810,26 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
-            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
+            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
 
             #region Assert
             Assert.IsNotNull(retryResults);
-            Assert.IsTrue(retryResults.Any(result => result.IsError
+            Assert.Contains(result => result.IsError
             && result.Error!=null
             && result.Error.Exception is not ResilienceException
-            && Equals(error, result.Error.Exception)
-            ));
-            Assert.IsTrue(retryResults.Any(result => !result.IsError));
+            && Equals(error, result.Error.Exception), retryResults);
+            Assert.Contains(result => !result.IsError, retryResults);
 
             Assert.IsNotNull(circuitResults);
-            Assert.IsTrue(circuitResults.Any(result => result.IsError
+            Assert.Contains(result => result.IsError
             && result.Error!=null
             && result.Error.Exception is not ResilienceException
-            && Equals(error, result.Error.Exception)
-            ));
-            Assert.IsTrue(circuitResults.Any(result => !result.IsError));
+            && Equals(error, result.Error.Exception), circuitResults);
+            Assert.Contains(result => !result.IsError, circuitResults);
             #endregion
 
             #region Verify
@@ -907,8 +905,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
-            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var retryResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
+            var circuitResults = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -921,7 +919,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             && Equals(ResilienceTypes.Retry, re.Type)
             && re.InnerException != null
             && Equals(error, re.InnerException)));
-            Assert.AreEqual(1, retryResults.Count(result => !result.IsError));
+            Assert.ContainsSingle(result => !result.IsError, retryResults);
 
             Assert.IsNotNull(circuitResults);
             Assert.AreEqual(2, circuitResults.Count(result => result.IsError
@@ -929,7 +927,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             && result.Error.Exception is ResilienceException re
             && Equals(ResilienceTypes.CircuitBreak, re.Type)
             && re.InnerException is BrokenCircuitException));
-            Assert.AreEqual(1, circuitResults.Count(result => !result.IsError));
+            Assert.ContainsSingle(result => !result.IsError, circuitResults);
             #endregion
 
             #region Verify

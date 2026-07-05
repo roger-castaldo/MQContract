@@ -150,14 +150,14 @@ namespace MQContract.Connections
             return result;
         }
 
-        protected async ValueTask<ServiceMessage> ProduceServiceMessageAsync<TMessage>(ChannelMapper.MapTypes mapType, IMessageFactory<TMessage> messageFactory, TMessage message, bool ignoreChannel, Activity? activity, uint? maxMessageSize = null, string? channel = null, MessageHeader? messageHeader = null)
+        protected async ValueTask<ServiceMessage> ProduceServiceMessageAsync<TMessage>(ChannelMapper.MapTypes mapType, IMessageFactory<TMessage> messageFactory, TransmissionMessage<TMessage> message, bool ignoreChannel, Activity? activity, uint? maxMessageSize = null, string? channel = null)
         {
             using var scope = SetScope();
             Logs.Pipeline.ProducingServiceMessage(Logger, typeof(TMessage));
             var context = new Middleware.Context(mapType, activity, maxMessageSize);
-            var encodableMessage = await BeforeMessageEncodeAsync<TMessage>(context, message, channel??messageFactory.MessageChannel, messageHeader??new([]));
+            var encodableMessage = await BeforeMessageEncodeAsync<TMessage>(context, message.Message, channel??messageFactory.MessageChannel, message.Header??new([]));
             return await AfterMessageEncodeAsync<TMessage>(context,
-                await messageFactory.ConvertMessageAsync(encodableMessage.Message, ignoreChannel, encodableMessage.Channel, encodableMessage.MessageHeader)
+                await messageFactory.ConvertMessageAsync(encodableMessage.Message, ignoreChannel, encodableMessage.Channel, encodableMessage.MessageHeader, message.ID)
             );
         }
 
@@ -650,12 +650,11 @@ namespace MQContract.Connections
                             var response = await ProduceServiceMessageAsync<TQueryResponse>(
                                 ChannelMapper.MapTypes.QueryResponse,
                                 responseMessageFactory,
-                                result.Message,
+                                new(result.Message, Header: (result.Headers is null ? null : new(result.Headers))),
                                 true,
                                 responseActivity,
                                 maxMessageSize: serviceConnection.MaxMessageBodySize,
-                                channel: replyChannel,
-                                messageHeader: (result.Headers is null ? null : new(result.Headers))
+                                channel: replyChannel
                             );
                             responseActivity?.SetStatus(ActivityStatusCode.Ok);
                             return new(response, responseActivity, decodedResult.FilterResult);

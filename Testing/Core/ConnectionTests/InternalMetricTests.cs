@@ -1,10 +1,10 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
 
-namespace AutomatedTesting.ContractConnectionTests
+namespace CoreTesting.ConnectionTests
 {
     [TestClass]
     public class InternalMetricTests
@@ -38,7 +38,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #region Assert
             Assert.IsNotNull(sentMetrics[0]);
             Assert.IsNotNull(receivedMetrics[0]);
-            Assert.IsFalse(sentMetrics.Skip(1).Any(m => m!=null));
+            Assert.DoesNotContain(m => m!=null, sentMetrics.Skip(1));
             Assert.AreEqual<ulong?>(ulong.MaxValue, sentMetrics[0]?.MessageBytesMin);
             Assert.AreEqual<ulong?>(0, sentMetrics[0]?.MessageBytes);
             Assert.AreEqual<ulong?>(ulong.MinValue, sentMetrics[0]?.MessageBytesMax);
@@ -49,7 +49,7 @@ namespace AutomatedTesting.ContractConnectionTests
             Assert.AreEqual<TimeSpan?>(TimeSpan.Zero, sentMetrics[0]?.MessageConversionAverage);
             Assert.AreEqual<TimeSpan?>(TimeSpan.Zero, sentMetrics[0]?.MessageConversionDuration);
 
-            Assert.IsFalse(receivedMetrics.Skip(1).Any(m => m!=null));
+            Assert.DoesNotContain(m => m!=null, receivedMetrics.Skip(1));
             Assert.AreEqual<ulong?>(ulong.MaxValue, receivedMetrics[0]?.MessageBytesMin);
             Assert.AreEqual<ulong?>(0, receivedMetrics[0]?.MessageBytes);
             Assert.AreEqual<ulong?>(ulong.MinValue, receivedMetrics[0]?.MessageBytesMax);
@@ -135,7 +135,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 (msg) => ValueTask.CompletedTask,
                 (error) => { },
                 channel: channel, cancellationToken: TestContext.CancellationToken);
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: channel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: channel, cancellationToken: TestContext.CancellationToken);
             _ = await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1));
             await Task.Delay(TimeSpan.FromSeconds(10), TestContext.CancellationToken).ConfigureAwait(true);
             IContractMetric?[] sentMetrics = [
@@ -227,7 +227,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => { },
             channel: channel, cancellationToken: TestContext.CancellationToken);
-            _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, channel: channel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message), channel: channel, cancellationToken: TestContext.CancellationToken);
             await Task.Delay(TimeSpan.FromSeconds(10), TestContext.CancellationToken).ConfigureAwait(true);
             IContractMetric?[] querySentMetrics = [
                 contractConnection.GetSnapshot(typeof(BasicQueryMessage),true),

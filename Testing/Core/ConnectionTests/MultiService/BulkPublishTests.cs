@@ -1,4 +1,4 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 
-namespace AutomatedTesting.ConnectionTests.MultiService
+namespace CoreTesting.ConnectionTests.MultiService
 {
     [TestClass]
     public class BulkPublishTests
@@ -22,9 +22,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Arrange
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
-            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
-                (new("testMessage"),null),
-                (new("testMessage2"),null)
+            IEnumerable<TransmissionMessage<BasicMessage>> testMessages = [
+                new(new("testMessage")),
+                new(new("testMessage2"))
             ];
 
             List<IEnumerable<ServiceMessage>> messages = [];
@@ -58,8 +58,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
             ));
-            Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(0).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
-            Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(1).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
+            Assert.AreEqual(testMessages.ElementAt(0).Message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(0).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
+            Assert.AreEqual(testMessages.ElementAt(1).Message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(1).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Verify
@@ -69,15 +69,15 @@ namespace AutomatedTesting.ConnectionTests.MultiService
         }
 
         [TestMethod]
-        public async Task TestBulkPublishAsyncWithCustomChannelAndHeaders()
+        public async Task TestBulkPublishAsyncWithCustomChannelAndHeadersAndIDs()
         {
             #region Arrange
             var transmissionResult = new TransmissionResult(Guid.NewGuid().ToString());
 
             var channel = "customChannel";
-            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
-                (new("testMessage"), new([new("key1","value1")])),
-                (new("testMessage2"), new([new("key1","value1")]))
+            IEnumerable<TransmissionMessage<BasicMessage>> testMessages = [
+                new(new("testMessage"), Header:new([new("key1","value1")]), ID: Guid.NewGuid().ToString()),
+                new(new("testMessage2"), Header:new([new("key1","value1")]), ID: Guid.NewGuid().ToString())
             ];
 
             List<IEnumerable<ServiceMessage>> messages = [];
@@ -111,12 +111,15 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
             ));
-            Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(0).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
-            Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(1).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
-            Assert.AreEqual(testMessages.ElementAt(0).messageHeader!.Keys.First(), messages[0].ElementAt(0).Header.Keys.First());
-            Assert.AreEqual(testMessages.ElementAt(0).messageHeader![testMessages.ElementAt(0).messageHeader!.Keys.First()], messages[0].ElementAt(0).Header[messages[0].ElementAt(0).Header.Keys.First()]);
-            Assert.AreEqual(testMessages.ElementAt(1).messageHeader!.Keys.First(), messages[0].ElementAt(1).Header.Keys.First());
-            Assert.AreEqual(testMessages.ElementAt(1).messageHeader![testMessages.ElementAt(1).messageHeader!.Keys.First()], messages[0].ElementAt(1).Header[messages[0].ElementAt(1).Header.Keys.First()]);
+            Assert.AreEqual(testMessages.ElementAt(0).Message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(0).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
+            Assert.AreEqual(testMessages.ElementAt(1).Message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(1).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
+            Assert.AreEqual(testMessages.ElementAt(0).Header!.Keys.First(), messages[0].ElementAt(0).Header.Keys.First());
+            Assert.AreEqual(testMessages.ElementAt(0).Header![testMessages.ElementAt(0).Header!.Keys.First()], messages[0].ElementAt(0).Header[messages[0].ElementAt(0).Header.Keys.First()]);
+            Assert.AreEqual(testMessages.ElementAt(1).Header!.Keys.First(), messages[0].ElementAt(1).Header.Keys.First());
+            Assert.AreEqual(testMessages.ElementAt(1).Header![testMessages.ElementAt(1).Header!.Keys.First()], messages[0].ElementAt(1).Header[messages[0].ElementAt(1).Header.Keys.First()]);
+            Assert.AreEqual(testMessages.ElementAt(0).ID, messages[0].ElementAt(0).ID);
+            Assert.AreEqual(testMessages.ElementAt(1).ID, messages[0].ElementAt(1).ID);
+
             #endregion
 
             #region Verify
@@ -133,9 +136,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Arrange
             (var listener, var capturedActivities, var sourceName) = ConnectionHelper.SetupTelemetry();
 
-            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
-                (new("testMessage"),null),
-                (new("testMessage2"),null)
+            IEnumerable<TransmissionMessage<BasicMessage>> testMessages = [
+                new(new("testMessage")),
+                new(new("testMessage2"))
             ];
 
             List<IEnumerable<ServiceMessage>> messages = [];
@@ -170,8 +173,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
                 && Equals(Constants.BasicMessageType, m.MessageTypeID)
                 && m.Data.Length > 0
             ));
-            Assert.AreEqual(testMessages.ElementAt(0).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(0).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
-            Assert.AreEqual(testMessages.ElementAt(1).message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(1).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
+            Assert.AreEqual(testMessages.ElementAt(0).Message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(0).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
+            Assert.AreEqual(testMessages.ElementAt(1).Message, await JsonSerializer.DeserializeAsync<BasicMessage>(new MemoryStream(messages[0].ElementAt(1).Data.ToArray()), cancellationToken: TestContext.CancellationToken));
             ConnectionHelper.ValidateBulkPublishActivity<BasicMessage>(
                 messages.SelectMany(m => m),
                 capturedActivities[0],
@@ -200,9 +203,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var error = new Exception("Failed");
             var retryCount = 2;
 
-            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
-                (new("testMessage"),null),
-                (new("testMessage2"),null)
+            IEnumerable<TransmissionMessage<BasicMessage>> testMessages = [
+                new(new("testMessage")),
+                new(new("testMessage2"))
             ];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
@@ -264,9 +267,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var error = new Exception("Failed");
             var circuitBreakCount = 1;
 
-            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
-                (new("testMessage"),null),
-                (new("testMessage2"),null)
+            IEnumerable<TransmissionMessage<BasicMessage>> testMessages = [
+                new(new("testMessage")),
+                new(new("testMessage2"))
             ];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
@@ -330,9 +333,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var circuitBreakCount = 3;
             var retryCount = 2;
 
-            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
-                (new("testMessage"),null),
-                (new("testMessage2"),null)
+            IEnumerable<TransmissionMessage<BasicMessage>> testMessages = [
+                new(new("testMessage")),
+                new(new("testMessage2"))
             ];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
@@ -402,9 +405,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var circuitBreakCount = 3;
             var retryCount = 2;
 
-            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
-                (new("testMessage"),null),
-                (new("testMessage2"),null)
+            IEnumerable<TransmissionMessage<BasicMessage>> testMessages = [
+                new(new("testMessage")),
+                new(new("testMessage2"))
             ];
 
             List<IEnumerable<ServiceMessage>> messages = [];
@@ -443,7 +446,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             Assert.IsNotNull(circuitBreakResults);
             Assert.IsTrue(Array.TrueForAll(retryResults.SelectMany(r => r.Results.Where(r => Equals(r.ServiceName, ServiceName))).ToArray(), r => r.IsError && Equals(error, r.Error!.Exception) && r.Error!.IsFatal));
             Assert.IsNotNull(circuitBreakResults);
-            Assert.AreEqual(testMessages.Count(), circuitBreakResults.Count());
+            Assert.HasCount(testMessages.Count(), circuitBreakResults);
             Assert.IsTrue(Array.TrueForAll(circuitBreakResults.SelectMany(r => r.Results.Where(r => Equals(r.ServiceName, ServiceName))).ToArray(), r => r.IsError && Equals(error, r.Error!.Exception) && r.Error!.IsFatal));
             Assert.IsTrue(Array.TrueForAll(retryResults.SelectMany(r => r.Results.Where(r => Equals(r.ServiceName, ServiceName2))).ToArray(), r => !r.IsError));
             Assert.IsTrue(Array.TrueForAll(circuitBreakResults.SelectMany(r => r.Results.Where(r => Equals(r.ServiceName, ServiceName2))).ToArray(), r => !r.IsError));
@@ -467,9 +470,9 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             var circuitBreakCount = 2;
             var retryCount = 1;
 
-            IEnumerable<(BasicMessage message, MessageHeader? messageHeader)> testMessages = [
-                (new("testMessage"),null),
-                (new("testMessage2"),null)
+            IEnumerable<TransmissionMessage<BasicMessage>> testMessages = [
+                new(new("testMessage")),
+                new(new("testMessage2"))
             ];
 
             var serviceConnection = new Mock<IMessageServiceConnection>();
@@ -520,8 +523,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             #region Assert
             Assert.IsNotNull(channelRetryResults);
             Assert.IsNotNull(channelCircuitBreakResults);
-            Assert.AreEqual(testMessages.Count(), channelRetryResults.Count());
-            Assert.AreEqual(testMessages.Count(), channelCircuitBreakResults.Count());
+            Assert.HasCount(testMessages.Count(), channelRetryResults);
+            Assert.HasCount(testMessages.Count(), channelCircuitBreakResults);
             Assert.IsTrue(Array.TrueForAll(channelRetryResults.Last().Results.Where(r => Equals(ServiceName, r.ServiceName) || Equals(serviceName3, r.ServiceName)).ToArray(),
                 retryFailure => retryFailure.IsError
                 && retryFailure.Error!=null
@@ -536,8 +539,8 @@ namespace AutomatedTesting.ConnectionTests.MultiService
             && re.InnerException is BrokenCircuitException));
             Assert.IsNotNull(typeRetryResults);
             Assert.IsNotNull(typeCircuitBreakResults);
-            Assert.AreEqual(testMessages.Count(), typeRetryResults.Count());
-            Assert.AreEqual(testMessages.Count(), typeCircuitBreakResults.Count());
+            Assert.HasCount(testMessages.Count(), typeRetryResults);
+            Assert.HasCount(testMessages.Count(), typeCircuitBreakResults);
             Assert.IsTrue(Array.TrueForAll(typeRetryResults.Last().Results.Where(r => Equals(ServiceName, r.ServiceName) || Equals(serviceName3, r.ServiceName)).ToArray(),
                 retryFailure => retryFailure.IsError
                 && retryFailure.Error!=null

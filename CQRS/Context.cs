@@ -9,11 +9,15 @@ namespace MQContract.CQRS
     /// </summary>
     public sealed record Context
     {
-        private const string MessageIdHeaderKey = "x-mqcontract-cqrs-message-id";
         private const string CorrelationIdHeaderKey = "x-mqcontract-cqrs-correlation-id";
         private const string CausationIdHeaderKey = "x-mqcontract-cqrs-causation-id";
         private readonly MessageHeader messageHeader;
         private readonly Dictionary<string, string?> properties = [];
+
+        /// <summary>
+        /// The unique identifier for the given message
+        /// </summary>
+        public Guid MessageId { get; private init; } = Guid.NewGuid();
 
         /// <summary>
         /// Default constructor
@@ -21,16 +25,14 @@ namespace MQContract.CQRS
         public Context()
         {
             messageHeader = new([
-                new KeyValuePair<string,string?>(MessageIdHeaderKey, Guid.NewGuid().ToString()),
                 new KeyValuePair<string,string?>(CorrelationIdHeaderKey, Guid.NewGuid().ToString())
            ]);
         }
 
-        internal Context(MessageHeader messageHeader)
+        internal Context(MessageHeader messageHeader, Guid messageID)
         {
             this.messageHeader = messageHeader;
-            if (string.IsNullOrWhiteSpace(this.messageHeader[MessageIdHeaderKey]))
-                properties.Add(MessageIdHeaderKey, Guid.NewGuid().ToString());
+            MessageId = messageID;
         }
 
         /// <summary>
@@ -59,12 +61,8 @@ namespace MQContract.CQRS
         public IEnumerable<string> Keys
             => properties.Keys
             .Concat(messageHeader.Keys)
-            .Where(k => !Equals(k, MessageIdHeaderKey) && !Equals(k, CorrelationIdHeaderKey) && !Equals(k, CausationIdHeaderKey));
+            .Where(k => !Equals(k, CorrelationIdHeaderKey) && !Equals(k, CausationIdHeaderKey));
 
-        /// <summary>
-        /// The unique identifier for the given message
-        /// </summary>
-        public Guid MessageId => Guid.Parse(this[MessageIdHeaderKey]!);
         /// <summary>
         /// The unique identifier for the given message chain
         /// </summary>
@@ -75,12 +73,9 @@ namespace MQContract.CQRS
             => new(new MessageHeader(messageHeader, 
                     properties
                         .AsEnumerable()
-                        .Where(pair => !Equals(pair.Key, CausationIdHeaderKey) && !Equals(pair.Key, MessageIdHeaderKey))
-                        .Concat([
-                            new(MessageIdHeaderKey,Guid.NewGuid().ToString()),
-                            new(CausationIdHeaderKey,MessageId.ToString())
-                        ])
-            ));
+                        .Where(pair => !Equals(pair.Key, CausationIdHeaderKey))
+                        .Append(new(CausationIdHeaderKey,MessageId.ToString()))
+            ), Guid.NewGuid());
 
         internal MessageHeader AsMessageHeader()
             => new(messageHeader, properties);

@@ -67,7 +67,7 @@ namespace MQContract.CQRS
         {
             if (!string.IsNullOrEmpty(cancelationTokenChannel))
 #pragma warning disable CA2012 // Use ValueTasks correctly
-                _ = contractConnection.PublishAsync<CancellationRequest>(new(context.CorrelationId, context.MessageId), channel: cancelationTokenChannel);
+                _ = contractConnection.PublishAsync<CancellationRequest>(new TransmissionMessage<CancellationRequest>(new(context.CorrelationId, context.MessageId)), channel: cancelationTokenChannel);
 #pragma warning restore CA2012 // Use ValueTasks correctly
         }
 
@@ -81,7 +81,7 @@ namespace MQContract.CQRS
         async ValueTask ICQRSConnection.ExecuteCommandAsync<TCommand>(TCommand command, Context? context, CancellationToken cancellationToken)
         {
             context = SetupContext(context, cancellationToken);
-            var result = await contractConnection.PublishAsync<TCommand>(command, messageHeader: context.AsMessageHeader(), cancellationToken: cancellationToken);
+            var result = await contractConnection.PublishAsync<TCommand>(new TransmissionMessage<TCommand>(command, ID: context.MessageId.ToString(), Header:context.AsMessageHeader()), cancellationToken: cancellationToken);
             if (result.IsError)
                 throw new CommandCallException(result.Error!);
         }
@@ -91,7 +91,7 @@ namespace MQContract.CQRS
             context = SetupContext(context, cancellationToken);
             try
             {
-                var result = await contractConnection.QueryAsync<TCommand, TCommandResult>(command, messageHeader: context.AsMessageHeader(), timeout: timeout, cancellationToken: cancellationToken);
+                var result = await contractConnection.QueryAsync<TCommand, TCommandResult>(new TransmissionMessage<TCommand>(command, ID: context.MessageId.ToString(), Header: context.AsMessageHeader()), timeout: timeout, cancellationToken: cancellationToken);
                 if (result.IsError)
                     throw new CommandCallException(result.Error!);
                 return result.Result;
@@ -105,7 +105,7 @@ namespace MQContract.CQRS
         async ValueTask<TQueryResponse?> ICQRSConnection.ExecuteQueryAsync<TQuery, TQueryResponse>(TQuery query, Context? context, TimeSpan? timeout, CancellationToken cancellationToken) where TQueryResponse : default
         {
             context = SetupContext(context, cancellationToken);
-            var result = await contractConnection.QueryAsync<TQuery, TQueryResponse>(query, messageHeader: context.AsMessageHeader(), timeout: timeout, cancellationToken: cancellationToken);
+            var result = await contractConnection.QueryAsync<TQuery, TQueryResponse>(new TransmissionMessage<TQuery>(query, ID: context.MessageId.ToString(), Header: context.AsMessageHeader()), timeout: timeout, cancellationToken: cancellationToken);
             if (result.IsError)
                 throw new QueryCallException(result.Error!);
             return result.Result;
@@ -118,9 +118,9 @@ namespace MQContract.CQRS
             Func<MessageHeader, ValueTask<MessageFilterResult>>? headerFilter = null;
             Func<TMessage, MessageHeader, ValueTask<MessageFilterResult>>? messageFilter = null;
             if (processor is IContextFilteredProcessor contextFilteredProcessor)
-                headerFilter = (header) => contextFilteredProcessor.Filter(new Context(header));
+                headerFilter = (header) => contextFilteredProcessor.Filter(new Context(header, Guid.NewGuid()));
             if (processor is IFilteredCommandProcessor<TMessage> commandFilteredProcessor)
-                messageFilter = (message, header) => commandFilteredProcessor.Filter(message, new Context(header));
+                messageFilter = (message, header) => commandFilteredProcessor.Filter(message, new Context(header, Guid.NewGuid()));
             if (headerFilter!=null || messageFilter!=null)
                 return new(headerFilter, messageFilter);
             return null;
@@ -152,9 +152,9 @@ namespace MQContract.CQRS
             Func<MessageHeader, ValueTask<MessageFilterResult>>? headerFilter = null;
             Func<TQuery, MessageHeader, ValueTask<MessageFilterResult>>? messageFilter = null;
             if (processor is IContextFilteredProcessor contextFilteredProcessor)
-                headerFilter = (header) => contextFilteredProcessor.Filter(new Context(header));
+                headerFilter = (header) => contextFilteredProcessor.Filter(new Context(header, Guid.NewGuid()));
             if (processor is IFilteredQueryProcessor<TQuery, TQueryResponse> queryFilteredProcessor)
-                messageFilter = (message, header) => queryFilteredProcessor.Filter(message, new Context(header));
+                messageFilter = (message, header) => queryFilteredProcessor.Filter(message, new Context(header, Guid.NewGuid()));
             if (headerFilter!=null || messageFilter!=null)
                 messageFilters = new(headerFilter, messageFilter);
             await processorRegistrar.RegisterQueryProcessorAsync<TQuery, TQueryResponse>(

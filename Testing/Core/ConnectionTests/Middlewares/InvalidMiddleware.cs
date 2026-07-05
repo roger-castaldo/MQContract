@@ -1,4 +1,4 @@
-﻿namespace AutomatedTesting.ConnectionTests.Middlewares
+﻿namespace CoreTesting.ConnectionTests.Middlewares
 {
     internal class InvalidMiddleware
     {

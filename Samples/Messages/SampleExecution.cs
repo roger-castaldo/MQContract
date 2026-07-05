@@ -83,35 +83,35 @@ namespace Messages
             Console.WriteLine("Beginning message transmissions...");
             var start = Stopwatch.GetTimestamp();
 
-            var result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
+            var result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new TransmissionMessage<ArrivalAnnouncement>(new("Bob", "Loblaw")), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Result 1 [Success:{!result.IsError}, ID:{result.ID}]");
-            result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
+            result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new TransmissionMessage<ArrivalAnnouncement>(new("Fred", "Flintstone")), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Result 2 [Success:{!result.IsError}, ID:{result.ID}]");
 
             Console.WriteLine("Broadcasting multiple announcements to demonstrate grouping...");
             for (var x = 0; x<10; x++)
             {
-                result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new($"FirstName{x}", $"LastName{x}"), cancellationToken: sourceCancel.Token);
+                result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new TransmissionMessage<ArrivalAnnouncement>(new($"FirstName{x}", $"LastName{x}")), cancellationToken: sourceCancel.Token);
                 Console.WriteLine($"Broadcast Result {x} [Success:{!result.IsError}, ID:{result.ID}]");
             }
 
-            List<(ArrivalAnnouncement, MessageHeader?)> arrivalAnnouncements = [];
+            List<TransmissionMessage<ArrivalAnnouncement>> arrivalAnnouncements = [];
             for (var x = 10; x<50; x++)
-                arrivalAnnouncements.Add((new($"FirstName{x}", $"LastName{x}"), null));
+                arrivalAnnouncements.Add(new TransmissionMessage<ArrivalAnnouncement>(new($"FirstName{x}", $"LastName{x}")));
 
             var bulkResult = await contractConnection.BulkPublishAsync<ArrivalAnnouncement>(arrivalAnnouncements, cancellationToken: sourceCancel.Token);
 
             foreach (var res in bulkResult)
                 Console.WriteLine($"Bulk Broadcast Result [Success:{!res.IsError}, ID:{res.ID}]");
 
-            var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
+            var response = await contractConnection.QueryAsync<Greeting, string>(new TransmissionMessage<Greeting>(new Greeting("Bob", "Loblaw")), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Response 1 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
-            response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
+            response = await contractConnection.QueryAsync<Greeting, string>(new TransmissionMessage<Greeting>(new Greeting("Fred", "Flintstone")), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Response 2 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
 
-            var storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
+            var storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new TransmissionMessage<StoredArrivalAnnouncement>(new("Bob", "Loblaw")), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Stored Result 1 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
-            storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
+            storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new TransmissionMessage<StoredArrivalAnnouncement>(new("Fred", "Flintstone")), cancellationToken: sourceCancel.Token);
             Console.WriteLine($"Stored Result 2 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
 
             Console.WriteLine("Press Enter to close");

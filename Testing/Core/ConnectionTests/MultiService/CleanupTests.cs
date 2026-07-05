@@ -2,7 +2,7 @@
 using MQContract;
 using MQContract.Interfaces.Service;
 
-namespace AutomatedTesting.ConnectionTests.MultiService
+namespace CoreTesting.ConnectionTests.MultiService
 {
     [TestClass]
     public class CleanupTests

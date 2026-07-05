@@ -1,12 +1,12 @@
-﻿using AutomatedTesting.Consumers;
-using AutomatedTesting.Messages;
+﻿using CoreTesting.Consumers;
+using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
 using MQContract.Interfaces.Service;
 using System.Reflection;
 
-namespace AutomatedTesting.ConnectionTests.Consumers
+namespace CoreTesting.ConnectionTests.Consumers
 {
     [TestClass]
     public class AutoConsumerTests
@@ -137,7 +137,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Assert
-            Assert.AreEqual("Failed to register a PubSubConsumer of type AutomatedTesting.Consumers.BasicMessageConsumer", exception.Message);
+            Assert.AreEqual("Failed to register a PubSubConsumer of type CoreTesting.Consumers.BasicMessageConsumer", exception.Message);
             Assert.IsInstanceOfType<SubscriptionFailedException>(exception.InnerException);
             #endregion
 
@@ -182,7 +182,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Assert
-            Assert.AreEqual("Failed to register a PubSubAsyncConsumer of type AutomatedTesting.Consumers.BasicMessageAsyncConsumer", exception.Message);
+            Assert.AreEqual("Failed to register a PubSubAsyncConsumer of type CoreTesting.Consumers.BasicMessageAsyncConsumer", exception.Message);
             Assert.IsInstanceOfType<SubscriptionFailedException>(exception.InnerException);
             #endregion
 
@@ -228,7 +228,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Assert
-            Assert.AreEqual("Failed to register a QueryResponseConsumer of type AutomatedTesting.Consumers.BasicQueryConsumer", exception.Message);
+            Assert.AreEqual("Failed to register a QueryResponseConsumer of type CoreTesting.Consumers.BasicQueryConsumer", exception.Message);
             Assert.IsInstanceOfType<SubscriptionFailedException>(exception.InnerException);
             #endregion
 
@@ -273,7 +273,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             #endregion
 
             #region Assert
-            Assert.AreEqual("Failed to register a QueryResponseAsyncConsumer of type AutomatedTesting.Consumers.BasicQueryAsyncConsumer", exception.Message);
+            Assert.AreEqual("Failed to register a QueryResponseAsyncConsumer of type CoreTesting.Consumers.BasicQueryAsyncConsumer", exception.Message);
             Assert.IsInstanceOfType<SubscriptionFailedException>(exception.InnerException);
             #endregion
 

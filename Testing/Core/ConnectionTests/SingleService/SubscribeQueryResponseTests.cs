@@ -1,4 +1,4 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
@@ -8,7 +8,7 @@ using MQContract.Interfaces.Service;
 using System.Diagnostics;
 using System.Reflection;
 
-namespace AutomatedTesting.ConnectionTests.SingleService
+namespace CoreTesting.ConnectionTests.SingleService
 {
     [TestClass]
     public class SubscribeQueryResponseTests
@@ -63,7 +63,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -84,7 +84,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.HasCount(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys);
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
@@ -383,11 +383,11 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 return new(responseMessage, null);
             }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage>(message1, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message1), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             stopwatch.Restart();
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage>(message2, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message2), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -408,7 +408,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.HasCount(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys);
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message1, messages[0].Message);
             Assert.AreEqual(message2, messages[1].Message);
@@ -470,7 +470,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 throw exception;
             }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -686,7 +686,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => exceptions.Add(error), ignoreMessageHeader: true, cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -760,7 +760,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => exceptions.Add(error), cancellationToken: TestContext.CancellationToken);
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
 
@@ -781,7 +781,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.HasCount(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys);
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
@@ -892,13 +892,13 @@ namespace AutomatedTesting.ConnectionTests.SingleService
             QueryResult<object>? result = null;
             Exception? error = null;
             var messageHeader = new MessageHeader([
-                new KeyValuePair<string,string>(headerKey,headerValue),
-                new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
+                new KeyValuePair<string,string?>(headerKey,headerValue),
+                new KeyValuePair<string,string?>(messageHeaderKey,messageHeaderValue)
             ]);
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
+                result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message, Header: messageHeader), timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
             else
-                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken));
+                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message, Header: messageHeader), timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -911,7 +911,7 @@ namespace AutomatedTesting.ConnectionTests.SingleService
                 Assert.IsNotNull(result);
                 Assert.IsNull(error);
                 Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-                Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+                Assert.HasCount(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys);
                 Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
                 Assert.AreEqual(message, messages[0].Message);
             }

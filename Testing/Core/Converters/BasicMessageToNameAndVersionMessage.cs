@@ -1,7 +1,7 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using MQContract.Interfaces.Conversion;
 
-namespace AutomatedTesting.Converters
+namespace CoreTesting.Converters
 {
     internal class BasicMessageToNameAndVersionMessage :
         IMessageConverter<BasicMessage, NamedAndVersionedMessage>

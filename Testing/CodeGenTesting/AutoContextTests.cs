@@ -307,14 +307,14 @@ namespace CodeGenTesting
                 new(new Exception(Helper.RandomString()), true)
             );
             var mockConnection = new Mock<IContractConnection>();
-            mockConnection.Setup(c => c.QueryAsync<Prompt, Reply>(It.IsAny<Prompt>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<MessageHeader?>(), It.IsAny<CancellationToken>()))
+            mockConnection.Setup(c => c.QueryAsync<Prompt, Reply>(It.IsAny<TransmissionMessage<Prompt>>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(replyResult);
             TimeSpan? messageTimeout = (timeout==null ? null : TimeSpan.FromSeconds(timeout.Value));
             MessageHeader? header = null;
             if (!string.IsNullOrWhiteSpace(headerKey))
                 header = new MessageHeader([new KeyValuePair<string, string?>(headerKey!, headerValue!)]);
             //Act
-            var call = context.TryExecuteQuery<Prompt>(mockConnection.Object, prompt, messageTimeout, channel, responseChannel, header, new CancellationToken());
+            var call = context.TryExecuteQuery<Prompt>(mockConnection.Object, new TransmissionMessage<Prompt>(prompt, Header:header), messageTimeout, channel, responseChannel, new CancellationToken());
             Assert.IsTrue(call.HasValue);
             var result = await call.Value.AsTask();
 
@@ -327,7 +327,7 @@ namespace CodeGenTesting
             Assert.AreEqual(replyResult.Error?.Message, result.Error?.Message);
             Assert.AreEqual(replyResult.Error?.IsFatal, result.Error?.IsFatal);
             //Verify
-            mockConnection.Verify(c => c.QueryAsync<Prompt, Reply>(prompt, messageTimeout, channel, responseChannel, header, It.IsAny<CancellationToken>()), Times.Once);
+            mockConnection.Verify(c => c.QueryAsync<Prompt, Reply>(It.Is<TransmissionMessage<Prompt>>(msg=>Equals(msg.Message,prompt) && Equals(msg.Header, header)), messageTimeout, channel, responseChannel, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [TestMethod]
@@ -344,20 +344,20 @@ namespace CodeGenTesting
             var replyResult = new QueryResult<Reply>(
                 Helper.RandomString(),
                 new([
-                    new KeyValuePair<string,string>("testkey",Helper.RandomString())
+                    new KeyValuePair<string,string?>("testkey",Helper.RandomString())
                 ]),
                 new(Helper.RandomString()),
                 new(new Exception(Helper.RandomString()), true)
             );
             var mockConnection = new Mock<IMultiServiceContractConnection>();
-            mockConnection.Setup(c => c.QueryAsync<Prompt, Reply>(It.IsAny<Prompt>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<MessageHeader?>(), It.IsAny<CancellationToken>()))
+            mockConnection.Setup(c => c.QueryAsync<Prompt, Reply>(It.IsAny<TransmissionMessage<Prompt>>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([replyResult]);
             TimeSpan? messageTimeout = (timeout==null ? null : TimeSpan.FromSeconds(timeout.Value));
             MessageHeader? header = null;
             if (!string.IsNullOrWhiteSpace(headerKey))
-                header = new MessageHeader([new KeyValuePair<string, string>(headerKey!, headerValue!)]);
+                header = new MessageHeader([new KeyValuePair<string, string?>(headerKey!, headerValue!)]);
             //Act
-            var call = context.TryExecuteQuery<Prompt>(mockConnection.Object, prompt, messageTimeout, channel, responseChannel, header, new CancellationToken());
+            var call = context.TryExecuteQuery<Prompt>(mockConnection.Object, new TransmissionMessage<Prompt>(prompt, Header:header), messageTimeout, channel, responseChannel, new CancellationToken());
             Assert.IsTrue(call.HasValue);
             var results = await call.Value.AsTask();
 
@@ -372,7 +372,7 @@ namespace CodeGenTesting
             Assert.AreEqual(replyResult.Error?.Message, result.Error?.Message);
             Assert.AreEqual(replyResult.Error?.IsFatal, result.Error?.IsFatal);
             //Verify
-            mockConnection.Verify(c => c.QueryAsync<Prompt, Reply>(prompt, messageTimeout, channel, responseChannel, header, It.IsAny<CancellationToken>()), Times.Once);
+            mockConnection.Verify(c => c.QueryAsync<Prompt, Reply>(It.Is<TransmissionMessage<Prompt>>(msg => Equals(msg.Message, prompt) && Equals(msg.Header, header)), messageTimeout, channel, responseChannel, It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

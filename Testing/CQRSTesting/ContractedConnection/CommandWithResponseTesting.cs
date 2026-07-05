@@ -374,8 +374,8 @@ namespace CQRSTesting.ContractedConnection
 
             var mockContractConnection = new Mock<IContractedConnection>();
 
-            mockContractConnection.Setup(x => x.QueryAsync<BasicResponseCommand, BasicCommandResponse>(It.IsAny<BasicResponseCommand>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(),
-                It.IsAny<MessageHeader>(), It.IsAny<CancellationToken>()))
+            mockContractConnection.Setup(x => x.QueryAsync<BasicResponseCommand, BasicCommandResponse>(It.IsAny<TransmissionMessage<BasicResponseCommand>>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), 
+                It.IsAny<CancellationToken>()))
                 .Returns(ValueTask.FromResult<QueryResult<BasicCommandResponse>>(new(Helper.GenerateRandomString(10), new MessageHeader([]), Error: new(exception, false))));
 
             var cqrsConnection = mockContractConnection.Object.CreateCQRSConnection();
@@ -394,7 +394,7 @@ namespace CQRSTesting.ContractedConnection
             #endregion
 
             #region Verify
-            mockContractConnection.Verify(x => x.QueryAsync<BasicResponseCommand, BasicCommandResponse>(command, null, null, null, It.IsNotNull<MessageHeader>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockContractConnection.Verify(x => x.QueryAsync<BasicResponseCommand, BasicCommandResponse>(It.Is<TransmissionMessage<BasicResponseCommand>>(msg=>Equals(msg.Message, command)), null, null, null, It.IsAny<CancellationToken>()), Times.Once);
             #endregion
         }
 

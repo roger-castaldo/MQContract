@@ -1,7 +1,7 @@
-﻿using AutomatedTesting.ServiceInjection;
+﻿using CoreTesting.ServiceInjection;
 using MQContract.Interfaces.Middleware;
 
-namespace AutomatedTesting.ContractConnectionTests.Middlewares
+namespace CoreTesting.ConnectionTests.Middlewares
 {
     internal class InjectedChannelChangeMiddleware(IInjectableService service)
         : IBeforeEncodeMiddleware

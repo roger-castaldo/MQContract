@@ -1,9 +1,9 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using MQContract.Attributes;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
 
-namespace AutomatedTesting.Consumers
+namespace CoreTesting.Consumers
 {
     [Consumer(ignoreMessageTypeHeader: true)]
     internal class BasicMessageConsumerIgnoringMessageType(List<IReceivedMessage<BasicMessage>> messages, List<Exception> errors) : IPubSubConsumer<BasicMessage>

@@ -113,10 +113,9 @@ namespace MQContract
         /// <param name="timeout">The query timeout</param>
         /// <param name="channel">The channel to use</param>
         /// <param name="responseChannel">The response channel to use</param>
-        /// <param name="messageHeader">The message header to use</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>null or the Query attempt against the given connection</returns>
-        public virtual ValueTask<QueryResult<object>>? TryExecuteQuery<TQuery>(IContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        public virtual ValueTask<QueryResult<object>>? TryExecuteQuery<TQuery>(IContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
             => null;
 
         /// <summary>
@@ -129,10 +128,9 @@ namespace MQContract
         /// <param name="timeout">The query timeout</param>
         /// <param name="channel">The channel to use</param>
         /// <param name="responseChannel">The response channel to use</param>
-        /// <param name="messageHeader">The message header to use</param>
         /// <param name="cancellationToken">A cancellation token</param>
         /// <returns>null or the Query attempt against the given connection</returns>
-        public virtual ValueTask<IEnumerable<QueryResult<object>>>? TryExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        public virtual ValueTask<IEnumerable<QueryResult<object>>>? TryExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
             => null;
 
         /// <summary>

@@ -1,6 +1,6 @@
 ﻿using MQContract.Attributes;
 
-namespace AutomatedTesting.Messages
+namespace CoreTesting.Messages
 {
     [Message(channel: "CustomEncoder")]
     public record CustomEncoderMessage(string TestName) { }

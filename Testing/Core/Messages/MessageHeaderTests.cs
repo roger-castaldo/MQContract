@@ -1,4 +1,4 @@
-﻿namespace AutomatedTesting.Messages
+﻿namespace CoreTesting.Messages
 {
     [TestClass]
     public class MessageHeaderTests
@@ -7,9 +7,9 @@
         public void TestMessageHeaderPrimaryConstructor()
         {
             #region Arrange
-            IEnumerable<KeyValuePair<string, string>> data = [
-                new KeyValuePair<string,string>("key1","value1"),
-                new KeyValuePair<string,string>("key2","value2")
+            IEnumerable<KeyValuePair<string, string?>> data = [
+                new KeyValuePair<string,string?>("key1","value1"),
+                new KeyValuePair<string,string?>("key2","value2")
             ];
             #endregion
 
@@ -18,7 +18,7 @@
             #endregion
 
             #region Assert
-            Assert.AreEqual(2, header.Keys.Count());
+            Assert.HasCount(2, header.Keys);
             Assert.IsTrue(data.All(pair => header.Keys.Contains(pair.Key) && Equals(header[pair.Key], pair.Value)));
             #endregion
 
@@ -41,7 +41,7 @@
             #endregion
 
             #region Assert
-            Assert.AreEqual(2, header.Keys.Count());
+            Assert.HasCount(2, header.Keys);
             Assert.IsTrue(data.All(pair => header.Keys.Contains(pair.Key) && Equals(header[pair.Key], pair.Value)));
             #endregion
 
@@ -54,8 +54,8 @@
         {
             #region Arrange
             var originalHeader = new MessageHeader([
-                new KeyValuePair<string,string>("key1","value1"),
-                new KeyValuePair<string,string>("key2","value2")
+                new KeyValuePair<string,string?>("key1","value1"),
+                new KeyValuePair<string,string?>("key2","value2")
             ]);
             var data = new Dictionary<string, string?>([
                 new KeyValuePair<string,string?>("key3","value3"),
@@ -68,7 +68,7 @@
             #endregion
 
             #region Assert
-            Assert.AreEqual(4, header.Keys.Count());
+            Assert.HasCount(4, header.Keys);
             Assert.IsTrue(originalHeader.Keys.All(k => header.Keys.Contains(k) && Equals(header[k], originalHeader[k])));
             Assert.IsTrue(data.All(pair => header.Keys.Contains(pair.Key) && Equals(header[pair.Key], pair.Value)));
             #endregion
@@ -82,8 +82,8 @@
         {
             #region Arrange
             var originalHeader = new MessageHeader([
-                new KeyValuePair<string,string>("key1","value1"),
-                new KeyValuePair<string,string>("key2","value2")
+                new KeyValuePair<string,string?>("key1","value1"),
+                new KeyValuePair<string,string?>("key2","value2")
             ]);
             var data = new Dictionary<string, string?>([
                 new KeyValuePair<string,string?>("key1","value3"),
@@ -96,7 +96,7 @@
             #endregion
 
             #region Assert
-            Assert.AreEqual(2, header.Keys.Count());
+            Assert.HasCount(2, header.Keys);
             Assert.IsTrue(originalHeader.Keys.All(k => header.Keys.Contains(k) && !Equals(header[k], originalHeader[k])));
             Assert.IsTrue(data.All(pair => header.Keys.Contains(pair.Key) && Equals(header[pair.Key], pair.Value)));
             #endregion

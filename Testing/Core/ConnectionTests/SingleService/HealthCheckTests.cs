@@ -3,7 +3,7 @@ using Moq;
 using MQContract;
 using MQContract.Interfaces.Service;
 
-namespace AutomatedTesting.ConnectionTests.SingleService
+namespace CoreTesting.ConnectionTests.SingleService
 {
     [TestClass]
     public class HealthCheckTests

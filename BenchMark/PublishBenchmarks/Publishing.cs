@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using MQContract;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
+using MQContract.Messages;
 using System.Text;
 
 namespace BenchMark.PublishBenchmarks
@@ -45,21 +46,21 @@ namespace BenchMark.PublishBenchmarks
         public async Task PublishBasicEncodedMessage()
             => await ExecuteOperationsAsync(async () =>
             {
-                _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
+                _ = await contractConnection!.PublishAsync<string>(new TransmissionMessage<string>(MessageContent), channel: ChannelName);
             });
 
         [Benchmark]
         public async Task PublishDefaultEncodedMessage()
             => await ExecuteOperationsAsync(async () =>
             {
-                _ = await contractConnection!.PublishAsync<Announcement>(announcement!, channel: ChannelName);
+                _ = await contractConnection!.PublishAsync<Announcement>(new TransmissionMessage<Announcement>(announcement!), channel: ChannelName);
             });
 
         [Benchmark]
         public async Task PublishCustomEncodedMessage()
             => await ExecuteOperationsAsync(async () =>
             {
-                _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(encodedAnnouncement!, channel: ChannelName);
+                _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(new TransmissionMessage<EncodedAnnouncement>(encodedAnnouncement!), channel: ChannelName);
             });
 
         [Benchmark]
@@ -68,7 +69,7 @@ namespace BenchMark.PublishBenchmarks
             await ((IContractedConnection)contractConnection!).RegisterMessageContextAsync(myMessageContext!);
             await ExecuteOperationsAsync(async () =>
             {
-                _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
+                _ = await contractConnection!.PublishAsync<string>(new TransmissionMessage<string>(MessageContent), channel: ChannelName);
             });
         }
 
@@ -78,7 +79,7 @@ namespace BenchMark.PublishBenchmarks
             await ((IContractedConnection)contractConnection!).RegisterMessageContextAsync(myMessageContext!);
             await ExecuteOperationsAsync(async () =>
             {
-                _ = await contractConnection!.PublishAsync<Announcement>(announcement!, channel: ChannelName);
+                _ = await contractConnection!.PublishAsync<Announcement>(new TransmissionMessage<Announcement>(announcement!), channel: ChannelName);
             });
         }
 
@@ -88,7 +89,7 @@ namespace BenchMark.PublishBenchmarks
             await ((IContractedConnection)contractConnection!).RegisterMessageContextAsync(myMessageContext!);
             await ExecuteOperationsAsync(async () =>
             {
-                _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(encodedAnnouncement!, channel: ChannelName);
+                _ = await contractConnection!.PublishAsync<EncodedAnnouncement>(new TransmissionMessage<EncodedAnnouncement>(encodedAnnouncement!), channel: ChannelName);
             });
         }
     }

@@ -1,4 +1,4 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 
-namespace AutomatedTesting
+namespace CoreTesting
 {
     [TestClass]
     public class ChannelMapperTests
@@ -35,7 +35,7 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.PublishAsync<BasicMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -81,10 +81,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.PublishAsync<BasicMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -131,10 +131,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.PublishAsync<BasicMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -181,10 +181,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.PublishAsync<BasicMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -230,10 +230,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.PublishAsync<BasicMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -534,7 +534,7 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -592,10 +592,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -648,10 +648,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -705,10 +705,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -761,10 +761,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, channel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), channel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -1096,7 +1096,7 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
             #endregion
@@ -1168,10 +1168,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -1239,10 +1239,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -1310,10 +1310,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -1380,10 +1380,10 @@ namespace AutomatedTesting
 
             #region Act
             var stopwatch = Stopwatch.StartNew();
-            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
+            var result1 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: responseChannel, cancellationToken: TestContext.CancellationToken);
             stopwatch.Stop();
             System.Diagnostics.Trace.WriteLine($"Time to publish message {stopwatch.ElapsedMilliseconds}ms");
-            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(testMessage, responseChannel: otherChannel, cancellationToken: TestContext.CancellationToken);
+            var result2 = await contractConnection.QueryAsync<BasicQueryMessage, BasicResponseMessage>(new TransmissionMessage<BasicQueryMessage>(testMessage), responseChannel: otherChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert

@@ -1,4 +1,4 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Moq;
 using MQContract;
@@ -7,7 +7,7 @@ using MQContract.Interfaces.Service;
 using System.Diagnostics.Metrics;
 using System.Reflection;
 
-namespace AutomatedTesting.ContractConnectionTests
+namespace CoreTesting.ConnectionTests
 {
     [TestClass]
     public class SystemMetricTests
@@ -215,7 +215,7 @@ namespace AutomatedTesting.ContractConnectionTests
                 return ValueTask.FromResult(new QueryResponseMessage<BasicResponseMessage>(responseMessage, null));
             }, (error) => { },
             channel: channel, cancellationToken: TestContext.CancellationToken);
-            _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, channel: channel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message), channel: channel, cancellationToken: TestContext.CancellationToken);
             await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken: TestContext.CancellationToken).ConfigureAwait(true);
             #endregion
 

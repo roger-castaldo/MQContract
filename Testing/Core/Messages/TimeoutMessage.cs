@@ -1,6 +1,6 @@
 ﻿using MQContract.Attributes;
 
-namespace AutomatedTesting.Messages
+namespace CoreTesting.Messages
 {
     [QueryMessage(channel: "Timeout", responseTimeoutMilliseconds: 500)]
     public record TimeoutMessage(string Name) { }

@@ -1,6 +1,6 @@
 ﻿using Moq.Language.Flow;
 
-namespace AutomatedTesting
+namespace CoreTesting
 {
     public static class MoqExtensions
     {

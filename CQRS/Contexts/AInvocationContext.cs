@@ -15,7 +15,7 @@ namespace MQContract.CQRS.Contexts
 
         protected AInvocationContext(IReceivedMessage<TMessage> receivedMessage, CqrsConnection connection)
         {
-            context = new(receivedMessage.Headers);
+            context = new(receivedMessage.Headers, Guid.Parse(receivedMessage.ID));
             Message = receivedMessage.Message;
             cancellationTokenSource = connection.RegisterInvocation(context);
             activity = receivedMessage.Activity;

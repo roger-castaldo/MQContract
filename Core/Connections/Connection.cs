@@ -51,7 +51,11 @@ namespace MQContract.Connections
                 cancellationToken
             );
 
-        async ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+            => ((IContractConnection)this).PublishAsync(new TransmissionMessage<TMessage>(message, Header: messageHeader), channel, cancellationToken);
+        ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, CancellationToken cancellationToken)
+            => ((IContractConnection)this).PublishAsync(new TransmissionMessage<TMessage>(message), channel, cancellationToken);
+        async ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TransmissionMessage<TMessage> message, string? channel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logs.Publishing.PublishingMessage(Logger, typeof(TMessage), channel);
@@ -63,13 +67,16 @@ namespace MQContract.Connections
                 false,
                 activity,
                 maxMessageSize: serviceConnection.MaxMessageBodySize,
-                channel: channel,
-                messageHeader: messageHeader
+                channel: channel
             );
             return await PublishMessageAsync<TMessage>(serviceMessage, serviceConnection, activity, null, cancellationToken);
         }
 
-        async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
+        ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
+            => ((IContractConnection)this).BulkPublishAsync(messages.Select(m => new TransmissionMessage<TMessage>(m.message, Header: m.messageHeader)), channel, cancellationToken);
+        ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<TMessage> messages, string? channel, CancellationToken cancellationToken)
+            => ((IContractConnection)this).BulkPublishAsync(messages.Select(m => new TransmissionMessage<TMessage>(m)), channel, cancellationToken);
+        async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<TransmissionMessage<TMessage>> messages, string? channel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logs.Publishing.BulkPublishingMessages(Logger, typeof(TMessage), channel);
@@ -80,12 +87,11 @@ namespace MQContract.Connections
                     ProduceServiceMessageAsync<TMessage>(
                         ChannelMapper.MapTypes.Publish,
                         GetMessageFactory<TMessage>(),
-                        m.message,
+                        m,
                         false,
                         activity,
                         maxMessageSize: serviceConnection.MaxMessageBodySize,
-                        channel: channel,
-                        messageHeader: m.messageHeader
+                        channel: channel
                     )
                 );
             var result = await BulkPublishAsync<TMessage>(serviceMessages, serviceConnection, activity, cancellationToken);
@@ -96,7 +102,11 @@ namespace MQContract.Connections
         #endregion
 
         #region QueryResponse
-        async ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+            => ((IContractConnection)this).QueryAsync<TQuery, TQueryResponse>(new TransmissionMessage<TQuery>(message, Header: messageHeader), timeout, channel, responseChannel, cancellationToken);
+        ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
+            => ((IContractConnection)this).QueryAsync<TQuery, TQueryResponse>(new TransmissionMessage<TQuery>(message), timeout, channel, responseChannel, cancellationToken);
+        async ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logs.Publishing.ExecutingQuery(Logger, typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
@@ -109,18 +119,20 @@ namespace MQContract.Connections
                 false,
                 activity,
                 maxMessageSize: serviceConnection.MaxMessageBodySize,
-                channel: channel,
-                messageHeader: messageHeader
+                channel: channel
             );
             return await ExecuteQueryAsync<TQuery, TQueryResponse>(serviceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, cancellationToken: cancellationToken);
         }
 
-        async ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader,
-            CancellationToken cancellationToken)
+        ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+            => ((IContractConnection)this).QueryAsync<TQuery>(new TransmissionMessage<TQuery>(message, Header: messageHeader), timeout, channel, responseChannel, cancellationToken);
+        ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
+            => ((IContractConnection)this).QueryAsync<TQuery>(new TransmissionMessage<TQuery>(message), timeout, channel, responseChannel, cancellationToken);
+        async ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
         {
             using var scope = SetScope();
             Logs.Pipeline.ExtractingQueryResponseType(Logger, typeof(TQuery), channel, responseChannel);
-            return await messageContext.ExecuteQuery<TQuery>(this, message, timeout, channel, responseChannel, messageHeader, cancellationToken);
+            return await messageContext.ExecuteQuery<TQuery>(this, message, timeout, channel, responseChannel, cancellationToken);
         }
 
         protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, MessageFilters<TQuery>? messageFilter, CancellationToken cancellationToken)

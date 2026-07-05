@@ -1,8 +1,8 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using MQContract.Attributes;
 using System.Reflection;
 
-namespace AutomatedTesting
+namespace CoreTesting
 {
     internal static class Constants
     {

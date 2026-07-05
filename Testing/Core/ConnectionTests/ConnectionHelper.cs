@@ -1,7 +1,7 @@
 ﻿using MQContract.Interfaces;
 using System.Diagnostics;
 
-namespace AutomatedTesting.ConnectionTests
+namespace CoreTesting.ConnectionTests
 {
     internal static class ConnectionHelper
     {
@@ -9,18 +9,18 @@ namespace AutomatedTesting.ConnectionTests
 
         private static void ValidateCommonActivityTags<T>(Activity activity, Type connectionType, string messageTypeID, string messageID, string? connectionName)
         {
-            Assert.IsTrue(activity.Tags.Any(t => Equals(t.Key, "mqcontract.serviceconnectiontype") && Equals(t.Value, connectionType.FullName)));
+            Assert.Contains(t => Equals(t.Key, "mqcontract.serviceconnectiontype") && Equals(t.Value, connectionType.FullName), activity.Tags);
             Assert.IsTrue(connectionName==null || activity.Tags.Any(t => Equals(t.Key, "mqcontract.serviceconnectionname") && Equals(t.Value, connectionName)));
             Assert.AreEqual(typeof(T).Name, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.messagetypeclass")).Value);
             Assert.AreEqual(messageTypeID, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.messagetypetag")).Value);
-            Assert.IsTrue(activity.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, messageID)));
+            Assert.Contains(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, messageID), activity.Tags);
         }
 
         private static void ValidateEncodeDecodeActivity(Activity activity, bool encode, string id)
         {
-            Assert.IsTrue(activity.Events.Any(evnt => Equals((encode ? "MessageEncoded" : "MessageDecoded"), evnt.Name)
+            Assert.Contains(evnt => Equals((encode ? "MessageEncoded" : "MessageDecoded"), evnt.Name)
             && evnt.Tags.Any(t => Equals(t.Key, $"mqcontract.{(encode ? "messageencodingduration" : "messagedecodingduration")}") && !Equals(t.Value, "Unknown"))
-            && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, id))));
+            && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, id)), activity.Events);
         }
 
         private static void ValidatePublishActivityBase<T>(Activity activity, string activityType, Type connectionType, string messageTypeID, string messageID, MessageHeader header, string channel, bool success, bool withTrace, string? connectionName = null)
@@ -42,32 +42,32 @@ namespace AutomatedTesting.ConnectionTests
             Assert.AreEqual(channel, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.initialchannel")).Value);
             Assert.AreEqual(channel, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.transmissionchannel")).Value);
             ValidateEncodeDecodeActivity(activity, true, messageID);
-            Assert.IsTrue(activity.Events.Any(evnt => Equals("MessageChannelMapped", evnt.Name)
+            Assert.Contains(evnt => Equals("MessageChannelMapped", evnt.Name)
             && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.initialchannel") && Equals(t.Value, channel))
-            && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.mappedchannel") && Equals(t.Value, channel))));
+            && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.mappedchannel") && Equals(t.Value, channel)), activity.Events);
         }
 
         public static void ValidatePublishActivity<T>(ServiceMessage message, Activity activity, string activityType, Type connectionType, bool success, bool withTrace, bool includePublish = true, string? connectionName = null)
         {
             ValidatePublishActivityBase<T>(activity, activityType, connectionType, message.MessageTypeID, message.ID, message.Header, message.Channel, success, withTrace, connectionName);
-            Assert.AreEqual((includePublish ? 3 : 2), activity.Events.Count());
+            Assert.HasCount((includePublish ? 3 : 2), activity.Events);
             if (includePublish)
             {
-                Assert.IsTrue(activity.Events.Any(evnt => Equals("MessagePublished", evnt.Name)
+                Assert.Contains(evnt => Equals("MessagePublished", evnt.Name)
                 && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.status") && Equals(t.Value, (success ? "Success" : "Fail"))
                 && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.serviceconnectiontype") && Equals(t.Value, connectionType.FullName))
                 && (
                     connectionName==null
                     || evnt.Tags.Any(t => Equals(t.Key, "mqcontract.serviceconnectionname") && Equals(t.Value, connectionName))
                 )
-                && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, message.ID)))));
+                && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, message.ID))), activity.Events);
             }
         }
 
         public static void ValidatePublishActivity<T>(ServiceQueryResult queryResult, Activity activity, string activityType, Type connectionType, bool success, bool withTrace, string? connectionName = null)
         {
             ValidatePublishActivityBase<T>(activity, activityType, connectionType, queryResult.MessageTypeID, queryResult.ID, queryResult.Header, string.Empty, success, withTrace, connectionName);
-            Assert.AreEqual(2, activity.Events.Count());
+            Assert.HasCount(2, activity.Events);
         }
 
         public static void ValidateBulkPublishActivity<T>(IEnumerable<ServiceMessage> messages, Activity activity, string activityType, Type connectionType, bool success, bool withTrace, string? connectionName = null)
@@ -81,20 +81,20 @@ namespace AutomatedTesting.ConnectionTests
             else
                 Assert.IsTrue(messages.All(message => message.Header["_traceParentId"]==null
                     && message.Header["_traceParentSpanId"]==null));
-            Assert.AreEqual(3 * messages.Count(), activity.Events.Count());
+            Assert.HasCount(3 * messages.Count(), activity.Events);
             foreach (var message in messages)
             {
                 ValidateCommonActivityTags<T>(activity, connectionType, message.MessageTypeID, message.ID, connectionName);
                 Assert.AreEqual(message.Channel, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.initialchannel")).Value);
                 Assert.AreEqual(message.Channel, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.transmissionchannel")).Value);
                 ValidateEncodeDecodeActivity(activity, true, message.ID);
-                Assert.IsTrue(activity.Events.Any(evnt => Equals("MessageChannelMapped", evnt.Name)
+                Assert.Contains(evnt => Equals("MessageChannelMapped", evnt.Name)
                 && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.initialchannel") && Equals(t.Value, message.Channel))
-                && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.mappedchannel") && Equals(t.Value, message.Channel))));
-                Assert.IsTrue(activity.Events.Any(evnt => Equals("BulkMessagePublished", evnt.Name)
+                && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.mappedchannel") && Equals(t.Value, message.Channel)), activity.Events);
+                Assert.Contains(evnt => Equals("BulkMessagePublished", evnt.Name)
                 && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.status") && Equals(t.Value, (success ? "Success" : "Fail")))
                 && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.serviceconnectiontype") && Equals(t.Value, connectionType.FullName))
-                && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, message.ID))));
+                && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, message.ID)), activity.Events);
             }
         }
 
@@ -107,11 +107,11 @@ namespace AutomatedTesting.ConnectionTests
             Assert.IsNull(queryResult.Header["_traceParentSpanId"]);
             ValidateCommonActivityTags<T>(activity, connectionType, queryResult.MessageTypeID, queryResult.ID, connectionName);
             Assert.AreEqual(string.Empty, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.recievedchannel")).Value);
-            Assert.AreEqual(1, activity.Events.Count());
+            Assert.HasCount(1, activity.Events);
             ValidateEncodeDecodeActivity(activity, false, queryResult.ID);
-            Assert.IsTrue(activity.Events.Any(evnt => Equals("MessageDecoded", evnt.Name)
+            Assert.Contains(evnt => Equals("MessageDecoded", evnt.Name)
             && evnt.Tags.Any(t => Equals(t.Key, "mqcontract.messagedecodingduration") && !Equals(t.Value, "Unknown"))
-            && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, queryResult.ID))));
+            && evnt.Tags.Any(t => Equals(t.Key, MessageIdTag) && Equals(t.Value, queryResult.ID)), activity.Events);
         }
 
         public static void ValidateConsumeActivity<T>(ReceivedServiceMessage recievedMessage, Activity activity, string activityType, Type connectionType, bool success, bool withTrace, string? connectionName = null)
@@ -128,7 +128,7 @@ namespace AutomatedTesting.ConnectionTests
             }
             ValidateCommonActivityTags<T>(activity, connectionType, recievedMessage.MessageTypeID, recievedMessage.ID, connectionName);
             Assert.AreEqual(recievedMessage.Channel, activity.Tags.FirstOrDefault(t => Equals(t.Key, "mqcontract.recievedchannel")).Value);
-            Assert.AreEqual(1, activity.Events.Count());
+            Assert.HasCount(1, activity.Events);
             ValidateEncodeDecodeActivity(activity, false, recievedMessage.ID);
         }
 

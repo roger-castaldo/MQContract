@@ -1,9 +1,9 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Interfaces.Service;
 
-namespace AutomatedTesting.ConnectionTests
+namespace CoreTesting.ConnectionTests
 {
     [TestClass]
     public class ResillianceSetupTests

@@ -1,13 +1,12 @@
-﻿using AutomatedTesting.ConnectionTests.Middlewares;
-using AutomatedTesting.ContractConnectionTests.Middlewares;
-using AutomatedTesting.Messages;
+﻿using CoreTesting.ConnectionTests.Middlewares;
+using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Middleware;
 using MQContract.Interfaces.Service;
 
-namespace AutomatedTesting.ContractConnectionTests
+namespace CoreTesting.ConnectionTests
 {
     [TestClass]
     public class MiddleWareTests
@@ -32,7 +31,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -65,7 +64,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -122,7 +121,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -145,7 +144,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var messageChannel = "TestRegisterGenericMiddlewareThrouwFunction";
             var newChannel = "NewTestRegisterGenericMiddlewareThrouwFunction";
             var headers = new MessageHeader([
-                new KeyValuePair<string,string>("test","test")
+                new KeyValuePair<string,string?>("test","test")
             ]);
 
             List<ServiceMessage> messages = [];
@@ -167,13 +166,13 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.AreEqual(messages[0].Channel, newChannel);
-            Assert.AreEqual(1, messages[0].Header.Keys.Count());
+            Assert.HasCount(1, messages[0].Header.Keys);
             Assert.AreEqual(headers[headers.Keys.First()], messages[0].Header[messages[0].Header.Keys.First()]);
             #endregion
 
@@ -204,7 +203,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -237,7 +236,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -270,7 +269,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -293,7 +292,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var messageChannel = "TestRegisterSpecificTypeMiddlewareThroughFunction";
             var newChannel = "NewTestRegisterSpecificTypeMiddlewareThroughFunction";
             var headers = new MessageHeader([
-                new KeyValuePair<string,string>("test","test")
+                new KeyValuePair<string,string?>("test","test")
             ]);
 
             List<ServiceMessage> messages = [];
@@ -315,13 +314,13 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.AreEqual(messages[0].Channel, newChannel);
-            Assert.AreEqual(1, messages[0].Header.Keys.Count());
+            Assert.HasCount(1, messages[0].Header.Keys);
             Assert.AreEqual(headers[headers.Keys.First()], messages[0].Header[messages[0].Header.Keys.First()]);
             #endregion
 
@@ -341,7 +340,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var messageChannel = "TestRegisterSpecificTypeMiddlewareThroughFunction";
             var newChannel = "NewTestRegisterSpecificTypeMiddlewareThroughFunction";
             var headers = new MessageHeader([
-                new KeyValuePair<string,string>("test","test")
+                new KeyValuePair<string,string?>("test","test")
             ]);
 
             List<ServiceMessage> messages = [];
@@ -363,13 +362,13 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount<ServiceMessage>(messages, 1, TimeSpan.FromMinutes(1)));
             Assert.AreEqual(messages[0].Channel, newChannel);
-            Assert.AreEqual(1, messages[0].Header.Keys.Count());
+            Assert.HasCount(1, messages[0].Header.Keys);
             Assert.AreEqual(headers[headers.Keys.First()], messages[0].Header[messages[0].Header.Keys.First()]);
             #endregion
 
@@ -402,7 +401,7 @@ namespace AutomatedTesting.ContractConnectionTests
             #endregion
 
             #region Act
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -425,7 +424,7 @@ namespace AutomatedTesting.ContractConnectionTests
             var testMessage = new BasicMessage("testMessage");
             var messageChannel = "TestRegisterSpecificTypeMiddlewareThroughFunction";
             var headers = new MessageHeader([
-                new KeyValuePair<string,string>("test","test")
+                new KeyValuePair<string,string?>("test","test")
             ]);
 
             var actions = new List<Func<ReceivedServiceMessage, ValueTask>>();
@@ -462,12 +461,12 @@ namespace AutomatedTesting.ContractConnectionTests
                 messages.Add(msg);
                 return ValueTask.CompletedTask;
             }, (error) => { }, cancellationToken: TestContext.CancellationToken);
-            _ = await contractConnection.PublishAsync<BasicMessage>(testMessage, channel: messageChannel, cancellationToken: TestContext.CancellationToken);
+            _ = await contractConnection.PublishAsync<BasicMessage>(new TransmissionMessage<BasicMessage>(testMessage), channel: messageChannel, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
             Assert.IsTrue(await Helper.WaitForCount<IReceivedMessage<BasicMessage>>(messages, 1, TimeSpan.FromMinutes(1)));
-            Assert.AreEqual(headers.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.HasCount(headers.Keys.Count(), messages[0].Headers.Keys);
             Assert.AreEqual(headers[headers.Keys.First()], messages[0].Headers[messages[0].Headers.Keys.First()]);
             #endregion
 

@@ -1,8 +1,8 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using MQContract.Interfaces.Encoding;
 using System.Text;
 
-namespace AutomatedTesting.Encoders
+namespace CoreTesting.Encoders
 {
     internal class TestMessageEncoder : IMessageTypeEncoder<CustomEncoderMessage>
     {

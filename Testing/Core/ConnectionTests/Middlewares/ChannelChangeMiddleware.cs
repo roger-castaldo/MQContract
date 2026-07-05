@@ -1,6 +1,6 @@
 ﻿using MQContract.Interfaces.Middleware;
 
-namespace AutomatedTesting.ContractConnectionTests.Middlewares
+namespace CoreTesting.ConnectionTests.Middlewares
 {
     internal class ChannelChangeMiddleware : IBeforeEncodeMiddleware
     {

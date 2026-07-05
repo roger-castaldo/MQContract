@@ -1,5 +1,5 @@
-﻿using AutomatedTesting.Consumers;
-using AutomatedTesting.Messages;
+﻿using CoreTesting.Consumers;
+using CoreTesting.Messages;
 using Moq;
 using MQContract.Extensions;
 using MQContract.Interfaces;

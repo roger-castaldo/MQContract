@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Attributes;
 using MQContract;
 using MQContract.CQRS.Extensions;
+using MQContract.Messages;
 
 namespace BenchMark.InMemoryBenchmarks
 {
@@ -32,7 +33,7 @@ namespace BenchMark.InMemoryBenchmarks
             );
 
             await Task.WhenAll(Enumerable.Range(0, Constants.PublishCount)
-                .Select(c => contractConnection.PublishAsync<Announcement>(testMessage, channel: channel).AsTask())
+                .Select(c => contractConnection.PublishAsync<Announcement>(new TransmissionMessage<Announcement>(testMessage), channel: channel).AsTask())
             );
 
             await completionSource.Task;
@@ -50,7 +51,7 @@ namespace BenchMark.InMemoryBenchmarks
             await contractConnection.RegisterPubSubAsyncConsumerAsync<Announcement, AnnouncementConsumer>(new AnnouncementConsumer(count, completionSource), channel: channel);
 
             await Task.WhenAll(Enumerable.Range(0, Constants.PublishCount)
-                .Select(c => contractConnection.PublishAsync<Announcement>(testMessage, channel: channel).AsTask())
+                .Select(c => contractConnection.PublishAsync<Announcement>(new TransmissionMessage<Announcement>(testMessage), channel: channel).AsTask())
             );
 
             await completionSource.Task;
@@ -97,7 +98,7 @@ namespace BenchMark.InMemoryBenchmarks
             );
 
             await Task.WhenAll(Enumerable.Range(0, Constants.PublishCount)
-                .Select(c => contractConnection.PublishAsync<Announcement>(testMessage, channel: channel).AsTask())
+                .Select(c => contractConnection.PublishAsync<Announcement>(new TransmissionMessage<Announcement>(testMessage), channel: channel).AsTask())
             );
 
             await completionSource.Task;
@@ -116,7 +117,7 @@ namespace BenchMark.InMemoryBenchmarks
             await contractConnection.RegisterPubSubAsyncConsumerAsync<Announcement, AnnouncementConsumer>(new AnnouncementConsumer(count, completionSource), channel: channel);
 
             await Task.WhenAll(Enumerable.Range(0, Constants.PublishCount)
-                .Select(c => contractConnection.PublishAsync<Announcement>(testMessage, channel: channel).AsTask())
+                .Select(c => contractConnection.PublishAsync<Announcement>(new TransmissionMessage<Announcement>(testMessage), channel: channel).AsTask())
             );
 
             await completionSource.Task;

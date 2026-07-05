@@ -4,7 +4,7 @@ using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
 using System.Security.Cryptography;
 
-namespace AutomatedTesting
+namespace CoreTesting
 {
     [TestClass]
     public class DefaultEncodersTests
@@ -43,7 +43,7 @@ namespace AutomatedTesting
 
             #region Act
             var subscription = await contractConnection.SubscribeAsync<byte[]>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName, cancellationToken: TestContext.CancellationToken);
-            var result = await contractConnection.PublishAsync<byte[]>(testMessage, ChannelName, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<byte[]>(new TransmissionMessage<byte[]>(testMessage), ChannelName, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -95,7 +95,7 @@ namespace AutomatedTesting
 
             #region Act
             var subscription = await contractConnection.SubscribeAsync<string>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName, cancellationToken: TestContext.CancellationToken);
-            var result = await contractConnection.PublishAsync<string>(testMessage, ChannelName, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.PublishAsync<string>(new TransmissionMessage<string>(testMessage), ChannelName, cancellationToken: TestContext.CancellationToken);
             #endregion
 
             #region Assert
@@ -148,7 +148,7 @@ namespace AutomatedTesting
 
             #region Act
             var subscription = await contractConnection.SubscribeAsync<T>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName);
-            var result = await contractConnection.PublishAsync<T>(testMessage, ChannelName);
+            var result = await contractConnection.PublishAsync<T>(new TransmissionMessage<T>(testMessage), ChannelName);
             #endregion
 
             #region Assert
@@ -201,9 +201,9 @@ namespace AutomatedTesting
             var subscription = await contractConnection.SubscribeAsync<T>((msg) => recievedMessages.Add(msg), (err) => { }, ChannelName);
             var subscriptionArray = await contractConnection.SubscribeAsync<T[]>((msg) => recievedArrayMessages.Add(msg), (err) => { }, $"{ChannelName}_array");
             var subscriptionEnumerable = await contractConnection.SubscribeAsync<IEnumerable<T>>((msg) => recievedEnumerableMessages.Add(msg), (err) => { }, $"{ChannelName}_enumerable");
-            var result = await contractConnection.PublishAsync<T>(testMessages.First(), ChannelName);
-            var resultArray = await contractConnection.PublishAsync<T[]>(testMessages.ToArray(), $"{ChannelName}_array");
-            var resultEnumerable = await contractConnection.PublishAsync<IEnumerable<T>>(testMessages, $"{ChannelName}_enumerable");
+            var result = await contractConnection.PublishAsync<T>(new TransmissionMessage<T>(testMessages.First()), ChannelName);
+            var resultArray = await contractConnection.PublishAsync<T[]>(new TransmissionMessage<T[]>(testMessages.ToArray()), $"{ChannelName}_array");
+            var resultEnumerable = await contractConnection.PublishAsync<IEnumerable<T>>(new TransmissionMessage<IEnumerable<T>>(testMessages), $"{ChannelName}_enumerable");
             #endregion
 
             #region Assert

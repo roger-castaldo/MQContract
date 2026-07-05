@@ -1,5 +1,5 @@
-﻿using AutomatedTesting.Consumers;
-using AutomatedTesting.Messages;
+﻿using CoreTesting.Consumers;
+using CoreTesting.Messages;
 using Moq;
 using MQContract;
 using MQContract.Attributes;
@@ -9,7 +9,7 @@ using MQContract.Interfaces.Service;
 using System.Diagnostics;
 using System.Reflection;
 
-namespace AutomatedTesting.ConnectionTests.Consumers
+namespace CoreTesting.ConnectionTests.Consumers
 {
     [TestClass]
     public class QueryResponseAsyncConsumerTests
@@ -68,7 +68,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             #region Act
             contractConnection = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>(mockAsyncConsumer.Object, cancellationToken: TestContext.CancellationToken);
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message), cancellationToken: TestContext.CancellationToken);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
@@ -86,7 +86,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.HasCount(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys);
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
@@ -385,7 +385,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
 
             #region Act
             contractConnection = await contractConnection.RegisterQueryResponseAsyncConsumerAsync<BasicQueryMessage, BasicResponseMessage, IQueryResponseAsyncConsumer<BasicQueryMessage, BasicResponseMessage>>(mockAsyncConsumer.Object, cancellationToken: TestContext.CancellationToken);
-            var result = await contractConnection.QueryAsync<BasicQueryMessage>(message, cancellationToken: TestContext.CancellationToken);
+            var result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message), cancellationToken: TestContext.CancellationToken);
             foreach (var act in errorActions)
                 act(exception);
             #endregion
@@ -403,7 +403,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             Assert.AreEqual(typeof(BasicQueryMessage).GetCustomAttribute<MessageAttribute>(false)?.Channel, channels[0]);
             Assert.IsNull(groups[0]);
             Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-            Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+            Assert.HasCount(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys);
             Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
             Assert.AreEqual(message, messages[0].Message);
             Assert.AreEqual(exception, exceptions[0]);
@@ -519,13 +519,13 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             QueryResult<object>? result = null;
             Exception? error = null;
             var messageHeader = new MessageHeader([
-                new KeyValuePair<string,string>(headerKey,headerValue),
-                new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
+                new KeyValuePair<string,string?>(headerKey,headerValue),
+                new KeyValuePair<string,string?>(messageHeaderKey,messageHeaderValue)
             ]);
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
+                result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message, Header:messageHeader), timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
             else
-                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken));
+                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message, Header: messageHeader), timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -537,7 +537,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                 Assert.IsNotNull(result);
                 Assert.IsNull(error);
                 Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-                Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+                Assert.HasCount(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys);
                 Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
                 Assert.AreEqual(message, messages[0].Message);
             }
@@ -637,13 +637,13 @@ namespace AutomatedTesting.ConnectionTests.Consumers
             QueryResult<object>? result = null;
             Exception? error = null;
             var messageHeader = new MessageHeader([
-                new KeyValuePair<string,string>(headerKey,headerValue),
-                new KeyValuePair<string,string>(messageHeaderKey,messageHeaderValue)
+                new KeyValuePair<string,string?>(headerKey,headerValue),
+                new KeyValuePair<string,string?>(messageHeaderKey,messageHeaderValue)
             ]);
             if (Equals(headerValue, checkValue) && Equals(messageHeaderValue, messageHeaderCheckValue) && Equals(messageValue, messageCheckValue))
-                result = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
+                result = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message, Header: messageHeader), timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken);
             else
-                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(message, messageHeader: messageHeader, timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken));
+                error = await Assert.ThrowsAsync<Exception>(async () => _ = await contractConnection.QueryAsync<BasicQueryMessage>(new TransmissionMessage<BasicQueryMessage>(message, Header: messageHeader), timeout: TimeSpan.FromMilliseconds(500), cancellationToken: TestContext.CancellationToken));
             #endregion
 
             #region Assert
@@ -655,7 +655,7 @@ namespace AutomatedTesting.ConnectionTests.Consumers
                 Assert.IsNotNull(result);
                 Assert.IsNull(error);
                 Assert.AreEqual(serviceMessages[0].ID, messages[0].ID);
-                Assert.AreEqual(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys.Count());
+                Assert.HasCount(serviceMessages[0].Header.Keys.Count(), messages[0].Headers.Keys);
                 Assert.AreEqual(serviceMessages[0].ReceivedTimestamp, messages[0].ReceivedTimestamp);
                 Assert.AreEqual(message, messages[0].Message);
             }

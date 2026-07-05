@@ -177,11 +177,11 @@ namespace MQContract.Generators
                     if (responseType!=null)
                     {
                         connectionSwitches.Add($@"          (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => async () => {{
-                    var result = await contractConnection.QueryAsync<{contract.Contract.ToDisplayString()}, {responseType.ToDisplayString()}>(({contract.Contract.ToDisplayString()})message, timeout, channel, responseChannel, messageHeader, cancellationToken);
+                    var result = await contractConnection.QueryAsync<{contract.Contract.ToDisplayString()}, {responseType.ToDisplayString()}>((TransmissionMessage<{contract.Contract.ToDisplayString()}>)message, timeout, channel, responseChannel, cancellationToken);
                     return new QueryResult<object>(result.ID, result.Header, result.Result, result.Error);
                 }},");
                         multiConnectionSwitches.Add($@"          (Type t) when t == typeof({contract.Contract.ToDisplayString()}) => async () => {{
-                    var result = await contractConnection.QueryAsync<{contract.Contract.ToDisplayString()}, {responseType.ToDisplayString()}>(({contract.Contract.ToDisplayString()})message, timeout, channel, responseChannel, messageHeader, cancellationToken);
+                    var result = await contractConnection.QueryAsync<{contract.Contract.ToDisplayString()}, {responseType.ToDisplayString()}>((TransmissionMessage<{contract.Contract.ToDisplayString()}>)message, timeout, channel, responseChannel, cancellationToken);
                     return result.Select(r=>new QueryResult<object>(r.ID, r.Header, r.Result, r.Error));
                 }},");
                     }
@@ -281,7 +281,7 @@ namespace {contractContext.Target.ContainingNamespace};
         }};
     }}
 
-    public override sealed ValueTask<QueryResult<object>>? TryExecuteQuery<TQuery>(IContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken){{
+    public override sealed ValueTask<QueryResult<object>>? TryExecuteQuery<TQuery>(IContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken){{
         Func<ValueTask<QueryResult<object>>>? callback =  (typeof(TQuery)) switch
         {{
 {string.Join("\r\n", connectionSwitches)}
@@ -292,7 +292,7 @@ namespace {contractContext.Target.ContainingNamespace};
         return null;
     }}
 
-    public override sealed ValueTask<IEnumerable<QueryResult<object>>>? TryExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken){{
+    public override sealed ValueTask<IEnumerable<QueryResult<object>>>? TryExecuteQuery<TQuery>(IMultiServiceContractConnection contractConnection, object message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken){{
         Func<ValueTask<IEnumerable<QueryResult<object>>>>? callback =  (typeof(TQuery)) switch
         {{
 {string.Join("\r\n", multiConnectionSwitches)}

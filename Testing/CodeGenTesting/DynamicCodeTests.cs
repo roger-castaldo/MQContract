@@ -130,7 +130,7 @@ namespace CodeGenTesting
             var replyResult = new QueryResult<Reply>(
                 Helper.RandomString(),
                 new([
-                    new KeyValuePair<string,string>("testkey",Helper.RandomString())
+                    new KeyValuePair<string,string?>("testkey",Helper.RandomString())
                 ]),
                 new(Helper.RandomString()),
                 new(new Exception(Helper.RandomString()), true)
@@ -138,20 +138,20 @@ namespace CodeGenTesting
             var nonReplyResult = new QueryResult<NonContextReply>(
                 Helper.RandomString(),
                 new([
-                    new KeyValuePair<string,string>("testkey",Helper.RandomString())
+                    new KeyValuePair<string,string?>("testkey",Helper.RandomString())
                 ]),
                 new(Helper.RandomString()),
                 new(new Exception(Helper.RandomString()), true)
             );
             var mockConnection = new Mock<IContractConnection>();
-            mockConnection.Setup(c => c.QueryAsync<Prompt, Reply>(It.IsAny<Prompt>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<MessageHeader?>(), It.IsAny<CancellationToken>()))
+            mockConnection.Setup(c => c.QueryAsync<Prompt, Reply>(It.IsAny<TransmissionMessage<Prompt>>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(replyResult);
-            mockConnection.Setup(c => c.QueryAsync<NonContextPrompt, NonContextReply>(It.IsAny<NonContextPrompt>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<MessageHeader?>(), It.IsAny<CancellationToken>()))
+            mockConnection.Setup(c => c.QueryAsync<NonContextPrompt, NonContextReply>(It.IsAny<TransmissionMessage<NonContextPrompt>>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(nonReplyResult);
 
             //Act
-            var error = await Assert.ThrowsExactlyAsync<DynamicCodeNotSupportedException>(async () => await context.ExecuteQuery<NonContextPrompt>(mockConnection.Object, nonPrompt, null, null, null, null, new()));
-            var result = await context.ExecuteQuery<Prompt>(mockConnection.Object, prompt, null, null, null, null, new());
+            var error = await Assert.ThrowsExactlyAsync<DynamicCodeNotSupportedException>(async () => await context.ExecuteQuery<NonContextPrompt>(mockConnection.Object, new(nonPrompt), null, null, null, new()));
+            var result = await context.ExecuteQuery<Prompt>(mockConnection.Object, new(prompt), null, null, null, new());
 
             //Assert
             Assert.IsNotNull(error);
@@ -164,8 +164,8 @@ namespace CodeGenTesting
             Assert.AreEqual(replyResult.Error?.Message, result.Error?.Message);
             Assert.AreEqual(replyResult.Error?.IsFatal, result.Error?.IsFatal);
             //Verify
-            mockConnection.Verify(c => c.QueryAsync<Prompt, Reply>(prompt, null, null, null, null, It.IsAny<CancellationToken>()), Times.Once);
-            mockConnection.Verify(c => c.QueryAsync<NonContextPrompt, NonContextReply>(nonPrompt, null, null, null, null, It.IsAny<CancellationToken>()), Times.Never);
+            mockConnection.Verify(c => c.QueryAsync<Prompt, Reply>(It.Is<TransmissionMessage<Prompt>>(msg=>Equals(msg.Message,prompt) && msg.Header==null), null, null, null, It.IsAny<CancellationToken>()), Times.Once);
+            mockConnection.Verify(c => c.QueryAsync<NonContextPrompt, NonContextReply>(It.Is<TransmissionMessage<NonContextPrompt>>(msg=>Equals(msg.Message,nonPrompt) && msg.Header==null), null, null, null, It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [TestMethod]
@@ -179,7 +179,7 @@ namespace CodeGenTesting
             var replyResult = new QueryResult<Reply>(
                 Helper.RandomString(),
                 new([
-                    new KeyValuePair<string,string>("testkey",Helper.RandomString())
+                    new KeyValuePair<string,string?>("testkey",Helper.RandomString())
                 ]),
                 new(Helper.RandomString()),
                 new(new Exception(Helper.RandomString()), true)
@@ -187,20 +187,20 @@ namespace CodeGenTesting
             var nonReplyResult = new QueryResult<NonContextReply>(
                 Helper.RandomString(),
                 new([
-                    new KeyValuePair<string,string>("testkey",Helper.RandomString())
+                    new KeyValuePair<string,string?>("testkey",Helper.RandomString())
                 ]),
                 new(Helper.RandomString()),
                 new(new Exception(Helper.RandomString()), true)
             );
             var mockConnection = new Mock<IMultiServiceContractConnection>();
-            mockConnection.Setup(c => c.QueryAsync<Prompt, Reply>(It.IsAny<Prompt>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<MessageHeader?>(), It.IsAny<CancellationToken>()))
+            mockConnection.Setup(c => c.QueryAsync<Prompt, Reply>(It.IsAny<TransmissionMessage<Prompt>>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([replyResult]);
-            mockConnection.Setup(c => c.QueryAsync<NonContextPrompt, NonContextReply>(It.IsAny<NonContextPrompt>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<MessageHeader?>(), It.IsAny<CancellationToken>()))
+            mockConnection.Setup(c => c.QueryAsync<NonContextPrompt, NonContextReply>(It.IsAny<TransmissionMessage<NonContextPrompt>>(), It.IsAny<TimeSpan?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([nonReplyResult]);
 
             //Act
-            var error = await Assert.ThrowsExactlyAsync<DynamicCodeNotSupportedException>(async () => await context.ExecuteQuery<NonContextPrompt>(mockConnection.Object, nonPrompt, null, null, null, null, new()));
-            var results = await context.ExecuteQuery<Prompt>(mockConnection.Object, prompt, null, null, null, null, new());
+            var error = await Assert.ThrowsExactlyAsync<DynamicCodeNotSupportedException>(async () => await context.ExecuteQuery<NonContextPrompt>(mockConnection.Object, new(nonPrompt), null, null, null, new()));
+            var results = await context.ExecuteQuery<Prompt>(mockConnection.Object, new(prompt), null, null, null, new());
 
             //Assert
             Assert.IsNotNull(error);
@@ -215,8 +215,8 @@ namespace CodeGenTesting
             Assert.AreEqual(replyResult.Error?.Message, result.Error?.Message);
             Assert.AreEqual(replyResult.Error?.IsFatal, result.Error?.IsFatal);
             //Verify
-            mockConnection.Verify(c => c.QueryAsync<Prompt, Reply>(prompt, null, null, null, null, It.IsAny<CancellationToken>()), Times.Once);
-            mockConnection.Verify(c => c.QueryAsync<NonContextPrompt, NonContextReply>(nonPrompt, null, null, null, null, It.IsAny<CancellationToken>()), Times.Never);
+            mockConnection.Verify(c => c.QueryAsync<Prompt, Reply>(It.Is<TransmissionMessage<Prompt>>(msg => Equals(msg.Message, prompt) && msg.Header==null), null, null, null, It.IsAny<CancellationToken>()), Times.Once);
+            mockConnection.Verify(c => c.QueryAsync<NonContextPrompt, NonContextReply>(It.Is<TransmissionMessage<NonContextPrompt>>(msg => Equals(msg.Message, nonPrompt) && msg.Header==null), null, null, null, It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [TestMethod]
@@ -225,7 +225,7 @@ namespace CodeGenTesting
             //Arrange
             var mockServiceConnection = new Mock<IMessageServiceConnection>();
             var connection = ContractConnection.Instance(mockServiceConnection.Object);
-            connection.RegisterMessageContextAsync(new MyMessageContext());
+            await connection.RegisterMessageContextAsync(new MyMessageContext());
 
             //Act
             var errorWithAssembly = await Assert.ThrowsExactlyAsync<DynamicCodeNotSupportedException>(async () => await connection.AutoRegisterAllConsumersAsync(this.GetType().Assembly));

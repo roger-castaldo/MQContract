@@ -13,7 +13,7 @@ namespace MQContract.Factories
         private readonly Func<Stream, ValueTask<TMessage?>> decodeMessage;
         public bool IgnoreMessageHeader { get; private init; }
 
-        private readonly string messageID;
+        private readonly string messageTypeID;
         private readonly MessageContext context;
         private readonly IMessageEncoder? globalMessageEncoder;
         private readonly IServiceProvider? serviceProvider;
@@ -22,7 +22,7 @@ namespace MQContract.Factories
         public MessageTypeFactory(IMessageEncoder? globalMessageEncoder, IServiceProvider? serviceProvider, bool ignoreMessageHeader, MessageContext context)
         {
             this.context=context;
-            messageID = context.MessageID<TMessage>();
+            messageTypeID = context.MessageID<TMessage>();
             this.globalMessageEncoder = globalMessageEncoder;
             this.serviceProvider  = serviceProvider;
             MessageChannel = context.MessageChannel<TMessage>();
@@ -31,14 +31,14 @@ namespace MQContract.Factories
             context.PrimeConverters<TMessage>(globalMessageEncoder, serviceProvider);
         }
 
-        public async ValueTask<ServiceMessage> ConvertMessageAsync(TMessage message, bool ignoreChannel, string? channel, MessageHeader messageHeader)
+        public async ValueTask<ServiceMessage> ConvertMessageAsync(TMessage message, bool ignoreChannel, string? channel, MessageHeader messageHeader, string? messageID)
         {
             if (string.IsNullOrWhiteSpace(channel)&&!ignoreChannel)
                 throw new MessageChannelNullException();
 
             return new ServiceMessage(
-                Guid.NewGuid().ToString(),
-                messageID,
+                messageID??Guid.NewGuid().ToString(),
+                messageTypeID,
                 channel??string.Empty,
                 messageHeader,
                 await encodeMessage(message)
@@ -54,7 +54,7 @@ namespace MQContract.Factories
             if (Equals(ErrorServiceMessage.MessageTypeID, message.MessageTypeID))
                 throw ErrorServiceMessage.DecodeError(message.Data);
             TMessage? result;
-            if (IgnoreMessageHeader || string.Equals(messageID, message.MessageTypeID, StringComparison.InvariantCultureIgnoreCase))
+            if (IgnoreMessageHeader || string.Equals(messageTypeID, message.MessageTypeID, StringComparison.InvariantCultureIgnoreCase))
             {
                 using var ms = new MemoryStream(message.Data.ToArray(), 0, message.Data.Length, false, true);
                 result = await decodeMessage(ms);

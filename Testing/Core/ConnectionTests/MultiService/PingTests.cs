@@ -2,7 +2,7 @@
 using MQContract;
 using MQContract.Interfaces.Service;
 
-namespace AutomatedTesting.ConnectionTests.MultiService
+namespace CoreTesting.ConnectionTests.MultiService
 {
     [TestClass]
     public class PingTests
@@ -30,7 +30,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count());
+            Assert.HasCount(1, result);
             Assert.AreEqual(pingResult, result.First());
             #endregion
 
@@ -63,7 +63,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count());
+            Assert.HasCount(1, result);
             Assert.AreEqual(pingResult, result.First());
             #endregion
 
@@ -89,7 +89,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual(0, result.Count());
+            Assert.IsEmpty(result);
             #endregion
 
             #region Verify
@@ -122,7 +122,7 @@ namespace AutomatedTesting.ConnectionTests.MultiService
 
             #region Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, result.Count());
+            Assert.HasCount(2, result);
             Assert.IsTrue(Array.TrueForAll(result.ToArray(), r => Equals(pingResult, r)));
             #endregion
 

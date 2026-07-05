@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MQContract;
+using MQContract.Messages;
 
 namespace BenchMark.PublishBenchmarks
 {
@@ -55,7 +56,7 @@ namespace BenchMark.PublishBenchmarks
                         circuitBreakPolicy: (3, TimeSpan.FromSeconds(1))
                     );
             for (var x = 0; x<Constants.PublishCount/10; x++)
-                _ = await contractConnection!.PublishAsync<string>(MessageContent, channel: ChannelName);
+                _ = await contractConnection!.PublishAsync<string>(new TransmissionMessage<string>(MessageContent), channel: ChannelName);
         }
     }
 }

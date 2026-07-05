@@ -8,10 +8,10 @@ namespace ConnectorTesting.Helpers;
 
 internal static class QueryResponseTestHelper
 {
-    private static readonly IEnumerable<(Prompt message, MessageHeader? header)> TestPrompts = [
-        new (new Prompt("Bob","Loblaw"), new MessageHeader([new("test-key1", "test-value1")])),
-        new (new Prompt("Fred","Flintstone"), new MessageHeader([new("test-key2", "test-value2")])),
-        new (new Prompt("Barney","Rubble"), new MessageHeader([new("test-key3", "test-value3")]))
+    private static readonly IEnumerable<TransmissionMessage<Prompt>> TestPrompts = [
+        new (new Prompt("Bob","Loblaw"), Header: new MessageHeader([new("test-key1", "test-value1")])),
+        new (new Prompt("Fred","Flintstone"), Header: new MessageHeader([new("test-key2", "test-value2")])),
+        new (new Prompt("Barney","Rubble"), Header: new MessageHeader([new("test-key3", "test-value3")]))
     ];
 
     public static async Task ExecuteQueryResponseTestsAsync(IMessageServiceConnection messageServiceConnection)
@@ -39,29 +39,29 @@ internal static class QueryResponseTestHelper
 
         var results = new List<QueryResult<Reply>>();
 
-        foreach (var (message, header) in TestPrompts)
-            results.Add(await contractConnection.QueryAsync<Prompt, Reply>(message, timeout: TimeSpan.FromMinutes(1), messageHeader: header));
+        foreach (var message in TestPrompts)
+            results.Add(await contractConnection.QueryAsync<Prompt, Reply>(message, timeout: TimeSpan.FromMinutes(1)));
 
         Assert.IsTrue(results.All(r => !r.IsError));
 
         Assert.HasCount(TestPrompts.Count(), receivedMessages);
         Assert.IsEmpty(errors);
-        foreach (var (prompt, header) in TestPrompts)
+        foreach (var message in TestPrompts)
         {
-            var receivedMessage = receivedMessages.FirstOrDefault(m => Equals(m.Message, prompt));
+            var receivedMessage = receivedMessages.FirstOrDefault(m => Equals(m.Message, message.Message));
             Assert.IsNotNull(receivedMessage);
-            Assert.AreEqual(prompt, receivedMessage.Message);
-            Assert.AreEqual(header!.Count, receivedMessage.Headers.Count);
-            Assert.IsTrue(header.AsEnumerable().All(h => Equals(h.Value, receivedMessage.Headers[h.Key])));
+            Assert.AreEqual(message.Message, receivedMessage.Message);
+            Assert.AreEqual(message.Header!.Count, receivedMessage.Headers.Count);
+            Assert.IsTrue(message.Header.AsEnumerable().All(h => Equals(h.Value, receivedMessage.Headers[h.Key])));
         }
 
         for (var x = 0; x<results.Count; x++)
         {
             var result = results[x];
-            var (message, header)= TestPrompts.ElementAt(x);
-            Assert.AreEqual($"Greeting {message.FirstName} {message.LastName}", result.Result?.Greeting);
-            Assert.AreEqual(header!.Count, result.Header.Count);
-            Assert.IsTrue(header.AsEnumerable().All(h => Equals(h.Value, result.Header[h.Key])));
+            var message = TestPrompts.ElementAt(x);
+            Assert.AreEqual($"Greeting {message.Message.FirstName} {message.Message.LastName}", result.Result?.Greeting);
+            Assert.AreEqual(message.Header!.Count, result.Header.Count);
+            Assert.IsTrue(message.Header.AsEnumerable().All(h => Equals(h.Value, result.Header[h.Key])));
         }
     }
 }
