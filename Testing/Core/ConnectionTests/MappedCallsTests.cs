@@ -1,10 +1,7 @@
 ﻿using CoreTesting.Messages;
 using Moq;
 using MQContract;
-using MQContract.Attributes;
 using MQContract.Interfaces.Service;
-using System.Diagnostics;
-using System.Reflection;
 using System.Text.Json;
 
 namespace CoreTesting.ConnectionTests

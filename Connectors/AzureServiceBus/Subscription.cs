@@ -50,12 +50,14 @@ namespace MQContract.AzureServiceBus
                 disposedValue=true;
                 if (!cancelToken.IsCancellationRequested)
                 {
-                    cancelToken.Cancel();
+                    await cancelToken.CancelAsync();
                     try
                     {
                         await consumerLoop!.ConfigureAwait(false);
                     }
-                    catch (OperationCanceledException) { }
+                    catch (OperationCanceledException) {
+                        // Ignore cancellation exceptions
+                    }
                 }
                 await receiver!.CloseAsync();
                 await receiver!.DisposeAsync();

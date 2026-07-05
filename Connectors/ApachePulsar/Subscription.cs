@@ -2,7 +2,6 @@
 using DotPulsar.Abstractions;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace MQContract.ApachePulsar
@@ -25,12 +24,7 @@ namespace MQContract.ApachePulsar
         {
             consumerLoop = Task.Run(async () =>
             {
-                if (regReplyGroup.IsMatch(group??string.Empty))
-                {
-                    var ids = await consumer.GetLastMessageIds(cancellationToken: cancelToken.Token);
-                    if (ids.Any())
-                        await consumer.Seek(ids.Last(), cancellationToken: cancelToken.Token);
-                }
+                await AdjustConsumerForRepliesAsync();
                 while (!cancelToken.IsCancellationRequested)
                 {
                     try
@@ -53,13 +47,22 @@ namespace MQContract.ApachePulsar
                             );
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (!cancelToken.IsCancellationRequested) 
                     {
-                        if (!cancelToken.IsCancellationRequested)
                             errorReceived(ex);
                     }
                 }
             });
+        }
+
+        private async Task AdjustConsumerForRepliesAsync()
+        {
+            if (regReplyGroup.IsMatch(group??string.Empty))
+            {
+                var ids = await consumer.GetLastMessageIds(cancellationToken: cancelToken.Token);
+                if (ids.Any())
+                    await consumer.Seek(ids.Last(), cancellationToken: cancelToken.Token);
+            }
         }
 
         ValueTask IServiceSubscription.EndAsync()
@@ -78,7 +81,9 @@ namespace MQContract.ApachePulsar
                     {
                         await (consumerLoop??Task.CompletedTask).ConfigureAwait(false);
                     }
-                    catch (OperationCanceledException) { }
+                    catch (OperationCanceledException) {
+                        // ignore
+                    }
                 }
                 try
                 {

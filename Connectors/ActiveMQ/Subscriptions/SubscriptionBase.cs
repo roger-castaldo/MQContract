@@ -54,9 +54,11 @@ namespace MQContract.ActiveMQ.Subscriptions
                     {
                         await (consumerLoop??Task.CompletedTask).ConfigureAwait(false);
                     }
-                    catch (OperationCanceledException) { }
+                    catch (OperationCanceledException) {
+                        // dropped this exception as it can occur when the consumption is stopped
+                    }
                 }
-                await ((consumer?.CloseAsync() ?? Task.CompletedTask)).ConfigureAwait(false);
+                await (consumer?.CloseAsync() ?? Task.CompletedTask).ConfigureAwait(false);
                 consumer?.Dispose();
             }
         }

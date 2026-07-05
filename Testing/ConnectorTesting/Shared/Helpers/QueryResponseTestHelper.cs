@@ -45,6 +45,7 @@ internal static class QueryResponseTestHelper
         Assert.IsTrue(results.All(r => !r.IsError));
 
         Assert.HasCount(TestPrompts.Count(), receivedMessages);
+        Assert.HasCount(TestPrompts.Count(), results);
         Assert.IsEmpty(errors);
         foreach (var message in TestPrompts)
         {
