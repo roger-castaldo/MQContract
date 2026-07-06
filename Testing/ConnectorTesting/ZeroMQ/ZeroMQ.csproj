@@ -42,6 +42,7 @@
     <Compile Include="..\Shared\Helpers\PubSubTestHelper.cs" Link="Helpers\PubSubTestHelper.cs" />
     <Compile Include="..\Shared\Helpers\QueryResponseTestHelper.cs" Link="Helpers\QueryResponseTestHelper.cs" />
     <Compile Include="..\Shared\Helpers\TestHelper.cs" Link="Helpers\TestHelper.cs" />
+	  <Compile Include="..\Shared\MSTestSettings.cs" Link="MSTestSettings.cs" />
   </ItemGroup>
 
 </Project>

@@ -84,6 +84,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{B7DC5F27-18B7-49FE-B4CB-5A936E94E499}"
 	ProjectSection(SolutionItems) = preProject
 		Testing\ConnectorTesting\Shared\AServiceHarness.cs = Testing\ConnectorTesting\Shared\AServiceHarness.cs
+		Testing\ConnectorTesting\Shared\MSTestSettings.cs = Testing\ConnectorTesting\Shared\MSTestSettings.cs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Helpers", "Helpers", "{B3E29345-3E67-4EB0-8657-EBD516D8B91F}"
