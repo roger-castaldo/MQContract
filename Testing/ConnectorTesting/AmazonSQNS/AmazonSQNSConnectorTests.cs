@@ -14,7 +14,8 @@ public class AmazonSQNSConnectorTests
     {
         "Announcement",
         "Prompt",
-        "PromptResponse"
+        "PromptResponse",
+        BulkPubSubTestHelper.BulkPubSubTopic
     };
     private const string QueueAttributeName = "QueueArn";
     private static AmazonSQNSTestHarness? amazonSQNSTestHarness;

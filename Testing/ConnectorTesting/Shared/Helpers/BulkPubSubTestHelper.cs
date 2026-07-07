@@ -8,6 +8,8 @@ namespace ConnectorTesting.Helpers;
 
 internal static class BulkPubSubTestHelper
 {
+    public static string BulkPubSubTopic = "BulkAnnouncement";
+
     private static readonly IEnumerable<TransmissionMessage<Announcement>> TestAnnouncements = [
         new (new Announcement("Hello World!"), Header: new MessageHeader([new("test-key1", "test-value1")])),
         new (new Announcement("Welcome to Pub/Sub testing."), Header: new MessageHeader([new("test-key2", "test-value2")])),
@@ -33,13 +35,14 @@ internal static class BulkPubSubTestHelper
         {
             errors.Add(error);
         },
-        group:"TestGroup");
+        group:"TestGroup",
+        channel: BulkPubSubTopic);
 
         Assert.IsNotNull(subscription);
 
         await Task.Delay(TimeSpan.FromSeconds(30));
 
-        var results = await contractConnection.BulkPublishAsync(TestAnnouncements);
+        var results = await contractConnection.BulkPublishAsync(TestAnnouncements, channel: BulkPubSubTopic);
 
         Assert.IsTrue(results.All(r => !r.IsError), message: $"Publish failed {results.First(r => r.IsError).Error}");
 

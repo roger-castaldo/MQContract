@@ -13,7 +13,8 @@ public class KafkaConnectorTests
     {
         "Announcement",
         "Prompt",
-        "PromptResponse"
+        "PromptResponse",
+        BulkPubSubTestHelper.BulkPubSubTopic
     };
     private static KafkaTestHarness? kafkaTestHarness;
 

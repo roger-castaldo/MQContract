@@ -14,7 +14,8 @@ public class GooglePubSubConnectorTests
     {
         "Announcement",
         "Prompt",
-        "PromptResponse"
+        "PromptResponse",
+        BulkPubSubTestHelper.BulkPubSubTopic
     };
     private const string projectId = "sample-project-id";
     private static GooglePubSubTestHarness? googlePubSubTestHarness;

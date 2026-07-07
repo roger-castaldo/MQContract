@@ -12,7 +12,8 @@ public class AzureServiceBusConnectorTests
     {
         "Announcement",
         "Prompt",
-        "PromptResponse"
+        "PromptResponse",
+        BulkPubSubTestHelper.BulkPubSubTopic
     };
     private static AzureServiceBusTestHarness? azureServiceBusTestHarness;
 

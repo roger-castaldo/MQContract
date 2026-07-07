@@ -11,7 +11,8 @@ public class RabbitMQConnectorTests
     private static readonly string[] RequiredTopics = new[]
     {
         "Announcement",
-        "Prompt"
+        "Prompt",
+        BulkPubSubTestHelper.BulkPubSubTopic
     };
     private static RabbitMQTestHarness? rabbitMQTestHarness;
 
