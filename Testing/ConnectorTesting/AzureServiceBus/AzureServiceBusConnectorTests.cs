@@ -8,13 +8,13 @@ namespace ConnectorTesting;
 [TestClass]
 public class AzureServiceBusConnectorTests
 {
-    private static readonly string[] RequiredTopics = new[]
-    {
-        "Announcement",
-        "Prompt",
-        "PromptResponse",
-        BulkPubSubTestHelper.BulkPubSubTopic
-    };
+    private static readonly string[][] RequiredTopics = 
+    [
+        ["Announcement", "TestGroup"],
+        ["Prompt", "TestQueryGroup"],
+        ["PromptResponse", "TestGroup"],
+        [BulkPubSubTestHelper.BulkPubSubTopic, "TestBulkGroup"]
+    ];
     private static AzureServiceBusTestHarness? azureServiceBusTestHarness;
 
     [ClassInitialize]
@@ -25,14 +25,14 @@ public class AzureServiceBusConnectorTests
         // Ensure topics exist in the Service Bus namespace used by the test harness.
         
         var adminClient = new ServiceBusAdministrationClient(azureServiceBusTestHarness.AdminConnectionString);
-        foreach (var topic in RequiredTopics)
+        foreach (var pair in RequiredTopics)
         {
             try
             {
                 using var ctsCreate = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                await adminClient.CreateTopicAsync(topic, ctsCreate.Token);
-                testContext.WriteLine($"Created topic '{topic}'");
-                await adminClient.CreateSubscriptionAsync(new(topic, "TestGroup"));
+                await adminClient.CreateTopicAsync(pair[0], ctsCreate.Token);
+                testContext.WriteLine($"Created topic '{pair[0]}'");
+                await adminClient.CreateSubscriptionAsync(new(pair[0], pair[1]));
             }
             catch (Azure.Messaging.ServiceBus.ServiceBusException sbEx) when (
                 sbEx.Reason == Azure.Messaging.ServiceBus.ServiceBusFailureReason.MessagingEntityAlreadyExists)
@@ -41,7 +41,7 @@ public class AzureServiceBusConnectorTests
             }
             catch (Exception ex)
             {
-                testContext.WriteLine($"Warning: failed to ensure topic '{topic}': {ex.Message}");
+                testContext.WriteLine($"Warning: failed to ensure topic '{pair[0]}': {ex.Message}");
             }
         }
         await adminClient.CreateTopicAsync("QueryResponse.Inbox");

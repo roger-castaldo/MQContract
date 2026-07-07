@@ -35,7 +35,7 @@ internal static class BulkPubSubTestHelper
         {
             errors.Add(error);
         },
-        group:"TestGroup",
+        group:"TestBulkGroup",
         channel: BulkPubSubTopic);
 
         Assert.IsNotNull(subscription);
