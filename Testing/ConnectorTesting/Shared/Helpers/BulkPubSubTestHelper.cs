@@ -1,5 +1,4 @@
 ﻿using ConnectorTesting.Messages;
-using MQContract;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
@@ -22,12 +21,9 @@ internal static class BulkPubSubTestHelper
     {
         var receivedMessages = new List<IReceivedMessage<Announcement>>();
         var errors = new List<Exception>();
-        await using var contractConnection = await ContractConnection.Instance(messageServiceConnection)
-            .RegisterMessageContextAsync(new TestMessageContext());
+        var contractConnection = await TestHelper.CreateContractConnectionAsync(messageServiceConnection);
 
-        Assert.IsNotNull(contractConnection);
-
-        await using var subscription = await contractConnection.SubscribeAsync<Announcement>(async message =>
+        var subscription = await contractConnection.SubscribeAsync<Announcement>(async message =>
         {
             receivedMessages.Add(message);
             await Task.CompletedTask;
@@ -48,6 +44,8 @@ internal static class BulkPubSubTestHelper
 
         var success = await TestHelper.WaitForCount(receivedMessages, TestAnnouncements.Count(), TimeSpan.FromMinutes(2));
 
+        await TestHelper.Cleanup(contractConnection, subscription);
+
         Assert.IsTrue(success);
 
         Assert.AreEqual(TestAnnouncements.Count(), receivedMessages.Count);
@@ -60,9 +58,6 @@ internal static class BulkPubSubTestHelper
             Assert.AreEqual(message.Header!.Count, receivedMessage.Headers.Count);
             Assert.IsTrue(message.Header.AsEnumerable().All(h => Equals(h.Value, receivedMessage.Headers[h.Key])));
         }
-
-        await subscription.EndAsync();
-        await contractConnection.CloseAsync();
     }
 
 }

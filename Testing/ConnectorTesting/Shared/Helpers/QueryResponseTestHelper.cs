@@ -1,5 +1,4 @@
 ﻿using ConnectorTesting.Messages;
-using MQContract;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
@@ -18,12 +17,9 @@ internal static class QueryResponseTestHelper
     {
         var receivedMessages = new List<IReceivedMessage<Prompt>>();
         var errors = new List<Exception>();
-        await using var contractConnection = await ContractConnection.Instance(messageServiceConnection)
-            .RegisterMessageContextAsync(new TestMessageContext());
+        var contractConnection = await TestHelper.CreateContractConnectionAsync(messageServiceConnection);
 
-        Assert.IsNotNull(contractConnection);
-
-        await using var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<Prompt, Reply>(async message =>
+        var subscription = await contractConnection.SubscribeQueryAsyncResponseAsync<Prompt, Reply>(async message =>
         {
             receivedMessages.Add(message);
             return new(new($"Greeting {message.Message.FirstName} {message.Message.LastName}"), message.Headers.AsEnumerable().Select(pair=>new KeyValuePair<string, string?>(pair.Key,pair.Value)));
@@ -41,6 +37,8 @@ internal static class QueryResponseTestHelper
 
         foreach (var message in TestPrompts)
             results.Add(await contractConnection.QueryAsync<Prompt, Reply>(message, timeout: TimeSpan.FromMinutes(1)));
+
+        await TestHelper.Cleanup(contractConnection, subscription);
 
         Assert.IsTrue(results.All(r => !r.IsError));
 

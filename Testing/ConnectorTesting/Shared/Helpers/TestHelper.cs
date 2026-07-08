@@ -1,4 +1,8 @@
-﻿using System.Security.Cryptography;
+﻿using ConnectorTesting.Messages;
+using MQContract;
+using MQContract.Interfaces;
+using MQContract.Interfaces.Service;
+using System.Security.Cryptography;
 
 namespace ConnectorTesting.Helpers;
 
@@ -24,5 +28,24 @@ internal static class TestHelper
     {
         return new string(Enumerable.Range(0, length)
             .Select(_ => chars[RandomNumberGenerator.GetInt32(chars.Length)]).ToArray());
+    }
+
+    public static async Task<IContractedConnection> CreateContractConnectionAsync(IMessageServiceConnection messageServiceConnection)
+    {
+        var contractConnection = await ContractConnection.Instance(messageServiceConnection)
+            .RegisterMessageContextAsync(new TestMessageContext());
+        Assert.IsNotNull(contractConnection);
+        return contractConnection;
+    }
+
+    public static async Task Cleanup(IContractedConnection contractConnection, ISubscription? subscription = null)
+    {
+        if (subscription!=null)
+        {
+            await subscription.EndAsync();
+            await subscription.DisposeAsync();
+        }
+        await contractConnection.CloseAsync();
+        await contractConnection.DisposeAsync();
     }
 }

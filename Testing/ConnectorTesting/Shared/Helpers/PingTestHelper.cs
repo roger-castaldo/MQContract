@@ -1,6 +1,4 @@
-﻿using ConnectorTesting.Messages;
-using MQContract;
-using MQContract.Interfaces.Service;
+﻿using MQContract.Interfaces.Service;
 
 namespace ConnectorTesting.Helpers;
 
@@ -8,10 +6,7 @@ internal static class PingTestHelper
 {
     public static async Task ExecutePingTestsAsync(IMessageServiceConnection messageServiceConnection)
     {
-        await using var contractConnection = await ContractConnection.Instance(messageServiceConnection)
-            .RegisterMessageContextAsync(new TestMessageContext());
-
-        Assert.IsNotNull(contractConnection);
+        var contractConnection = await TestHelper.CreateContractConnectionAsync(messageServiceConnection);
 
         await Task.Delay(TimeSpan.FromSeconds(30));
 
@@ -27,7 +22,7 @@ internal static class PingTestHelper
 
         Assert.AreNotEqual(result1, result2);
 
-        await contractConnection.CloseAsync();
+        await TestHelper.Cleanup(contractConnection);
     }
 
 }
