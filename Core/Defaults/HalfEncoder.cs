@@ -1,13 +1,12 @@
-﻿namespace MQContract.Defaults
+﻿namespace MQContract.Defaults;
+
+internal class HalfEncoder : ABitEncoder<Half>
 {
-    internal class HalfEncoder : ABitEncoder<Half>
-    {
-        protected override int ByteSize => 2;
+    protected override int ByteSize => 2;
 
-        protected override Half ConvertValue(ReadOnlySpan<byte> value)
-            => BitConverter.ToHalf(value);
+    protected override Half ConvertValue(ReadOnlySpan<byte> value)
+        => BitConverter.ToHalf(value);
 
-        protected override byte[] ConvertValue(Half value)
-            => BitConverter.GetBytes(value);
-    }
+    protected override byte[] ConvertValue(Half value)
+        => BitConverter.GetBytes(value);
 }

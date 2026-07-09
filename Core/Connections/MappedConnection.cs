@@ -8,174 +8,173 @@ using MQContract.Messages;
 using MQContract.Middleware;
 using System.Diagnostics;
 
-namespace MQContract.Connections
+namespace MQContract.Connections;
+
+internal class MappedConnection(IMessageEncoder? defaultMessageEncoder = null,
+    IMessageEncryptor? defaultMessageEncryptor = null,
+    IServiceProvider? serviceProvider = null,
+    ILogger? logger = null,
+    ChannelMapper? channelMapper = null) :
+    AMappableConnection<IMappedContractConnection>(defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, logger, channelMapper),
+    IMappedContractConnection
 {
-    internal class MappedConnection(IMessageEncoder? defaultMessageEncoder = null,
-        IMessageEncryptor? defaultMessageEncryptor = null,
-        IServiceProvider? serviceProvider = null,
-        ILogger? logger = null,
-        ChannelMapper? channelMapper = null) :
-        AMappableConnection<IMappedContractConnection>(defaultMessageEncoder, defaultMessageEncryptor, serviceProvider, logger, channelMapper),
-        IMappedContractConnection
+    ValueTask<PingResult> IContractConnection.PingAsync()
     {
-        ValueTask<PingResult> IContractConnection.PingAsync()
+        using var scope = SetScope();
+        Logs.Transport.PingServiceConnection(Logger);  
+        var connections = FullList.Select(c => c.MessageServiceConnection).OfType<IPingableMessageServiceConnection>();
+        return connections.Count() switch
         {
-            using var scope = SetScope();
-            Logs.Transport.PingServiceConnection(Logger);  
-            var connections = FullList.Select(c => c.MessageServiceConnection).OfType<IPingableMessageServiceConnection>();
-            return connections.Count() switch
-            {
-                0 => throw new PingNotSupportedException(),
-                1 => connections.First().PingAsync(),
-                _ => throw new TooManyConnectionMatchesException()
-            };
-        }
-
-        protected override async ValueTask InternalDisposeAsync()
-        {
-            await base.InternalDisposeAsync();
-        }
-
-        private readonly record struct GetConnectionResult(ServiceConnectionList.ServiceConnection Connection, string Channel);
-
-        private async ValueTask<ServiceConnectionList.ServiceConnection> GetConnectionAsync(string channel, Type messageType, MessageHeader messageHeader)
-        {
-            using var scope = SetScope();
-            var connections = await base.GetConnectionsAsync(channel, messageType, messageHeader);
-            if (connections.Count()>1)
-            {
-                Logs.Transport.LocatedTooManyConnections(Logger, channel, messageType, messageHeader.Keys);
-                throw new TooManyConnectionMatchesException();
-            }
-            return connections.First();
-        }
-
-        private async ValueTask<GetConnectionResult> GetConnectionAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
-        {
-            using var scope = SetScope();
-            Logs.Transport.LocatingConnectionsForMapType(Logger, channel, typeof(TMessage), mapTypes);
-            var connections = await base.GetConnectionsAsync<TMessage>(channel, mapTypes);
-            if (connections.Connections.Count()>1)
-            {
-                Logs.Transport.LocatedTooManyConnectionsForMapType(Logger, channel, typeof(TMessage), mapTypes);
-                throw new TooManyConnectionMatchesException();
-            }
-            return new(connections.Connections.First(), connections.Channel);
-        }
-
-        #region PubSub
-        protected override async ValueTask<ISubscription> CreateSubscriptionAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, bool synchronous, CancellationToken cancellationToken)
-        {
-            var connection = await GetConnectionAsync<TMessage>(channel, ChannelMapper.MapTypes.PublishSubscription);
-            return await CreateSubscriptionAsync<TMessage>(
-                GetMessageFactory<TMessage>(ignoreMessageHeader),
-                connection.Connection.MessageServiceConnection,
-                messageReceived,
-                errorReceived,
-                connection.Channel,
-                group,
-                synchronous,
-                connection.Connection.ServiceConnectionName,
-                messageFilters,
-                cancellationToken
-            );
-        }
-        ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
-            => ((IContractConnection)this).PublishAsync(new TransmissionMessage<TMessage>(message, Header: messageHeader), channel, cancellationToken);
-        ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, CancellationToken cancellationToken)
-            => ((IContractConnection)this).PublishAsync(new TransmissionMessage<TMessage>(message), channel, cancellationToken);
-        async ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TransmissionMessage<TMessage> message, string? channel, CancellationToken cancellationToken)
-        {
-            using var scope = SetScope();
-            Logs.Publishing.PublishingMessage(Logger, typeof(TMessage), channel);
-            using var activity = StartActivity(Constants.PublishActivityName);
-            var serviceMessage = await ProduceServiceMessageAsync<TMessage>(
-                ChannelMapper.MapTypes.Publish,
-                GetMessageFactory<TMessage>(),
-                message,
-                false,
-                activity,
-                maxMessageSize: MaxMessageBodySize,
-                channel: channel
-            );
-            var serviceConnection = await GetConnectionAsync(serviceMessage.Channel, typeof(TMessage), serviceMessage.Header);
-            OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
-            return await PublishMessageAsync<TMessage>(serviceMessage, serviceConnection.MessageServiceConnection, activity, serviceConnection.ServiceConnectionName, cancellationToken);
-        }
-
-        ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
-            => ((IContractConnection)this).BulkPublishAsync(messages.Select(m => new TransmissionMessage<TMessage>(m.message, Header: m.messageHeader)), channel, cancellationToken);
-        ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<TMessage> messages, string? channel, CancellationToken cancellationToken)
-            => ((IContractConnection)this).BulkPublishAsync(messages.Select(m => new TransmissionMessage<TMessage>(m)), channel, cancellationToken);
-        async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<TransmissionMessage<TMessage>> messages, string? channel, CancellationToken cancellationToken)
-        {
-            using var scope = SetScope();
-            Logs.Publishing.BulkPublishingMessages(Logger, typeof(TMessage), channel);
-            using var activity = StartActivity(Constants.BulkPublishActivityName);
-            var serviceMessages = await
-            messages.WhenAll(m =>
-                    ProduceServiceMessageAsync<TMessage>(
-                        ChannelMapper.MapTypes.Publish,
-                        GetMessageFactory<TMessage>(),
-                        m,
-                        false,
-                        activity,
-                        maxMessageSize: MaxMessageBodySize,
-                        channel: channel
-                    )
-                );
-            var serviceConnection = await GetConnectionAsync(serviceMessages.First().Channel, typeof(TMessage), serviceMessages.First().Header);
-            OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
-            var result = await BulkPublishAsync<TMessage>(serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken, connectionName: serviceConnection.ServiceConnectionName);
-            activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
-            activity?.Stop();
-            return result;
-        }
-        #endregion
-
-        #region QueryResponse
-        ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
-            => ((IContractConnection)this).QueryAsync<TQuery, TQueryResponse>(new TransmissionMessage<TQuery>(message, Header: messageHeader), timeout, channel, responseChannel, cancellationToken);
-        ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
-            => ((IContractConnection)this).QueryAsync<TQuery, TQueryResponse>(new TransmissionMessage<TQuery>(message), timeout, channel, responseChannel, cancellationToken);
-        async ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
-        {
-            using var scope = SetScope();
-            Logs.Publishing.ExecutingQuery(Logger, typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
-            using var activity = StartActivity(Constants.PublishQueryActivityName);
-            var serviceMessage = await ProduceServiceMessageAsync<TQuery>(
-                ChannelMapper.MapTypes.Query,
-                GetMessageFactory<TQuery>(),
-                message,
-                false,
-                activity,
-                maxMessageSize: MaxMessageBodySize,
-                channel: channel
-            );
-            var serviceConnection = await GetConnectionAsync(serviceMessage.Channel, typeof(TQuery), serviceMessage.Header);
-            OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
-            return await ExecuteQueryAsync<TQuery, TQueryResponse>(serviceConnection.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: serviceConnection.ServiceConnectionName, cancellationToken: cancellationToken);
-        }
-
-        ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
-            => ((IContractConnection)this).QueryAsync<TQuery>(new TransmissionMessage<TQuery>(message, Header: messageHeader), timeout, channel, responseChannel, cancellationToken);
-        ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
-            => ((IContractConnection)this).QueryAsync<TQuery>(new TransmissionMessage<TQuery>(message), timeout, channel, responseChannel, cancellationToken);
-        async ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
-        {
-            using var scope = SetScope();
-            Logs.Pipeline.ExtractingQueryResponseType(Logger, typeof(TQuery), channel, responseChannel);
-            return await messageContext.ExecuteQuery<TQuery>(this, message, timeout, channel, responseChannel, cancellationToken);
-        }
-
-        protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, MessageFilters<TQuery>? messageFilter, CancellationToken cancellationToken)
-        {
-            using var scope = SetScope();
-            var queryMessageFactory = GetMessageFactory<TQuery>(ignoreMessageHeader);
-            var responseMessageFactory = GetMessageFactory<TQueryResponse>();
-            var connection = await GetConnectionAsync<TQuery>(channel, ChannelMapper.MapTypes.QuerySubscription);
-            return await CreateSubscriptionAsync<TQuery, TQueryResponse>(queryMessageFactory, responseMessageFactory, connection.Connection.MessageServiceConnection, messageReceived, errorReceived, connection.Channel, group, synchronous, connection.Connection.ServiceConnectionName, messageFilter, cancellationToken);
-        }
-        #endregion
+            0 => throw new PingNotSupportedException(),
+            1 => connections.First().PingAsync(),
+            _ => throw new TooManyConnectionMatchesException()
+        };
     }
+
+    protected override async ValueTask InternalDisposeAsync()
+    {
+        await base.InternalDisposeAsync();
+    }
+
+    private readonly record struct GetConnectionResult(ServiceConnectionList.ServiceConnection Connection, string Channel);
+
+    private async ValueTask<ServiceConnectionList.ServiceConnection> GetConnectionAsync(string channel, Type messageType, MessageHeader messageHeader)
+    {
+        using var scope = SetScope();
+        var connections = await base.GetConnectionsAsync(channel, messageType, messageHeader);
+        if (connections.Count()>1)
+        {
+            Logs.Transport.LocatedTooManyConnections(Logger, channel, messageType, messageHeader.Keys);
+            throw new TooManyConnectionMatchesException();
+        }
+        return connections.First();
+    }
+
+    private async ValueTask<GetConnectionResult> GetConnectionAsync<TMessage>(string? channel, ChannelMapper.MapTypes mapTypes)
+    {
+        using var scope = SetScope();
+        Logs.Transport.LocatingConnectionsForMapType(Logger, channel, typeof(TMessage), mapTypes);
+        var connections = await base.GetConnectionsAsync<TMessage>(channel, mapTypes);
+        if (connections.Connections.Count()>1)
+        {
+            Logs.Transport.LocatedTooManyConnectionsForMapType(Logger, channel, typeof(TMessage), mapTypes);
+            throw new TooManyConnectionMatchesException();
+        }
+        return new(connections.Connections.First(), connections.Channel);
+    }
+
+    #region PubSub
+    protected override async ValueTask<ISubscription> CreateSubscriptionAsync<TMessage>(Func<IReceivedMessage<TMessage>, ValueTask> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, MessageFilters<TMessage>? messageFilters, bool synchronous, CancellationToken cancellationToken)
+    {
+        var connection = await GetConnectionAsync<TMessage>(channel, ChannelMapper.MapTypes.PublishSubscription);
+        return await CreateSubscriptionAsync<TMessage>(
+            GetMessageFactory<TMessage>(ignoreMessageHeader),
+            connection.Connection.MessageServiceConnection,
+            messageReceived,
+            errorReceived,
+            connection.Channel,
+            group,
+            synchronous,
+            connection.Connection.ServiceConnectionName,
+            messageFilters,
+            cancellationToken
+        );
+    }
+    ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        => ((IContractConnection)this).PublishAsync(new TransmissionMessage<TMessage>(message, Header: messageHeader), channel, cancellationToken);
+    ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TMessage message, string? channel, CancellationToken cancellationToken)
+        => ((IContractConnection)this).PublishAsync(new TransmissionMessage<TMessage>(message), channel, cancellationToken);
+    async ValueTask<TransmissionResult> IContractConnection.PublishAsync<TMessage>(TransmissionMessage<TMessage> message, string? channel, CancellationToken cancellationToken)
+    {
+        using var scope = SetScope();
+        Logs.Publishing.PublishingMessage(Logger, typeof(TMessage), channel);
+        using var activity = StartActivity(Constants.PublishActivityName);
+        var serviceMessage = await ProduceServiceMessageAsync<TMessage>(
+            ChannelMapper.MapTypes.Publish,
+            GetMessageFactory<TMessage>(),
+            message,
+            false,
+            activity,
+            maxMessageSize: MaxMessageBodySize,
+            channel: channel
+        );
+        var serviceConnection = await GetConnectionAsync(serviceMessage.Channel, typeof(TMessage), serviceMessage.Header);
+        OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
+        return await PublishMessageAsync<TMessage>(serviceMessage, serviceConnection.MessageServiceConnection, activity, serviceConnection.ServiceConnectionName, cancellationToken);
+    }
+
+    ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<(TMessage message, MessageHeader? messageHeader)> messages, string? channel, CancellationToken cancellationToken)
+        => ((IContractConnection)this).BulkPublishAsync(messages.Select(m => new TransmissionMessage<TMessage>(m.message, Header: m.messageHeader)), channel, cancellationToken);
+    ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<TMessage> messages, string? channel, CancellationToken cancellationToken)
+        => ((IContractConnection)this).BulkPublishAsync(messages.Select(m => new TransmissionMessage<TMessage>(m)), channel, cancellationToken);
+    async ValueTask<IEnumerable<TransmissionResult>> IContractConnection.BulkPublishAsync<TMessage>(IEnumerable<TransmissionMessage<TMessage>> messages, string? channel, CancellationToken cancellationToken)
+    {
+        using var scope = SetScope();
+        Logs.Publishing.BulkPublishingMessages(Logger, typeof(TMessage), channel);
+        using var activity = StartActivity(Constants.BulkPublishActivityName);
+        var serviceMessages = await
+        messages.WhenAll(m =>
+                ProduceServiceMessageAsync<TMessage>(
+                    ChannelMapper.MapTypes.Publish,
+                    GetMessageFactory<TMessage>(),
+                    m,
+                    false,
+                    activity,
+                    maxMessageSize: MaxMessageBodySize,
+                    channel: channel
+                )
+            );
+        var serviceConnection = await GetConnectionAsync(serviceMessages.First().Channel, typeof(TMessage), serviceMessages.First().Header);
+        OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
+        var result = await BulkPublishAsync<TMessage>(serviceMessages, serviceConnection.MessageServiceConnection, activity, cancellationToken, connectionName: serviceConnection.ServiceConnectionName);
+        activity?.SetStatus(result.Any(r => r.IsError) ? ActivityStatusCode.Error : ActivityStatusCode.Ok);
+        activity?.Stop();
+        return result;
+    }
+    #endregion
+
+    #region QueryResponse
+    ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        => ((IContractConnection)this).QueryAsync<TQuery, TQueryResponse>(new TransmissionMessage<TQuery>(message, Header: messageHeader), timeout, channel, responseChannel, cancellationToken);
+    ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
+        => ((IContractConnection)this).QueryAsync<TQuery, TQueryResponse>(new TransmissionMessage<TQuery>(message), timeout, channel, responseChannel, cancellationToken);
+    async ValueTask<QueryResult<TQueryResponse>> IContractConnection.QueryAsync<TQuery, TQueryResponse>(TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
+    {
+        using var scope = SetScope();
+        Logs.Publishing.ExecutingQuery(Logger, typeof(TQuery), typeof(TQueryResponse), channel, responseChannel);
+        using var activity = StartActivity(Constants.PublishQueryActivityName);
+        var serviceMessage = await ProduceServiceMessageAsync<TQuery>(
+            ChannelMapper.MapTypes.Query,
+            GetMessageFactory<TQuery>(),
+            message,
+            false,
+            activity,
+            maxMessageSize: MaxMessageBodySize,
+            channel: channel
+        );
+        var serviceConnection = await GetConnectionAsync(serviceMessage.Channel, typeof(TQuery), serviceMessage.Header);
+        OpenTelemetryMiddleware.AssignConnectionType(activity, serviceConnection.MessageServiceConnection, serviceConnection.ServiceConnectionName);
+        return await ExecuteQueryAsync<TQuery, TQueryResponse>(serviceConnection.MessageServiceConnection, serviceMessage, activity, timeout: timeout, responseChannel: responseChannel, connectionName: serviceConnection.ServiceConnectionName, cancellationToken: cancellationToken);
+    }
+
+    ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, MessageHeader? messageHeader, CancellationToken cancellationToken)
+        => ((IContractConnection)this).QueryAsync<TQuery>(new TransmissionMessage<TQuery>(message, Header: messageHeader), timeout, channel, responseChannel, cancellationToken);
+    ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TQuery message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
+        => ((IContractConnection)this).QueryAsync<TQuery>(new TransmissionMessage<TQuery>(message), timeout, channel, responseChannel, cancellationToken);
+    async ValueTask<QueryResult<object>> IContractConnection.QueryAsync<TQuery>(TransmissionMessage<TQuery> message, TimeSpan? timeout, string? channel, string? responseChannel, CancellationToken cancellationToken)
+    {
+        using var scope = SetScope();
+        Logs.Pipeline.ExtractingQueryResponseType(Logger, typeof(TQuery), channel, responseChannel);
+        return await messageContext.ExecuteQuery<TQuery>(this, message, timeout, channel, responseChannel, cancellationToken);
+    }
+
+    protected override async ValueTask<ISubscription> ProduceSubscribeQueryResponseAsync<TQuery, TQueryResponse>(Func<IReceivedMessage<TQuery>, ValueTask<QueryResponseMessage<TQueryResponse>>> messageReceived, Action<Exception> errorReceived, string? channel, string? group, bool ignoreMessageHeader, bool synchronous, MessageFilters<TQuery>? messageFilter, CancellationToken cancellationToken)
+    {
+        using var scope = SetScope();
+        var queryMessageFactory = GetMessageFactory<TQuery>(ignoreMessageHeader);
+        var responseMessageFactory = GetMessageFactory<TQueryResponse>();
+        var connection = await GetConnectionAsync<TQuery>(channel, ChannelMapper.MapTypes.QuerySubscription);
+        return await CreateSubscriptionAsync<TQuery, TQueryResponse>(queryMessageFactory, responseMessageFactory, connection.Connection.MessageServiceConnection, messageReceived, errorReceived, connection.Channel, group, synchronous, connection.Connection.ServiceConnectionName, messageFilter, cancellationToken);
+    }
+    #endregion
 }

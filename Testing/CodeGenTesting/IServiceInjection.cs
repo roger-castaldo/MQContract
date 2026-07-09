@@ -1,6 +1,5 @@
-﻿namespace CodeGenTesting
+﻿namespace CodeGenTesting;
+
+public interface IServiceInjection
 {
-    public interface IServiceInjection
-    {
-    }
 }

@@ -1,24 +1,23 @@
 ﻿using MQContract.Messages;
 using NATS.Client.Core;
 
-namespace MQContract.NATS.Subscriptions
+namespace MQContract.NATS.Subscriptions;
+
+internal class PublishSubscription(IAsyncEnumerable<NatsMsg<byte[]>> asyncEnumerable,
+    Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived)
+    : SubscriptionBase()
 {
-    internal class PublishSubscription(IAsyncEnumerable<NatsMsg<byte[]>> asyncEnumerable,
-        Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived)
-        : SubscriptionBase()
+    protected override async Task RunAction()
     {
-        protected override async Task RunAction()
+        await foreach (var msg in asyncEnumerable.WithCancellation(CancelToken))
         {
-            await foreach (var msg in asyncEnumerable.WithCancellation(CancelToken))
+            try
             {
-                try
-                {
-                    await messageReceived(ExtractMessage(msg)).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    errorReceived(ex);
-                }
+                await messageReceived(ExtractMessage(msg)).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                errorReceived(ex);
             }
         }
     }

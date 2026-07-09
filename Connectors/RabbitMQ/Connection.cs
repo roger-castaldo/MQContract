@@ -6,314 +6,313 @@ using RabbitMQ.Client.Exceptions;
 using System.Diagnostics;
 using System.Text;
 
-namespace MQContract.RabbitMQ
+namespace MQContract.RabbitMQ;
+
+/// <summary>
+/// This is the MessageServiceConnection implemenation for using RabbitMQ
+/// </summary>
+public sealed class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
 {
+    private readonly record struct MessageInstance(string ID, string Channel, BasicProperties Props, ReadOnlyMemory<byte> Data);
+    private const string InboxExchange = "_Inbox";
+
+    private readonly IChannel channel;
+    private readonly string inboxChannel;
+    private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
+    private bool disposedValue;
+
     /// <summary>
-    /// This is the MessageServiceConnection implemenation for using RabbitMQ
+    /// Houses the underlying Rabbit MQ Connection
     /// </summary>
-    public sealed class Connection : IInboxQueryableMessageServiceConnection, IPingableMessageServiceConnection, IAsyncDisposable
+    public IConnection RabbitMQConnection { get; private init; }
+
+    /// <summary>
+    /// Default constructor for creating instance
+    /// </summary>
+    /// <param name="factory">The connection factory to use that was built with required authentication and connection information</param>
+    public Connection(ConnectionFactory factory)
     {
-        private readonly record struct MessageInstance(string ID, string Channel, BasicProperties Props, ReadOnlyMemory<byte> Data);
-        private const string InboxExchange = "_Inbox";
+        if (string.IsNullOrWhiteSpace(factory.ClientProvidedName))
+            factory.ClientProvidedName = Guid.NewGuid().ToString();
+        var connectionTask = factory.CreateConnectionAsync();
+        connectionTask.Wait();
+        RabbitMQConnection = connectionTask.Result;
+        var channelTask = RabbitMQConnection.CreateChannelAsync();
+        channelTask.Wait();
+        channel = channelTask.Result;
+        MaxMessageBodySize = factory.MaxInboundMessageBodySize;
+        inboxChannel = $"{InboxExchange}.{factory.ClientProvidedName}";
+        batchedMessageStream = new(
+            async (serviceMessage, cancellationToken) =>
+            {
+                var (props, data) = ConvertMessage(serviceMessage);
+                return new MessageInstance(serviceMessage.ID, serviceMessage.Channel, props, data);
+            },
+            async (messageInstance, cancellationToken) =>
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return new TransmissionResult(messageInstance.ID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
+                try
+                {
+                    await channel.BasicPublishAsync<BasicProperties>(messageInstance.Channel, string.Empty, true, messageInstance.Props, messageInstance.Data, cancellationToken);
+                    return new TransmissionResult(messageInstance.ID);
+                }
+                catch (Exception e)
+                {
+                    return new TransmissionResult(messageInstance.ID, Error: new(e, e switch
+                    {
+                        PublishException => true,
+                        _ => false
+                    }));
+                }
+            }
+        );
+    }
 
-        private readonly IChannel channel;
-        private readonly string inboxChannel;
-        private readonly BatchedMessageStream<MessageInstance> batchedMessageStream;
-        private bool disposedValue;
+    /// <summary>
+    /// Used to declare a queue inside the RabbitMQ server
+    /// </summary>
+    /// <param name="queue">The name of the queue</param>
+    /// <param name="durable">Is this queue durable</param>
+    /// <param name="exclusive">Is this queue exclusive</param>
+    /// <param name="autoDelete">Auto Delete queue when connection closed</param>
+    /// <param name="arguments">Additional arguements</param>
+    /// <returns>The connection to allow for chaining calls</returns>
+    public async Task<Connection> QueueDeclareAsync(string queue, bool durable = false, bool exclusive = false,
+        bool autoDelete = true, IDictionary<string, object?>? arguments = null)
+    {
+        await channel.QueueDeclareAsync(queue, durable, exclusive, autoDelete, arguments: arguments);
+        return this;
+    }
 
-        /// <summary>
-        /// Houses the underlying Rabbit MQ Connection
-        /// </summary>
-        public IConnection RabbitMQConnection { get; private init; }
+    /// <summary>
+    /// Used to decalre an exchange inside the RabbitMQ server
+    /// </summary>
+    /// <param name="exchange">The name of the exchange</param>
+    /// <param name="type">The type of the exchange</param>
+    /// <param name="durable">Is this durable</param>
+    /// <param name="autoDelete">Auto Delete when connection closed</param>
+    /// <param name="arguments">Additional arguements</param>
+    /// <returns>The connection to allow for chaining calls</returns>
+    public async Task<Connection> ExchangeDeclareAsync(string exchange, string type, bool durable = false, bool autoDelete = false,
+        IDictionary<string, object?>? arguments = null)
+    {
+        await channel.ExchangeDeclareAsync(exchange, type, durable, autoDelete, arguments);
+        return this;
+    }
 
-        /// <summary>
-        /// Default constructor for creating instance
-        /// </summary>
-        /// <param name="factory">The connection factory to use that was built with required authentication and connection information</param>
-        public Connection(ConnectionFactory factory)
+    /// <summary>
+    /// Used to delete a queue inside the RabbitMQ server
+    /// </summary>
+    /// <param name="queue">The name of the queue</param>
+    /// <param name="ifUnused">Is unused</param>
+    /// <param name="ifEmpty">Is Empty</param>
+    public async Task QueueDeleteAsync(string queue, bool ifUnused, bool ifEmpty)
+        => await channel.QueueDeclareAsync(queue, ifUnused, ifEmpty);
+
+    /// <summary>
+    /// The maximum message body size allowed
+    /// </summary>
+    public uint? MaxMessageBodySize { get; init; }
+
+    /// <summary>
+    /// The default timeout to use for RPC calls when not specified by class or in the call.
+    /// DEFAULT: 1 minute
+    /// </summary>
+    public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
+
+    internal static (BasicProperties props, ReadOnlyMemory<byte>) ConvertMessage(ServiceMessage message, Guid? messageId = null)
+    {
+        var props = new BasicProperties
         {
-            if (string.IsNullOrWhiteSpace(factory.ClientProvidedName))
-                factory.ClientProvidedName = Guid.NewGuid().ToString();
-            var connectionTask = factory.CreateConnectionAsync();
-            connectionTask.Wait();
-            RabbitMQConnection = connectionTask.Result;
-            var channelTask = RabbitMQConnection.CreateChannelAsync();
-            channelTask.Wait();
-            channel = channelTask.Result;
-            MaxMessageBodySize = factory.MaxInboundMessageBodySize;
-            inboxChannel = $"{InboxExchange}.{factory.ClientProvidedName}";
-            batchedMessageStream = new(
-                async (serviceMessage, cancellationToken) =>
+            MessageId=message.ID,
+            Type = message.MessageTypeID
+        };
+        using var ms = new MemoryStream();
+        using var bw = new BinaryWriter(ms);
+        if (messageId!=null)
+        {
+            bw.Write((byte)1);
+            bw.Write(messageId.Value.ToByteArray());
+        }
+        else
+            bw.Write((byte)0);
+        bw.Write(message.Data.Length);
+        bw.Write(message.Data.ToArray());
+        message.Header.ForEach(pair =>
+        {
+            var bytes = UTF8Encoding.UTF8.GetBytes(pair.Key);
+            bw.Write(bytes.Length);
+            bw.Write(bytes);
+            bytes = UTF8Encoding.UTF8.GetBytes(pair.Value!);
+            bw.Write(bytes.Length);
+            bw.Write(bytes);
+
+        });
+        bw.Flush();
+        return (props, ms.ToArray());
+    }
+
+    internal static ReceivedServiceMessage ConvertMessage(BasicDeliverEventArgs eventArgs, string channel, Func<ValueTask> acknowledge, out Guid? messageId)
+    {
+        using var ms = new MemoryStream(eventArgs.Body.ToArray(), 0, eventArgs.Body.Length, false, true);
+        using var br = new BinaryReader(ms);
+        var flag = br.ReadByte();
+        if (flag==1)
+            messageId = new Guid(br.ReadBytes(16));
+        else
+            messageId=null;
+        var data = br.ReadBytes(br.ReadInt32());
+        var header = new Dictionary<string, string?>();
+        while (br.BaseStream.Position<br.BaseStream.Length)
+        {
+            var key = UTF8Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt32()));
+            var value = UTF8Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt32()));
+            header.Add(key, value);
+        }
+        return new(
+            eventArgs.BasicProperties.MessageId!,
+            eventArgs.BasicProperties.Type!,
+            channel,
+            new(header),
+            data.ToArray(),
+            acknowledge
+        );
+    }
+
+    ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
+        => batchedMessageStream.TransmitAsync(message, cancellationToken);
+    ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
+        => batchedMessageStream.TransmitAsync(messages, cancellationToken);
+
+    private async Task<Subscription> ProduceSubscriptionAsync(string channel, string? group, Func<BasicDeliverEventArgs, IChannel, Func<ValueTask>, ValueTask> messageReceived, Action<Exception> errorReceived)
+    {
+        if (group==null)
+        {
+            group = Guid.NewGuid().ToString();
+            await this.channel.QueueDeclareAsync(queue: group, durable: false, exclusive: false, autoDelete: true);
+        }
+        else
+        {
+            try
+            {
+                await this.channel.QueueDeclareAsync(queue: group);
+            }
+            catch (Exception)
+            {
+                //this may throw an error is the queue already exists but checking for it fails
+            }
+        }
+        return await Subscription.ProduceInstanceAsync(RabbitMQConnection, channel, group, messageReceived, errorReceived);
+    }
+
+    async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+        => await ProduceSubscriptionAsync(channel, group,
+            async (@event, modelChannel, acknowledge) => await messageReceived(ConvertMessage(@event, channel, acknowledge, out _)).ConfigureAwait(false),
+            errorReceived
+        );
+
+    async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
+    {
+        await channel.ExchangeDeclareAsync(InboxExchange, ExchangeType.Direct, durable: false, autoDelete: true, cancellationToken: cancellationToken);
+        await channel.QueueDeclareAsync(inboxChannel, durable: false, exclusive: false, autoDelete: true, cancellationToken: cancellationToken);
+        return await Subscription.ProduceInstanceAsync(
+            RabbitMQConnection,
+            InboxExchange,
+            inboxChannel,
+            async (@event, model, acknowledge) =>
+            {
+                var responseMessage = ConvertMessage(@event, string.Empty, acknowledge, out var messageId);
+                if (messageId!=null)
+                    await messageReceived(new(
+                        responseMessage.ID,
+                        responseMessage.MessageTypeID,
+                        inboxChannel,
+                        responseMessage.Header,
+                        messageId.Value,
+                        responseMessage.Data,
+                        acknowledge
+                    )).ConfigureAwait(false);
+            },
+            (error) => { },
+            routingKey: inboxChannel
+        );
+    }
+
+    async ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
+    {
+        (var props, var data) = ConvertMessage(message, correlationID);
+        props.ReplyTo = inboxChannel;
+        TransmissionResult result;
+        try
+        {
+            await channel.BasicPublishAsync<BasicProperties>(message.Channel, string.Empty, true, props, data, cancellationToken: cancellationToken);
+            result = new TransmissionResult(message.ID);
+        }
+        catch (Exception e)
+        {
+            result = new TransmissionResult(message.ID, Error: new(e, e switch
+            {
+                PublishException => true,
+                _ => false
+            }));
+        }
+        return result;
+    }
+
+    async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
+    => await ProduceSubscriptionAsync(channel, group,
+            async (@event, model, acknowledge) =>
+            {
+                var result = await messageReceived(ConvertMessage(@event, channel, acknowledge, out var messageID));
+                if (result!=null)
                 {
-                    var (props, data) = ConvertMessage(serviceMessage);
-                    return new MessageInstance(serviceMessage.ID, serviceMessage.Channel, props, data);
-                },
-                async (messageInstance, cancellationToken) =>
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                        return new TransmissionResult(messageInstance.ID, Error: new(new OperationCanceledException("Transmission cancelled"), true));
+                    (var props, var data) = ConvertMessage(result!, messageID);
                     try
                     {
-                        await channel.BasicPublishAsync<BasicProperties>(messageInstance.Channel, string.Empty, true, messageInstance.Props, messageInstance.Data, cancellationToken);
-                        return new TransmissionResult(messageInstance.ID);
+                        await this.channel.BasicPublishAsync<BasicProperties>(InboxExchange, @event.BasicProperties.ReplyTo!, true, props, data);
                     }
                     catch (Exception e)
                     {
-                        return new TransmissionResult(messageInstance.ID, Error: new(e, e switch
-                        {
-                            PublishException => true,
-                            _ => false
-                        }));
+                        errorReceived(e);
                     }
                 }
-            );
-        }
+            },
+            errorReceived
+        );
 
-        /// <summary>
-        /// Used to declare a queue inside the RabbitMQ server
-        /// </summary>
-        /// <param name="queue">The name of the queue</param>
-        /// <param name="durable">Is this queue durable</param>
-        /// <param name="exclusive">Is this queue exclusive</param>
-        /// <param name="autoDelete">Auto Delete queue when connection closed</param>
-        /// <param name="arguments">Additional arguements</param>
-        /// <returns>The connection to allow for chaining calls</returns>
-        public async Task<Connection> QueueDeclareAsync(string queue, bool durable = false, bool exclusive = false,
-            bool autoDelete = true, IDictionary<string, object?>? arguments = null)
+    ValueTask IMessageServiceConnection.CloseAsync()
+     => ((IAsyncDisposable)this).DisposeAsync();
+
+    async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
+    {
+        IChannel? pchannel = null;
+        try
         {
-            await channel.QueueDeclareAsync(queue, durable, exclusive, autoDelete, arguments: arguments);
-            return this;
+            var start = Stopwatch.GetTimestamp();
+            pchannel = await RabbitMQConnection.CreateChannelAsync();
+            return new(RabbitMQConnection.Endpoint.HostName, string.Empty, Stopwatch.GetElapsedTime(start));
         }
-
-        /// <summary>
-        /// Used to decalre an exchange inside the RabbitMQ server
-        /// </summary>
-        /// <param name="exchange">The name of the exchange</param>
-        /// <param name="type">The type of the exchange</param>
-        /// <param name="durable">Is this durable</param>
-        /// <param name="autoDelete">Auto Delete when connection closed</param>
-        /// <param name="arguments">Additional arguements</param>
-        /// <returns>The connection to allow for chaining calls</returns>
-        public async Task<Connection> ExchangeDeclareAsync(string exchange, string type, bool durable = false, bool autoDelete = false,
-            IDictionary<string, object?>? arguments = null)
+        catch
         {
-            await channel.ExchangeDeclareAsync(exchange, type, durable, autoDelete, arguments);
-            return this;
+            throw new PingFailedException("Unable to validate connection to RabbitMQ instance");
         }
-
-        /// <summary>
-        /// Used to delete a queue inside the RabbitMQ server
-        /// </summary>
-        /// <param name="queue">The name of the queue</param>
-        /// <param name="ifUnused">Is unused</param>
-        /// <param name="ifEmpty">Is Empty</param>
-        public async Task QueueDeleteAsync(string queue, bool ifUnused, bool ifEmpty)
-            => await channel.QueueDeclareAsync(queue, ifUnused, ifEmpty);
-
-        /// <summary>
-        /// The maximum message body size allowed
-        /// </summary>
-        public uint? MaxMessageBodySize { get; init; }
-
-        /// <summary>
-        /// The default timeout to use for RPC calls when not specified by class or in the call.
-        /// DEFAULT: 1 minute
-        /// </summary>
-        public TimeSpan DefaultTimeout { get; init; } = TimeSpan.FromMinutes(1);
-
-        internal static (BasicProperties props, ReadOnlyMemory<byte>) ConvertMessage(ServiceMessage message, Guid? messageId = null)
+        finally
         {
-            var props = new BasicProperties
-            {
-                MessageId=message.ID,
-                Type = message.MessageTypeID
-            };
-            using var ms = new MemoryStream();
-            using var bw = new BinaryWriter(ms);
-            if (messageId!=null)
-            {
-                bw.Write((byte)1);
-                bw.Write(messageId.Value.ToByteArray());
-            }
-            else
-                bw.Write((byte)0);
-            bw.Write(message.Data.Length);
-            bw.Write(message.Data.ToArray());
-            message.Header.ForEach(pair =>
-            {
-                var bytes = UTF8Encoding.UTF8.GetBytes(pair.Key);
-                bw.Write(bytes.Length);
-                bw.Write(bytes);
-                bytes = UTF8Encoding.UTF8.GetBytes(pair.Value!);
-                bw.Write(bytes.Length);
-                bw.Write(bytes);
-
-            });
-            bw.Flush();
-            return (props, ms.ToArray());
+            await (pchannel?.CloseAsync()??Task.CompletedTask);
         }
+    }
 
-        internal static ReceivedServiceMessage ConvertMessage(BasicDeliverEventArgs eventArgs, string channel, Func<ValueTask> acknowledge, out Guid? messageId)
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (!disposedValue)
         {
-            using var ms = new MemoryStream(eventArgs.Body.ToArray(), 0, eventArgs.Body.Length, false, true);
-            using var br = new BinaryReader(ms);
-            var flag = br.ReadByte();
-            if (flag==1)
-                messageId = new Guid(br.ReadBytes(16));
-            else
-                messageId=null;
-            var data = br.ReadBytes(br.ReadInt32());
-            var header = new Dictionary<string, string?>();
-            while (br.BaseStream.Position<br.BaseStream.Length)
-            {
-                var key = UTF8Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt32()));
-                var value = UTF8Encoding.UTF8.GetString(br.ReadBytes(br.ReadInt32()));
-                header.Add(key, value);
-            }
-            return new(
-                eventArgs.BasicProperties.MessageId!,
-                eventArgs.BasicProperties.Type!,
-                channel,
-                new(header),
-                data.ToArray(),
-                acknowledge
-            );
-        }
-
-        ValueTask<TransmissionResult> IMessageServiceConnection.PublishAsync(ServiceMessage message, CancellationToken cancellationToken)
-            => batchedMessageStream.TransmitAsync(message, cancellationToken);
-        ValueTask<IEnumerable<TransmissionResult>> IMessageServiceConnection.BulkPublishAsync(IEnumerable<ServiceMessage> messages, CancellationToken cancellationToken)
-            => batchedMessageStream.TransmitAsync(messages, cancellationToken);
-
-        private async Task<Subscription> ProduceSubscriptionAsync(string channel, string? group, Func<BasicDeliverEventArgs, IChannel, Func<ValueTask>, ValueTask> messageReceived, Action<Exception> errorReceived)
-        {
-            if (group==null)
-            {
-                group = Guid.NewGuid().ToString();
-                await this.channel.QueueDeclareAsync(queue: group, durable: false, exclusive: false, autoDelete: true);
-            }
-            else
-            {
-                try
-                {
-                    await this.channel.QueueDeclareAsync(queue: group);
-                }
-                catch (Exception)
-                {
-                    //this may throw an error is the queue already exists but checking for it fails
-                }
-            }
-            return await Subscription.ProduceInstanceAsync(RabbitMQConnection, channel, group, messageReceived, errorReceived);
-        }
-
-        async ValueTask<IServiceSubscription?> IMessageServiceConnection.SubscribeAsync(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-            => await ProduceSubscriptionAsync(channel, group,
-                async (@event, modelChannel, acknowledge) => await messageReceived(ConvertMessage(@event, channel, acknowledge, out _)).ConfigureAwait(false),
-                errorReceived
-            );
-
-        async ValueTask<IServiceSubscription> IInboxQueryableMessageServiceConnection.EstablishInboxSubscriptionAsync(Func<ReceivedInboxServiceMessage, ValueTask> messageReceived, CancellationToken cancellationToken)
-        {
-            await channel.ExchangeDeclareAsync(InboxExchange, ExchangeType.Direct, durable: false, autoDelete: true, cancellationToken: cancellationToken);
-            await channel.QueueDeclareAsync(inboxChannel, durable: false, exclusive: false, autoDelete: true, cancellationToken: cancellationToken);
-            return await Subscription.ProduceInstanceAsync(
-                RabbitMQConnection,
-                InboxExchange,
-                inboxChannel,
-                async (@event, model, acknowledge) =>
-                {
-                    var responseMessage = ConvertMessage(@event, string.Empty, acknowledge, out var messageId);
-                    if (messageId!=null)
-                        await messageReceived(new(
-                            responseMessage.ID,
-                            responseMessage.MessageTypeID,
-                            inboxChannel,
-                            responseMessage.Header,
-                            messageId.Value,
-                            responseMessage.Data,
-                            acknowledge
-                        )).ConfigureAwait(false);
-                },
-                (error) => { },
-                routingKey: inboxChannel
-            );
-        }
-
-        async ValueTask<TransmissionResult> IInboxQueryableMessageServiceConnection.QueryAsync(ServiceMessage message, Guid correlationID, CancellationToken cancellationToken)
-        {
-            (var props, var data) = ConvertMessage(message, correlationID);
-            props.ReplyTo = inboxChannel;
-            TransmissionResult result;
-            try
-            {
-                await channel.BasicPublishAsync<BasicProperties>(message.Channel, string.Empty, true, props, data, cancellationToken: cancellationToken);
-                result = new TransmissionResult(message.ID);
-            }
-            catch (Exception e)
-            {
-                result = new TransmissionResult(message.ID, Error: new(e, e switch
-                {
-                    PublishException => true,
-                    _ => false
-                }));
-            }
-            return result;
-        }
-
-        async ValueTask<IServiceSubscription?> IQueryableMessageServiceConnection.SubscribeQueryAsync(Func<ReceivedServiceMessage, ValueTask<ServiceMessage?>> messageReceived, Action<Exception> errorReceived, string channel, string? group, CancellationToken cancellationToken)
-        => await ProduceSubscriptionAsync(channel, group,
-                async (@event, model, acknowledge) =>
-                {
-                    var result = await messageReceived(ConvertMessage(@event, channel, acknowledge, out var messageID));
-                    if (result!=null)
-                    {
-                        (var props, var data) = ConvertMessage(result!, messageID);
-                        try
-                        {
-                            await this.channel.BasicPublishAsync<BasicProperties>(InboxExchange, @event.BasicProperties.ReplyTo!, true, props, data);
-                        }
-                        catch (Exception e)
-                        {
-                            errorReceived(e);
-                        }
-                    }
-                },
-                errorReceived
-            );
-
-        ValueTask IMessageServiceConnection.CloseAsync()
-         => ((IAsyncDisposable)this).DisposeAsync();
-
-        async ValueTask<PingResult> IPingableMessageServiceConnection.PingAsync()
-        {
-            IChannel? pchannel = null;
-            try
-            {
-                var start = Stopwatch.GetTimestamp();
-                pchannel = await RabbitMQConnection.CreateChannelAsync();
-                return new(RabbitMQConnection.Endpoint.HostName, string.Empty, Stopwatch.GetElapsedTime(start));
-            }
-            catch
-            {
-                throw new PingFailedException("Unable to validate connection to RabbitMQ instance");
-            }
-            finally
-            {
-                await (pchannel?.CloseAsync()??Task.CompletedTask);
-            }
-        }
-
-        async ValueTask IAsyncDisposable.DisposeAsync()
-        {
-            if (!disposedValue)
-            {
-                disposedValue=true;
-                await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
-                await channel.CloseAsync().ConfigureAwait(true);
-                await channel.DisposeAsync().ConfigureAwait(true);
-                await RabbitMQConnection.CloseAsync().ConfigureAwait(true);
-                await RabbitMQConnection.DisposeAsync().ConfigureAwait(true);
-            }
+            disposedValue=true;
+            await batchedMessageStream.DisposeAsync().ConfigureAwait(true);
+            await channel.CloseAsync().ConfigureAwait(true);
+            await channel.DisposeAsync().ConfigureAwait(true);
+            await RabbitMQConnection.CloseAsync().ConfigureAwait(true);
+            await RabbitMQConnection.DisposeAsync().ConfigureAwait(true);
         }
     }
 }

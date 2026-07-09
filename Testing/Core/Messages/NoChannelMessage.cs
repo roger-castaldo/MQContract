@@ -1,6 +1,5 @@
-﻿namespace CoreTesting.Messages
+﻿namespace CoreTesting.Messages;
+
+public record NoChannelMessage(string TestName)
 {
-    public record NoChannelMessage(string TestName)
-    {
-    }
 }

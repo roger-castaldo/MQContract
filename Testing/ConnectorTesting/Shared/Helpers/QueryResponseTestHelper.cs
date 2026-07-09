@@ -44,7 +44,7 @@ internal static class QueryResponseTestHelper
 
         Assert.HasCount(TestPrompts.Count(), receivedMessages);
         Assert.HasCount(TestPrompts.Count(), results);
-        Assert.IsEmpty(errors);
+        Assert.IsEmpty(errors, message: $"Unexpected errors occurred: {string.Join(", ", errors.Select(e => e.Message))}");
         foreach (var message in TestPrompts)
         {
             var receivedMessage = receivedMessages.FirstOrDefault(m => Equals(m.Message, message.Message));

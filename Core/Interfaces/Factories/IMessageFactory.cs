@@ -2,12 +2,11 @@
 using MQContract.Interfaces.Messages;
 using MQContract.Messages;
 
-namespace MQContract.Interfaces.Factories
+namespace MQContract.Interfaces.Factories;
+
+internal interface IMessageFactory<TMessage> : IMessageTypeFactory
 {
-    internal interface IMessageFactory<TMessage> : IMessageTypeFactory
-    {
-        string? MessageChannel { get; }
-        ValueTask<ServiceMessage> ConvertMessageAsync(TMessage message, bool ignoreChannel, string? channel, MessageHeader messageHeader, string? messageID);
-        ValueTask<TMessage?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message);
-    }
+    string? MessageChannel { get; }
+    ValueTask<ServiceMessage> ConvertMessageAsync(TMessage message, bool ignoreChannel, string? channel, MessageHeader messageHeader, string? messageID);
+    ValueTask<TMessage?> ConvertMessageAsync(ILogger? logger, IEncodedMessage message);
 }

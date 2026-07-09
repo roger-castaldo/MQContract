@@ -6,6 +6,9 @@
 		<RootNamespace>MQContract.$(MSBuildProjectName)</RootNamespace>
 		<Title>AzureServiceBus Connector for MQContract</Title>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\Shared\BaseLoopSubscription.cs" Link="BaseLoopSubscription.cs" />
+	</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.*" />

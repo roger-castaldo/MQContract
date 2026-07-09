@@ -9,6 +9,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\Shared\BaseLoopSubscription.cs" Link="BaseLoopSubscription.cs" />
 	  <Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
 	</ItemGroup>
 

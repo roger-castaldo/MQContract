@@ -2,12 +2,11 @@
 using MQContract;
 using MQContract.Attributes;
 
-namespace KafkaSample
+namespace KafkaSample;
+
+[UseMqContract(typeof(ArrivalAnnouncement))]
+[UseMqContract(typeof(Greeting))]
+[UseMqContract(typeof(StoredArrivalAnnouncement))]
+internal partial class MyMessageContext : MQContractMessageContext
 {
-    [UseMqContract(typeof(ArrivalAnnouncement))]
-    [UseMqContract(typeof(Greeting))]
-    [UseMqContract(typeof(StoredArrivalAnnouncement))]
-    internal partial class MyMessageContext : MQContractMessageContext
-    {
-    }
 }

@@ -54,8 +54,8 @@ internal static class PubSubTestHelper
         Assert.IsTrue(success);
 
         Assert.AreEqual(TestAnnouncements.Count(), receivedMessages.Count);
-        Assert.AreEqual(0, errors.Count);
-        foreach(var message in TestAnnouncements)
+        Assert.IsEmpty(errors, message: $"Unexpected errors occurred: {string.Join(", ", errors.Select(e => e.Message))}");
+        foreach (var message in TestAnnouncements)
         {
             var receivedMessage = receivedMessages.FirstOrDefault(m => Equals(m.Message.Message, message.Message.Message));
             Assert.IsNotNull(receivedMessage);

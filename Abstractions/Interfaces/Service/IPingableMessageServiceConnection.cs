@@ -1,16 +1,15 @@
 ﻿using MQContract.Messages;
 
-namespace MQContract.Interfaces.Service
+namespace MQContract.Interfaces.Service;
+
+/// <summary>
+/// Extends the base MessageServiceConnection Interface to support service pinging
+/// </summary>
+public interface IPingableMessageServiceConnection : IMessageServiceConnection
 {
     /// <summary>
-    /// Extends the base MessageServiceConnection Interface to support service pinging
+    /// Implemented Ping call if avaialble for the underlying service
     /// </summary>
-    public interface IPingableMessageServiceConnection : IMessageServiceConnection
-    {
-        /// <summary>
-        /// Implemented Ping call if avaialble for the underlying service
-        /// </summary>
-        /// <returns>A Ping Result</returns>
-        ValueTask<PingResult> PingAsync();
-    }
+    /// <returns>A Ping Result</returns>
+    ValueTask<PingResult> PingAsync();
 }

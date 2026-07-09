@@ -3,58 +3,57 @@ using MQContract.CQRS.Interfaces.Query;
 using MQContract.Interfaces;
 using System.Diagnostics;
 
-namespace MQContract.CQRS.Contexts
+namespace MQContract.CQRS.Contexts;
+
+internal abstract class AInvocationContext<TMessage> : IInvocationContext, IAsyncDisposable
 {
-    internal abstract class AInvocationContext<TMessage> : IInvocationContext, IAsyncDisposable
+    private readonly Context context;
+    protected readonly TMessage Message;
+    private readonly CancellationTokenSource cancellationTokenSource;
+    private readonly Activity? activity;
+    private readonly ICQRSConnection connection;
+
+    protected AInvocationContext(IReceivedMessage<TMessage> receivedMessage, CqrsConnection connection)
     {
-        private readonly Context context;
-        protected readonly TMessage Message;
-        private readonly CancellationTokenSource cancellationTokenSource;
-        private readonly Activity? activity;
-        private readonly ICQRSConnection connection;
+        context = new(receivedMessage.Headers, Guid.Parse(receivedMessage.ID));
+        Message = receivedMessage.Message;
+        cancellationTokenSource = connection.RegisterInvocation(context);
+        activity = receivedMessage.Activity;
+        this.connection = connection;
+        receivedMessage.Activity?.AddTag("mqcontract.cqrs.correlationid", context.CorrelationId);
+        receivedMessage.Activity?.AddTag("mqcontract.cqrs.messageid", context.MessageId);
+        receivedMessage.Activity?.AddTag("mqcontract.cqrs.causationid", context.CausationId);
+        receivedMessage.Activity?.AddTag("mqcontract.cqrs.type", (receivedMessage.Message is IQuery ? "query" : "command"));
+    }
 
-        protected AInvocationContext(IReceivedMessage<TMessage> receivedMessage, CqrsConnection connection)
-        {
-            context = new(receivedMessage.Headers, Guid.Parse(receivedMessage.ID));
-            Message = receivedMessage.Message;
-            cancellationTokenSource = connection.RegisterInvocation(context);
-            activity = receivedMessage.Activity;
-            this.connection = connection;
-            receivedMessage.Activity?.AddTag("mqcontract.cqrs.correlationid", context.CorrelationId);
-            receivedMessage.Activity?.AddTag("mqcontract.cqrs.messageid", context.MessageId);
-            receivedMessage.Activity?.AddTag("mqcontract.cqrs.causationid", context.CausationId);
-            receivedMessage.Activity?.AddTag("mqcontract.cqrs.type", (receivedMessage.Message is IQuery ? "query" : "command"));
-        }
+    internal CancellationTokenSource CancellationTokenSource => cancellationTokenSource;
 
-        internal CancellationTokenSource CancellationTokenSource => cancellationTokenSource;
+    string? IInvocationContext.this[string key] { get => context[key]; set => context[key] = value; }
+    IEnumerable<string> IInvocationContext.Keys => context.Keys;
 
-        string? IInvocationContext.this[string key] { get => context[key]; set => context[key] = value; }
-        IEnumerable<string> IInvocationContext.Keys => context.Keys;
+    Guid IInvocationContext.MessageId => context.MessageId;
 
-        Guid IInvocationContext.MessageId => context.MessageId;
+    Guid IInvocationContext.CorrelationId => context.CorrelationId;
 
-        Guid IInvocationContext.CorrelationId => context.CorrelationId;
+    Guid? IInvocationContext.CausationId => context.CausationId;
 
-        Guid? IInvocationContext.CausationId => context.CausationId;
+    Activity? IInvocationContext.Activity => activity;
 
-        Activity? IInvocationContext.Activity => activity;
+    internal IEnumerable<KeyValuePair<string, string?>> Headers => context.AsEnumerable();
 
-        internal IEnumerable<KeyValuePair<string, string?>> Headers => context.AsEnumerable();
+    ValueTask IInvocationContext.ExecuteCommandAsync<TCommand>(TCommand command)
+        => connection.ExecuteCommandAsync<TCommand>(command, context.CloneToChild(), cancellationTokenSource.Token);
 
-        ValueTask IInvocationContext.ExecuteCommandAsync<TCommand>(TCommand command)
-            => connection.ExecuteCommandAsync<TCommand>(command, context.CloneToChild(), cancellationTokenSource.Token);
+    ValueTask<TCommandResult?> IInvocationContext.ExecuteCommandAsync<TCommand, TCommandResult>(TCommand command, TimeSpan? timeout) where TCommandResult : default
+        => connection.ExecuteCommandAsync<TCommand, TCommandResult>(command, context.CloneToChild(), timeout: timeout, cancellationToken: cancellationTokenSource.Token);
 
-        ValueTask<TCommandResult?> IInvocationContext.ExecuteCommandAsync<TCommand, TCommandResult>(TCommand command, TimeSpan? timeout) where TCommandResult : default
-            => connection.ExecuteCommandAsync<TCommand, TCommandResult>(command, context.CloneToChild(), timeout: timeout, cancellationToken: cancellationTokenSource.Token);
+    ValueTask<TQueryResponse?> IInvocationContext.ExecuteQueryAsync<TQuery, TQueryResponse>(TQuery query, TimeSpan? timeout) where TQueryResponse : default
+        => connection.ExecuteQueryAsync<TQuery, TQueryResponse>(query, context.CloneToChild(), timeout: timeout, cancellationToken: cancellationTokenSource.Token);
 
-        ValueTask<TQueryResponse?> IInvocationContext.ExecuteQueryAsync<TQuery, TQueryResponse>(TQuery query, TimeSpan? timeout) where TQueryResponse : default
-            => connection.ExecuteQueryAsync<TQuery, TQueryResponse>(query, context.CloneToChild(), timeout: timeout, cancellationToken: cancellationTokenSource.Token);
-
-        ValueTask IAsyncDisposable.DisposeAsync()
-        {
-            ((CqrsConnection)connection).UnregisterInvocation(context);
-            cancellationTokenSource.Dispose();
-            return ValueTask.CompletedTask;
-        }
+    ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        ((CqrsConnection)connection).UnregisterInvocation(context);
+        cancellationTokenSource.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

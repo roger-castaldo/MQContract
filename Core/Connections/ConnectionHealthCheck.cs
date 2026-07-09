@@ -1,82 +1,81 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MQContract.Interfaces.Service;
 using MQContract.Messages;
-namespace MQContract.Connections
+namespace MQContract.Connections;
+
+internal class ConnectionHealthCheck : IHealthCheck
 {
-    internal class ConnectionHealthCheck : IHealthCheck
+    private const string HealthyDescription = "MQContract service connection available";
+    private const string UnHealthyDescription = "MQContract service connection unavailable";
+    private const string DegradedDescription = "1 or more service connection(s) are unavailable";
+
+    private sealed record ServicePingResult(string ServiceName, PingResult? Result = null, Exception? Error = null);
+
+    private readonly IPingableMessageServiceConnection? connection;
+    private readonly ServiceConnectionList? serviceConnectionList;
+
+    public ConnectionHealthCheck(IMessageServiceConnection? connection = null, ServiceConnectionList? serviceConnectionList = null)
     {
-        private const string HealthyDescription = "MQContract service connection available";
-        private const string UnHealthyDescription = "MQContract service connection unavailable";
-        private const string DegradedDescription = "1 or more service connection(s) are unavailable";
+        if (serviceConnectionList!=null && !serviceConnectionList.FullList.Any(conn => conn.MessageServiceConnection is IPingableMessageServiceConnection))
+            throw new ArgumentOutOfRangeException(nameof(serviceConnectionList), "No Pingable service connections provided, cannot provide health checks");
+        else if (serviceConnectionList==null && connection is not IPingableMessageServiceConnection)
+            throw new ArgumentOutOfRangeException(nameof(connection), "Service connection is not Pingable");
+        this.connection=(IPingableMessageServiceConnection?)connection;
+        this.serviceConnectionList=serviceConnectionList;
+    }
 
-        private sealed record ServicePingResult(string ServiceName, PingResult? Result = null, Exception? Error = null);
-
-        private readonly IPingableMessageServiceConnection? connection;
-        private readonly ServiceConnectionList? serviceConnectionList;
-
-        public ConnectionHealthCheck(IMessageServiceConnection? connection = null, ServiceConnectionList? serviceConnectionList = null)
+    private static IReadOnlyDictionary<string, object> MapPing(PingResult result)
+        => new Dictionary<string, object>()
         {
-            if (serviceConnectionList!=null && !serviceConnectionList.FullList.Any(conn => conn.MessageServiceConnection is IPingableMessageServiceConnection))
-                throw new ArgumentOutOfRangeException(nameof(serviceConnectionList), "No Pingable service connections provided, cannot provide health checks");
-            else if (serviceConnectionList==null && connection is not IPingableMessageServiceConnection)
-                throw new ArgumentOutOfRangeException(nameof(connection), "Service connection is not Pingable");
-            this.connection=(IPingableMessageServiceConnection?)connection;
-            this.serviceConnectionList=serviceConnectionList;
+            { "Host",result.Host},
+            { "Version",result.Version},
+            { "ResponseTime",result.ResponseTime }
+        };
+
+    private static IReadOnlyDictionary<string, object> MapServicePingResult(ServicePingResult servicePingResult)
+        => (servicePingResult.Error==null ? MapPing(servicePingResult.Result!) : new Dictionary<string, object>() { { "Error", servicePingResult.Error.Message } });
+
+    async Task<HealthCheckResult> IHealthCheck.CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken)
+    {
+        if (connection!=null)
+        {
+            try
+            {
+                var result = await connection.PingAsync();
+                return HealthCheckResult.Healthy(HealthyDescription, MapPing(result));
+            }
+            catch (Exception e)
+            {
+                return HealthCheckResult.Unhealthy(UnHealthyDescription, e);
+            }
         }
-
-        private static IReadOnlyDictionary<string, object> MapPing(PingResult result)
-            => new Dictionary<string, object>()
-            {
-                { "Host",result.Host},
-                { "Version",result.Version},
-                { "ResponseTime",result.ResponseTime }
-            };
-
-        private static IReadOnlyDictionary<string, object> MapServicePingResult(ServicePingResult servicePingResult)
-            => (servicePingResult.Error==null ? MapPing(servicePingResult.Result!) : new Dictionary<string, object>() { { "Error", servicePingResult.Error.Message } });
-
-        async Task<HealthCheckResult> IHealthCheck.CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken)
+        else
         {
-            if (connection!=null)
-            {
-                try
+            var results = await Task.WhenAll(serviceConnectionList!.FullList
+                .Where(conn => conn.MessageServiceConnection is IPingableMessageServiceConnection)
+                .Select(async (conn) =>
                 {
-                    var result = await connection.PingAsync();
-                    return HealthCheckResult.Healthy(HealthyDescription, MapPing(result));
-                }
-                catch (Exception e)
-                {
-                    return HealthCheckResult.Unhealthy(UnHealthyDescription, e);
-                }
-            }
-            else
-            {
-                var results = await Task.WhenAll(serviceConnectionList!.FullList
-                    .Where(conn => conn.MessageServiceConnection is IPingableMessageServiceConnection)
-                    .Select(async (conn) =>
+                    try
                     {
-                        try
-                        {
-                            var result = await ((IPingableMessageServiceConnection)conn.MessageServiceConnection).PingAsync();
-                            return new ServicePingResult(conn.ServiceConnectionName, Result: result);
-                        }
-                        catch (Exception e)
-                        {
-                            return new ServicePingResult(conn.ServiceConnectionName, Error: e);
-                        }
-                    })
-                );
-                var data = new Dictionary<string, object>(results.Select(r =>
-                    new KeyValuePair<string, object>(r.ServiceName, MapServicePingResult(r))
-                ));
-                var errorCount = results.Count(r => r.Error!=null);
-                return errorCount switch
-                {
-                    0 => HealthCheckResult.Healthy(HealthyDescription, data: data),
-                    var i when i < results.Length => HealthCheckResult.Degraded(DegradedDescription, data: data),
-                    _ => HealthCheckResult.Unhealthy(UnHealthyDescription, data: data)
-                };
-            }
+                        var result = await ((IPingableMessageServiceConnection)conn.MessageServiceConnection).PingAsync();
+                        return new ServicePingResult(conn.ServiceConnectionName, Result: result);
+                    }
+                    catch (Exception e)
+                    {
+                        return new ServicePingResult(conn.ServiceConnectionName, Error: e);
+                    }
+                })
+            );
+            var data = new Dictionary<string, object>(results.Select(r =>
+                new KeyValuePair<string, object>(r.ServiceName, MapServicePingResult(r))
+            ));
+            var errorCount = results.Count(r => r.Error!=null);
+            return errorCount switch
+            {
+                0 => HealthCheckResult.Healthy(HealthyDescription, data: data),
+                var i when i < results.Length => HealthCheckResult.Degraded(DegradedDescription, data: data),
+                _ => HealthCheckResult.Unhealthy(UnHealthyDescription, data: data)
+            };
         }
     }
 }

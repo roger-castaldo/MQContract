@@ -4,50 +4,49 @@ using MQContract.Interfaces;
 using System.Diagnostics;
 using System.Security.Cryptography;
 
-namespace CQRSTesting
+namespace CQRSTesting;
+
+internal static class Helper
 {
-    internal static class Helper
+    private const string ValidCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
+    public static string GenerateRandomString(int length)
+        => RandomNumberGenerator.GetString(ValidCharacters, length);
+
+    public static string GenerateRandomString()
+        => RandomNumberGenerator.GetString(ValidCharacters, RandomNumberGenerator.GetInt32(5, 250));
+    public static IContractConnection ProduceConnection(bool mapped)
+        => (mapped
+        ? ContractConnection.MappedServiceInstance().RegisterServiceConnection((pars) => true, "default", new Connection())
+        : ContractConnection.Instance(new Connection()));
+
+    private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(5);
+
+    public static async Task<bool> WaitForCount<T>(IEnumerable<T> values, int count, TimeSpan maxTime)
+        where T : class
     {
-        private const string ValidCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
-
-        public static string GenerateRandomString(int length)
-            => RandomNumberGenerator.GetString(ValidCharacters, length);
-
-        public static string GenerateRandomString()
-            => RandomNumberGenerator.GetString(ValidCharacters, RandomNumberGenerator.GetInt32(5, 250));
-        public static IContractConnection ProduceConnection(bool mapped)
-            => (mapped
-            ? ContractConnection.MappedServiceInstance().RegisterServiceConnection((pars) => true, "default", new Connection())
-            : ContractConnection.Instance(new Connection()));
-
-        private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(5);
-
-        public static async Task<bool> WaitForCount<T>(IEnumerable<T> values, int count, TimeSpan maxTime)
-            where T : class
+        var task = new Task(() =>
         {
-            var task = new Task(() =>
-            {
-                while (values.Count()<count)
-                    Task.Delay(Delay).Wait();
-            });
-            task.Start();
-            return (await Task.WhenAny(task, Task.Delay(maxTime))) == task || values.Count()>=count;
-        }
+            while (values.Count()<count)
+                Task.Delay(Delay).Wait();
+        });
+        task.Start();
+        return (await Task.WhenAny(task, Task.Delay(maxTime))) == task || values.Count()>=count;
+    }
 
-        public static (ActivityListener listener, List<Activity> capturedActivities, string sourceName) SetupTelemetry()
+    public static (ActivityListener listener, List<Activity> capturedActivities, string sourceName) SetupTelemetry()
+    {
+        var sourceName = Helper.GenerateRandomString(20);
+        var capturedActivities = new List<Activity>();
+
+        var listener = new ActivityListener()
         {
-            var sourceName = Helper.GenerateRandomString(20);
-            var capturedActivities = new List<Activity>();
-
-            var listener = new ActivityListener()
-            {
-                ShouldListenTo = source => source.Name == sourceName,
-                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
-                ActivityStarted = activity => capturedActivities.Add(activity),
-                ActivityStopped = _ => { }
-            };
-            ActivitySource.AddActivityListener(listener);
-            return (listener, capturedActivities, sourceName);
-        }
+            ShouldListenTo = source => source.Name == sourceName,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            ActivityStarted = activity => capturedActivities.Add(activity),
+            ActivityStopped = _ => { }
+        };
+        ActivitySource.AddActivityListener(listener);
+        return (listener, capturedActivities, sourceName);
     }
 }

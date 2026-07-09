@@ -3,19 +3,18 @@ using CoreTesting.ServiceInjection;
 using MQContract.Interfaces.Encoding;
 using System.Text;
 
-namespace CoreTesting.Encoders
-{
-    internal class TestMessageEncoderWithInjection(IInjectableService injectableService)
-        : IMessageTypeEncoder<CustomEncoderWithInjectionMessage>
-    {
-        public ValueTask<CustomEncoderWithInjectionMessage?> DecodeAsync(Stream stream)
-        {
-            var message = Encoding.ASCII.GetString(new BinaryReader(stream).ReadBytes((int)stream.Length));
-            Assert.StartsWith($"{injectableService.Name}:", message);
-            return ValueTask.FromResult<CustomEncoderWithInjectionMessage?>(new CustomEncoderWithInjectionMessage(message.Substring($"{injectableService.Name}:".Length)));
-        }
+namespace CoreTesting.Encoders;
 
-        public ValueTask<byte[]> EncodeAsync(CustomEncoderWithInjectionMessage message)
-            => ValueTask.FromResult<byte[]>(Encoding.ASCII.GetBytes($"{injectableService.Name}:{message.TestName}"));
+internal class TestMessageEncoderWithInjection(IInjectableService injectableService)
+    : IMessageTypeEncoder<CustomEncoderWithInjectionMessage>
+{
+    public ValueTask<CustomEncoderWithInjectionMessage?> DecodeAsync(Stream stream)
+    {
+        var message = Encoding.ASCII.GetString(new BinaryReader(stream).ReadBytes((int)stream.Length));
+        Assert.StartsWith($"{injectableService.Name}:", message);
+        return ValueTask.FromResult<CustomEncoderWithInjectionMessage?>(new CustomEncoderWithInjectionMessage(message.Substring($"{injectableService.Name}:".Length)));
     }
+
+    public ValueTask<byte[]> EncodeAsync(CustomEncoderWithInjectionMessage message)
+        => ValueTask.FromResult<byte[]>(Encoding.ASCII.GetBytes($"{injectableService.Name}:{message.TestName}"));
 }

@@ -78,6 +78,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CQRSSample", "Samples\CQRSSample\CQRSSample.csproj", "{D7ADBEFC-AF6C-5E21-75A9-E54BB8D0B545}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{4EF455E7-05D1-4FDA-B0F7-9AB53C9271EC}"
+	ProjectSection(SolutionItems) = preProject
+		Connectors\Shared\BaseLoopSubscription.cs = Connectors\Shared\BaseLoopSubscription.cs
+		Connectors\Shared\BatchedMessageStream.cs = Connectors\Shared\BatchedMessageStream.cs
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConnectorTesting", "ConnectorTesting", "{FD1442D3-A3A8-43CF-A2F6-1D02A0C8741D}"
 EndProject

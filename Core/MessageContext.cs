@@ -1,17 +1,16 @@
 ﻿using MQContract.Defaults;
 using MQContract.Messages;
 
-namespace MQContract
+namespace MQContract;
+
+internal partial class MessageContext
 {
-    internal partial class MessageContext
-    {
-        private readonly List<MQContractMessageContext> contexts = [new DefaultMessageContext()];
+    private readonly List<MQContractMessageContext> contexts = [new DefaultMessageContext()];
 
-        public IEnumerable<MQContractMessageContext> Contexts => contexts;
+    public IEnumerable<MQContractMessageContext> Contexts => contexts;
 
-        internal void RegisterContext(MQContractMessageContext messageContext)
-            => contexts.Add(messageContext);
+    internal void RegisterContext(MQContractMessageContext messageContext)
+        => contexts.Add(messageContext);
 
-        internal delegate ValueTask<ServiceMessage> delProduceServiceMessage<TMessage>(TMessage message);
-    }
+    internal delegate ValueTask<ServiceMessage> delProduceServiceMessage<TMessage>(TMessage message);
 }

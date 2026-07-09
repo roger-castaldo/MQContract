@@ -1,23 +1,22 @@
 using Messages;
 using MQContract.CQRS.Interfaces.Command;
 
-namespace CQRSSample
+namespace CQRSSample;
+
+public class CreateUserProcessor : ICommandProcessor<CreateUserCommand>
 {
-    public class CreateUserProcessor : ICommandProcessor<CreateUserCommand>
+    private static readonly Dictionary<string, User> _users = new();
+
+    public async ValueTask ProcessCommandAsync(ICommandInvocationContext<CreateUserCommand> context, CancellationToken cancellationToken)
     {
-        private static readonly Dictionary<string, User> _users = new();
+        var command = context.Command;
+        var user = new User(command.UserId, command.UserName, command.Email);
+        _users[command.UserId] = user;
+        Console.WriteLine($"User created: {user.UserName} ({user.UserId})");
+    }
 
-        public async ValueTask ProcessCommandAsync(ICommandInvocationContext<CreateUserCommand> context, CancellationToken cancellationToken)
-        {
-            var command = context.Command;
-            var user = new User(command.UserId, command.UserName, command.Email);
-            _users[command.UserId] = user;
-            Console.WriteLine($"User created: {user.UserName} ({user.UserId})");
-        }
-
-        public void ErrorRecieved(Exception error)
-        {
-            Console.WriteLine($"CreateUserProcessor error: {error.Message}");
-        }
+    public void ErrorRecieved(Exception error)
+    {
+        Console.WriteLine($"CreateUserProcessor error: {error.Message}");
     }
 }

@@ -1,4 +1,3 @@
-﻿namespace CoreTesting.Messages
-{
-    public record BasicResponseMessage(string TestName) { }
-}
+﻿namespace CoreTesting.Messages;
+
+public record BasicResponseMessage(string TestName) { }
