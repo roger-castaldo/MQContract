@@ -1,7 +1,6 @@
-﻿namespace AutomatedTesting.ServiceInjection
+﻿namespace CoreTesting.ServiceInjection;
+
+internal interface IInjectableService
 {
-    internal interface IInjectableService
-    {
-        string Name { get; }
-    }
+    string Name { get; }
 }

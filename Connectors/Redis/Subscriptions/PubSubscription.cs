@@ -1,22 +1,21 @@
 ﻿using MQContract.Messages;
 using StackExchange.Redis;
 
-namespace MQContract.Redis.Subscriptions
+namespace MQContract.Redis.Subscriptions;
+
+internal class PubSubscription(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, IDatabase database, Guid connectionID, string channel, string? group)
+    : SubscriptionBase(errorReceived, database, connectionID, channel, group)
 {
-    internal class PubSubscription(Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, IDatabase database, Guid connectionID, string channel, string? group)
-        : SubscriptionBase(errorReceived, database, connectionID, channel, group)
+    protected override async ValueTask ProcessMessage(StreamEntry streamEntry, string channel, string? group)
     {
-        protected override async ValueTask ProcessMessage(StreamEntry streamEntry, string channel, string? group)
-        {
-            (var message, _, _, var ackSource) = Connection.ConvertMessage(
-                    streamEntry.Values,
-                    channel,
-                    () => Acknowledge(streamEntry.Id)
-                 );
-            await Task.WhenAny(
-                messageReceived(message).AsTask(),
-                ackSource.Task
-            );
-        }
+        (var message, _, _, var ackSource) = Connection.ConvertMessage(
+                streamEntry.Values,
+                channel,
+                () => Acknowledge(streamEntry.Id)
+             );
+        await Task.WhenAny(
+            messageReceived(message).AsTask(),
+            ackSource.Task
+        );
     }
 }

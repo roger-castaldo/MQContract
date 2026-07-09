@@ -1,40 +1,39 @@
-﻿namespace MQContract.Attributes
+﻿namespace MQContract.Attributes;
+
+/// <summary>
+/// Use this attribute to define the Channel, Group and/or IngoreMessageTypeHeader flag
+/// for a given Consumer
+/// </summary>
+/// <example>
+/// <code>
+/// [Consumer(channel: "Arrivals", group: "Group1")]
+/// public class MyConsumer : IPubSubConsumer&lt;ArrivalAnnouncement&gt;
+/// {
+///     public void MessageReceived(IReceivedMessage&lt;ArrivalAnnouncement&gt; message)
+///     {
+///         Console.WriteLine($"Received: {message.Message.FirstName}");
+///     }
+/// }
+/// </code>
+/// </example>
+/// <param name="channel">The channel the consumer will listen on</param>
+/// <param name="group">The group the consumer will register as</param>
+/// <param name="ignoreMessageTypeHeader">A falg to indicate if ignoring the message type is desired</param>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+public class ConsumerAttribute(string? channel = null, string? group = null, bool ignoreMessageTypeHeader = false) : Attribute
 {
     /// <summary>
-    /// Use this attribute to define the Channel, Group and/or IngoreMessageTypeHeader flag
-    /// for a given Consumer
+    /// The channel to register the consumer on
     /// </summary>
-    /// <example>
-    /// <code>
-    /// [Consumer(channel: "Arrivals", group: "Group1")]
-    /// public class MyConsumer : IPubSubConsumer&lt;ArrivalAnnouncement&gt;
-    /// {
-    ///     public void MessageReceived(IReceivedMessage&lt;ArrivalAnnouncement&gt; message)
-    ///     {
-    ///         Console.WriteLine($"Received: {message.Message.FirstName}");
-    ///     }
-    /// }
-    /// </code>
-    /// </example>
-    /// <param name="channel">The channel the consumer will listen on</param>
-    /// <param name="group">The group the consumer will register as</param>
-    /// <param name="ignoreMessageTypeHeader">A falg to indicate if ignoring the message type is desired</param>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class ConsumerAttribute(string? channel = null, string? group = null, bool ignoreMessageTypeHeader = false) : Attribute
-    {
-        /// <summary>
-        /// The channel to register the consumer on
-        /// </summary>
-        public string? Channel => channel;
+    public string? Channel => channel;
 
-        /// <summary>
-        /// The group to register the consumer to
-        /// </summary>
-        public string? Group => group;
+    /// <summary>
+    /// The group to register the consumer to
+    /// </summary>
+    public string? Group => group;
 
-        /// <summary>
-        /// Indicates if the message type should be ignored
-        /// </summary>
-        public bool IgnoreMessageTypeHeader => ignoreMessageTypeHeader;
-    }
+    /// <summary>
+    /// Indicates if the message type should be ignored
+    /// </summary>
+    public bool IgnoreMessageTypeHeader => ignoreMessageTypeHeader;
 }

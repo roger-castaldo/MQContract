@@ -1,7 +1,6 @@
-﻿namespace MQContract.Interfaces.Factories
+﻿namespace MQContract.Interfaces.Factories;
+
+internal interface IMessageTypeFactory
 {
-    internal interface IMessageTypeFactory
-    {
-        bool IgnoreMessageHeader { get; }
-    }
+    bool IgnoreMessageHeader { get; }
 }

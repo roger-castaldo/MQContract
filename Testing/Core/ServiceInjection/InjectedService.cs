@@ -1,6 +1,5 @@
-﻿namespace AutomatedTesting.ServiceInjection
+﻿namespace CoreTesting.ServiceInjection;
+
+internal record InjectedService(string Name) : IInjectableService
 {
-    internal record InjectedService(string Name) : IInjectableService
-    {
-    }
 }

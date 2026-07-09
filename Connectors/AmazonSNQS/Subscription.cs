@@ -1,78 +1,47 @@
 ﻿using Amazon.SQS;
 using Amazon.SQS.Model;
-using MQContract.Interfaces.Service;
 using MQContract.Messages;
 
-namespace MQContract.AmazonSNQS
+namespace MQContract.AmazonSNQS;
+
+internal class Subscription(AmazonSQSClient sqsClient, string queueUrl, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, CancellationToken connectionCancellationToken)
+    : BaseLoopSubscription(errorReceived)
 {
-    internal class Subscription(AmazonSQSClient sqsClient, string queueUrl, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, CancellationToken connectionCancellationToken)
-        : IServiceSubscription, IAsyncDisposable
+    protected override async ValueTask RecieveMessageAsync(CancellationToken cancelToken)
     {
-        protected readonly CancellationTokenSource cancelToken = new();
-        private bool disposedValue;
-
-        public void Start()
+        var receiveResponse = await sqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
         {
-            connectionCancellationToken.Register(() =>
-            {
-                try
-                {
-                    if (!cancelToken.IsCancellationRequested)
-                        cancelToken.Cancel();
-                }
-                catch
-                {
-                    //exception is ignored here because the cancellation token may have been disposed of already
-                }
-            });
-            _ = Task.Run(async () =>
-            {
-                while (!cancelToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        var receiveResponse = await sqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
-                        {
-                            QueueUrl = queueUrl,
-                            MaxNumberOfMessages = 1,
-                            WaitTimeSeconds = 5
-                        }, cancelToken.Token);
+            QueueUrl = queueUrl,
+            MaxNumberOfMessages = 1,
+            WaitTimeSeconds = 5
+        }, cancelToken);
 
-                        foreach (var msg in receiveResponse.Messages?? [])
-                        {
-                            var ackSource = new TaskCompletionSource();
-                            await Task.WhenAny(
-                                messageReceived(MessageMapper.Map(msg, async () =>
-                                {
-                                    await sqsClient.DeleteMessageAsync(queueUrl, msg.ReceiptHandle);
-                                    ackSource.TrySetResult();
-                                })).AsTask(),
-                                ackSource.Task
-                            );
-                        }
-                    }
-                    catch (Exception error)
-                    {
-                        errorReceived(error);
-                    }
-                }
-            });
+        foreach (var msg in receiveResponse.Messages?? [])
+        {
+            var ackSource = new TaskCompletionSource();
+            await Task.WhenAny(
+                messageReceived(MessageMapper.Map(msg, async () =>
+                {
+                    await sqsClient.DeleteMessageAsync(queueUrl, msg.ReceiptHandle);
+                    ackSource.TrySetResult();
+                })).AsTask(),
+                ackSource.Task
+            );
         }
-
-        async ValueTask IServiceSubscription.EndAsync()
+    }
+    protected override void PreStart()
+    {
+        connectionCancellationToken.Register(() =>
         {
-            if (!cancelToken.IsCancellationRequested)
-                await cancelToken.CancelAsync();
-        }
-
-        async ValueTask IAsyncDisposable.DisposeAsync()
-        {
-            if (!disposedValue)
+            try
             {
-                disposedValue=true;
-                await ((IServiceSubscription)this).EndAsync();
-                cancelToken.Dispose();
+                if (!this.cancelToken.IsCancellationRequested)
+                    this.cancelToken.Cancel();
             }
-        }
+            catch
+            {
+                //exception is ignored here because the cancellation token may have been disposed of already
+            }
+        });
     }
 }

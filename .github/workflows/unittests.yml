@@ -1,0 +1,110 @@
+name: .NET-Test
+
+on:
+  push:
+    branches: [ 'master' ]
+  pull_request:
+    branches: [ 'master' ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+    - name: Restore
+      run: dotnet restore MQContract.sln --force
+    - name: Build testing core
+      run: dotnet build -p:BlockMD=true --no-restore Testing/Core
+    - name: Build testing cqrs
+      run: dotnet build -p:BlockMD=true --no-restore Testing/CQRSTesting
+    - name: Build testing codegen
+      run: dotnet build -p:BlockMD=true --no-restore Testing/CodeGenTesting
+    - name: Build testing activemq
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/ActiveMQ
+    - name: Build testing amazonsqns
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/AmazonSQNS
+    - name: Build testing azureservicebus
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/AzureServiceBus
+    - name: Build testing googlepubsub
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/GooglePubSub
+    - name: Build testing hivemq
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/HiveMQ
+    - name: Build testing inmemory
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/InMemory
+    - name: Build testing kafka
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/Kafka
+    - name: Build testing nats
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/Nats
+    - name: Build testing pulsar
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/Pulsar
+    - name: Build testing rabbitmq
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/RabbitMQ
+    - name: Build testing redis
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/Redis
+    - name: Build testing zeromq
+      run: dotnet build -p:BlockMD=true --no-restore Testing/ConnectorTesting/ZeroMQ
+    - name: Test core
+      run: dotnet test -p:BlockMD=true --no-build --verbosity normal Testing/Core
+    - name: Test cqrs
+      run: dotnet test -p:BlockMD=true --no-build --verbosity normal Testing/CQRSTesting
+    - name: Test codegen
+      run: dotnet test -p:BlockMD=true --no-build --verbosity normal Testing/CodeGenTesting
+    - name: Test activemq 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/ActiveMQ
+    - name: Test activemq 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/ActiveMQ
+    - name: Test amazonsqns 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/AmazonSQNS
+    - name: Test amazonsqns 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/AmazonSQNS
+    - name: Test azureservicebus 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/AzureServiceBus
+    - name: Test azureservicebus 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/AzureServiceBus
+    - name: Test googlepubsub 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/GooglePubSub
+    - name: Test googlepubsub 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/GooglePubSub
+    - name: Test hivemq 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/HiveMQ
+    - name: Test hivemq 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/HiveMQ
+    - name: Test inmemory 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/InMemory
+    - name: Test inmemory 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/InMemory
+    - name: Test kafka 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/Kafka
+    - name: Test kafka 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/Kafka
+    - name: Test nats 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/Nats
+    - name: Test nats 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/Nats
+    - name: Test pulsar 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/Pulsar
+    - name: Test pulsar 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/Pulsar
+    - name: Test rabbitmq 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/RabbitMQ
+    - name: Test rabbitmq 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/RabbitMQ
+    - name: Test redis 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/Redis
+    - name: Test redis 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/Redis
+    - name: Test zeromq 8.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net8.0 Testing/ConnectorTesting/ZeroMQ
+    - name: Test zeromq 10.0
+      run: dotnet test -p:BlockMD=true --no-build --framework net10.0 Testing/ConnectorTesting/ZeroMQ

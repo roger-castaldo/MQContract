@@ -1,4 +1,3 @@
-namespace Messages
-{
-    public record User(string UserId, string UserName, string Email);
-}
+namespace Messages;
+
+public record User(string UserId, string UserName, string Email);

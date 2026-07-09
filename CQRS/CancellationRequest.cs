@@ -1,5 +1,4 @@
-﻿namespace MQContract.CQRS
-{
-    internal record CancellationRequest(Guid CorrelationId, Guid MessageId)
-    { }
-}
+﻿namespace MQContract.CQRS;
+
+internal record CancellationRequest(Guid CorrelationId, Guid MessageId)
+{ }

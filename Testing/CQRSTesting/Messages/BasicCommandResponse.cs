@@ -1,6 +1,5 @@
-﻿namespace CQRSTesting.Messages
+﻿namespace CQRSTesting.Messages;
+
+public record BasicCommandResponse(string Name)
 {
-    public record BasicCommandResponse(string Name)
-    {
-    }
 }

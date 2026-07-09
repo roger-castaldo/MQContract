@@ -1,7 +1,6 @@
-﻿namespace BenchMark
+﻿namespace BenchMark;
+
+internal static class Constants
 {
-    internal static class Constants
-    {
-        public const int PublishCount = 200;
-    }
+    public const int PublishCount = 200;
 }

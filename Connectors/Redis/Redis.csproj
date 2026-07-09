@@ -9,11 +9,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\Shared\BaseLoopSubscription.cs" Link="BaseLoopSubscription.cs" />
 	  <Compile Include="..\Shared\BatchedMessageStream.cs" Link="BatchedMessageStream.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="StackExchange.Redis" Version="[2.12.4,3.0.0)" />
+		<PackageReference Include="StackExchange.Redis" Version="[2.13.17,3.0.0)" />
 	</ItemGroup>
 
 	<ItemGroup>

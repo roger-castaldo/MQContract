@@ -1,8 +1,7 @@
-﻿namespace MQContract.Interfaces
+﻿namespace MQContract.Interfaces;
+
+internal interface IInternalSubscription : ISubscription
 {
-    internal interface IInternalSubscription : ISubscription
-    {
-        Guid ID { get; }
-        ValueTask EndAsyncWithoutRemoval();
-    }
+    Guid ID { get; }
+    ValueTask EndAsyncWithoutRemoval();
 }

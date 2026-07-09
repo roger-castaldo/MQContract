@@ -1,13 +1,12 @@
-﻿namespace MQContract.Defaults
+﻿namespace MQContract.Defaults;
+
+internal class ULongEncoder : ABitEncoder<ulong>
 {
-    internal class ULongEncoder : ABitEncoder<ulong>
-    {
-        protected override int ByteSize => sizeof(ulong);
+    protected override int ByteSize => sizeof(ulong);
 
-        protected override ulong ConvertValue(ReadOnlySpan<byte> value)
-            => BitConverter.ToUInt64(value);
+    protected override ulong ConvertValue(ReadOnlySpan<byte> value)
+        => BitConverter.ToUInt64(value);
 
-        protected override byte[] ConvertValue(ulong value)
-            => BitConverter.GetBytes(value);
-    }
+    protected override byte[] ConvertValue(ulong value)
+        => BitConverter.GetBytes(value);
 }

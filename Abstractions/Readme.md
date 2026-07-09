@@ -104,10 +104,18 @@
   - [Item](#P-MQContract-Interfaces-Middleware-IContext-Item-System-String- 'MQContract.Interfaces.Middleware.IContext.Item(System.String)')
 - [IContractConnection](#T-MQContract-Interfaces-IContractConnection 'MQContract.Interfaces.IContractConnection')
   - [BulkPublishAsync\`\`1(messages,channel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{System-ValueTuple{``0,MQContract-Messages-MessageHeader}},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.BulkPublishAsync``1(System.Collections.Generic.IEnumerable{System.ValueTuple{``0,MQContract.Messages.MessageHeader}},System.String,System.Threading.CancellationToken)')
+  - [BulkPublishAsync\`\`1(messages,channel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{``0},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.BulkPublishAsync``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)')
+  - [BulkPublishAsync\`\`1(messages,channel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{MQContract-Messages-TransmissionMessage{``0}},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.BulkPublishAsync``1(System.Collections.Generic.IEnumerable{MQContract.Messages.TransmissionMessage{``0}},System.String,System.Threading.CancellationToken)')
   - [PingAsync()](#M-MQContract-Interfaces-IContractConnection-PingAsync 'MQContract.Interfaces.IContractConnection.PingAsync')
   - [PublishAsync\`\`1(message,channel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-PublishAsync``1-``0,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.PublishAsync``1(``0,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [PublishAsync\`\`1(message,channel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-PublishAsync``1-``0,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.PublishAsync``1(``0,System.String,System.Threading.CancellationToken)')
+  - [PublishAsync\`\`1(message,channel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-PublishAsync``1-MQContract-Messages-TransmissionMessage{``0},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.PublishAsync``1(MQContract.Messages.TransmissionMessage{``0},System.String,System.Threading.CancellationToken)')
   - [QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.QueryAsync``1(``0,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [QueryAsync\`\`1(message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.QueryAsync``1(``0,System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
+  - [QueryAsync\`\`1(message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-QueryAsync``1-MQContract-Messages-TransmissionMessage{``0},System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.QueryAsync``1(MQContract.Messages.TransmissionMessage{``0},System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
   - [QueryAsync\`\`2(message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.QueryAsync``2(``0,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [QueryAsync\`\`2(message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.QueryAsync``2(``0,System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
+  - [QueryAsync\`\`2(message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-Interfaces-IContractConnection-QueryAsync``2-MQContract-Messages-TransmissionMessage{``0},System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IContractConnection.QueryAsync``2(MQContract.Messages.TransmissionMessage{``0},System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
 - [IContractMetric](#T-MQContract-Interfaces-IContractMetric 'MQContract.Interfaces.IContractMetric')
   - [MessageBytes](#P-MQContract-Interfaces-IContractMetric-MessageBytes 'MQContract.Interfaces.IContractMetric.MessageBytes')
   - [MessageBytesAverage](#P-MQContract-Interfaces-IContractMetric-MessageBytesAverage 'MQContract.Interfaces.IContractMetric.MessageBytesAverage')
@@ -183,10 +191,18 @@
   - [RegisterMiddlewareAsync\`\`2(constructInstance)](#M-MQContract-Interfaces-IMiddlewareContractConnection`1-RegisterMiddlewareAsync``2-System-Func{``0}- 'MQContract.Interfaces.IMiddlewareContractConnection`1.RegisterMiddlewareAsync``2(System.Func{``0})')
 - [IMultiServiceContractConnection](#T-MQContract-Interfaces-IMultiServiceContractConnection 'MQContract.Interfaces.IMultiServiceContractConnection')
   - [BulkPublishAsync\`\`1(messages,channel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{System-ValueTuple{``0,MQContract-Messages-MessageHeader}},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.BulkPublishAsync``1(System.Collections.Generic.IEnumerable{System.ValueTuple{``0,MQContract.Messages.MessageHeader}},System.String,System.Threading.CancellationToken)')
+  - [BulkPublishAsync\`\`1(messages,channel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{``0},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.BulkPublishAsync``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)')
+  - [BulkPublishAsync\`\`1(messages,channel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{MQContract-Messages-TransmissionMessage{``0}},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.BulkPublishAsync``1(System.Collections.Generic.IEnumerable{MQContract.Messages.TransmissionMessage{``0}},System.String,System.Threading.CancellationToken)')
   - [PingAsync()](#M-MQContract-Interfaces-IMultiServiceContractConnection-PingAsync 'MQContract.Interfaces.IMultiServiceContractConnection.PingAsync')
   - [PublishAsync\`\`1(message,channel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-PublishAsync``1-``0,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.PublishAsync``1(``0,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [PublishAsync\`\`1(message,channel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-PublishAsync``1-``0,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.PublishAsync``1(``0,System.String,System.Threading.CancellationToken)')
+  - [PublishAsync\`\`1(message,channel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-PublishAsync``1-MQContract-Messages-TransmissionMessage{``0},System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.PublishAsync``1(MQContract.Messages.TransmissionMessage{``0},System.String,System.Threading.CancellationToken)')
   - [QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``1(``0,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [QueryAsync\`\`1(message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``1(``0,System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
+  - [QueryAsync\`\`1(message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``1-MQContract-Messages-TransmissionMessage{``0},System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``1(MQContract.Messages.TransmissionMessage{``0},System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
   - [QueryAsync\`\`2(message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``2(``0,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [QueryAsync\`\`2(message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``2(``0,System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
+  - [QueryAsync\`\`2(message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``2-MQContract-Messages-TransmissionMessage{``0},System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.Interfaces.IMultiServiceContractConnection.QueryAsync``2(MQContract.Messages.TransmissionMessage{``0},System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
   - [RegisterServiceConnection(serviceConnectionName,messageServiceConnection)](#M-MQContract-Interfaces-IMultiServiceContractConnection-RegisterServiceConnection-System-String,MQContract-Interfaces-Service-IMessageServiceConnection- 'MQContract.Interfaces.IMultiServiceContractConnection.RegisterServiceConnection(System.String,MQContract.Interfaces.Service.IMessageServiceConnection)')
 - [IPingableMessageServiceConnection](#T-MQContract-Interfaces-Service-IPingableMessageServiceConnection 'MQContract.Interfaces.Service.IPingableMessageServiceConnection')
   - [PingAsync()](#M-MQContract-Interfaces-Service-IPingableMessageServiceConnection-PingAsync 'MQContract.Interfaces.Service.IPingableMessageServiceConnection.PingAsync')
@@ -226,8 +242,8 @@
   - [DefinedMessages](#P-MQContract-MQContractMessageContext-DefinedMessages 'MQContract.MQContractMessageContext.DefinedMessages')
   - [IsMessageCodeGenerated(messageType)](#M-MQContract-MQContractMessageContext-IsMessageCodeGenerated-System-Type- 'MQContract.MQContractMessageContext.IsMessageCodeGenerated(System.Type)')
   - [IsMessageCodeGenerated\`\`1()](#M-MQContract-MQContractMessageContext-IsMessageCodeGenerated``1 'MQContract.MQContractMessageContext.IsMessageCodeGenerated``1')
-  - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
-  - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IMultiServiceContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IMultiServiceContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,MQContract.Messages.MessageHeader,System.Threading.CancellationToken)')
+  - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
+  - [TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,cancellationToken)](#M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IMultiServiceContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken- 'MQContract.MQContractMessageContext.TryExecuteQuery``1(MQContract.Interfaces.IMultiServiceContractConnection,System.Object,System.Nullable{System.TimeSpan},System.String,System.String,System.Threading.CancellationToken)')
   - [TryGetDecodingCallback(messageID,globalMessageEncoder,serviceProvider)](#M-MQContract-MQContractMessageContext-TryGetDecodingCallback-System-String,MQContract-Interfaces-Encoding-IMessageEncoder,System-IServiceProvider- 'MQContract.MQContractMessageContext.TryGetDecodingCallback(System.String,MQContract.Interfaces.Encoding.IMessageEncoder,System.IServiceProvider)')
   - [TryGetMessageConverter\`\`1(messageID,messageDecode,serviceProvider)](#M-MQContract-MQContractMessageContext-TryGetMessageConverter``1-System-String,System-Func{MQContract-Interfaces-Messages-IEncodedMessage,System-Threading-Tasks-ValueTask{System-Object}},System-IServiceProvider- 'MQContract.MQContractMessageContext.TryGetMessageConverter``1(System.String,System.Func{MQContract.Interfaces.Messages.IEncodedMessage,System.Threading.Tasks.ValueTask{System.Object}},System.IServiceProvider)')
   - [TryGetMessageEncoder\`\`1(globalMessageEncoder,serviceProvider)](#M-MQContract-MQContractMessageContext-TryGetMessageEncoder``1-MQContract-Interfaces-Encoding-IMessageEncoder,System-IServiceProvider- 'MQContract.MQContractMessageContext.TryGetMessageEncoder``1(MQContract.Interfaces.Encoding.IMessageEncoder,System.IServiceProvider)')
@@ -370,6 +386,11 @@
 - [TransmissionException](#T-MQContract-TransmissionException 'MQContract.TransmissionException')
   - [#ctor(underlyingError,isFatal)](#M-MQContract-TransmissionException-#ctor-System-Exception,System-Boolean- 'MQContract.TransmissionException.#ctor(System.Exception,System.Boolean)')
   - [IsFatal](#P-MQContract-TransmissionException-IsFatal 'MQContract.TransmissionException.IsFatal')
+- [TransmissionMessage\`1](#T-MQContract-Messages-TransmissionMessage`1 'MQContract.Messages.TransmissionMessage`1')
+  - [#ctor(Message,ID,Header)](#M-MQContract-Messages-TransmissionMessage`1-#ctor-`0,System-String,MQContract-Messages-MessageHeader- 'MQContract.Messages.TransmissionMessage`1.#ctor(`0,System.String,MQContract.Messages.MessageHeader)')
+  - [Header](#P-MQContract-Messages-TransmissionMessage`1-Header 'MQContract.Messages.TransmissionMessage`1.Header')
+  - [ID](#P-MQContract-Messages-TransmissionMessage`1-ID 'MQContract.Messages.TransmissionMessage`1.ID')
+  - [Message](#P-MQContract-Messages-TransmissionMessage`1-Message 'MQContract.Messages.TransmissionMessage`1.Message')
 - [TransmissionResult](#T-MQContract-Messages-TransmissionResult 'MQContract.Messages.TransmissionResult')
   - [#ctor(ID,Error)](#M-MQContract-Messages-TransmissionResult-#ctor-System-String,MQContract-Messages-ErrorMessage- 'MQContract.Messages.TransmissionResult.#ctor(System.String,MQContract.Messages.ErrorMessage)')
   - [Error](#P-MQContract-Messages-TransmissionResult-Error 'MQContract.Messages.TransmissionResult.Error')
@@ -2186,6 +2207,56 @@ A result indicating the tranmission results
 | ---- | ----------- |
 | TMessage | The type of message to send |
 
+<a name='M-MQContract-Interfaces-IContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{``0},System-String,System-Threading-CancellationToken-'></a>
+### BulkPublishAsync\`\`1(messages,channel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a bulk set of messages into the underlying service Pub/Sub style
+
+##### Returns
+
+A result indicating the tranmission results
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messages | [System.Collections.Generic.IEnumerable{\`\`0}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{``0}') | The set of messages to transmit |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to send |
+
+<a name='M-MQContract-Interfaces-IContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{MQContract-Messages-TransmissionMessage{``0}},System-String,System-Threading-CancellationToken-'></a>
+### BulkPublishAsync\`\`1(messages,channel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a bulk set of messages into the underlying service Pub/Sub style
+
+##### Returns
+
+A result indicating the tranmission results
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messages | [System.Collections.Generic.IEnumerable{MQContract.Messages.TransmissionMessage{\`\`0}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{MQContract.Messages.TransmissionMessage{``0}}') | The set of messages to transmit with additional properties such as ID or Headers |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to send |
+
 <a name='M-MQContract-Interfaces-IContractConnection-PingAsync'></a>
 ### PingAsync() `method`
 
@@ -2234,6 +2305,66 @@ var result = await contractConnection.PublishAsync(new ArrivalAnnouncement("John
 Console.WriteLine($"Published ID: {result.ID}");
 ```
 
+<a name='M-MQContract-Interfaces-IContractConnection-PublishAsync``1-``0,System-String,System-Threading-CancellationToken-'></a>
+### PublishAsync\`\`1(message,channel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying service Pub/Sub style
+
+##### Returns
+
+A result indicating the tranmission results
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [\`\`0](#T-``0 '``0') | The message to send |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to send |
+
+##### Example
+
+```
+var result = await contractConnection.PublishAsync(new ArrivalAnnouncement("John", "Doe"));
+Console.WriteLine($"Published ID: {result.ID}");
+```
+
+<a name='M-MQContract-Interfaces-IContractConnection-PublishAsync``1-MQContract-Messages-TransmissionMessage{``0},System-String,System-Threading-CancellationToken-'></a>
+### PublishAsync\`\`1(message,channel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying service Pub/Sub style
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Messages.TransmissionMessage{\`\`0}](#T-MQContract-Messages-TransmissionMessage{``0} 'MQContract.Messages.TransmissionMessage{``0}') | The message to send with additional properties such as ID or Headers |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to send |
+
+##### Example
+
+```
+var result = await contractConnection.PublishAsync(new ArrivalAnnouncement("John", "Doe"));
+Console.WriteLine($"Published ID: {result.ID}");
+```
+
 <a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
 
@@ -2264,6 +2395,64 @@ only used when the underlying connection does not support a QueryResponse style 
 | ---- | ----------- |
 | TQuery | The type of message to send for the query |
 
+<a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### QueryAsync\`\`1(message,timeout,channel,responseChannel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying service in the Query/Response style.  The return type is not specified here and is instead obtained from the QueryResponseTypeAttribute
+attached to the Query message type class.
+
+##### Returns
+
+A result indicating the success or failure as well as the returned message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [\`\`0](#T-``0 '``0') | The message to send |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The allowed timeout prior to a response being received |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+only used when the underlying connection does not support a QueryResponse style messaging. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to send for the query |
+
+<a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``1-MQContract-Messages-TransmissionMessage{``0},System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### QueryAsync\`\`1(message,timeout,channel,responseChannel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying service in the Query/Response style.  The return type is not specified here and is instead obtained from the QueryResponseTypeAttribute
+attached to the Query message type class.
+
+##### Returns
+
+A result indicating the success or failure as well as the returned message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Messages.TransmissionMessage{\`\`0}](#T-MQContract-Messages-TransmissionMessage{``0} 'MQContract.Messages.TransmissionMessage{``0}') | The message to send with additional properties such as ID or Headers |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The allowed timeout prior to a response being received |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+only used when the underlying connection does not support a QueryResponse style messaging. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to send for the query |
+
 <a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`2(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
 
@@ -2285,6 +2474,78 @@ A result indicating the success or failure as well as the returned message
 | responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
 only used when the underlying connection does not support a QueryResponse style messaging. |
 | messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The headers to pass along with the message |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to send for the query |
+| TQueryResponse | The type of message to expect back for the response |
+
+##### Example
+
+```
+var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("John", "Doe"));
+Console.WriteLine($"Response: {response.Result}");
+```
+
+<a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### QueryAsync\`\`2(message,timeout,channel,responseChannel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying service in the Query/Response style
+
+##### Returns
+
+A result indicating the success or failure as well as the returned message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [\`\`0](#T-``0 '``0') | The message to send |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The allowed timeout prior to a response being received |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+only used when the underlying connection does not support a QueryResponse style messaging. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to send for the query |
+| TQueryResponse | The type of message to expect back for the response |
+
+##### Example
+
+```
+var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("John", "Doe"));
+Console.WriteLine($"Response: {response.Result}");
+```
+
+<a name='M-MQContract-Interfaces-IContractConnection-QueryAsync``2-MQContract-Messages-TransmissionMessage{``0},System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### QueryAsync\`\`2(message,timeout,channel,responseChannel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying service in the Query/Response style
+
+##### Returns
+
+A result indicating the success or failure as well as the returned message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Messages.TransmissionMessage{\`\`0}](#T-MQContract-Messages-TransmissionMessage{``0} 'MQContract.Messages.TransmissionMessage{``0}') | The message to send with additional properties such as ID or Headers |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The allowed timeout prior to a response being received |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+only used when the underlying connection does not support a QueryResponse style messaging. |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
 ##### Generic Types
@@ -3482,6 +3743,56 @@ A result indicating the tranmission results
 | ---- | ----------- |
 | TMessage | The type of message to send |
 
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{``0},System-String,System-Threading-CancellationToken-'></a>
+### BulkPublishAsync\`\`1(messages,channel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a bulk set of messages into the underlying services Pub/Sub style
+
+##### Returns
+
+A result indicating the tranmission results
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messages | [System.Collections.Generic.IEnumerable{\`\`0}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{``0}') | The set of messages to transmit |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to send |
+
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-BulkPublishAsync``1-System-Collections-Generic-IEnumerable{MQContract-Messages-TransmissionMessage{``0}},System-String,System-Threading-CancellationToken-'></a>
+### BulkPublishAsync\`\`1(messages,channel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a bulk set of messages into the underlying services Pub/Sub style
+
+##### Returns
+
+A result indicating the tranmission results
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| messages | [System.Collections.Generic.IEnumerable{MQContract.Messages.TransmissionMessage{\`\`0}}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Collections.Generic.IEnumerable 'System.Collections.Generic.IEnumerable{MQContract.Messages.TransmissionMessage{``0}}') | The set of messages to transmit with additional properties such as ID or Headers |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to send |
+
 <a name='M-MQContract-Interfaces-IMultiServiceContractConnection-PingAsync'></a>
 ### PingAsync() `method`
 
@@ -3523,6 +3834,56 @@ A result indicating the tranmission results
 | ---- | ----------- |
 | TMessage | The type of message to send |
 
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-PublishAsync``1-``0,System-String,System-Threading-CancellationToken-'></a>
+### PublishAsync\`\`1(message,channel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying services Pub/Sub style
+
+##### Returns
+
+A result indicating the tranmission results
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [\`\`0](#T-``0 '``0') | The message to send |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to send |
+
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-PublishAsync``1-MQContract-Messages-TransmissionMessage{``0},System-String,System-Threading-CancellationToken-'></a>
+### PublishAsync\`\`1(message,channel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying services Pub/Sub style
+
+##### Returns
+
+A result indicating the tranmission results
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Messages.TransmissionMessage{\`\`0}](#T-MQContract-Messages-TransmissionMessage{``0} 'MQContract.Messages.TransmissionMessage{``0}') | The message to send with additional properties such as ID or Headers |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of message to send |
+
 <a name='M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`1(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
 
@@ -3553,6 +3914,64 @@ only used when the underlying connection does not support a QueryResponse style 
 | ---- | ----------- |
 | TQuery | The type of message to send for the query |
 
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``1-``0,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### QueryAsync\`\`1(message,timeout,channel,responseChannel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying services in the Query/Response style.  The return type is not specified here and is instead obtained from the QueryResponseTypeAttribute
+attached to the Query message type class.
+
+##### Returns
+
+A result indicating the success or failure as well as the returned message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [\`\`0](#T-``0 '``0') | The message to send |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The allowed timeout prior to a response being received |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+only used when the underlying connection does not support a QueryResponse style messaging. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to send for the query |
+
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``1-MQContract-Messages-TransmissionMessage{``0},System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### QueryAsync\`\`1(message,timeout,channel,responseChannel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying services in the Query/Response style.  The return type is not specified here and is instead obtained from the QueryResponseTypeAttribute
+attached to the Query message type class.
+
+##### Returns
+
+A result indicating the success or failure as well as the returned message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Messages.TransmissionMessage{\`\`0}](#T-MQContract-Messages-TransmissionMessage{``0} 'MQContract.Messages.TransmissionMessage{``0}') | The message to send with additional properties such as ID or Headers |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The allowed timeout prior to a response being received |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+only used when the underlying connection does not support a QueryResponse style messaging. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to send for the query |
+
 <a name='M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
 ### QueryAsync\`\`2(message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
 
@@ -3574,6 +3993,64 @@ A result indicating the success or failure as well as the returned message
 | responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
 only used when the underlying connection does not support a QueryResponse style messaging. |
 | messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The headers to pass along with the message |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to send for the query |
+| TQueryResponse | The type of message to expect back for the response |
+
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``2-``0,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### QueryAsync\`\`2(message,timeout,channel,responseChannel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying services in the Query/Response style
+
+##### Returns
+
+A result indicating the success or failure as well as the returned message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [\`\`0](#T-``0 '``0') | The message to send |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The allowed timeout prior to a response being received |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+only used when the underlying connection does not support a QueryResponse style messaging. |
+| cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TQuery | The type of message to send for the query |
+| TQueryResponse | The type of message to expect back for the response |
+
+<a name='M-MQContract-Interfaces-IMultiServiceContractConnection-QueryAsync``2-MQContract-Messages-TransmissionMessage{``0},System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### QueryAsync\`\`2(message,timeout,channel,responseChannel,cancellationToken) `method`
+
+##### Summary
+
+Called to send a message into the underlying services in the Query/Response style
+
+##### Returns
+
+A result indicating the success or failure as well as the returned message
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | [MQContract.Messages.TransmissionMessage{\`\`0}](#T-MQContract-Messages-TransmissionMessage{``0} 'MQContract.Messages.TransmissionMessage{``0}') | The message to send with additional properties such as ID or Headers |
+| timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The allowed timeout prior to a response being received |
+| channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use.  The prefered method is using the MessageChannelAttribute on the class. |
+| responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | Specifies the message channel to use for the response.  The preferred method is using the QueryResponseChannelAttribute on the class.  This is 
+only used when the underlying connection does not support a QueryResponse style messaging. |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
 ##### Generic Types
@@ -4129,8 +4606,8 @@ This method has no parameters.
 | ---- | ----------- |
 | TMessage | The type of message to check for |
 
-<a name='M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
-### TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
+<a name='M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,cancellationToken) `method`
 
 ##### Summary
 
@@ -4149,7 +4626,6 @@ null or the Query attempt against the given connection
 | timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The query timeout |
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to use |
 | responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The response channel to use |
-| messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message header to use |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
 ##### Generic Types
@@ -4162,8 +4638,8 @@ null or the Query attempt against the given connection
 
 This will be implemented by the code generator
 
-<a name='M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IMultiServiceContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,MQContract-Messages-MessageHeader,System-Threading-CancellationToken-'></a>
-### TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,messageHeader,cancellationToken) `method`
+<a name='M-MQContract-MQContractMessageContext-TryExecuteQuery``1-MQContract-Interfaces-IMultiServiceContractConnection,System-Object,System-Nullable{System-TimeSpan},System-String,System-String,System-Threading-CancellationToken-'></a>
+### TryExecuteQuery\`\`1(contractConnection,message,timeout,channel,responseChannel,cancellationToken) `method`
 
 ##### Summary
 
@@ -4182,7 +4658,6 @@ null or the Query attempt against the given connection
 | timeout | [System.Nullable{System.TimeSpan}](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Nullable 'System.Nullable{System.TimeSpan}') | The query timeout |
 | channel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The channel to use |
 | responseChannel | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The response channel to use |
-| messageHeader | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The message header to use |
 | cancellationToken | [System.Threading.CancellationToken](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.Threading.CancellationToken 'System.Threading.CancellationToken') | A cancellation token |
 
 ##### Generic Types
@@ -6500,6 +6975,71 @@ Thrown when an error occurs attempting to transmit a given message and is flagge
 ##### Summary
 
 Indicates if the error that occured is fatal
+
+<a name='T-MQContract-Messages-TransmissionMessage`1'></a>
+## TransmissionMessage\`1 `type`
+
+##### Namespace
+
+MQContract.Messages
+
+##### Summary
+
+Represents a transmission message with an optional identifier and header.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| Message | [T:MQContract.Messages.TransmissionMessage\`1](#T-T-MQContract-Messages-TransmissionMessage`1 'T:MQContract.Messages.TransmissionMessage`1') | The message object to be transmitted |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of the message payload. |
+
+<a name='M-MQContract-Messages-TransmissionMessage`1-#ctor-`0,System-String,MQContract-Messages-MessageHeader-'></a>
+### #ctor(Message,ID,Header) `constructor`
+
+##### Summary
+
+Represents a transmission message with an optional identifier and header.
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| Message | [\`0](#T-`0 '`0') | The message object to be transmitted |
+| ID | [System.String](http://msdn.microsoft.com/query/dev14.query?appId=Dev14IDEF1&l=EN-US&k=k:System.String 'System.String') | The optional message ID for the message if desired |
+| Header | [MQContract.Messages.MessageHeader](#T-MQContract-Messages-MessageHeader 'MQContract.Messages.MessageHeader') | The optional headers to pass with the message during transmission |
+
+##### Generic Types
+
+| Name | Description |
+| ---- | ----------- |
+| TMessage | The type of the message payload. |
+
+<a name='P-MQContract-Messages-TransmissionMessage`1-Header'></a>
+### Header `property`
+
+##### Summary
+
+The optional headers to pass with the message during transmission
+
+<a name='P-MQContract-Messages-TransmissionMessage`1-ID'></a>
+### ID `property`
+
+##### Summary
+
+The optional message ID for the message if desired
+
+<a name='P-MQContract-Messages-TransmissionMessage`1-Message'></a>
+### Message `property`
+
+##### Summary
+
+The message object to be transmitted
 
 <a name='T-MQContract-Messages-TransmissionResult'></a>
 ## TransmissionResult `type`

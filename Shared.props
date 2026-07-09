@@ -4,7 +4,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<Company>$(AssemblyName)</Company>
-		<VersionPrefix>3.9.2</VersionPrefix>
+		<VersionPrefix>4.0.0</VersionPrefix>
 		<PackageProjectUrl>https://github.com/roger-castaldo/MQContract</PackageProjectUrl>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/roger-castaldo/MQContract</RepositoryUrl>

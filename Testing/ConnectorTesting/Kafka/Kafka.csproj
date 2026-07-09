@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<GenerateCodeCoverage>true</GenerateCodeCoverage>
+	</PropertyGroup>
+	
+<ItemGroup>
+		<PackageReference Include="Testcontainers.Kafka" Version="4.12.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+		<PackageReference Include="MSTest.TestAdapter" Version="4.2.3" />
+		<PackageReference Include="MSTest.TestFramework" Version="4.2.3" />
+		<PackageReference Include="coverlet.collector" Version="10.0.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.msbuild" Version="10.0.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\Connectors\Kafka\Kafka.csproj" />
+	  <ProjectReference Include="..\..\..\Core\Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Generators\Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\AServiceHarness.cs" Link="AServiceHarness.cs" />
+	<Compile Include="..\Shared\Messages\Announcement.cs" Link="Messages\Announcement.cs" />
+	<Compile Include="..\Shared\Messages\Prompt.cs" Link="Messages\Prompt.cs" />
+	<Compile Include="..\Shared\Messages\TestMessageContext.cs" Link="Messages\TestMessageContext.cs" />
+    <Compile Include="..\Shared\Helpers\BulkPubSubTestHelper.cs" Link="Helpers\BulkPubSubTestHelper.cs" />
+    <Compile Include="..\Shared\Helpers\PingTestHelper.cs" Link="Helpers\PingTestHelper.cs" />
+    <Compile Include="..\Shared\Helpers\PubSubTestHelper.cs" Link="Helpers\PubSubTestHelper.cs" />
+    <Compile Include="..\Shared\Helpers\QueryResponseTestHelper.cs" Link="Helpers\QueryResponseTestHelper.cs" />
+    <Compile Include="..\Shared\Helpers\TestHelper.cs" Link="Helpers\TestHelper.cs" />
+	  <Compile Include="..\Shared\MSTestSettings.cs" Link="MSTestSettings.cs" />
+  </ItemGroup>
+
+</Project>

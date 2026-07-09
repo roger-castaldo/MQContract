@@ -1,63 +1,36 @@
 ﻿using Google.Cloud.PubSub.V1;
-using MQContract.Interfaces.Service;
 using MQContract.Messages;
 
 
-namespace MQContract.GooglePubSub
+namespace MQContract.GooglePubSub;
+
+internal class Subscription(SubscriberServiceApiClient subscriberClientApi, SubscriptionName subscriptionName, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel) 
+    : BaseLoopSubscription(errorReceived)
 {
-    internal class Subscription(SubscriberServiceApiClient subscriberClientApi, SubscriptionName subscriptionName, Func<ReceivedServiceMessage, ValueTask> messageReceived, Action<Exception> errorReceived, string channel) : IServiceSubscription, IAsyncDisposable
+    protected override async ValueTask RecieveMessageAsync(CancellationToken cancelToken)
     {
-        protected readonly CancellationTokenSource cancelToken = new();
-        private bool disposedValue;
-
-        public void Start()
+        try
         {
-            _ = Task.Run(async () =>
+            var msg = await subscriberClientApi.PullAsync(subscriptionName, 1, cancelToken);
+            if (msg!=null)
             {
-                while (!cancelToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        var msg = await subscriberClientApi.PullAsync(subscriptionName, 1, cancelToken.Token);
-                        if (msg!=null)
+                var ackSource = new TaskCompletionSource();
+                await Task.WhenAny(
+                    messageReceived(Connection.ConvertMessage(
+                        msg.ReceivedMessages[0],
+                        channel,
+                        async () =>
                         {
-                            var ackSource = new TaskCompletionSource();
-                            await Task.WhenAny(
-                                messageReceived(Connection.ConvertMessage(
-                                    msg.ReceivedMessages[0],
-                                    channel,
-                                    async () =>
-                                    {
-                                        await subscriberClientApi.AcknowledgeAsync(subscriptionName, [msg.ReceivedMessages[0].AckId], cancelToken.Token);
-                                        ackSource.SetResult();
-                                    }
-                                )).AsTask(),
-                                ackSource.Task
-                            );
+                            await subscriberClientApi.AcknowledgeAsync(subscriptionName, [msg.ReceivedMessages[0].AckId], cancelToken);
+                            ackSource.SetResult();
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        errorReceived(ex);
-                    }
-                }
-            });
-        }
-
-        public async ValueTask EndAsync()
-        {
-            if (!cancelToken.IsCancellationRequested)
-                await cancelToken.CancelAsync();
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            if (!disposedValue)
-            {
-                disposedValue=true;
-                await EndAsync();
-                cancelToken.Dispose();
+                    )).AsTask(),
+                    ackSource.Task
+                );
             }
+        }catch(Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Cancelled)
+        {
+            // Ignore cancellation exceptions
         }
     }
 }

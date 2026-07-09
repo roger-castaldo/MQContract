@@ -6,133 +6,132 @@ using MQContract.Messages;
 using System.Diagnostics;
 using System.Text.Json;
 
-namespace Messages
+namespace Messages;
+
+public static class SampleExecution
 {
-    public static class SampleExecution
+    public static async ValueTask ExecuteSample(IMessageServiceConnection serviceConnection, string serviceName, ChannelMapper? mapper = null, IEnumerable<IMiddleware>? middlewares = null, MQContractMessageContext? messageContext=null)
     {
-        public static async ValueTask ExecuteSample(IMessageServiceConnection serviceConnection, string serviceName, ChannelMapper? mapper = null, IEnumerable<IMiddleware>? middlewares = null, MQContractMessageContext? messageContext=null)
-        {
-            using var sourceCancel = new CancellationTokenSource();
+        using var sourceCancel = new CancellationTokenSource();
 
-            var contractConnection = ContractConnection.Instance(serviceConnection, channelMapper: mapper)
-                .RegisterResiliencePolicy<Greeting>(
-                    retryPolicy: (3, (ct) => TimeSpan.FromSeconds(1)),
-                    circuitBreakPolicy: (4, TimeSpan.FromSeconds(5))
+        var contractConnection = ContractConnection.Instance(serviceConnection, channelMapper: mapper)
+            .RegisterResiliencePolicy<Greeting>(
+                retryPolicy: (3, (ct) => TimeSpan.FromSeconds(1)),
+                circuitBreakPolicy: (4, TimeSpan.FromSeconds(5))
+            );
+        if (messageContext!=null)
+            contractConnection = await contractConnection.RegisterMessageContextAsync(messageContext);
+        var healthCheck = contractConnection.HealthCheck;
+        Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck!.CheckHealthAsync(new(), sourceCancel.Token))}");
+        contractConnection.AddMetrics(null, true)
+            .EnableOpenTelemetry(linkActivitiesAcrossSystems: true);
+
+        foreach (var middleware in middlewares?? [])
+            contractConnection = await contractConnection.RegisterMiddlewareAsync(middleware);
+
+        var announcementSubscription1 = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
+            (announcement) =>
+            {
+                Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName} in member 1 of the group.. [{announcement.ID},{announcement.ReceivedTimestamp}]");
+                return ValueTask.CompletedTask;
+            },
+            (error) =>
+            {
+                Console.WriteLine($"Announcement error: {error.Message}");
+            },
+            group: "AnnouncementGroup",
+            cancellationToken: sourceCancel.Token
+        );
+
+        await contractConnection.RegisterPubSubConsumerAsync<ArrivalAnnouncement, AnnouncementConsumer>(group: "AnnouncementGroup", cancellationToken: sourceCancel.Token);
+
+        var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
+            (greeting) =>
+            {
+                Console.WriteLine($"Greeting received for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.ReceivedTimestamp}]");
+                return new(
+                    $"Welcome {greeting.Message.FirstName} {greeting.Message.LastName} to the {serviceName} sample"
                 );
-            if (messageContext!=null)
-                contractConnection = await contractConnection.RegisterMessageContextAsync(messageContext);
-            var healthCheck = contractConnection.HealthCheck;
-            Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck!.CheckHealthAsync(new(), sourceCancel.Token))}");
-            contractConnection.AddMetrics(null, true)
-                .EnableOpenTelemetry(linkActivitiesAcrossSystems: true);
+            },
+            (error) => Console.WriteLine($"Greeting error: {error.Message}"),
+            cancellationToken: sourceCancel.Token
+        );
 
-            foreach (var middleware in middlewares?? [])
-                contractConnection = await contractConnection.RegisterMiddlewareAsync(middleware);
-
-            var announcementSubscription1 = await contractConnection.SubscribeAsync<ArrivalAnnouncement>(
-                (announcement) =>
-                {
-                    Console.WriteLine($"Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName} in member 1 of the group.. [{announcement.ID},{announcement.ReceivedTimestamp}]");
-                    return ValueTask.CompletedTask;
-                },
-                (error) =>
-                {
-                    Console.WriteLine($"Announcement error: {error.Message}");
-                },
-                group: "AnnouncementGroup",
-                cancellationToken: sourceCancel.Token
-            );
-
-            await contractConnection.RegisterPubSubConsumerAsync<ArrivalAnnouncement, AnnouncementConsumer>(group: "AnnouncementGroup", cancellationToken: sourceCancel.Token);
-
-            var greetingSubscription = await contractConnection.SubscribeQueryResponseAsync<Greeting, string>(
-                (greeting) =>
-                {
-                    Console.WriteLine($"Greeting received for {greeting.Message.LastName}, {greeting.Message.FirstName}. [{greeting.ID},{greeting.ReceivedTimestamp}]");
-                    return new(
-                        $"Welcome {greeting.Message.FirstName} {greeting.Message.LastName} to the {serviceName} sample"
-                    );
-                },
-                (error) => Console.WriteLine($"Greeting error: {error.Message}"),
-                cancellationToken: sourceCancel.Token
-            );
-
-            var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredArrivalAnnouncement>(
-                (announcement) =>
-                {
-                    Console.WriteLine($"Stored Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.ReceivedTimestamp}]");
-                    return ValueTask.CompletedTask;
-                },
-                (error) => Console.WriteLine($"Stored Announcement error: {error.Message}"),
-                cancellationToken: sourceCancel.Token
-            );
-
-            sourceCancel.Token.Register(async () =>
+        var storedArrivalSubscription = await contractConnection.SubscribeAsync<StoredArrivalAnnouncement>(
+            (announcement) =>
             {
-                await Task.WhenAll(
-                    announcementSubscription1.EndAsync().AsTask(),
-                    greetingSubscription.EndAsync().AsTask(),
-                    storedArrivalSubscription.EndAsync().AsTask()
-                ).ConfigureAwait(true);
-                await contractConnection.CloseAsync().ConfigureAwait(true);
-                Console.WriteLine("Connection closed, system exiting.");
-            }, true);
+                Console.WriteLine($"Stored Announcing the arrival of {announcement.Message.LastName}, {announcement.Message.FirstName}. [{announcement.ID},{announcement.ReceivedTimestamp}]");
+                return ValueTask.CompletedTask;
+            },
+            (error) => Console.WriteLine($"Stored Announcement error: {error.Message}"),
+            cancellationToken: sourceCancel.Token
+        );
 
-            Console.WriteLine("Awaiting 5 seconds to ensure that all subscriptions are established fully.");
-            await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
-            Console.WriteLine("Beginning message transmissions...");
-            var start = Stopwatch.GetTimestamp();
+        sourceCancel.Token.Register(async () =>
+        {
+            await Task.WhenAll(
+                announcementSubscription1.EndAsync().AsTask(),
+                greetingSubscription.EndAsync().AsTask(),
+                storedArrivalSubscription.EndAsync().AsTask()
+            ).ConfigureAwait(true);
+            await contractConnection.CloseAsync().ConfigureAwait(true);
+            Console.WriteLine("Connection closed, system exiting.");
+        }, true);
 
-            var result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
-            Console.WriteLine($"Result 1 [Success:{!result.IsError}, ID:{result.ID}]");
-            result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
-            Console.WriteLine($"Result 2 [Success:{!result.IsError}, ID:{result.ID}]");
+        Console.WriteLine("Awaiting 5 seconds to ensure that all subscriptions are established fully.");
+        await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+        Console.WriteLine("Beginning message transmissions...");
+        var start = Stopwatch.GetTimestamp();
 
-            Console.WriteLine("Broadcasting multiple announcements to demonstrate grouping...");
-            for (var x = 0; x<10; x++)
-            {
-                result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new($"FirstName{x}", $"LastName{x}"), cancellationToken: sourceCancel.Token);
-                Console.WriteLine($"Broadcast Result {x} [Success:{!result.IsError}, ID:{result.ID}]");
-            }
+        var result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new TransmissionMessage<ArrivalAnnouncement>(new("Bob", "Loblaw")), cancellationToken: sourceCancel.Token);
+        Console.WriteLine($"Result 1 [Success:{!result.IsError}, ID:{result.ID}]");
+        result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new TransmissionMessage<ArrivalAnnouncement>(new("Fred", "Flintstone")), cancellationToken: sourceCancel.Token);
+        Console.WriteLine($"Result 2 [Success:{!result.IsError}, ID:{result.ID}]");
 
-            List<(ArrivalAnnouncement, MessageHeader?)> arrivalAnnouncements = [];
-            for (var x = 10; x<50; x++)
-                arrivalAnnouncements.Add((new($"FirstName{x}", $"LastName{x}"), null));
-
-            var bulkResult = await contractConnection.BulkPublishAsync<ArrivalAnnouncement>(arrivalAnnouncements, cancellationToken: sourceCancel.Token);
-
-            foreach (var res in bulkResult)
-                Console.WriteLine($"Bulk Broadcast Result [Success:{!res.IsError}, ID:{res.ID}]");
-
-            var response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
-            Console.WriteLine($"Response 1 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
-            response = await contractConnection.QueryAsync<Greeting, string>(new Greeting("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
-            Console.WriteLine($"Response 2 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
-
-            var storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Bob", "Loblaw"), cancellationToken: sourceCancel.Token);
-            Console.WriteLine($"Stored Result 1 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
-            storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new("Fred", "Flintstone"), cancellationToken: sourceCancel.Token);
-            Console.WriteLine($"Stored Result 2 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
-
-            Console.WriteLine("Press Enter to close");
-
-            Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck.CheckHealthAsync(new(), sourceCancel.Token))}");
-            var stop = Stopwatch.GetElapsedTime(start);
-            Console.ReadLine();
-            await sourceCancel.CancelAsync();
-
-            Console.WriteLine("System completed operation");
-            var jsonOptions = new JsonSerializerOptions()
-            {
-                WriteIndented = true
-            };
-            Console.WriteLine($"Greetings Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting), true), jsonOptions)}");
-            Console.WriteLine($"Greetings Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting), false), jsonOptions)}");
-            Console.WriteLine($"StoredArrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), true), jsonOptions)}");
-            Console.WriteLine($"StoredArrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), false), jsonOptions)}");
-            Console.WriteLine($"Arrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), true), jsonOptions)}");
-            Console.WriteLine($"Arrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), false), jsonOptions)}");
-            Console.WriteLine($"Total Duration: {stop}");
+        Console.WriteLine("Broadcasting multiple announcements to demonstrate grouping...");
+        for (var x = 0; x<10; x++)
+        {
+            result = await contractConnection.PublishAsync<ArrivalAnnouncement>(new TransmissionMessage<ArrivalAnnouncement>(new($"FirstName{x}", $"LastName{x}")), cancellationToken: sourceCancel.Token);
+            Console.WriteLine($"Broadcast Result {x} [Success:{!result.IsError}, ID:{result.ID}]");
         }
+
+        List<TransmissionMessage<ArrivalAnnouncement>> arrivalAnnouncements = [];
+        for (var x = 10; x<50; x++)
+            arrivalAnnouncements.Add(new TransmissionMessage<ArrivalAnnouncement>(new($"FirstName{x}", $"LastName{x}")));
+
+        var bulkResult = await contractConnection.BulkPublishAsync<ArrivalAnnouncement>(arrivalAnnouncements, cancellationToken: sourceCancel.Token);
+
+        foreach (var res in bulkResult)
+            Console.WriteLine($"Bulk Broadcast Result [Success:{!res.IsError}, ID:{res.ID}]");
+
+        var response = await contractConnection.QueryAsync<Greeting, string>(new TransmissionMessage<Greeting>(new Greeting("Bob", "Loblaw")), cancellationToken: sourceCancel.Token);
+        Console.WriteLine($"Response 1 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
+        response = await contractConnection.QueryAsync<Greeting, string>(new TransmissionMessage<Greeting>(new Greeting("Fred", "Flintstone")), cancellationToken: sourceCancel.Token);
+        Console.WriteLine($"Response 2 [Success:{!response.IsError}, ID:{response.ID}, Response: {response.Result}]");
+
+        var storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new TransmissionMessage<StoredArrivalAnnouncement>(new("Bob", "Loblaw")), cancellationToken: sourceCancel.Token);
+        Console.WriteLine($"Stored Result 1 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
+        storedResult = await contractConnection.PublishAsync<StoredArrivalAnnouncement>(new TransmissionMessage<StoredArrivalAnnouncement>(new("Fred", "Flintstone")), cancellationToken: sourceCancel.Token);
+        Console.WriteLine($"Stored Result 2 [Success:{!storedResult.IsError}, ID:{storedResult.ID}]");
+
+        Console.WriteLine("Press Enter to close");
+
+        Console.WriteLine($"Current Health: {JsonSerializer.Serialize(await healthCheck.CheckHealthAsync(new(), sourceCancel.Token))}");
+        var stop = Stopwatch.GetElapsedTime(start);
+        Console.ReadLine();
+        await sourceCancel.CancelAsync();
+
+        Console.WriteLine("System completed operation");
+        var jsonOptions = new JsonSerializerOptions()
+        {
+            WriteIndented = true
+        };
+        Console.WriteLine($"Greetings Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting), true), jsonOptions)}");
+        Console.WriteLine($"Greetings Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(Greeting), false), jsonOptions)}");
+        Console.WriteLine($"StoredArrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), true), jsonOptions)}");
+        Console.WriteLine($"StoredArrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(StoredArrivalAnnouncement), false), jsonOptions)}");
+        Console.WriteLine($"Arrivals Sent: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), true), jsonOptions)}");
+        Console.WriteLine($"Arrivals Received: {JsonSerializer.Serialize<IContractMetric?>(contractConnection.GetSnapshot(typeof(ArrivalAnnouncement), false), jsonOptions)}");
+        Console.WriteLine($"Total Duration: {stop}");
     }
 }

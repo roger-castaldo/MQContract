@@ -1,12 +1,11 @@
-﻿using AutomatedTesting.ServiceInjection;
+﻿using CoreTesting.ServiceInjection;
 using MQContract.Interfaces.Middleware;
 
-namespace AutomatedTesting.ContractConnectionTests.Middlewares
+namespace CoreTesting.ConnectionTests.Middlewares;
+
+internal class InjectedChannelChangeMiddleware(IInjectableService service)
+    : IBeforeEncodeMiddleware
 {
-    internal class InjectedChannelChangeMiddleware(IInjectableService service)
-        : IBeforeEncodeMiddleware
-    {
-        ValueTask<EncodableMessage<TMessage>> IBeforeEncodeMiddleware.BeforeMessageEncodeAsync<TMessage>(IContext context, EncodableMessage<TMessage> message)
-            => ValueTask.FromResult<EncodableMessage<TMessage>>(new(message.MessageHeader, message.Message, service.Name));
-    }
+    ValueTask<EncodableMessage<TMessage>> IBeforeEncodeMiddleware.BeforeMessageEncodeAsync<TMessage>(IContext context, EncodableMessage<TMessage> message)
+        => ValueTask.FromResult<EncodableMessage<TMessage>>(new(message.MessageHeader, message.Message, service.Name));
 }

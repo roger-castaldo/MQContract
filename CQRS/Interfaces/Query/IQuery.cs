@@ -1,9 +1,8 @@
-﻿namespace MQContract.CQRS.Interfaces.Query
+﻿namespace MQContract.CQRS.Interfaces.Query;
+
+/// <summary>
+/// Used to identify a query type
+/// </summary>
+public interface IQuery
 {
-    /// <summary>
-    /// Used to identify a query type
-    /// </summary>
-    public interface IQuery
-    {
-    }
 }

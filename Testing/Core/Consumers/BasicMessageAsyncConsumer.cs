@@ -1,29 +1,28 @@
-﻿using AutomatedTesting.Messages;
+﻿using CoreTesting.Messages;
 using MQContract.Attributes;
 using MQContract.Interfaces;
 using MQContract.Interfaces.Consumers;
 
-namespace AutomatedTesting.Consumers
+namespace CoreTesting.Consumers;
+
+[Consumer(channel: "AsyncBasicMessage", group: "AsyncBasicMessageGroup")]
+internal class BasicMessageAsyncConsumer : IPubSubAsyncConsumer<BasicMessage>
 {
-    [Consumer(channel: "AsyncBasicMessage", group: "AsyncBasicMessageGroup")]
-    internal class BasicMessageAsyncConsumer : IPubSubAsyncConsumer<BasicMessage>
+    private static readonly List<IReceivedMessage<BasicMessage>> messages = [];
+
+    public static List<IReceivedMessage<BasicMessage>> Messages => messages;
+
+    public BasicMessageAsyncConsumer()
     {
-        private static readonly List<IReceivedMessage<BasicMessage>> messages = [];
+        messages.Clear();
+    }
 
-        public static List<IReceivedMessage<BasicMessage>> Messages => messages;
+    void IBaseConsumer.ErrorRecieved(Exception error)
+    { }
 
-        public BasicMessageAsyncConsumer()
-        {
-            messages.Clear();
-        }
-
-        void IBaseConsumer.ErrorRecieved(Exception error)
-        { }
-
-        ValueTask IPubSubAsyncConsumer<BasicMessage>.MessageReceivedAsync(IReceivedMessage<BasicMessage> message)
-        {
-            messages.Add(message);
-            return ValueTask.CompletedTask;
-        }
+    ValueTask IPubSubAsyncConsumer<BasicMessage>.MessageReceivedAsync(IReceivedMessage<BasicMessage> message)
+    {
+        messages.Add(message);
+        return ValueTask.CompletedTask;
     }
 }

@@ -1,15 +1,14 @@
-﻿namespace MQContract.CQRS.Interfaces.Query
+﻿namespace MQContract.CQRS.Interfaces.Query;
+
+/// <summary>
+/// Represents a given execution context for a query
+/// </summary>
+/// <typeparam name="TQuery">The type of query housed within this context</typeparam>
+public interface IQueryInvocationContext<out TQuery> : IInvocationContext
+    where TQuery : IQuery
 {
     /// <summary>
-    /// Represents a given execution context for a query
+    /// The query for this invocation context instance
     /// </summary>
-    /// <typeparam name="TQuery">The type of query housed within this context</typeparam>
-    public interface IQueryInvocationContext<out TQuery> : IInvocationContext
-        where TQuery : IQuery
-    {
-        /// <summary>
-        /// The query for this invocation context instance
-        /// </summary>
-        TQuery Query { get; }
-    }
+    TQuery Query { get; }
 }

@@ -1,7 +1,6 @@
 ﻿using MQContract.Attributes;
 
-namespace AutomatedTesting.Messages
-{
-    [Message(channel: "CustomEncryptorMessage")]
-    public record CustomEncryptorMessage(string TestName) { }
-}
+namespace CoreTesting.Messages;
+
+[Message(channel: "CustomEncryptorMessage")]
+public record CustomEncryptorMessage(string TestName) { }
